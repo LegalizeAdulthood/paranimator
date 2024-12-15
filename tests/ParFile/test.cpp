@@ -120,3 +120,20 @@ TEST(TestParFile, parSetParamContinued)
     EXPECT_EQ("video", set.params[1].name);
     EXPECT_EQ("F6", set.params[1].value);
 }
+
+TEST(TestParFile, parSetParamComment)
+{
+    std::stringstream contents{"Foo { ; First comment\n"
+                               "    type=mandel video=F6 ; Second comment\n"
+                               "}"};
+    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+
+    ASSERT_FALSE(par_file->empty());
+    const ParFile::ParSet &set{*par_file->begin()};
+    EXPECT_EQ("Foo", set.name);
+    ASSERT_EQ(2u, set.params.size());
+    EXPECT_EQ("type", set.params[0].name);
+    EXPECT_EQ("mandel", set.params[0].value);
+    EXPECT_EQ("video", set.params[1].name);
+    EXPECT_EQ("F6", set.params[1].value);
+}

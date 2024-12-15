@@ -66,6 +66,11 @@ StreamParFile::StreamParFile(std::istream &contents)
                             continuation.erase(0, not_space);
                             line += continuation;
                         }
+                        if (const auto semi = line.find_first_of(';'); semi != std::string::npos)
+                        {
+                            const auto end = line.find_last_not_of(' ', semi);
+                            line.erase(end, std::string::npos);
+                        }
                         const auto not_space{line.find_first_not_of(' ')};
                         line.erase(0, not_space);
                         assert(line[0] != ' ');
