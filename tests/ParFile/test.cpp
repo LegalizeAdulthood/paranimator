@@ -37,7 +37,7 @@ TEST(TestParFile, parSetName)
     std::stringstream contents{"Name {}"};
     ParFile::ParFilePtr par_file{ParFile::create(contents)};
 
-    EXPECT_EQ("Name", par_file->begin()->name);
+    EXPECT_EQ("Name", par_file->cbegin()->name);
 }
 
 TEST(TestParFile, parSetFoo)
@@ -45,5 +45,15 @@ TEST(TestParFile, parSetFoo)
     std::stringstream contents{"Foo {}"};
     ParFile::ParFilePtr par_file{ParFile::create(contents)};
 
-    EXPECT_EQ("Foo", par_file->begin()->name);
+    EXPECT_EQ("Foo", par_file->cbegin()->name);
+}
+
+TEST(TestParFile, multipleParSetNames)
+{
+    std::stringstream contents{"Foo {}\nBar {}\n"};
+    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+
+    auto it = par_file->begin();
+    EXPECT_EQ("Foo", it->name);
+    EXPECT_EQ("Bar", (++it)->name);
 }

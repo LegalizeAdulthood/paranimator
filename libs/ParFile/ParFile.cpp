@@ -43,7 +43,7 @@ StreamParFile::StreamParFile(std::istream &contents)
     std::string line;
     while (contents)
     {
-        contents >> line;
+        std::getline(contents, line);
         if (contents && !line.empty())
         {
             const std::string name{line.substr(0, line.find_first_of('{')-1)};
