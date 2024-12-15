@@ -21,3 +21,13 @@ TEST(TestParFile, empty)
     EXPECT_EQ(par_file->cbegin(), par_file->cend());
     EXPECT_EQ(par_file->begin(), par_file->end());
 }
+
+TEST(TestParFile, notEmpty)
+{
+    std::stringstream contents{"Name {}"};
+    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+
+    EXPECT_FALSE(par_file->empty());
+    EXPECT_NE(par_file->cbegin(), par_file->cend());
+    EXPECT_NE(par_file->begin(), par_file->end());
+}

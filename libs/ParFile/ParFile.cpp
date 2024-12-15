@@ -1,5 +1,7 @@
 #include <ParFile/ParFile.h>
 
+#include <iostream>
+
 namespace ParFile
 {
 
@@ -9,9 +11,7 @@ namespace
 class StreamParFile : public ParFile
 {
 public:
-    StreamParFile(std::istream &contents)
-    {
-    }
+    StreamParFile(std::istream &contents);
 
     bool empty() const override
     {
@@ -37,6 +37,14 @@ public:
 private:
     std::vector<ParSet> m_param_sets;
 };
+
+StreamParFile::StreamParFile(std::istream &contents)
+{
+    if (contents)
+    {
+        m_param_sets.push_back({});
+    }
+}
 
 } // namespace
 
