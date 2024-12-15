@@ -48,6 +48,14 @@ StreamParFile::StreamParFile(std::istream &contents)
         {
             const std::string name{line.substr(0, line.find_first_of('{')-1)};
             m_param_sets.push_back({name});
+            while (line.find_first_of('}') == std::string::npos)
+            {
+                std::getline(contents, line);
+                if (contents && line.find_first_of('}') != std::string::npos)
+                {
+                    m_param_sets.back().params.push_back({});
+                }
+            }
         }
     }
 }
