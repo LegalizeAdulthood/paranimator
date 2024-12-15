@@ -57,6 +57,15 @@ StreamParFile::StreamParFile(std::istream &contents)
                     std::getline(contents, line);
                     while (contents && !line.empty())
                     {
+                        while (contents && line.back() == '\\')
+                        {
+                            std::string continuation;
+                            std::getline(contents, continuation);
+                            line.pop_back();
+                            auto not_space{continuation.find_first_not_of(' ')};
+                            continuation.erase(0, not_space);
+                            line += continuation;
+                        }
                         const auto not_space{line.find_first_not_of(' ')};
                         line.erase(0, not_space);
                         assert(line[0] != ' ');
