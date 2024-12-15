@@ -31,3 +31,19 @@ TEST(TestParFile, notEmpty)
     EXPECT_NE(par_file->cbegin(), par_file->cend());
     EXPECT_NE(par_file->begin(), par_file->end());
 }
+
+TEST(TestParFile, parSetName)
+{
+    std::stringstream contents{"Name {}"};
+    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+
+    EXPECT_EQ("Name", par_file->begin()->name);
+}
+
+TEST(TestParFile, parSetFoo)
+{
+    std::stringstream contents{"Foo {}"};
+    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+
+    EXPECT_EQ("Foo", par_file->begin()->name);
+}

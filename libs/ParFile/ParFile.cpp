@@ -40,9 +40,15 @@ private:
 
 StreamParFile::StreamParFile(std::istream &contents)
 {
-    if (contents)
+    std::string line;
+    while (contents)
     {
-        m_param_sets.push_back({});
+        contents >> line;
+        if (contents && !line.empty())
+        {
+            const std::string name{line.substr(0, line.find_first_of('{')-1)};
+            m_param_sets.push_back({name});
+        }
     }
 }
 
