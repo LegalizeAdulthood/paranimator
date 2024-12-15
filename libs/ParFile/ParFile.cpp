@@ -65,7 +65,7 @@ StreamParFile::StreamParFile(std::istream &contents)
                             break;
                         }
                         const auto next_space{line.find_first_of(' ')};
-                        const std::string name_value{line.substr(0, next_space-1)};
+                        const std::string name_value{line.substr(0, next_space)};
                         line.erase(0, line.find_first_not_of(' ', next_space));
                         const auto equal{name_value.find('=')};
                         Parameter param;
