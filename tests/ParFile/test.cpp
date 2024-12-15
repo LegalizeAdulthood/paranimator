@@ -70,3 +70,18 @@ TEST(TestParFile, parSetHasParams)
     EXPECT_EQ("Foo", set.name);
     EXPECT_FALSE(set.params.empty());
 }
+
+TEST(TestParFile, parSetParamNameValue)
+{
+    std::stringstream contents{"Foo {\n"
+                               "    type=mandel\n"
+                               "}"};
+    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+
+    ASSERT_FALSE(par_file->empty());
+    const ParFile::ParSet &set{*par_file->begin()};
+    EXPECT_EQ("Foo", set.name);
+    ASSERT_FALSE(set.params.empty());
+    EXPECT_EQ("type", set.params.back().name);
+    EXPECT_EQ("mandel", set.params.back().value);
+}

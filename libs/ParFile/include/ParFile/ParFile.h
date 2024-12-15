@@ -10,6 +10,8 @@ namespace ParFile
 
 struct Parameter
 {
+    std::string name;
+    std::string value;
 };
 
 struct ParSet

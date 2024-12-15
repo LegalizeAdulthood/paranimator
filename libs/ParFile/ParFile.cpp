@@ -1,5 +1,6 @@
 #include <ParFile/ParFile.h>
 
+#include <cassert>
 #include <iostream>
 
 namespace ParFile
@@ -48,12 +49,37 @@ StreamParFile::StreamParFile(std::istream &contents)
         {
             const std::string name{line.substr(0, line.find_first_of('{')-1)};
             m_param_sets.push_back({name});
+            ParSet &param_set{m_param_sets.back()};
             while (line.find_first_of('}') == std::string::npos)
             {
-                std::getline(contents, line);
-                if (contents && line.find_first_of('}') != std::string::npos)
+                while (contents)
                 {
-                    m_param_sets.back().params.push_back({});
+                    std::getline(contents, line);
+                    while (contents && !line.empty())
+                    {
+                        const auto not_space{line.find_first_not_of(' ')};
+                        line.erase(0, not_space);
+                        assert(line[0] != ' ');
+                        if (line.empty() || line[0] == '}')
+                        {
+                            break;
+                        }
+                        const auto next_space{line.find_first_of(' ')};
+                        const std::string name_value{line.substr(0, next_space-1)};
+                        line.erase(0, line.find_first_not_of(' ', next_space));
+                        const auto equal{name_value.find('=')};
+                        Parameter param;
+                        if (equal == std::string::npos)
+                        {
+                            param.name = name_value;
+                        }
+                        else
+                        {
+                            param.name = name_value.substr(0, equal);
+                            param.value = name_value.substr(equal+1);
+                        }
+                        param_set.params.push_back(param);
+                    }
                 }
             }
         }
