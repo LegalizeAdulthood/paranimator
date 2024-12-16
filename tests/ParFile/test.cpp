@@ -137,3 +137,72 @@ TEST(TestParFile, parSetParamComment)
     EXPECT_EQ("video", set.params[1].name);
     EXPECT_EQ("F6", set.params[1].value);
 }
+
+constexpr std::string_view s_demo_par{
+    R"par(; SPDX-License-Identifier: GPL-3.0-only
+;
+Mandel_Demo        { ; PAR for initialization of Fractint demo
+   reset type=mandel corners=-2.5/1.5/-1.5/1.5 params=0/0 inside=0
+   sound=no maxiter=678
+}
+
+trunc_demo        { ; PAR for initialization of Fractint demo (New in 19.4)
+   reset type=lambda(fn||fn) function=conj/trunc
+   center-mag=-4.44089e-015/3.55271e-015/0.2339956
+   params=-0.7398119122257053/1.28140703517588/52 float=y maxiter=255
+   bailoutest=or inside=0 decomp=256 sound=no
+   colors=DUH<2>EXJFZKFYK<29>121000110<30>rZ0<30>220000011<13>0OL0QM2RM<14>\
+   ZhZ<30>222000110<30>zkK<30>221000010<25>CTG cyclerange=0/255
+}
+)par"};
+
+TEST(TestParFile, parSetMandelDemo)
+{
+    std::stringstream contents{s_demo_par.data()};
+    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+
+    ASSERT_EQ(2U, par_file->size());
+    const ParFile::ParSet &set{*par_file->begin()};
+    EXPECT_EQ("Mandel_Demo", set.name);
+    ASSERT_EQ(7U, set.params.size());
+    EXPECT_EQ("reset", set.params[0].name);
+    EXPECT_EQ("type", set.params[1].name);
+    EXPECT_EQ("mandel", set.params[1].value);
+    EXPECT_EQ("corners", set.params[2].name);
+    EXPECT_EQ("params", set.params[3].name);
+    EXPECT_EQ("inside", set.params[4].name);
+    EXPECT_EQ("sound", set.params[5].name);
+    EXPECT_EQ("maxiter", set.params[6].name);
+}
+
+TEST(TestParFile, parSetTruncDemo)
+{
+    std::stringstream contents{s_demo_par.data()};
+    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+
+    ASSERT_EQ(2U, par_file->size());
+    auto set_iter{par_file->begin()};
+    ++set_iter;
+    const ParFile::ParSet &set{*set_iter};
+    EXPECT_EQ("trunc_demo", set.name);
+    ASSERT_EQ(13U, set.params.size());
+    auto param{set.params.begin()};
+    EXPECT_EQ("reset", param->name);
+    ++param;
+    EXPECT_EQ("type", param->name);
+    EXPECT_EQ("lambda(fn||fn)", param->value);
+    EXPECT_EQ("function", (++param)->name);
+    EXPECT_EQ("center-mag", (++param)->name);
+    EXPECT_EQ("params", (++param)->name);
+    EXPECT_EQ("float", (++param)->name);
+    EXPECT_EQ("maxiter", (++param)->name);
+    EXPECT_EQ("bailoutest", (++param)->name);
+    EXPECT_EQ("inside", (++param)->name);
+    EXPECT_EQ("decomp", (++param)->name);
+    EXPECT_EQ("sound", (++param)->name);
+    EXPECT_EQ("colors", (++param)->name);
+    EXPECT_EQ("DUH<2>EXJFZKFYK<29>121000110<30>rZ0<30>220000011<13>0OL0QM2RM<14>"
+              "ZhZ<30>222000110<30>zkK<30>221000010<25>CTG",
+        param->value);
+    EXPECT_EQ("cyclerange", (++param)->name);
+}

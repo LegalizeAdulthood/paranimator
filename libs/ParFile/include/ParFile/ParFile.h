@@ -29,6 +29,7 @@ public:
     virtual ~ParFile() = default;
 
     virtual bool empty() const = 0;
+    virtual size_t size() const = 0;
     virtual const_iterator cbegin() const = 0;
     virtual iterator begin() = 0;
     virtual const_iterator cend() const = 0;
