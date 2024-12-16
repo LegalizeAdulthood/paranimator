@@ -1,2 +1,3 @@
 add_executable(paranimator main.cpp)
-set_target_properties(paranimator PROPERTIES FOLDER "Tools")
+target_folder(paranimator "Tools")
+target_link_libraries(paranimator PUBLIC ParFile)

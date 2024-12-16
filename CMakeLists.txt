@@ -9,6 +9,10 @@ project("${PARANIMATOR_PROJECT_NAME}" CXX)
 
 include(CTest)
 
+function(target_folder target folder)
+    set_target_properties(${target} PROPERTIES FOLDER ${folder})
+endfunction()
+
 add_subdirectory(libs)
 add_subdirectory(tools)
 
