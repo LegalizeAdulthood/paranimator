@@ -1,9 +1,10 @@
 #include <ParFile/ParFile.h>
 
+#include <boost/format.hpp>
+#include <boost/json.hpp>
 #include <tweeny/tweeny.h>
 
-#include <boost/json.hpp>
-
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -31,7 +32,7 @@ std::vector<std::string_view> arguments(int argc, char *argv[])
 int usage(std::string_view program)
 {
     std::cerr << "Usage:\n" //
-              << program << " <config-json> <num-frames>\n";
+              << program << " <config-json>\n";
     return 1;
 }
 
@@ -41,65 +42,79 @@ ParFile::ParFilePtr read_par_file(std::string_view file)
     return ParFile::create(in);
 }
 
-struct NamedParam
-{
-    NamedParam(const Object &config);
-
-    ParFile::ParFilePtr params;
-    std::string entry_name;
-};
-
-NamedParam::NamedParam(const Object &config) :
-    params(read_par_file(config.at("file").as_string())),
-    entry_name(config.at("name").as_string())
-{
-}
-
 class Interpolator
 {
 public:
-    Interpolator(const Config &config, int num_frames);
+    Interpolator(const Config &config);
 
+    int num_frames() const { return m_num_frames; }
+    
     ParFile::ParSet operator()();
 
 private:
     const Config &m_config;
     int m_num_frames;
-
-    NamedParam m_begin;
-    NamedParam m_end;
+    std::string m_frame_name;
+    std::string m_output;
+    std::string m_script;
+    ParFile::ParSet m_begin;
+    ParFile::ParSet m_end;
     int m_frame{};
 };
 
-Interpolator::Interpolator(const Config &config, int num_frames) :
+ParFile::ParSet load_named_par_set(const Object &par_entry)
+{
+    std::string filename{par_entry.at("file").as_string()};
+    std::string name{par_entry.at("name").as_string()};
+    std::ifstream in{filename};
+    ParFile::ParFilePtr file{ParFile::create(in)};
+    auto it{std::find_if(file->cbegin(), file->cend(), [&](const ParFile::ParSet &params) { return params.name == name; })};
+    if (it == file->cend())
+    {
+        throw std::runtime_error("Couldn't find parameter set '" + name + "' in file '" + filename + "'");
+    }
+    return *it;
+}
+
+ParFile::ParSet load_config_params(const Object &config, std::string_view name)
+{
+    return load_named_par_set(config.at(name).as_object());
+}
+
+Interpolator::Interpolator(const Config &config) :
     m_config(config),
-    m_num_frames(num_frames),
-    m_begin(config.at("begin").as_object()),
-    m_end(config.at("end").as_object())
+    m_num_frames(static_cast<int>(config.at("num_frames").as_int64())),
+    m_frame_name(config.at("frame").as_string()),
+    m_output(config.at("output").as_string()),
+    m_script(config.at("script").as_string()),
+    m_begin(load_config_params(config, "begin")),
+    m_end(load_config_params(config, "end"))
 {
 }
 
 ParFile::ParSet Interpolator::operator()()
 {
-    ParFile::ParSet par_set{*(m_begin.params->begin())};
-    par_set.name = "Frame_" + std::to_string(m_frame + 1);
+    ParFile::ParSet par_set{m_begin};
     ++m_frame;
+    par_set.name = boost::basic_format<char>{boost::format(m_frame_name) % m_frame}.str();
+    par_set.params.push_back({"batch", "yes"});
+    par_set.params.push_back({"savename", par_set.name + ".gif"});
     return par_set;
 }
 
-void print(const ParFile::ParSet &par)
+void print(std::ostream &str, const ParFile::ParSet &par)
 {
-    std::cout << par.name << " {\n";
+    str << par.name << " {\n";
     for (const ParFile::Parameter &param : par.params)
     {
-        std::cout << "    " << param.name;
+        str << "    " << param.name;
         if (!param.value.empty())
         {
-            std::cout << '=' << param.value;
+            str << '=' << param.value;
         }
-        std::cout << '\n';
+        str << '\n';
     }
-    std::cout << "}\n";
+    str << "}\n";
 }
 
 boost::json::value read_json( std::istream& is, boost::system::error_code& ec )
@@ -125,14 +140,33 @@ Config load_config(std::string_view path)
     return read_json(in, ec).as_object();
 }
 
+bool validate_named_parset(const Object &config, std::string_view name)
+{
+    if (!config.try_at(name) || !config.at(name).is_object())
+    {
+        return false;
+    }
+    const Object &named_params{config.at(name).as_object()};
+    return named_params.try_at("file")         //
+        && named_params.at("file").is_string() //
+        && named_params.try_at("name")         //
+        && named_params.at("name").is_string();
+}
+
 bool validate_config(const Config &config)
 {
-    return true;
+    return config.try_at("begin") && config.at("begin").is_object()   //
+        && validate_named_parset(config, "begin")                     //
+        && validate_named_parset(config, "end")                       //
+        && config.try_at("output") && config.at("output").is_string() //
+        && config.try_at("script") && config.at("script").is_string() //
+        && config.try_at("frame") && config.at("frame").is_string()   //
+        && config.try_at("num_frames") && config.at("num_frames").is_number();
 }
 
 int main(const std::vector<std::string_view> &args)
 {
-    if (args.size() != 3)
+    if (args.size() != 2)
     {
         return usage(args[0]);
     }
@@ -143,18 +177,17 @@ int main(const std::vector<std::string_view> &args)
         std::cerr << "Invalid JSON configuration " << json_file << '\n';
         return 2;
     }
-    const int num_frames{std::stoi(std::string{args[2]})};
-    if (num_frames < 1)
-    {
-        std::cerr << num_frames << " must be positive.\n";
-        return 3;
-    }
     
-    Interpolator lerper{config, num_frames};
-    for (int i = 0; i < num_frames; ++i)
+    Interpolator lerper{config};
+    const std::string output{config.at("output").as_string()};
+    std::ofstream out{output.c_str()};
+    std::ofstream bat{config.at("script").as_string().c_str()};
+    for (int i = 0; i < lerper.num_frames(); ++i)
     {
         ParFile::ParSet frame{lerper()};
-        print(frame);
+        print(out, frame);
+        out << '\n';
+        bat << "id @" << output << '/' << frame.name << '\n';
     }
     
     return 0;

@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "dependencies": [
     "boost-algorithm",
+    "boost-format",
     "boost-json",
     "gtest",
     "tweeny"
