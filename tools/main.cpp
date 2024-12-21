@@ -47,8 +47,11 @@ class Interpolator
 public:
     Interpolator(const Config &config);
 
-    int num_frames() const { return m_num_frames; }
-    
+    int num_frames() const
+    {
+        return m_num_frames;
+    }
+
     ParFile::ParSet operator()();
 
 private:
@@ -68,7 +71,8 @@ ParFile::ParSet load_named_par_set(const Object &par_entry)
     std::string name{par_entry.at("name").as_string()};
     std::ifstream in{filename};
     ParFile::ParFilePtr file{ParFile::create(in)};
-    auto it{std::find_if(file->cbegin(), file->cend(), [&](const ParFile::ParSet &params) { return params.name == name; })};
+    auto it{
+        std::find_if(file->cbegin(), file->cend(), [&](const ParFile::ParSet &params) { return params.name == name; })};
     if (it == file->cend())
     {
         throw std::runtime_error("Couldn't find parameter set '" + name + "' in file '" + filename + "'");
@@ -117,18 +121,18 @@ void print(std::ostream &str, const ParFile::ParSet &par)
     str << "}\n";
 }
 
-boost::json::value read_json( std::istream& is, boost::system::error_code& ec )
+boost::json::value read_json(std::istream &is, boost::system::error_code &ec)
 {
     boost::json::stream_parser p;
     std::string line;
-    while( std::getline( is, line ) )
+    while (std::getline(is, line))
     {
-        p.write( line, ec );
-        if( ec )
+        p.write(line, ec);
+        if (ec)
             return nullptr;
     }
-    p.finish( ec );
-    if( ec )
+    p.finish(ec);
+    if (ec)
         return nullptr;
     return p.release();
 }
@@ -177,7 +181,7 @@ int main(const std::vector<std::string_view> &args)
         std::cerr << "Invalid JSON configuration " << json_file << '\n';
         return 2;
     }
-    
+
     Interpolator lerper{config};
     const std::string output{config.at("output").as_string()};
     std::ofstream out{output.c_str()};
@@ -189,13 +193,13 @@ int main(const std::vector<std::string_view> &args)
         out << '\n';
         bat << "id @" << output << '/' << frame.name << '\n';
     }
-    
+
     return 0;
 }
 
-}
+} // namespace
 
 int main(int argc, char *argv[])
 {
-    return main(arguments(argc, argv));    
+    return main(arguments(argc, argv));
 }
