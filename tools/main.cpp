@@ -36,12 +36,6 @@ int usage(std::string_view program)
     return 1;
 }
 
-ParFile::ParFilePtr read_par_file(std::string_view file)
-{
-    std::ifstream in{std::string{file}};
-    return ParFile::create(in);
-}
-
 ParFile::ParSet load_named_par_set(const Object &par_entry)
 {
     std::string filename{par_entry.at("file").as_string()};
