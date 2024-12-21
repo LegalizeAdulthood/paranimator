@@ -42,29 +42,6 @@ ParFile::ParFilePtr read_par_file(std::string_view file)
     return ParFile::create(in);
 }
 
-class Interpolator
-{
-public:
-    Interpolator(const Config &config);
-
-    int num_frames() const
-    {
-        return m_num_frames;
-    }
-
-    ParFile::ParSet operator()();
-
-private:
-    const Config &m_config;
-    int m_num_frames;
-    std::string m_frame_name;
-    std::string m_output;
-    std::string m_script;
-    ParFile::ParSet m_begin;
-    ParFile::ParSet m_end;
-    int m_frame{};
-};
-
 ParFile::ParSet load_named_par_set(const Object &par_entry)
 {
     std::string filename{par_entry.at("file").as_string()};
@@ -85,8 +62,29 @@ ParFile::ParSet load_config_params(const Object &config, std::string_view name)
     return load_named_par_set(config.at(name).as_object());
 }
 
+class Interpolator
+{
+public:
+    Interpolator(const Config &config);
+    
+    int num_frames() const
+    {
+        return m_num_frames;
+    }
+
+    ParFile::ParSet operator()();
+
+private:
+    int m_num_frames;
+    std::string m_frame_name;
+    std::string m_output;
+    std::string m_script;
+    ParFile::ParSet m_begin;
+    ParFile::ParSet m_end;
+    int m_frame{};
+};
+
 Interpolator::Interpolator(const Config &config) :
-    m_config(config),
     m_num_frames(static_cast<int>(config.at("num_frames").as_int64())),
     m_frame_name(config.at("frame").as_string()),
     m_output(config.at("output").as_string()),
