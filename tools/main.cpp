@@ -71,44 +71,8 @@ ParFile::Config load_config(std::string_view path)
     return read_json(in, ec).as_object();
 }
 
-bool validate_named_parset(const Object &config, std::string_view name)
+void interpolate(ParFile::Config config)
 {
-    if (!config.try_at(name) || !config.at(name).is_object())
-    {
-        return false;
-    }
-    const Object &named_params{config.at(name).as_object()};
-    return named_params.try_at("file")         //
-        && named_params.at("file").is_string() //
-        && named_params.try_at("name")         //
-        && named_params.at("name").is_string();
-}
-
-bool validate_config(const ParFile::Config &config)
-{
-    return config.try_at("begin") && config.at("begin").is_object()   //
-        && validate_named_parset(config, "begin")                     //
-        && validate_named_parset(config, "end")                       //
-        && config.try_at("output") && config.at("output").is_string() //
-        && config.try_at("script") && config.at("script").is_string() //
-        && config.try_at("frame") && config.at("frame").is_string()   //
-        && config.try_at("num_frames") && config.at("num_frames").is_number();
-}
-
-int main(const std::vector<std::string_view> &args)
-{
-    if (args.size() != 2)
-    {
-        return usage(args[0]);
-    }
-    const std::string_view json_file{args[1]};
-    const ParFile::Config config{load_config(json_file)};
-    if (!validate_config(config))
-    {
-        std::cerr << "Invalid JSON configuration " << json_file << '\n';
-        return 2;
-    }
-
     ParFile::Interpolator lerper{config};
     const std::string output{config.at("output").as_string()};
     std::ofstream out{output.c_str()};
@@ -118,10 +82,30 @@ int main(const std::vector<std::string_view> &args)
         ParFile::ParSet frame{lerper()};
         print(out, frame);
         out << '\n';
-        bat << "id @" << output << '/' << frame.name << '\n';
+        bat << "start/wait id @" << output << '/' << frame.name << '\n';
     }
+}
 
-    return 0;
+int main(const std::vector<std::string_view> &args)
+{
+    try
+    {
+        if (args.size() != 2)
+        {
+            return usage(args[0]);
+        }
+        const std::string_view json_file{args[1]};
+        interpolate(load_config(json_file));
+
+        return 0;
+    }
+    catch (const std::exception &bang)
+    {
+        {
+            std::cerr << bang.what() << '\n';
+            return 2;
+        }
+    }
 }
 
 } // namespace
