@@ -1,7 +1,7 @@
 #pragma once
 
-#include <iosfwd>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -14,11 +14,43 @@ struct Parameter
     std::string value;
 };
 
+inline bool operator==(const Parameter &lhs, const Parameter &rhs)
+{
+    return lhs.name == rhs.name && lhs.value == rhs.value;
+}
+inline bool operator!=(const Parameter &lhs, const Parameter &rhs)
+{
+    return !(lhs == rhs);
+}
+
+inline std::string to_string(const Parameter &par)
+{
+    if (par.value.empty())
+    {
+        return par.name;
+    }
+    return par.name + '=' + par.value;
+}
+
+inline std::ostream &operator<<(std::ostream &str, const Parameter &value)
+{
+    return str << to_string(value);
+}
+
 struct ParSet
 {
     std::string name;
     std::vector<Parameter> params;
 };
+
+bool operator==(const ParSet &lhs, const ParSet &rhs);
+inline bool operator!=(const ParSet &lhs, const ParSet &rhs)
+{
+    return !(lhs == rhs);
+}
+
+std::ostream &operator<<(std::ostream &str, const ParSet &value);
+std::string to_string(const ParSet &value);
 
 class ParFile
 {

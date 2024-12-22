@@ -32,21 +32,6 @@ int usage(std::string_view program)
     return 1;
 }
 
-void print(std::ostream &str, const ParFile::ParSet &par)
-{
-    str << par.name << " {\n";
-    for (const ParFile::Parameter &param : par.params)
-    {
-        str << "    " << param.name;
-        if (!param.value.empty())
-        {
-            str << '=' << param.value;
-        }
-        str << '\n';
-    }
-    str << "}\n";
-}
-
 void interpolate(const ParFile::Config &config)
 {
     ParFile::Interpolator lerper{config};
@@ -55,8 +40,7 @@ void interpolate(const ParFile::Config &config)
     for (int i = 0; i < config.num_frames(); ++i)
     {
         const ParFile::ParSet frame{lerper()};
-        print(out, frame);
-        out << '\n';
+        out << frame << '\n';
         bat << "start/wait id @" << config.output() << '/' << frame.name << '\n';
     }
 }

@@ -8,9 +8,11 @@ configure_file("config.json.in" "config.json" @ONLY)
 configure_file("test.h.in" "include/TestParFile/test.h" @ONLY)
 
 add_executable(test-par-file
-    TestInterpolator.cpp
-    TestParFile.cpp
     TestConfig.cpp
+    TestInterpolator.cpp
+    TestParameter.cpp
+    TestParFile.cpp
+    TestParSet.cpp
 
     from.par.in
     to.par.in

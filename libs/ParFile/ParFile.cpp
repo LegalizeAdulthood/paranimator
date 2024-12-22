@@ -3,9 +3,12 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
-#include <cassert>
-#include <iostream>
+#include <algorithm>
+#include <istream>
 #include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace ParFile
 {
@@ -108,6 +111,55 @@ StreamParFile::StreamParFile(std::istream &contents)
 }
 
 } // namespace
+
+bool operator==(const ParSet &lhs, const ParSet &rhs)
+{
+    if (lhs.name != rhs.name || lhs.params.size() != rhs.params.size())
+    {
+        return false;
+    }
+
+    std::vector lhs_sorted{lhs.params};
+    const auto less_names = [](const Parameter &left, const Parameter &right) { return left.name < right.name; };
+    std::sort(lhs_sorted.begin(), lhs_sorted.end(), less_names);
+    std::vector rhs_sorted{rhs.params};
+    std::sort(rhs_sorted.begin(), rhs_sorted.end(), less_names);
+
+    for (size_t i = 0; i < lhs_sorted.size(); ++i)
+    {
+        if (lhs_sorted[i] != rhs_sorted[i])
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+std::ostream &operator<<(std::ostream &str, const ParSet &value)
+{
+    if (value.name.empty())
+    {
+        return str;
+    }
+    str << value.name << " {\n";
+    for (const Parameter &param : value.params)
+    {
+        str << "    " << param << '\n';
+    }
+    return str << "}\n";
+}
+
+std::string to_string(const ParSet &value)
+{
+    if (value.name.empty())
+    {
+        return {};
+    }
+    std::ostringstream result;
+    result << value;
+    return result.str();
+}
 
 ParFilePtr createParFile(std::istream &contents)
 {

@@ -16,9 +16,9 @@ class Interpolator
 public:
     Interpolator(const Config &config);
 
-    int num_frames() const
+    const ParSet &from() const
     {
-        return m_num_frames;
+        return m_from;
     }
 
     ParSet operator()();
