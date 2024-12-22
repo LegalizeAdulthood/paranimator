@@ -19,7 +19,11 @@ class Config
 {
 public:
     Config() = default;
+    Config(const Config &rhs) = default;
+    Config(Config &&rhs) = default;
     Config(const boost::json::object &json);
+    Config &operator=(const Config &rhs) = default;
+    Config &operator=(Config &&rhs) = default;
 
     const NamedFileParSet &from() const
     {

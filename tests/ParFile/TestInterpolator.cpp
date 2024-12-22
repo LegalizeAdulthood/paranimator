@@ -10,25 +10,47 @@
 
 #include <gtest/gtest.h>
 
-TEST(TestInterpolator, construct)
+struct TestInterpolator : testing::Test
 {
-    boost::json::value json{ParFile::read_json(TestParFile::CONFIG_JSON)};
-    ParFile::Config config{json.as_object()};
+    ~TestInterpolator() override = default;
 
-    ParFile::Interpolator lerper{config};
-}
+protected:
+    void SetUp() override
+    {
+        m_json = ParFile::read_json(TestParFile::CONFIG_JSON).as_object();
+        m_config = ParFile::Config{m_json};
+        m_lerper = ParFile::Interpolator{m_config};
+    }
 
-TEST(TestInterpolator, firstFrameIsFrom)
+    boost::json::object m_json;
+    ParFile::Config m_config{};
+    ParFile::Interpolator m_lerper{};
+};
+
+TEST_F(TestInterpolator, firstFrameIsFrom)
 {
-    boost::json::value json{ParFile::read_json(TestParFile::CONFIG_JSON)};
-    ParFile::Config config{json.as_object()};
-    ParFile::Interpolator lerper{config};
-    ParFile::ParSet expected{lerper.from()};
+    ParFile::ParSet expected{m_lerper.from()};
     expected.name = "frame-0001";
     expected.params.push_back({"batch", "yes"});
     expected.params.push_back({"savename", "frame-0001.gif"});
 
-    ParFile::ParSet frame{lerper()};
+    ParFile::ParSet frame{m_lerper()};
+
+    ASSERT_EQ( expected, frame );
+}
+
+TEST_F(TestInterpolator, lastFrameIsTo)
+{
+    m_json.at("num_frames").as_int64() = 2;
+    m_config = ParFile::Config{m_json};
+    m_lerper = ParFile::Interpolator{m_config};
+    ParFile::ParSet expected{m_lerper.to()};
+    expected.name = "frame-0002";
+    expected.params.push_back({"batch", "yes"});
+    expected.params.push_back({"savename", "frame-0002.gif"});
+
+    ParFile::ParSet frame{m_lerper()};
+    frame = m_lerper();
 
     ASSERT_EQ( expected, frame );
 }
