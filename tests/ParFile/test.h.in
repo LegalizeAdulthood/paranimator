@@ -1,0 +1,10 @@
+#pragma once
+
+namespace TestParFile
+{
+
+constexpr const char *const FROM_PAR{"@CMAKE_CURRENT_BINARY_DIR@/from.par"};
+constexpr const char *const TO_PAR{"@CMAKE_CURRENT_BINARY_DIR@/to.par"};
+constexpr const char *const CONFIG_JSON{"@CMAKE_CURRENT_BINARY_DIR@/config.json"};
+
+} // nmespace TestParFile

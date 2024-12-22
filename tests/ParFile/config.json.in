@@ -1,0 +1,14 @@
+{
+  "from": {
+    "file": "from.par",
+    "name": "Mandel_Demo"
+  },
+  "to": {
+    "file": "to.par",
+    "name": "Mandel_Demo"
+  },
+  "output": "frames.par",
+  "script": "frames.bat",
+  "frame": "frame-%04d",
+  "num_frames": 60
+}

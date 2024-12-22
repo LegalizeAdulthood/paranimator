@@ -1,5 +1,6 @@
 #include <ParFile/Config.h>
 #include <ParFile/Interpolator.h>
+#include <ParFile/Json.h>
 #include <ParFile/ParFile.h>
 
 #include <boost/json.hpp>
@@ -46,29 +47,6 @@ void print(std::ostream &str, const ParFile::ParSet &par)
     str << "}\n";
 }
 
-boost::json::value read_json(std::istream &is, boost::system::error_code &ec)
-{
-    boost::json::stream_parser p;
-    std::string line;
-    while (std::getline(is, line))
-    {
-        p.write(line, ec);
-        if (ec)
-            return nullptr;
-    }
-    p.finish(ec);
-    if (ec)
-        return nullptr;
-    return p.release();
-}
-
-ParFile::Config load_config(std::string_view path)
-{
-    std::ifstream in{std::string{path}};
-    boost::system::error_code ec;
-    return read_json(in, ec).as_object();
-}
-
 void interpolate(const ParFile::Config &config)
 {
     ParFile::Interpolator lerper{config};
@@ -92,7 +70,7 @@ int main(const std::vector<std::string_view> &args)
             return usage(args[0]);
         }
         const std::string_view json_file{args[1]};
-        interpolate(load_config(json_file));
+        interpolate(ParFile::read_json(json_file).as_object());
 
         return 0;
     }

@@ -6,8 +6,10 @@ find_package(Tweeny REQUIRED CONFIG)
 add_library(ParFile
     include/ParFile/Config.h
     include/ParFile/Interpolator.h
+    include/ParFile/Json.h
     include/ParFile/ParFile.h
     Config.cpp
+    Json.cpp
     ParFile.cpp
     Interpolator.cpp
 )
