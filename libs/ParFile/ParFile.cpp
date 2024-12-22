@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+//
 #include <ParFile/ParFile.h>
 
 #include <boost/algorithm/string/split.hpp>

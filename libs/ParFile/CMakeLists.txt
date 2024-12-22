@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+#
 find_package(boost_algorithm REQUIRED CONFIG)
 find_package(boost_format REQUIRED CONFIG)
 find_package(boost_json REQUIRED CONFIG)

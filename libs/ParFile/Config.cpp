@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+//
 #include <ParFile/Config.h>
 
 #include <boost/json.hpp>
