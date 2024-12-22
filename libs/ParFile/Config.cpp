@@ -41,7 +41,7 @@ static std::string_view load_string(const Object &json, std::string_view field)
 static NamedFileParSet load_named_file_par_set(const Object &json, std::string_view name)
 {
     const Object &named_params{load_object(json, name)};
-    
+
     NamedFileParSet result;
     result.file = load_string(named_params, name, "file");
     result.name = load_string(named_params, name, "name");

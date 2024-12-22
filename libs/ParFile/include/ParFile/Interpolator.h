@@ -9,7 +9,7 @@
 namespace ParFile
 {
 
-using Config = boost::json::object;
+class Config;
 
 class Interpolator
 {
@@ -28,8 +28,8 @@ private:
     std::string m_frame_name;
     std::string m_output;
     std::string m_script;
-    ParSet m_begin;
-    ParSet m_end;
+    ParSet m_from;
+    ParSet m_to;
     int m_frame{};
 };
 

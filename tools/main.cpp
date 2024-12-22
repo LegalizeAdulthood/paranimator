@@ -1,3 +1,4 @@
+#include <ParFile/Config.h>
 #include <ParFile/Interpolator.h>
 #include <ParFile/ParFile.h>
 
@@ -12,8 +13,6 @@
 
 namespace
 {
-
-using Object = boost::json::object;
 
 std::vector<std::string_view> arguments(int argc, char *argv[])
 {
@@ -71,18 +70,17 @@ ParFile::Config load_config(std::string_view path)
     return read_json(in, ec).as_object();
 }
 
-void interpolate(ParFile::Config config)
+void interpolate(const ParFile::Config &config)
 {
     ParFile::Interpolator lerper{config};
-    const std::string output{config.at("output").as_string()};
-    std::ofstream out{output.c_str()};
-    std::ofstream bat{config.at("script").as_string().c_str()};
-    for (int i = 0; i < lerper.num_frames(); ++i)
+    std::ofstream out{config.output().c_str()};
+    std::ofstream bat{config.script().c_str()};
+    for (int i = 0; i < config.num_frames(); ++i)
     {
-        ParFile::ParSet frame{lerper()};
+        const ParFile::ParSet frame{lerper()};
         print(out, frame);
         out << '\n';
-        bat << "start/wait id @" << output << '/' << frame.name << '\n';
+        bat << "start/wait id @" << config.output() << '/' << frame.name << '\n';
     }
 }
 
