@@ -48,8 +48,25 @@ TEST_F(TestInterpolator, lastFrameIsTo)
     expected.name = "frame-0002";
     expected.params.push_back({"batch", "yes"});
     expected.params.push_back({"savename", "frame-0002.gif"});
-
     ParFile::ParSet frame{m_lerper()};
+
+    frame = m_lerper();
+
+    ASSERT_EQ( expected, frame );
+}
+
+TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
+{
+    m_json.at("num_frames").as_int64() = 3;
+    m_config = ParFile::Config{m_json};
+    m_lerper = ParFile::Interpolator{m_config};
+    ParFile::ParSet expected{m_lerper.to()};
+    expected.name = "frame-0002";
+    expected.params[2].value  = "-0.5/0/5.5";
+    expected.params.push_back({"batch", "yes"});
+    expected.params.push_back({"savename", "frame-0002.gif"});
+    ParFile::ParSet frame{m_lerper()};
+
     frame = m_lerper();
 
     ASSERT_EQ( expected, frame );

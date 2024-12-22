@@ -70,7 +70,17 @@ Interpolator::Interpolator(const Config &config) :
 ParSet Interpolator::operator()()
 {
     ++m_frame;
-    ParSet par_set{m_frame == 1 ? m_from.par_set : m_to.par_set};
+    ParSet par_set{(m_frame == m_num_frames ? m_to : m_from).par_set};
+    if (m_frame != 1 && m_frame != m_num_frames)
+    {
+        const double fraction{(m_frame - 1) / static_cast<double>(m_num_frames - 1)};
+        const std::complex<double> center{
+            m_from.center_mag.center + fraction * (m_to.center_mag.center - m_from.center_mag.center)};
+        const double mag{m_from.center_mag.mag + fraction * (m_to.center_mag.mag - m_from.center_mag.mag)};
+        auto it{std::find_if(par_set.params.begin(), par_set.params.end(),
+            [](const Parameter &param) { return param.name == "center-mag"; })};
+        it->value = (boost::format("%g/%g/%g") % center.real() % center.imag() % mag).str();
+    }
     par_set.name = (boost::format(m_frame_name) % m_frame).str();
     par_set.params.push_back({"batch", "yes"});
     par_set.params.push_back({"savename", par_set.name + ".gif"});
