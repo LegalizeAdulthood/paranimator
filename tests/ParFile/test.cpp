@@ -7,7 +7,7 @@
 TEST(TestParFile, construct)
 {
     std::stringstream contents;
-    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+    ParFile::ParFilePtr par_file{ParFile::createParFile(contents)};
 
     EXPECT_TRUE(par_file);
 }
@@ -15,7 +15,7 @@ TEST(TestParFile, construct)
 TEST(TestParFile, empty)
 {
     std::stringstream contents;
-    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+    ParFile::ParFilePtr par_file{ParFile::createParFile(contents)};
 
     EXPECT_TRUE(par_file->empty());
     EXPECT_EQ(par_file->cbegin(), par_file->cend());
@@ -25,7 +25,7 @@ TEST(TestParFile, empty)
 TEST(TestParFile, notEmpty)
 {
     std::stringstream contents{"Name {}"};
-    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+    ParFile::ParFilePtr par_file{ParFile::createParFile(contents)};
 
     EXPECT_FALSE(par_file->empty());
     EXPECT_NE(par_file->cbegin(), par_file->cend());
@@ -35,7 +35,7 @@ TEST(TestParFile, notEmpty)
 TEST(TestParFile, parSetName)
 {
     std::stringstream contents{"Name {}"};
-    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+    ParFile::ParFilePtr par_file{ParFile::createParFile(contents)};
 
     EXPECT_EQ("Name", par_file->cbegin()->name);
 }
@@ -43,7 +43,7 @@ TEST(TestParFile, parSetName)
 TEST(TestParFile, parSetFoo)
 {
     std::stringstream contents{"Foo {}"};
-    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+    ParFile::ParFilePtr par_file{ParFile::createParFile(contents)};
 
     EXPECT_EQ("Foo", par_file->cbegin()->name);
 }
@@ -51,7 +51,7 @@ TEST(TestParFile, parSetFoo)
 TEST(TestParFile, multipleParSetNames)
 {
     std::stringstream contents{"Foo {}\nBar {}\n"};
-    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+    ParFile::ParFilePtr par_file{ParFile::createParFile(contents)};
 
     auto it = par_file->begin();
     EXPECT_EQ("Foo", it->name);
@@ -63,7 +63,7 @@ TEST(TestParFile, parSetHasParams)
     std::stringstream contents{"Foo {\n"
                                "    type=mandel\n"
                                "}"};
-    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+    ParFile::ParFilePtr par_file{ParFile::createParFile(contents)};
 
     ASSERT_FALSE(par_file->empty());
     const ParFile::ParSet &set{*par_file->begin()};
@@ -76,7 +76,7 @@ TEST(TestParFile, parSetParamNameValue)
     std::stringstream contents{"Foo {\n"
                                "    type=mandel\n"
                                "}"};
-    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+    ParFile::ParFilePtr par_file{ParFile::createParFile(contents)};
 
     ASSERT_FALSE(par_file->empty());
     const ParFile::ParSet &set{*par_file->begin()};
@@ -91,7 +91,7 @@ TEST(TestParFile, parSetMultipleParams)
     std::stringstream contents{"Foo {\n"
                                "    type=mandel video=F6\n"
                                "}"};
-    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+    ParFile::ParFilePtr par_file{ParFile::createParFile(contents)};
 
     ASSERT_FALSE(par_file->empty());
     const ParFile::ParSet &set{*par_file->begin()};
@@ -109,7 +109,7 @@ TEST(TestParFile, parSetParamContinued)
                                "    type=mandel video=\\\n"
                                "    F6\n"
                                "}"};
-    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+    ParFile::ParFilePtr par_file{ParFile::createParFile(contents)};
 
     ASSERT_FALSE(par_file->empty());
     const ParFile::ParSet &set{*par_file->begin()};
@@ -126,7 +126,7 @@ TEST(TestParFile, parSetParamComment)
     std::stringstream contents{"Foo { ; First comment\n"
                                "    type=mandel video=F6 ; Second comment\n"
                                "}"};
-    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+    ParFile::ParFilePtr par_file{ParFile::createParFile(contents)};
 
     ASSERT_FALSE(par_file->empty());
     const ParFile::ParSet &set{*par_file->begin()};
@@ -159,7 +159,7 @@ trunc_demo        { ; PAR for initialization of Fractint demo (New in 19.4)
 TEST(TestParFile, parSetMandelDemo)
 {
     std::stringstream contents{s_demo_par.data()};
-    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+    ParFile::ParFilePtr par_file{ParFile::createParFile(contents)};
 
     ASSERT_EQ(2U, par_file->size());
     const ParFile::ParSet &set{*par_file->begin()};
@@ -178,7 +178,7 @@ TEST(TestParFile, parSetMandelDemo)
 TEST(TestParFile, parSetTruncDemo)
 {
     std::stringstream contents{s_demo_par.data()};
-    ParFile::ParFilePtr par_file{ParFile::create(contents)};
+    ParFile::ParFilePtr par_file{ParFile::createParFile(contents)};
 
     ASSERT_EQ(2U, par_file->size());
     auto set_iter{par_file->begin()};

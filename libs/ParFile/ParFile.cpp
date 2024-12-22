@@ -109,7 +109,7 @@ StreamParFile::StreamParFile(std::istream &contents)
 
 } // namespace
 
-ParFilePtr create(std::istream &contents)
+ParFilePtr createParFile(std::istream &contents)
 {
     return std::make_shared<StreamParFile>(contents);
 }
