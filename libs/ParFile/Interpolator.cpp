@@ -79,15 +79,12 @@ Interpolator::Interpolator(const Config &config) :
 ParSet Interpolator::operator()()
 {
     ++m_frame;
-    ParSet par_set{m_frame == m_num_frames ? m_to : m_from};
-    if (m_frame != 1 && m_frame != m_num_frames)
+    ParSet par_set{m_from};
+    for (const InterpolantPtr &lerper : m_interpolants)
     {
-        for (const InterpolantPtr &lerper : m_interpolants)
-        {
-            const auto it{std::find_if(par_set.params.begin(), par_set.params.end(),
-                [&](const Parameter &param) { return param.name == lerper->name(); })};
-            it->value = lerper->step();
-        }
+        const auto it{std::find_if(par_set.params.begin(), par_set.params.end(),
+            [&](const Parameter &param) { return param.name == lerper->name(); })};
+        it->value = lerper->step();
     }
     par_set.name = (boost::format(m_frame_name) % m_frame).str();
     par_set.params.push_back({"batch", "yes"});
