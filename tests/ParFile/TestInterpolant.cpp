@@ -9,9 +9,11 @@ TEST(TestInterpolant, centerMag)
     const std::string from{"-0.5/0.0/1.0"};
     const std::string to{"-0.5/0.0/10.0"};
     const int num_steps{3};
+    
     ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("center-mag", from, to, num_steps)};
 
     ASSERT_TRUE(interpolant);
+    ASSERT_EQ("center-mag", interpolant->name());
 }
 
 TEST(TestInterpolant, centerMagFrom)

@@ -18,6 +18,24 @@ namespace ParFile
 namespace
 {
 
+class Base : public Interpolant
+{
+public:
+    Base(std::string_view name) :
+        m_name(name)
+    {
+    }
+    ~Base() override = default;
+
+    const std::string &name() const override
+    {
+        return m_name;
+    }
+    
+private:
+    std::string m_name;
+};
+
 struct CenterMag
 {
     CenterMag() = default;
@@ -47,7 +65,7 @@ CenterMag::CenterMag(const std::string &value)
     mag = values[2];
 }
 
-class CenterMagInterpolant : public Interpolant
+class CenterMagInterpolant : public Base
 {
 public:
     CenterMagInterpolant(const std::string &from, const std::string &to, int num_steps);
@@ -67,6 +85,7 @@ private:
 };
 
 CenterMagInterpolant::CenterMagInterpolant(const std::string &from, const std::string &to, int num_steps) :
+    Base("center-mag"),
     m_from(from),
     m_to(to),
     m_num_steps(num_steps)

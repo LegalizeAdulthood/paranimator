@@ -6,14 +6,17 @@
 
 #include <boost/json/object.hpp>
 
-#include <complex>
+#include <memory>
 #include <string>
+#include <vector>
 
 namespace ParFile
 {
 
 struct NamedFileParSet;
 class Config;
+class Interpolant;
+using InterpolantPtr = std::shared_ptr<Interpolant>;
 
 class Interpolator
 {
@@ -37,21 +40,15 @@ public:
     ParSet operator()();
 
 private:
-    struct Interpolant
-    {
-        std::string name;
-        int index;
-        double from;
-        double to;
-    };
-    static std::vector<Interpolant> load_interpolants(const Config &config);
+    static std::vector<InterpolantPtr> load_interpolants(
+        const Config &config, const ParSet &from, const ParSet &to, int num_steps);
     int m_num_frames;
     std::string m_frame_name;
     std::string m_output;
     std::string m_script;
     ParSet m_from;
     ParSet m_to;
-    std::vector<Interpolant> m_interpolants;
+    std::vector<InterpolantPtr> m_interpolants;
     int m_frame{};
 };
 
