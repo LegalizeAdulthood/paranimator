@@ -23,7 +23,7 @@ static ParSet load_par_set(const NamedFileParSet &par_entry)
     std::string filename{par_entry.file};
     std::string name{par_entry.name};
     std::ifstream in{filename};
-    ParFilePtr file{createParFile(in)};
+    ParFilePtr file{create_par_file(in)};
     const auto it{
         std::find_if(file->cbegin(), file->cend(), [&](const ParSet &params) { return params.name == name; })};
     if (it == file->cend())

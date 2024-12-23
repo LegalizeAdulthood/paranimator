@@ -163,7 +163,7 @@ std::string to_string(const ParSet &value)
     return result.str();
 }
 
-ParFilePtr createParFile(std::istream &contents)
+ParFilePtr create_par_file(std::istream &contents)
 {
     return std::make_shared<StreamParFile>(contents);
 }

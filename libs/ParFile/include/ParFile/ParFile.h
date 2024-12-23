@@ -72,6 +72,6 @@ public:
 
 using ParFilePtr = std::shared_ptr<ParFile>;
 
-ParFilePtr createParFile(std::istream &contents);
+ParFilePtr create_par_file(std::istream &contents);
 
 } // namespace ParFile
