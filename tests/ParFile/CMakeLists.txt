@@ -11,6 +11,7 @@ configure_file("test.h.in" "include/TestParFile/test.h" @ONLY)
 
 add_executable(test-par-file
     TestConfig.cpp
+    TestInterpolant.cpp
     TestInterpolator.cpp
     TestParameter.cpp
     TestParFile.cpp

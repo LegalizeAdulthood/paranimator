@@ -7,13 +7,15 @@ find_package(Tweeny REQUIRED CONFIG)
 
 add_library(ParFile
     include/ParFile/Config.h
+    include/ParFile/Interpolant.h
     include/ParFile/Interpolator.h
     include/ParFile/Json.h
     include/ParFile/ParFile.h
     Config.cpp
+    Interpolant.cpp
+    Interpolator.cpp
     Json.cpp
     ParFile.cpp
-    Interpolator.cpp
 )
 target_include_directories(ParFile PUBLIC include)
 target_link_libraries(ParFile PUBLIC tweeny Boost::algorithm Boost::format Boost::json)
