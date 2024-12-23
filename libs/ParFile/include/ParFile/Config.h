@@ -5,6 +5,7 @@
 #include <boost/json.hpp>
 
 #include <string>
+#include <vector>
 
 namespace ParFile
 {
@@ -33,6 +34,10 @@ public:
     {
         return m_to;
     }
+    const std::vector<std::string> &interpolate() const
+    {
+        return m_interpolate;
+    }
     const std::string &output() const
     {
         return m_output;
@@ -53,6 +58,7 @@ public:
 private:
     NamedFileParSet m_from;
     NamedFileParSet m_to;
+    std::vector<std::string> m_interpolate;
     std::string m_output;
     std::string m_script;
     std::string m_frame;

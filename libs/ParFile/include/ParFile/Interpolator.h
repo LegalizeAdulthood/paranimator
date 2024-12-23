@@ -27,33 +27,31 @@ public:
 
     const ParSet &from() const
     {
-        return m_from.par_set;
+        return m_from;
     }
     const ParSet &to() const
     {
-        return m_to.par_set;
+        return m_to;
     }
 
     ParSet operator()();
 
 private:
-    struct CenterMag
-    {
-        std::complex<double> center;
-        double mag;
-    };
     struct Interpolant
     {
-        ParSet par_set;
-        CenterMag center_mag;
+        std::string name;
+        int index;
+        double from;
+        double to;
     };
-    static Interpolant load_interpolant(const Config &config, const NamedFileParSet &par_entry);
+    static std::vector<Interpolant> load_interpolants(const Config &config);
     int m_num_frames;
     std::string m_frame_name;
     std::string m_output;
     std::string m_script;
-    Interpolant m_from;
-    Interpolant m_to;
+    ParSet m_from;
+    ParSet m_to;
+    std::vector<Interpolant> m_interpolants;
     int m_frame{};
 };
 
