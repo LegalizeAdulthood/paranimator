@@ -10,6 +10,9 @@
 
 #include <gtest/gtest.h>
 
+namespace
+{
+
 struct TestInterpolator : testing::Test
 {
     ~TestInterpolator() override = default;
@@ -22,19 +25,28 @@ protected:
         m_lerper = ParFile::Interpolator{m_config};
     }
 
+    void add_expected_params(ParFile::ParSet &frame, const std::string &save_name);
+
     boost::json::object m_json;
     ParFile::Config m_config{};
     ParFile::Interpolator m_lerper{};
 };
 
+void TestInterpolator::add_expected_params(ParFile::ParSet &expected, const std::string &save_name)
+{
+    expected.params.push_back({"batch", "yes"});
+    expected.params.push_back({"savename", save_name});
+    expected.params.push_back({"overwrite", "yes"});
+    expected.params.push_back({"video", TestParFile::TEST_VIDEO_MODE});
+}
+
+} // namespace
+
 TEST_F(TestInterpolator, firstFrameIsFrom)
 {
     ParFile::ParSet expected{m_lerper.from()};
     expected.name = "frame-0001";
-    expected.params.push_back({"batch", "yes"});
-    expected.params.push_back({"savename", "frame-0001.gif"});
-    expected.params.push_back({"video", TestParFile::TEST_VIDEO_MODE});
-
+    add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
 
     ASSERT_EQ( expected, frame );
@@ -47,9 +59,7 @@ TEST_F(TestInterpolator, lastFrameIsTo)
     m_lerper = ParFile::Interpolator{m_config};
     ParFile::ParSet expected{m_lerper.to()};
     expected.name = "frame-0002";
-    expected.params.push_back({"batch", "yes"});
-    expected.params.push_back({"savename", "frame-0002.gif"});
-    expected.params.push_back({"video", TestParFile::TEST_VIDEO_MODE});
+    add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
 
     frame = m_lerper();
@@ -65,9 +75,7 @@ TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
     ParFile::ParSet expected{m_lerper.to()};
     expected.name = "frame-0002";
     expected.params[2].value  = "-0.5/0/5.5";
-    expected.params.push_back({"batch", "yes"});
-    expected.params.push_back({"savename", "frame-0002.gif"});
-    expected.params.push_back({"video", TestParFile::TEST_VIDEO_MODE});
+    add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
 
     frame = m_lerper();

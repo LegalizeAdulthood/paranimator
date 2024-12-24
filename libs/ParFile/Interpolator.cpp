@@ -90,6 +90,7 @@ ParSet Interpolator::operator()()
     par_set.name = (boost::format(m_frame_name) % m_frame).str();
     par_set.params.push_back({"batch", "yes"});
     par_set.params.push_back({"savename", par_set.name + ".gif"});
+    par_set.params.push_back({"overwrite", "yes"});
     par_set.params.push_back({"video", m_video});
     return par_set;
 }
