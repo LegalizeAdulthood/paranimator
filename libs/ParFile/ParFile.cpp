@@ -147,7 +147,18 @@ std::ostream &operator<<(std::ostream &str, const ParSet &value)
     str << value.name << " {\n";
     for (const Parameter &param : value.params)
     {
-        str << "    " << param << '\n';
+        std::string line{"    " + to_string(param)};
+        constexpr size_t LINE_LENGTH{70};
+        while (line.length() >= LINE_LENGTH)
+        {
+            str << line.substr(0, LINE_LENGTH - 1) << "\\\n";
+            line.erase(0, LINE_LENGTH - 1);
+            line.insert(0, 8, ' ');
+        }
+        if (!line.empty())
+        {
+            str << line << '\n';
+        }
     }
     return str << "}\n";
 }

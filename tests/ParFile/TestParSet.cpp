@@ -124,3 +124,30 @@ TEST(TestParSet, paramsToString)
 )par",
         str);
 }
+
+TEST(TestParSet, foldLinesToString)
+{
+    ParFile::ParSet long_value{"foo",
+        {{"colors",
+             "DUH"
+             "<2>EXJFZKFYK"
+             "<29>121000110"
+             "<30>rZ0"
+             "<30>220000011"
+             "<13>0OL0QM2RM"
+             "<14>ZhZ"
+             "<30>222000110"
+             "<30>zkK"
+             "<30>221000010"
+             "<25>CTG"},
+            {"bar", "2"}}};
+
+    const std::string str{to_string(long_value)};
+
+    EXPECT_EQ(R"par(foo {
+    colors=DUH<2>EXJFZKFYK<29>121000110<30>rZ0<30>220000011<13>0OL0QM\
+        2RM<14>ZhZ<30>222000110<30>zkK<30>221000010<25>CTG
+    bar=2
+}
+)par", str);
+}
