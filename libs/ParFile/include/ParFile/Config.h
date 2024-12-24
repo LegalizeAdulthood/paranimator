@@ -50,6 +50,10 @@ public:
     {
         return m_frame;
     }
+    const std::string &video() const
+    {
+        return m_video;
+    }
     int num_frames() const
     {
         return m_num_frames;
@@ -62,6 +66,7 @@ private:
     std::string m_output;
     std::string m_script;
     std::string m_frame;
+    std::string m_video;
     int m_num_frames;
 };
 

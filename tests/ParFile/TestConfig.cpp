@@ -16,6 +16,7 @@ TEST(TestConfig, valid)
         {"output", "output.par"},                               //
         {"script", "output.bat"},                               //
         {"frame", "frame-%04d"},                                //
+        {"video", "F6"},                                        //
         {"num_frames", 60}                                      //
     };
 
@@ -30,6 +31,7 @@ TEST(TestConfig, valid)
     EXPECT_EQ("output.par", config.output());
     EXPECT_EQ("output.bat", config.script());
     EXPECT_EQ("frame-%04d", config.frame());
+    EXPECT_EQ("F6", config.video());
     EXPECT_EQ(60, config.num_frames());
 }
 
@@ -41,6 +43,7 @@ TEST(TestConfig, missingFrom)
         {"output", "output.par"},                             //
         {"script", "output.bat"},                             //
         {"frame", "frame-%04d"},                              //
+        {"video", "F6"},                                      //
         {"num_frames", 60}                                    //
     };
 
@@ -56,6 +59,7 @@ TEST(TestConfig, fromMissingFile)
         {"output", "output.par"},                             //
         {"script", "output.bat"},                             //
         {"frame", "frame-%04d"},                              //
+        {"video", "F6"},                                      //
         {"num_frames", 60}                                    //
     };
 
@@ -71,6 +75,7 @@ TEST(TestConfig, fromMissingName)
         {"output", "output.par"},                             //
         {"script", "output.bat"},                             //
         {"frame", "frame-%04d"},                              //
+        {"video", "F6"},                                      //
         {"num_frames", 60}                                    //
     };
 
@@ -85,6 +90,7 @@ TEST(TestConfig, missingTo)
         {"output", "output.par"},                               //
         {"script", "output.bat"},                               //
         {"frame", "frame-%04d"},                                //
+        {"video", "F6"},                                        //
         {"num_frames", 60}                                      //
     };
 
@@ -99,6 +105,7 @@ TEST(TestConfig, missingInterpolate)
         {"output", "output.par"},                               //
         {"script", "output.bat"},                               //
         {"frame", "frame-%04d"},                                //
+        {"video", "F6"},                                        //
         {"num_frames", 60}                                      //
     };
 
@@ -113,6 +120,7 @@ TEST(TestConfig, missingOutput)
         {"interpolate", Array{"center-mag/3"}},                 //
         {"script", "output.bat"},                               //
         {"frame", "frame-%04d"},                                //
+        {"video", "F6"},                                        //
         {"num_frames", 60}                                      //
     };
 
@@ -127,6 +135,7 @@ TEST(TestConfig, missingScript)
         {"interpolate", Array{"center-mag/3"}},                 //
         {"output", "output.par"},                               //
         {"frame", "frame-%04d"},                                //
+        {"video", "F6"},                                        //
         {"num_frames", 60}                                      //
     };
 
@@ -141,6 +150,22 @@ TEST(TestConfig, missingFrame)
         {"interpolate", Array{"center-mag/3"}},                 //
         {"output", "output.par"},                               //
         {"script", "output.bat"},                               //
+        {"video", "F6"},                                        //
+        {"num_frames", 60}                                      //
+    };
+
+    EXPECT_THROW(ParFile::Config{json}, std::runtime_error);
+}
+
+TEST(TestConfig, missingVideo)
+{
+    const Object json{
+        {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
+        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
+        {"interpolate", Array{"center-mag/3"}},                 //
+        {"output", "output.par"},                               //
+        {"script", "output.bat"},                               //
+        {"frame", "frame-%04d"},                                //
         {"num_frames", 60}                                      //
     };
 
@@ -155,7 +180,8 @@ TEST(TestConfig, missingNumFrames)
         {"interpolate", Array{"center-mag/3"}},                 //
         {"output", "output.par"},                               //
         {"script", "output.bat"},                               //
-        {"frame", "frame-%04d"}                                 //
+        {"frame", "frame-%04d"},                                //
+        {"video", "F6"},                                        //
     };
 
     EXPECT_THROW(ParFile::Config{json}, std::runtime_error);

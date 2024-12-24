@@ -46,6 +46,7 @@ private:
     std::string m_frame_name;
     std::string m_output;
     std::string m_script;
+    std::string m_video;
     ParSet m_from;
     ParSet m_to;
     std::vector<InterpolantPtr> m_interpolants;

@@ -4,6 +4,7 @@ include(GoogleTest)
 
 find_package(GTest CONFIG REQUIRED)
 
+set(TEST_VIDEO_MODE "F6")
 configure_file("from.par.in" "from.par" @ONLY)
 configure_file("to.par.in" "to.par" @ONLY)
 configure_file("config.json.in" "config.json" @ONLY)

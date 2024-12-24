@@ -94,6 +94,7 @@ Config::Config(const boost::json::object &json) :
     m_output(load_string(json, "output")),
     m_script(load_string(json, "script")),
     m_frame(load_string(json, "frame")),
+    m_video(load_string(json, "video")),
     m_num_frames(load_int(json, "num_frames"))
 {
 }

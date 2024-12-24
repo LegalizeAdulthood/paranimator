@@ -33,6 +33,7 @@ TEST_F(TestInterpolator, firstFrameIsFrom)
     expected.name = "frame-0001";
     expected.params.push_back({"batch", "yes"});
     expected.params.push_back({"savename", "frame-0001.gif"});
+    expected.params.push_back({"video", TestParFile::TEST_VIDEO_MODE});
 
     ParFile::ParSet frame{m_lerper()};
 
@@ -48,6 +49,7 @@ TEST_F(TestInterpolator, lastFrameIsTo)
     expected.name = "frame-0002";
     expected.params.push_back({"batch", "yes"});
     expected.params.push_back({"savename", "frame-0002.gif"});
+    expected.params.push_back({"video", TestParFile::TEST_VIDEO_MODE});
     ParFile::ParSet frame{m_lerper()};
 
     frame = m_lerper();
@@ -65,6 +67,7 @@ TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
     expected.params[2].value  = "-0.5/0/5.5";
     expected.params.push_back({"batch", "yes"});
     expected.params.push_back({"savename", "frame-0002.gif"});
+    expected.params.push_back({"video", TestParFile::TEST_VIDEO_MODE});
     ParFile::ParSet frame{m_lerper()};
 
     frame = m_lerper();

@@ -11,5 +11,6 @@
   "output": "frames.par",
   "script": "frames.bat",
   "frame": "frame-%04d",
+  "video": "@TEST_VIDEO_MODE@",
   "num_frames": 60
 }
