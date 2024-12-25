@@ -4,6 +4,7 @@ include(GoogleTest)
 
 find_package(GTest CONFIG REQUIRED)
 
+set(TEST_OUTPUT "frames.par")
 set(TEST_VIDEO_MODE "F6")
 configure_file("from.par.in" "from.par" @ONLY)
 configure_file("to.par.in" "to.par" @ONLY)
@@ -17,6 +18,7 @@ add_executable(test-par-file
     TestParameter.cpp
     TestParFile.cpp
     TestParSet.cpp
+    TestScript.cpp
 
     from.par.in
     to.par.in

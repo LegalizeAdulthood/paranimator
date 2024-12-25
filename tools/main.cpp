@@ -4,6 +4,7 @@
 #include <ParFile/Interpolator.h>
 #include <ParFile/Json.h>
 #include <ParFile/ParFile.h>
+#include <ParFile/Script.h>
 
 #include <boost/json.hpp>
 
@@ -37,13 +38,14 @@ int usage(std::string_view program)
 void interpolate(const ParFile::Config &config)
 {
     ParFile::Interpolator lerper{config};
+    ParFile::Script script{config};
     std::ofstream out{config.output().c_str()};
     std::ofstream bat{config.script().c_str()};
     for (int i = 0; i < config.num_frames(); ++i)
     {
         const ParFile::ParSet frame{lerper()};
         out << frame << '\n';
-        bat << "start/wait id @" << config.output() << '/' << frame.name << '\n';
+        bat << script.commands(frame.name);
     }
 }
 

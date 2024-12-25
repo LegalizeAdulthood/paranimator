@@ -7,12 +7,12 @@
 using Array = boost::json::array;
 using Object = boost::json::object;
 
-TEST(TestConfig, valid)
+TEST(TestConfig, minimumValid)
 {
     const Object json{
         {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
         {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"interpolate", Array{"center-mag/3"}},                 //
+        {"interpolate", Array{"center-mag"}},                   //
         {"output", "output.par"},                               //
         {"script", "output.bat"},                               //
         {"frame", "frame-%04d"},                                //
@@ -27,9 +27,39 @@ TEST(TestConfig, valid)
     EXPECT_EQ("bar.par", config.to().file);
     EXPECT_EQ("bar", config.to().name);
     ASSERT_EQ(1U, config.interpolate().size());
-    EXPECT_EQ("center-mag/3", config.interpolate()[0]);
+    EXPECT_EQ("center-mag", config.interpolate()[0]);
     EXPECT_EQ("output.par", config.output());
     EXPECT_EQ("output.bat", config.script());
+    EXPECT_EQ("frame-%04d", config.frame());
+    EXPECT_EQ("F6", config.video());
+    EXPECT_EQ(60, config.num_frames());
+}
+
+TEST(TestConfig, optionalParallelValid)
+{
+    const Object json{
+        {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
+        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
+        {"interpolate", Array{"center-mag"}},                   //
+        {"output", "output.par"},                               //
+        {"script", "output.bat"},                               //
+        {"parallel", 20},                                       //
+        {"frame", "frame-%04d"},                                //
+        {"video", "F6"},                                        //
+        {"num_frames", 60}                                      //
+    };
+
+    ParFile::Config config{json};
+
+    EXPECT_EQ("foo.par", config.from().file);
+    EXPECT_EQ("foo", config.from().name);
+    EXPECT_EQ("bar.par", config.to().file);
+    EXPECT_EQ("bar", config.to().name);
+    ASSERT_EQ(1U, config.interpolate().size());
+    EXPECT_EQ("center-mag", config.interpolate()[0]);
+    EXPECT_EQ("output.par", config.output());
+    EXPECT_EQ("output.bat", config.script());
+    EXPECT_EQ(20, config.parallel());
     EXPECT_EQ("frame-%04d", config.frame());
     EXPECT_EQ("F6", config.video());
     EXPECT_EQ(60, config.num_frames());
@@ -39,7 +69,7 @@ TEST(TestConfig, missingFrom)
 {
     const Object json{
         {"to", Object{{"file", "bar.par"}, {"name", "bar"}}}, //
-        {"interpolate", Array{"center-mag/3"}},               //
+        {"interpolate", Array{"center-mag"}},                 //
         {"output", "output.par"},                             //
         {"script", "output.bat"},                             //
         {"frame", "frame-%04d"},                              //
@@ -55,7 +85,7 @@ TEST(TestConfig, fromMissingFile)
     const Object json{
         {"from", Object{{"name", "foo"}}},                    //
         {"to", Object{{"file", "bar.par"}, {"name", "bar"}}}, //
-        {"interpolate", Array{"center-mag/3"}},               //
+        {"interpolate", Array{"center-mag"}},                 //
         {"output", "output.par"},                             //
         {"script", "output.bat"},                             //
         {"frame", "frame-%04d"},                              //
@@ -71,7 +101,7 @@ TEST(TestConfig, fromMissingName)
     const Object json{
         {"from", Object{{"file", "foo.par"}}},                //
         {"to", Object{{"file", "bar.par"}, {"name", "bar"}}}, //
-        {"interpolate", Array{"center-mag/3"}},               //
+        {"interpolate", Array{"center-mag"}},                 //
         {"output", "output.par"},                             //
         {"script", "output.bat"},                             //
         {"frame", "frame-%04d"},                              //
@@ -86,7 +116,7 @@ TEST(TestConfig, missingTo)
 {
     const Object json{
         {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
-        {"interpolate", Array{"center-mag/3"}},                 //
+        {"interpolate", Array{"center-mag"}},                   //
         {"output", "output.par"},                               //
         {"script", "output.bat"},                               //
         {"frame", "frame-%04d"},                                //
@@ -117,7 +147,7 @@ TEST(TestConfig, missingOutput)
     const Object json{
         {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
         {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"interpolate", Array{"center-mag/3"}},                 //
+        {"interpolate", Array{"center-mag"}},                   //
         {"script", "output.bat"},                               //
         {"frame", "frame-%04d"},                                //
         {"video", "F6"},                                        //
@@ -132,7 +162,7 @@ TEST(TestConfig, missingScript)
     const Object json{
         {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
         {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"interpolate", Array{"center-mag/3"}},                 //
+        {"interpolate", Array{"center-mag"}},                   //
         {"output", "output.par"},                               //
         {"frame", "frame-%04d"},                                //
         {"video", "F6"},                                        //
@@ -147,7 +177,7 @@ TEST(TestConfig, missingFrame)
     const Object json{
         {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
         {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"interpolate", Array{"center-mag/3"}},                 //
+        {"interpolate", Array{"center-mag"}},                   //
         {"output", "output.par"},                               //
         {"script", "output.bat"},                               //
         {"video", "F6"},                                        //
@@ -162,7 +192,7 @@ TEST(TestConfig, missingVideo)
     const Object json{
         {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
         {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"interpolate", Array{"center-mag/3"}},                 //
+        {"interpolate", Array{"center-mag"}},                   //
         {"output", "output.par"},                               //
         {"script", "output.bat"},                               //
         {"frame", "frame-%04d"},                                //
@@ -177,7 +207,7 @@ TEST(TestConfig, missingNumFrames)
     const Object json{
         {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
         {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"interpolate", Array{"center-mag/3"}},                 //
+        {"interpolate", Array{"center-mag"}},                   //
         {"output", "output.par"},                               //
         {"script", "output.bat"},                               //
         {"frame", "frame-%04d"},                                //

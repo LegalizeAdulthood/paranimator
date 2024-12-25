@@ -8,7 +8,7 @@
     "name": "Mandel_Demo"
   },
   "interpolate": [ "center-mag" ],
-  "output": "frames.par",
+  "output": "@TEST_OUTPUT@",
   "script": "frames.bat",
   "frame": "frame-%04d",
   "video": "@TEST_VIDEO_MODE@",
