@@ -30,6 +30,7 @@ TEST(TestConfig, minimumValid)
     EXPECT_EQ("center-mag", config.interpolate()[0]);
     EXPECT_EQ("output.par", config.output());
     EXPECT_EQ("output.bat", config.script());
+    EXPECT_EQ(1, config.parallel());
     EXPECT_EQ("frame-%04d", config.frame());
     EXPECT_EQ("F6", config.video());
     EXPECT_EQ(60, config.num_frames());

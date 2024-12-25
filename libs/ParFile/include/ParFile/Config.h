@@ -69,7 +69,7 @@ private:
     std::vector<std::string> m_interpolate;
     std::string m_output;
     std::string m_script;
-    int m_parallel{};
+    int m_parallel{1};
     std::string m_frame;
     std::string m_video;
     int m_num_frames;
