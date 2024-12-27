@@ -7,7 +7,8 @@ namespace TestParFile
 
 constexpr const char *const FROM_PAR{"@CMAKE_CURRENT_BINARY_DIR@/from.par"};
 constexpr const char *const TO_PAR{"@CMAKE_CURRENT_BINARY_DIR@/to.par"};
-constexpr const char *const CONFIG_JSON{"@CMAKE_CURRENT_BINARY_DIR@/config.json"};
+constexpr const char *const CENTER_MAG_CONFIG_JSON{"@CMAKE_CURRENT_BINARY_DIR@/center-mag.json"};
+constexpr const char *const CORNERS_CONFIG_JSON{"@CMAKE_CURRENT_BINARY_DIR@/corners.json"};
 constexpr const char *const TEST_VIDEO_MODE{"@TEST_VIDEO_MODE@"};
 constexpr const char *const TEST_OUTPUT{"@TEST_OUTPUT@"};
 

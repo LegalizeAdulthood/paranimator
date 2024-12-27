@@ -8,6 +8,7 @@
 
 #include <boost/json.hpp>
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -40,12 +41,32 @@ void interpolate(const ParFile::Config &config)
     ParFile::Interpolator lerper{config};
     ParFile::Script script{config};
     std::ofstream out{config.output().c_str()};
-    std::ofstream bat{config.script().c_str()};
+    std::vector<std::ofstream> scripts;
+    if(config.parallel() == 1)
+    {
+        scripts.emplace_back(config.script().c_str());
+    }
+    else
+    {
+        std::filesystem::path name{config.script()};
+        std::filesystem::path filename{name};
+        for (int i = 1; i <= config.parallel(); ++i)
+        {
+            filename.replace_filename(name.stem().string() + '-' + std::to_string(i) + name.extension().string());
+            scripts.emplace_back(filename.string().c_str());
+        }
+    }
+    auto current_script{scripts.begin()};
     for (int i = 0; i < config.num_frames(); ++i)
     {
         const ParFile::ParSet frame{lerper()};
         out << frame << '\n';
-        bat << script.commands(frame.name);
+        *current_script << script.commands(frame.name);
+        ++current_script;
+        if (current_script == scripts.end())
+        {
+            current_script = scripts.begin();
+        }
     }
 }
 

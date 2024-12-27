@@ -11,7 +11,7 @@
 
 TEST(TestScript, construct)
 {
-    boost::json::object m_json{ParFile::read_json(TestParFile::CONFIG_JSON).as_object()};
+    boost::json::object m_json{ParFile::read_json(TestParFile::CENTER_MAG_CONFIG_JSON).as_object()};
     ParFile::Config config{ParFile::Config{m_json}};
 
     ParFile::Script script{config};
@@ -19,7 +19,7 @@ TEST(TestScript, construct)
 
 TEST(TestScript, commandForFrame)
 {
-    boost::json::object m_json{ParFile::read_json(TestParFile::CONFIG_JSON).as_object()};
+    boost::json::object m_json{ParFile::read_json(TestParFile::CENTER_MAG_CONFIG_JSON).as_object()};
     ParFile::Config config{ParFile::Config{m_json}};
     ParFile::Script script{config};
 

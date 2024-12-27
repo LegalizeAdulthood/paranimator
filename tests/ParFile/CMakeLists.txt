@@ -8,7 +8,14 @@ set(TEST_OUTPUT "frames.par")
 set(TEST_VIDEO_MODE "F6")
 configure_file("from.par.in" "from.par" @ONLY)
 configure_file("to.par.in" "to.par" @ONLY)
-configure_file("config.json.in" "config.json" @ONLY)
+set(TEST_INTERPOLATE "center-mag")
+set(TEST_FROM_PAR "Mandel_Demo")
+set(TEST_TO_PAR "Mandel_Demo")
+configure_file("config.json.in" "center-mag.json" @ONLY)
+set(TEST_INTERPOLATE "corners")
+set(TEST_FROM_PAR "corners")
+set(TEST_TO_PAR "corners")
+configure_file("config.json.in" "corners.json" @ONLY)
 configure_file("test.h.in" "include/TestParFile/test.h" @ONLY)
 
 add_executable(test-par-file
@@ -26,7 +33,8 @@ add_executable(test-par-file
     test.h.in
     "${CMAKE_CURRENT_BINARY_DIR}/from.par"
     "${CMAKE_CURRENT_BINARY_DIR}/to.par"
-    "${CMAKE_CURRENT_BINARY_DIR}/config.json"
+    "${CMAKE_CURRENT_BINARY_DIR}/center-mag.json"
+    "${CMAKE_CURRENT_BINARY_DIR}/corners.json"
     "${CMAKE_CURRENT_BINARY_DIR}/include/TestParFile/test.h"
 )
 source_group("Template Files" REGULAR_EXPRESSION "^.*\\.in$")

@@ -20,7 +20,7 @@ struct TestInterpolator : testing::Test
 protected:
     void SetUp() override
     {
-        m_json = ParFile::read_json(TestParFile::CONFIG_JSON).as_object();
+        m_json = ParFile::read_json(TestParFile::CENTER_MAG_CONFIG_JSON).as_object();
         m_config = ParFile::Config{m_json};
         m_lerper = ParFile::Interpolator{m_config};
     }
