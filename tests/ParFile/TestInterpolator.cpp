@@ -49,7 +49,7 @@ TEST_F(TestInterpolator, firstFrameIsFrom)
     add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
 
-    ASSERT_EQ( expected, frame );
+    ASSERT_EQ(expected, frame);
 }
 
 TEST_F(TestInterpolator, lastFrameIsTo)
@@ -64,7 +64,7 @@ TEST_F(TestInterpolator, lastFrameIsTo)
 
     frame = m_lerper();
 
-    ASSERT_EQ( expected, frame );
+    ASSERT_EQ(expected, frame);
 }
 
 TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
@@ -74,11 +74,11 @@ TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
     m_lerper = ParFile::Interpolator{m_config};
     ParFile::ParSet expected{m_lerper.to()};
     expected.name = "frame-0002";
-    expected.params[2].value  = "-0.5/0/5.5";
+    expected.params[2].value = "-0.5/0/3.16228";
     add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
 
     frame = m_lerper();
 
-    ASSERT_EQ( expected, frame );
+    ASSERT_EQ(expected, frame);
 }

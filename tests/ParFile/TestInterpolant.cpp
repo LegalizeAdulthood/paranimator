@@ -9,7 +9,7 @@ TEST(TestInterpolant, centerMag)
     const std::string from{"-0.5/0.0/1.0"};
     const std::string to{"-0.5/0.0/10.0"};
     const int num_steps{3};
-    
+
     ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("center-mag", from, to, num_steps)};
 
     ASSERT_TRUE(interpolant);
@@ -38,7 +38,7 @@ TEST(TestInterpolant, centerMagFraction)
 
     const std::string value{interpolant->step()};
 
-    EXPECT_EQ("-0.5/0/5.5", value);
+    EXPECT_EQ("-0.5/0/3.16228", value);
 }
 
 TEST(TestInterpolant, centerMagTo)
@@ -60,7 +60,7 @@ TEST(TestInterpolant, corners)
     const std::string from{"-3.570101/-0.0499383/-1.320061/1.320061"};
     const std::string to{"-1.8101050271/-1.8099342992/-6.37250230799e-05/6.4320896203e-05"};
     const int num_steps{3};
-    
+
     ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("corners", from, to, num_steps)};
 
     ASSERT_TRUE(interpolant);

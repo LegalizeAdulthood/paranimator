@@ -8,6 +8,7 @@
 #include <tweeny/tweeny.h>
 
 #include <algorithm>
+#include <cmath>
 #include <complex>
 #include <stdexcept>
 #include <vector>
@@ -36,7 +37,7 @@ public:
     {
         return m_name;
     }
-    
+
 protected:
     std::string m_name;
     int m_step{};
@@ -101,7 +102,17 @@ std::string CenterMagInterpolant::step()
     ++m_step;
     const double fraction{(m_step - 1) / static_cast<double>(m_num_steps - 1)};
     const std::complex<double> center{m_from.center + fraction * (m_to.center - m_from.center)};
-    const double mag{m_from.mag + fraction * (m_to.mag - m_from.mag)};
+    double mag;
+    if (m_from.mag > 0.0 && m_to.mag > 0.0)
+    {
+        // Geometric interpolation so each frame zooms by a consistent factor
+        mag = m_from.mag * std::pow(m_to.mag / m_from.mag, fraction);
+    }
+    else
+    {
+        // Fallback to linear interpolation for non-positive magnifications
+        mag = m_from.mag + fraction * (m_to.mag - m_from.mag);
+    }
     return (boost::format("%g/%g/%g") % center.real() % center.imag() % mag).str();
 }
 
