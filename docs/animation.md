@@ -293,6 +293,8 @@ Minimum useful type set:
     point3
     vector3
     camera2d
+    id_3d_view
+    julibrot_view
     center_mag
     corners
     rgb_color
@@ -396,6 +398,156 @@ error rather than silently dropping orientation.
 The camera2d track lets the animator plan look_at, view_up, and height as
 independent curves while still writing only normal Iterated Dynamics
 parameters.
+
+## ID 3D Viewing Adapters
+
+Iterated Dynamics does not expose one general 3D camera model. It exposes
+several parameter families. Use virtual adapters that evaluate planned
+curves, then write real catalog-declared parameters.
+
+The adapter type is hard-coded. The output parameter names are not.
+
+## ID Euler 3D View Adapter
+
+The id_3d_view adapter targets ID's Euler-style 3D view controls. This is
+the right adapter for the general 3D transform and for 3D orbital types
+such as lorenz3d and ifs3d.
+
+It writes catalog-declared outputs such as:
+
+    rotation
+    perspective
+    xyshift
+    xyadjust
+    scalexyz
+    roughness
+    sphere
+    longitude
+    latitude
+    radius
+    stereo
+    interocular
+    converge
+
+Example:
+
+    {
+      "parameter": "view",
+      "type": "id_3d_view",
+      "outputs": {
+        "rotation": "rotation",
+        "perspective": "perspective",
+        "xyshift": "xyshift",
+        "scalexyz": "scalexyz"
+      },
+      "rotation": {
+        "type": "numeric_tuple",
+        "arity": 3,
+        "rounding": "nearest",
+        "keys": [
+          { "frame": 0,   "value": "60/30/0" },
+          { "frame": 300, "value": "70/45/5" }
+        ]
+      },
+      "perspective": {
+        "type": "integer",
+        "keys": [
+          { "frame": 0,   "value": 0 },
+          { "frame": 300, "value": 150 }
+        ]
+      },
+      "xyshift": {
+        "type": "numeric_tuple",
+        "arity": 2,
+        "rounding": "nearest",
+        "keys": [
+          { "frame": 0,   "value": "0/0" },
+          { "frame": 300, "value": "20/-5" }
+        ]
+      }
+    }
+
+The adapter may offer eye, look_at, and view_up as planning inputs only
+when they can be converted to ID's x/y/z rotation, perspective, and shift
+controls. If the requested camera motion needs an unsupported target,
+roll, projection, or center of interest, reject it with a clear error.
+
+The general 3D transform supports the broader output set. Orbital 3D
+types such as lorenz3d and ifs3d support a smaller set: rotation,
+perspective, xyshift, and stereo controls. Validate against the selected
+target.
+
+## Julibrot View Adapter
+
+The julibrot_view adapter targets Julibrot's slice and stereo renderer. It
+does not use ID's general rotation parameters.
+
+It writes catalog-declared outputs such as:
+
+    3dmode
+    julibrot3d
+    julibroteyes
+    julibrotfromto
+
+Example:
+
+    {
+      "parameter": "julibrot_view",
+      "type": "julibrot_view",
+      "outputs": {
+        "mode": "3dmode",
+        "geometry": "julibrot3d",
+        "eyes": "julibroteyes",
+        "from_to": "julibrotfromto"
+      },
+      "mode": {
+        "type": "enum",
+        "keys": [
+          { "frame": 0, "value": "monocular" }
+        ]
+      },
+      "geometry": {
+        "type": "numeric_tuple",
+        "arity": 6,
+        "keys": [
+          { "frame": 0,   "value": "128/8/8/7/10/24" },
+          { "frame": 300, "value": "160/7/6/6/9/20" }
+        ]
+      },
+      "eyes": {
+        "type": "double",
+        "keys": [
+          { "frame": 0,   "value": 2.5 },
+          { "frame": 300, "value": 1.0 }
+        ]
+      },
+      "from_to": {
+        "type": "numeric_tuple",
+        "arity": 4,
+        "keys": [
+          { "frame": 0,   "value": "-0.83/-0.83/0.25/-0.25" },
+          { "frame": 300, "value": "-0.7/-0.9/0.2/-0.2" }
+        ]
+      }
+    }
+
+The six geometry components are:
+
+    z dots
+    origin
+    depth
+    height
+    width
+    viewer distance
+
+Julibrot has no arbitrary view_up, roll, or look_at camera. If a planned
+camera path asks for those, the adapter must reject it unless the request
+can be expressed by Julibrot's origin, depth, screen size, viewer
+distance, eye separation, and from/to slice parameters.
+
+The orbitname parameter belongs to the Julibrot fractal setup, but it is
+not a view control. Animate it as a normal string or enum track when
+needed.
 
 ## Curves
 
@@ -532,7 +684,8 @@ A track has:
 
 Most tracks write one par-file parameter. Virtual tracks such as
 camera2d may write another catalog parameter named by a local output
-option.
+option. Virtual adapters such as id_3d_view and julibrot_view may write
+multiple catalog parameters.
 
 Conceptual C++ interface:
 
@@ -926,7 +1079,8 @@ Implement in this order:
     9. color tracks
     10. path generators
     11. camera2d virtual tracks
-    12. formula-specific catalog files
+    12. id_3d_view and julibrot_view virtual tracks
+    13. formula-specific catalog files
 
 This order gets useful behavior early while keeping the design open.
 
@@ -946,7 +1100,7 @@ Do not hard-code:
     formula-specific parameter lists
     legal enum values
     which parameters are animatable
-    camera2d output parameter names
+    virtual adapter output parameter names
     default curves for individual parameters
     enum values used by PWM tracks
 
@@ -959,6 +1113,7 @@ The final design is:
     each timeline has its own keys, curves, type, and extrapolation
     parameter names and metadata come from JSON catalogs
     the animator knows types, not Iterated Dynamics parameter names
+    virtual adapters map planned views onto real ID parameters
     enum parameters are discrete by default
     enum PWM is an optional temporal dithering mode
     PWM tracks explicitly choose their a and b enum values
