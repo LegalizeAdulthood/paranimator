@@ -37,13 +37,9 @@ add_executable(test-par-file
     TestParSet.cpp
     TestScript.cpp
 
-    e2e-center-mag.json
     from.par.in
-    gold-center-mag.par
-    invalid-extra-property.json
     invalid-missing-metadata-type.json
     invalid-output-directory-type.json
-    paranimator_test.cmake
     to.par.in
     config.json.in
     viewport-catalog.json
@@ -65,13 +61,3 @@ target_link_libraries(test-par-file PUBLIC ParFile GTest::gtest_main nlohmann_js
 target_folder(test-par-file "Tests")
 
 gtest_discover_tests(test-par-file)
-
-add_test(NAME paranimator-center-mag-e2e
-    COMMAND ${CMAKE_COMMAND}
-        "-DPARANIMATOR=$<SHELL_PATH:$<TARGET_FILE:paranimator>>"
-        "-DVALID_CONFIG=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/e2e-center-mag.json>"
-        "-DINVALID_CONFIG=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/invalid-extra-property.json>"
-        "-DGOLD_PAR=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/gold-center-mag.par>"
-        -P "${CMAKE_CURRENT_SOURCE_DIR}/paranimator_test.cmake"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-)

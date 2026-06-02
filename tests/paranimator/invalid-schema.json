@@ -1,13 +1,13 @@
 {
   "parameter_catalogs": [
-    "viewport-catalog.json"
+    "input/viewport-catalog.json"
   ],
   "source": {
-    "file": "from.par",
+    "file": "input/source.par",
     "name": "Mandel_Demo"
   },
   "output": {
-    "directory": "e2e-output",
+    "directory": "output",
     "par": "frames.par",
     "entry": "frame-%04d",
     "script": "frames.bat"

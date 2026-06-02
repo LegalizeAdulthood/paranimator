@@ -1519,6 +1519,10 @@ time while preserving that working path.
 
 When a slice is implemented, remove it from this section.
 
+Each new slice should add or extend `paranimator_test` integration tests
+that validate the new functionality through the paranimator tool. This may
+include additional invalid-schema tests when schema behavior changes.
+
 ### 1. Add Center-Mag Tracks
 
 Add center_mag tracks to the new track engine. Use it to animate the real

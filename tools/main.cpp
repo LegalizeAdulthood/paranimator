@@ -62,7 +62,11 @@ void interpolate(const ParFile::Config &config)
     for (int i = 0; i < config.num_frames(); ++i)
     {
         const ParFile::ParSet frame{lerper()};
-        out << frame << '\n';
+        if (i != 0)
+        {
+            out << '\n';
+        }
+        out << frame;
         *current_script << script.commands(frame.name);
         ++current_script;
         if (current_script == scripts.end())

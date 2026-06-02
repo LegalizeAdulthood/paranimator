@@ -1,28 +1,29 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
-foreach(name PARANIMATOR VALID_CONFIG INVALID_CONFIG GOLD_PAR)
+foreach(name PARANIMATOR TEST_NAME TEST_SOURCE_DIR GOLD_PAR)
     if(NOT DEFINED ${name})
         message(FATAL_ERROR "Missing required variable: ${name}")
     endif()
 endforeach()
 
-set(output_directory "e2e-output")
+set(input_directory "input")
+set(output_directory "output")
 set(generated_par "${output_directory}/par/frames.par")
-set(normalized_gold_par "gold-center-mag-normalized.par")
+set(valid_config "${input_directory}/${TEST_NAME}.json")
+
+file(REMOVE_RECURSE "${input_directory}" "${output_directory}")
+file(MAKE_DIRECTORY "${input_directory}")
+foreach(input_file
+        "${TEST_NAME}.json"
+        "source.par"
+        "viewport-catalog.json")
+    file(COPY_FILE
+        "${TEST_SOURCE_DIR}/${input_file}"
+        "${input_directory}/${input_file}")
+endforeach()
 
 execute_process(
-    COMMAND "${PARANIMATOR}" "${INVALID_CONFIG}"
-    RESULT_VARIABLE invalid_result
-    OUTPUT_VARIABLE invalid_output
-    ERROR_VARIABLE invalid_error
-)
-if(invalid_result EQUAL 0)
-    message(FATAL_ERROR "Schema-invalid config was accepted")
-endif()
-
-file(REMOVE_RECURSE "${output_directory}")
-execute_process(
-    COMMAND "${PARANIMATOR}" "${VALID_CONFIG}"
+    COMMAND "${PARANIMATOR}" "${valid_config}"
     RESULT_VARIABLE generate_result
     OUTPUT_VARIABLE generate_output
     ERROR_VARIABLE generate_error
@@ -39,15 +40,10 @@ if(NOT EXISTS "${generated_par}")
     message(FATAL_ERROR "Generated PAR file was not created: ${generated_par}")
 endif()
 
-file(READ "${GOLD_PAR}" gold_text)
-string(REGEX REPLACE "^;[^\n]*\n;[^\n]*\n" "" gold_text "${gold_text}")
-file(WRITE "${normalized_gold_par}" "${gold_text}")
-file(APPEND "${normalized_gold_par}" "\n")
-
 execute_process(
     COMMAND
         "${CMAKE_COMMAND}" -E compare_files
-        "${normalized_gold_par}"
+        "${GOLD_PAR}"
         "${generated_par}"
     RESULT_VARIABLE compare_result
 )
