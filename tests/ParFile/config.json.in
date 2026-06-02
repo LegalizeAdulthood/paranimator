@@ -8,9 +8,12 @@
     "name": "@TEST_TO_PAR@"
   },
   "interpolate": [ "@TEST_INTERPOLATE@" ],
-  "output": "@TEST_OUTPUT@",
-  "script": "frames.bat",
-  "frame": "frame-%04d",
+  "output": {
+    "directory": "@TEST_OUTPUT_DIRECTORY@",
+    "par": "@TEST_OUTPUT_PAR@",
+    "entry": "@TEST_OUTPUT_ENTRY@",
+    "script": "@TEST_OUTPUT_SCRIPT@"
+  },
   "video": "@TEST_VIDEO_MODE@",
   "num_frames": 60
 }

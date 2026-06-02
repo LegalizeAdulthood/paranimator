@@ -9,12 +9,14 @@ add_library(ParFile
     include/ParFile/Interpolant.h
     include/ParFile/Interpolator.h
     include/ParFile/Json.h
+    include/ParFile/OutputLayout.h
     include/ParFile/ParFile.h
     include/ParFile/Script.h
     Config.cpp
     Interpolant.cpp
     Interpolator.cpp
     Json.cpp
+    OutputLayout.cpp
     ParFile.cpp
     Script.cpp
 )

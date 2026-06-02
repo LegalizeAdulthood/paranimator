@@ -61,9 +61,7 @@ std::vector<InterpolantPtr> Interpolator::load_interpolants(
 
 Interpolator::Interpolator(const Config &config) :
     m_num_frames(config.num_frames()),
-    m_frame_name(config.frame()),
-    m_output(config.output()),
-    m_script(config.script()),
+    m_frame_name(config.output().entry),
     m_video(config.video()),
     m_from(load_par_set(config.from())),
     m_to(load_par_set(config.to())),

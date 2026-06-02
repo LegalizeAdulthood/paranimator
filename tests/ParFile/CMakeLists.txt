@@ -4,7 +4,10 @@ include(GoogleTest)
 
 find_package(GTest CONFIG REQUIRED)
 
-set(TEST_OUTPUT "frames.par")
+set(TEST_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/output")
+set(TEST_OUTPUT_PAR "frames.par")
+set(TEST_OUTPUT_ENTRY "frame-%04d")
+set(TEST_OUTPUT_SCRIPT "frames.bat")
 set(TEST_VIDEO_MODE "F6")
 configure_file("from.par.in" "from.par" @ONLY)
 configure_file("to.par.in" "to.par" @ONLY)
@@ -22,6 +25,7 @@ add_executable(test-par-file
     TestConfig.cpp
     TestInterpolant.cpp
     TestInterpolator.cpp
+    TestOutputLayout.cpp
     TestParameter.cpp
     TestParFile.cpp
     TestParSet.cpp

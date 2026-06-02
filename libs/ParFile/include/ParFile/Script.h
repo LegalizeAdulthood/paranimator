@@ -17,7 +17,8 @@ public:
     std::string commands(const std::string &par_name) const;
 
 private:
-    std::string m_output;
+    std::string m_directory;
+    std::string m_par;
 };
 
 } // namespace ParFile

@@ -16,6 +16,14 @@ struct NamedFileParSet
     std::string name;
 };
 
+struct OutputConfig
+{
+    std::string directory;
+    std::string par;
+    std::string entry;
+    std::string script;
+};
+
 class Config
 {
 public:
@@ -38,21 +46,13 @@ public:
     {
         return m_interpolate;
     }
-    const std::string &output() const
+    const OutputConfig &output() const
     {
         return m_output;
-    }
-    const std::string &script() const
-    {
-        return m_script;
     }
     int parallel() const
     {
         return m_parallel;
-    }
-    const std::string &frame() const
-    {
-        return m_frame;
     }
     const std::string &video() const
     {
@@ -67,10 +67,8 @@ private:
     NamedFileParSet m_from;
     NamedFileParSet m_to;
     std::vector<std::string> m_interpolate;
-    std::string m_output;
-    std::string m_script;
+    OutputConfig m_output;
     int m_parallel{1};
-    std::string m_frame;
     std::string m_video;
     int m_num_frames;
 };

@@ -50,6 +50,18 @@ static NamedFileParSet load_named_file_par_set(const Object &json, std::string_v
     return result;
 }
 
+static OutputConfig load_output_config(const Object &json)
+{
+    const Object &output{load_object(json, "output")};
+
+    OutputConfig result;
+    result.directory = load_string(output, "output", "directory");
+    result.par = load_string(output, "output", "par");
+    result.entry = load_string(output, "output", "entry");
+    result.script = load_string(output, "output", "script");
+    return result;
+}
+
 static int load_int(const Object &json, std::string_view name)
 {
     if (!json.try_at(name) || !json.at(name).is_int64())
@@ -91,9 +103,7 @@ Config::Config(const boost::json::object &json) :
     m_from(load_named_file_par_set(json, "from")),
     m_to(load_named_file_par_set(json, "to")),
     m_interpolate(load_string_vector(json, "interpolate")),
-    m_output(load_string(json, "output")),
-    m_script(load_string(json, "script")),
-    m_frame(load_string(json, "frame")),
+    m_output(load_output_config(json)),
     m_video(load_string(json, "video")),
     m_num_frames(load_int(json, "num_frames"))
 {

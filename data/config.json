@@ -8,8 +8,12 @@
     "name": "Mandel_Demo"
   },
   "interpolate": [ "center-mag/3" ],
-  "output": "frames.par",
-  "script": "frames.bat",
-  "frame": "frame-%04d",
+  "output": {
+    "directory": "output",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
   "num_frames": 60
 }

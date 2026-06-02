@@ -44,8 +44,6 @@ private:
         const Config &config, const ParSet &from, const ParSet &to, int num_steps);
     int m_num_frames;
     std::string m_frame_name;
-    std::string m_output;
-    std::string m_script;
     std::string m_video;
     ParSet m_from;
     ParSet m_to;

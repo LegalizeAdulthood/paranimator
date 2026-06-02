@@ -7,20 +7,34 @@
 using Array = boost::json::array;
 using Object = boost::json::object;
 
+namespace
+{
+
+Object valid_json()
+{
+    return Object{
+        {"from", Object{{"file", "foo.par"}, {"name", "foo"}}},         //
+        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},           //
+        {"interpolate", Array{"center-mag"}},                           //
+        {"output", Object{{"directory", "out"},                         //
+                       {"par", "output.par"},                           //
+                       {"entry", "frame-%04d"},                         //
+                       {"script", "output.bat"}}},                      //
+        {"video", "F6"},                                                //
+        {"num_frames", 60}                                              //
+    };
+}
+
+void expect_invalid(const Object &json)
+{
+    EXPECT_THROW(ParFile::Config{json}, std::runtime_error);
+}
+
+} // namespace
+
 TEST(TestConfig, minimumValid)
 {
-    const Object json{
-        {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
-        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"interpolate", Array{"center-mag"}},                   //
-        {"output", "output.par"},                               //
-        {"script", "output.bat"},                               //
-        {"frame", "frame-%04d"},                                //
-        {"video", "F6"},                                        //
-        {"num_frames", 60}                                      //
-    };
-
-    ParFile::Config config{json};
+    ParFile::Config config{valid_json()};
 
     EXPECT_EQ("foo.par", config.from().file);
     EXPECT_EQ("foo", config.from().name);
@@ -28,192 +42,117 @@ TEST(TestConfig, minimumValid)
     EXPECT_EQ("bar", config.to().name);
     ASSERT_EQ(1U, config.interpolate().size());
     EXPECT_EQ("center-mag", config.interpolate()[0]);
-    EXPECT_EQ("output.par", config.output());
-    EXPECT_EQ("output.bat", config.script());
+    EXPECT_EQ("out", config.output().directory);
+    EXPECT_EQ("output.par", config.output().par);
+    EXPECT_EQ("frame-%04d", config.output().entry);
+    EXPECT_EQ("output.bat", config.output().script);
     EXPECT_EQ(1, config.parallel());
-    EXPECT_EQ("frame-%04d", config.frame());
     EXPECT_EQ("F6", config.video());
     EXPECT_EQ(60, config.num_frames());
 }
 
 TEST(TestConfig, optionalParallelValid)
 {
-    const Object json{
-        {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
-        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"interpolate", Array{"center-mag"}},                   //
-        {"output", "output.par"},                               //
-        {"script", "output.bat"},                               //
-        {"parallel", 20},                                       //
-        {"frame", "frame-%04d"},                                //
-        {"video", "F6"},                                        //
-        {"num_frames", 60}                                      //
-    };
+    Object json{valid_json()};
+    json.insert_or_assign("parallel", 20);
 
     ParFile::Config config{json};
 
-    EXPECT_EQ("foo.par", config.from().file);
-    EXPECT_EQ("foo", config.from().name);
-    EXPECT_EQ("bar.par", config.to().file);
-    EXPECT_EQ("bar", config.to().name);
-    ASSERT_EQ(1U, config.interpolate().size());
-    EXPECT_EQ("center-mag", config.interpolate()[0]);
-    EXPECT_EQ("output.par", config.output());
-    EXPECT_EQ("output.bat", config.script());
     EXPECT_EQ(20, config.parallel());
-    EXPECT_EQ("frame-%04d", config.frame());
-    EXPECT_EQ("F6", config.video());
-    EXPECT_EQ(60, config.num_frames());
 }
 
 TEST(TestConfig, missingFrom)
 {
-    const Object json{
-        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}}, //
-        {"interpolate", Array{"center-mag"}},                 //
-        {"output", "output.par"},                             //
-        {"script", "output.bat"},                             //
-        {"frame", "frame-%04d"},                              //
-        {"video", "F6"},                                      //
-        {"num_frames", 60}                                    //
-    };
+    Object json{valid_json()};
+    json.erase("from");
 
-    EXPECT_THROW(ParFile::Config{json}, std::runtime_error);
+    expect_invalid(json);
 }
 
 TEST(TestConfig, fromMissingFile)
 {
-    const Object json{
-        {"from", Object{{"name", "foo"}}},                    //
-        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}}, //
-        {"interpolate", Array{"center-mag"}},                 //
-        {"output", "output.par"},                             //
-        {"script", "output.bat"},                             //
-        {"frame", "frame-%04d"},                              //
-        {"video", "F6"},                                      //
-        {"num_frames", 60}                                    //
-    };
+    Object json{valid_json()};
+    json.at("from").as_object().erase("file");
 
-    EXPECT_THROW(ParFile::Config{json}, std::runtime_error);
+    expect_invalid(json);
 }
 
 TEST(TestConfig, fromMissingName)
 {
-    const Object json{
-        {"from", Object{{"file", "foo.par"}}},                //
-        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}}, //
-        {"interpolate", Array{"center-mag"}},                 //
-        {"output", "output.par"},                             //
-        {"script", "output.bat"},                             //
-        {"frame", "frame-%04d"},                              //
-        {"video", "F6"},                                      //
-        {"num_frames", 60}                                    //
-    };
+    Object json{valid_json()};
+    json.at("from").as_object().erase("name");
 
-    EXPECT_THROW(ParFile::Config{json}, std::runtime_error);
+    expect_invalid(json);
 }
 
 TEST(TestConfig, missingTo)
 {
-    const Object json{
-        {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
-        {"interpolate", Array{"center-mag"}},                   //
-        {"output", "output.par"},                               //
-        {"script", "output.bat"},                               //
-        {"frame", "frame-%04d"},                                //
-        {"video", "F6"},                                        //
-        {"num_frames", 60}                                      //
-    };
+    Object json{valid_json()};
+    json.erase("to");
 
-    EXPECT_THROW(ParFile::Config{json}, std::runtime_error);
+    expect_invalid(json);
 }
 
 TEST(TestConfig, missingInterpolate)
 {
-    const Object json{
-        {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
-        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"output", "output.par"},                               //
-        {"script", "output.bat"},                               //
-        {"frame", "frame-%04d"},                                //
-        {"video", "F6"},                                        //
-        {"num_frames", 60}                                      //
-    };
+    Object json{valid_json()};
+    json.erase("interpolate");
 
-    EXPECT_THROW(ParFile::Config{json}, std::runtime_error);
+    expect_invalid(json);
 }
 
 TEST(TestConfig, missingOutput)
 {
-    const Object json{
-        {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
-        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"interpolate", Array{"center-mag"}},                   //
-        {"script", "output.bat"},                               //
-        {"frame", "frame-%04d"},                                //
-        {"video", "F6"},                                        //
-        {"num_frames", 60}                                      //
-    };
+    Object json{valid_json()};
+    json.erase("output");
 
-    EXPECT_THROW(ParFile::Config{json}, std::runtime_error);
+    expect_invalid(json);
 }
 
-TEST(TestConfig, missingScript)
+TEST(TestConfig, outputMissingDirectory)
 {
-    const Object json{
-        {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
-        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"interpolate", Array{"center-mag"}},                   //
-        {"output", "output.par"},                               //
-        {"frame", "frame-%04d"},                                //
-        {"video", "F6"},                                        //
-        {"num_frames", 60}                                      //
-    };
+    Object json{valid_json()};
+    json.at("output").as_object().erase("directory");
 
-    EXPECT_THROW(ParFile::Config{json}, std::runtime_error);
+    expect_invalid(json);
 }
 
-TEST(TestConfig, missingFrame)
+TEST(TestConfig, outputMissingPar)
 {
-    const Object json{
-        {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
-        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"interpolate", Array{"center-mag"}},                   //
-        {"output", "output.par"},                               //
-        {"script", "output.bat"},                               //
-        {"video", "F6"},                                        //
-        {"num_frames", 60}                                      //
-    };
+    Object json{valid_json()};
+    json.at("output").as_object().erase("par");
 
-    EXPECT_THROW(ParFile::Config{json}, std::runtime_error);
+    expect_invalid(json);
+}
+
+TEST(TestConfig, outputMissingEntry)
+{
+    Object json{valid_json()};
+    json.at("output").as_object().erase("entry");
+
+    expect_invalid(json);
+}
+
+TEST(TestConfig, outputMissingScript)
+{
+    Object json{valid_json()};
+    json.at("output").as_object().erase("script");
+
+    expect_invalid(json);
 }
 
 TEST(TestConfig, missingVideo)
 {
-    const Object json{
-        {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
-        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"interpolate", Array{"center-mag"}},                   //
-        {"output", "output.par"},                               //
-        {"script", "output.bat"},                               //
-        {"frame", "frame-%04d"},                                //
-        {"num_frames", 60}                                      //
-    };
+    Object json{valid_json()};
+    json.erase("video");
 
-    EXPECT_THROW(ParFile::Config{json}, std::runtime_error);
+    expect_invalid(json);
 }
 
 TEST(TestConfig, missingNumFrames)
 {
-    const Object json{
-        {"from", Object{{"file", "foo.par"}, {"name", "foo"}}}, //
-        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},   //
-        {"interpolate", Array{"center-mag"}},                   //
-        {"output", "output.par"},                               //
-        {"script", "output.bat"},                               //
-        {"frame", "frame-%04d"},                                //
-        {"video", "F6"},                                        //
-    };
+    Object json{valid_json()};
+    json.erase("num_frames");
 
-    EXPECT_THROW(ParFile::Config{json}, std::runtime_error);
+    expect_invalid(json);
 }

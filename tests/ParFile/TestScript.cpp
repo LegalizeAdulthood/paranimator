@@ -25,8 +25,8 @@ TEST(TestScript, commandForFrame)
 
     const std::string commands{script.commands("frame-0001")};
 
-    EXPECT_EQ(std::string{"start/wait id @"} + TestParFile::TEST_OUTPUT +
-            "/frame-0001\n"
+    EXPECT_EQ(std::string{"start/wait id batch=yes librarydirs="} + TestParFile::TEST_OUTPUT_DIRECTORY +
+            " @" + TestParFile::TEST_OUTPUT_PAR + "/frame-0001\n"
             "if errorlevel 1 exit /b 1\n",
         commands);
 }

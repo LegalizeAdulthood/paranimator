@@ -3,6 +3,7 @@
 #include <ParFile/Config.h>
 #include <ParFile/Interpolator.h>
 #include <ParFile/Json.h>
+#include <ParFile/OutputLayout.h>
 #include <ParFile/ParFile.h>
 #include <ParFile/Script.h>
 
@@ -39,21 +40,20 @@ int usage(std::string_view program)
 void interpolate(const ParFile::Config &config)
 {
     ParFile::Interpolator lerper{config};
+    ParFile::OutputLayout output{config};
+    output.create_directories();
     ParFile::Script script{config};
-    std::ofstream out{config.output().c_str()};
+    std::ofstream out{output.par_file().string().c_str()};
     std::vector<std::ofstream> scripts;
-    if(config.parallel() == 1)
+    if (config.parallel() == 1)
     {
-        scripts.emplace_back(config.script().c_str());
+        scripts.emplace_back(output.script_file().string().c_str());
     }
     else
     {
-        std::filesystem::path name{config.script()};
-        std::filesystem::path filename{name};
         for (int i = 1; i <= config.parallel(); ++i)
         {
-            filename.replace_filename(name.stem().string() + '-' + std::to_string(i) + name.extension().string());
-            scripts.emplace_back(filename.string().c_str());
+            scripts.emplace_back(output.script_file(i).string().c_str());
         }
     }
     auto current_script{scripts.begin()};
