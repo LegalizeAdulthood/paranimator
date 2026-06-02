@@ -618,12 +618,15 @@ Dependency guidance:
         Keep for JSON parsing and serialization.
 
     Boost.Math interpolators
-        Use behind path generators if Catmull-Rom, Bezier, Akima, PCHIP,
-        or B-spline paths become useful.
+        Do not use for core tracks, easing, or simple paths. Evaluate it
+        at the Catmull-Rom or spline path slice only, and use it only
+        behind the PathGenerator abstraction if it keeps that slice
+        smaller and clearer.
 
     TinySpline
-        Consider only if spline paths need control points, knots,
-        arbitrary-dimensional splines, or arc-length sampling.
+        Consider only after the same Catmull-Rom or spline path decision
+        point, if paths need control points, knots, arbitrary-dimensional
+        splines, or arc-length sampling.
 
     GLM or local vector types
         Use for camera and 3D adapter math only if it reduces code.
@@ -1851,8 +1854,11 @@ Unit tests:
 
 ### 34. Add Catmull-Rom Paths
 
-Add catmull_rom path generation. Use Boost.Math or TinySpline internally
-only if it simplifies this slice.
+Add catmull_rom path generation. This is the first point where
+Boost.Math should be considered. Do not add it earlier. Keep it hidden
+behind PathGenerator, and add it only if local code would be larger or
+less clear. Consider TinySpline at the same point only if Catmull-Rom
+needs richer spline features.
 
 Unit tests:
 
