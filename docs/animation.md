@@ -14,7 +14,8 @@ The central idea is:
 - no hard-coded Iterated Dynamics parameter names in the animator
 
 ParAnimator should not know that maxiter, julia, inside, colors, or
-lightx exist. It should know how to animate declared parameter types.
+lightsource exist. It should know how to animate declared parameter
+types.
 
 ## Current Limitation
 
@@ -164,19 +165,11 @@ Example parameter catalog:
           "extrapolate": "clamp"
         },
 
-        "lightx": {
-          "type": "double",
-          "default_curve": "smoothstep"
-        },
-
-        "lighty": {
-          "type": "double",
-          "default_curve": "smoothstep"
-        },
-
-        "lightz": {
-          "type": "double",
-          "default_curve": "smoothstep"
+        "lightsource": {
+          "type": "point3",
+          "format": "slash",
+          "default_curve": "smoothstep",
+          "extrapolate": "clamp"
         }
       }
     }
@@ -193,9 +186,11 @@ Useful metadata fields:
     min
     max
     modulus
+    arity
     values
     rounding
     units
+    normalize
     aliases
     required
     write_when_unchanged
@@ -223,6 +218,9 @@ Meanings:
     modulus
         Wrap range for cyclic values such as palette offsets.
 
+    arity
+        Number of components for tuple-like values.
+
     values
         Legal enum values.
 
@@ -231,6 +229,9 @@ Meanings:
 
     units
         Unit hint, such as degrees, radians, raw, or percent.
+
+    normalize
+        Whether vector-like values are normalized after interpolation.
 
     aliases
         Alternative parameter names accepted in par files.
@@ -265,8 +266,10 @@ Possible formats:
     double raw
     complex slash_pair
     complex comma_pair
-    tuple slash
-    tuple comma
+    numeric_tuple slash
+    numeric_tuple comma
+    point3 slash
+    vector3 slash
     color rgb_tuple
     angle degrees
     angle radians
@@ -283,6 +286,8 @@ Minimum useful type set:
     double
     complex
     numeric_tuple
+    point3
+    vector3
     center_mag
     corners
     rgb_color
@@ -292,6 +297,34 @@ Minimum useful type set:
 
 The animator may hard-code these types. That is a small type system, not
 a list of Iterated Dynamics parameters.
+
+## 3D Point And Vector Parameters
+
+Some Iterated Dynamics parameters are one par-file parameter whose value
+is a 3-component floating-point tuple. Treat these as atomic tracks, not
+as three unrelated scalar tracks.
+
+Example:
+
+    {
+      "parameters": {
+        "lightsource": {
+          "type": "point3",
+          "format": "slash",
+          "default_curve": "smoothstep",
+          "extrapolate": "clamp"
+        }
+      }
+    }
+
+The point3 and vector3 types are convenience aliases over numeric_tuple
+with arity 3. They use the numeric_tuple parser, interpolate each
+component independently, and format one value back into the original
+tuple syntax.
+
+Use point3 for positions. Use vector3 for directions. A vector3 metadata
+entry may set normalize to true when the value must remain a unit vector
+after interpolation.
 
 ## Curves
 
@@ -745,6 +778,8 @@ Sketch:
         std::optional<double> min;
         std::optional<double> max;
         std::optional<int> modulus;
+        std::optional<int> arity;
+        bool normalize{false};
 
         std::vector<std::string> enum_values;
     };
@@ -802,7 +837,7 @@ animation.
 Implement in this order:
 
     1. parameter catalog loading
-    2. integer, double, and numeric_tuple tracks
+    2. integer, double, numeric_tuple, point3, and vector3 tracks
     3. per-parameter key timelines
     4. easing curves
     5. complex tracks
