@@ -28,7 +28,7 @@ TEST(TestInterpolant, centerMagFrom)
     EXPECT_EQ(from, value);
 }
 
-TEST(TestInterpolant, centerMagFraction)
+TEST(TestInterpolant, centerMagMagnificationIsGeometric)
 {
     const std::string from{"-0.5/0.0/1.0"};
     const std::string to{"-0.5/0.0/10.0"};
@@ -39,6 +39,19 @@ TEST(TestInterpolant, centerMagFraction)
     const std::string value{interpolant->step()};
 
     EXPECT_EQ("-0.5/0/3.16228", value);
+}
+
+TEST(TestInterpolant, centerMagCenterFraction)
+{
+    const std::string from{"-1/-2/1"};
+    const std::string to{"1/2/1"};
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("center-mag", from, to, num_steps)};
+    static_cast<void>(interpolant->step());
+
+    const std::string value{interpolant->step()};
+
+    EXPECT_EQ("0/0/1", value);
 }
 
 TEST(TestInterpolant, centerMagTo)

@@ -6,7 +6,6 @@
     "boost-algorithm",
     "boost-format",
     "boost-json",
-    "gtest",
-    "tweeny"
+    "gtest"
   ]
 }

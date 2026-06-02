@@ -5,7 +5,6 @@
 #include <ParFile/ParFile.h>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/format.hpp>
-#include <tweeny/tweeny.h>
 
 #include <algorithm>
 #include <cmath>
@@ -19,13 +18,49 @@ namespace ParFile
 namespace
 {
 
+class SegmentEvaluator
+{
+public:
+    SegmentEvaluator() = default;
+    explicit SegmentEvaluator(int num_steps) :
+        m_num_steps(num_steps)
+    {
+    }
+
+    double fraction(int step) const
+    {
+        return (step - 1) / static_cast<double>(m_num_steps - 1);
+    }
+
+    double linear_value_at(int step, double from, double to) const
+    {
+        const double local_fraction{fraction(step)};
+        return from + local_fraction * (to - from);
+    }
+
+    double geometric_value_at(int step, double from, double to) const
+    {
+        return from * std::pow(to / from, fraction(step));
+    }
+
+    std::complex<double> linear_value_at(
+        int step, const std::complex<double> &from, const std::complex<double> &to) const
+    {
+        const double local_fraction{fraction(step)};
+        return from + local_fraction * (to - from);
+    }
+
+private:
+    int m_num_steps{};
+};
+
 class Base : public Interpolant
 {
 public:
     Base() = default;
     Base(std::string_view name, int num_steps) :
         m_name(name),
-        m_num_steps(num_steps)
+        m_segment(num_steps)
     {
     }
     Base(const Base &rhs) = delete;
@@ -41,7 +76,7 @@ public:
 protected:
     std::string m_name;
     int m_step{};
-    int m_num_steps{};
+    SegmentEvaluator m_segment;
 };
 
 struct CenterMag
@@ -100,18 +135,16 @@ CenterMagInterpolant::CenterMagInterpolant(const std::string &from, const std::s
 std::string CenterMagInterpolant::step()
 {
     ++m_step;
-    const double fraction{(m_step - 1) / static_cast<double>(m_num_steps - 1)};
-    const std::complex<double> center{m_from.center + fraction * (m_to.center - m_from.center)};
+    const std::complex<double> center{m_segment.linear_value_at(m_step, m_from.center, m_to.center)};
     double mag;
     if (m_from.mag > 0.0 && m_to.mag > 0.0)
     {
-        // Geometric interpolation so each frame zooms by a consistent factor
-        mag = m_from.mag * std::pow(m_to.mag / m_from.mag, fraction);
+        mag = m_segment.geometric_value_at(m_step, m_from.mag, m_to.mag);
     }
     else
     {
         // Fallback to linear interpolation for non-positive magnifications
-        mag = m_from.mag + fraction * (m_to.mag - m_from.mag);
+        mag = m_segment.linear_value_at(m_step, m_from.mag, m_to.mag);
     }
     return (boost::format("%g/%g/%g") % center.real() % center.imag() % mag).str();
 }
@@ -165,9 +198,8 @@ CornersInterpolant::CornersInterpolant(const std::string &from, const std::strin
 std::string CornersInterpolant::step()
 {
     ++m_step;
-    const double fraction{(m_step - 1) / static_cast<double>(m_num_steps - 1)};
-    const std::complex<double> ll{m_from.lower_left + fraction * (m_to.lower_left - m_from.lower_left)};
-    const std::complex<double> ur{m_from.upper_right + fraction * (m_to.upper_right - m_from.upper_right)};
+    const std::complex<double> ll{m_segment.linear_value_at(m_step, m_from.lower_left, m_to.lower_left)};
+    const std::complex<double> ur{m_segment.linear_value_at(m_step, m_from.upper_right, m_to.upper_right)};
     return (boost::format("%.12g/%.12g/%.12g/%.12g") % ll.real() % ur.real() % ll.imag() % ur.imag()).str();
 }
 
