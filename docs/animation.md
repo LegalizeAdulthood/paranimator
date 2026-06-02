@@ -13,7 +13,7 @@ The central idea is:
 - typed tracks for interpolation and formatting
 - no hard-coded Iterated Dynamics parameter names in the animator
 
-ParAnimator should not know that maxiter, julia, inside, colors, or
+ParAnimator should not know that maxiter, params, colors, inside, or
 lightsource exist. It should know how to animate declared parameter
 types.
 
@@ -67,7 +67,7 @@ parameters should not be forced to change at the same frames.
 
 Example conceptual timing:
 
-    julia parameter:
+    params for type=julia:
         frame 0      value A
         frame 300    value B
         frame 900    value A
@@ -78,19 +78,19 @@ Example conceptual timing:
         frame 500    2000
         frame 900    2000
 
-    palette offset:
-        frame 0      0
-        frame 900    256
+    colors:
+        frame 0      maps/fire.map
+        frame 900    maps/ice.map
 
-    light angle:
-        frame 200    0 degrees
-        frame 700    360 degrees
+    lightsource:
+        frame 200    -1/-1/1
+        frame 700    1/1/1
 
 These are independent rhythms:
 
 - Julia shape mutates over the shot.
 - Iteration detail fades in after a delay.
-- Palette phase rotates continuously.
+- The colormap changes over the shot.
 - Lighting sweep happens only in the middle.
 
 A global keyframe list would make this awkward. Per-parameter timelines
@@ -138,18 +138,19 @@ Example parameter catalog:
           "extrapolate": "clamp"
         },
 
-        "julia": {
+        "params": {
           "type": "complex",
+          "description": "Julia constant for type=julia",
           "format": "slash_pair",
           "default_curve": "smoothstep",
           "extrapolate": "clamp"
         },
 
         "colors": {
-          "type": "cyclic_integer",
-          "modulus": 256,
-          "default_curve": "linear",
-          "extrapolate": "cycle"
+          "type": "colormap",
+          "format": "at_file",
+          "default_curve": "smoothstep",
+          "extrapolate": "clamp"
         },
 
         "inside": {
@@ -216,7 +217,7 @@ Meanings:
         Validation limits. They may also be used for clamping.
 
     modulus
-        Wrap range for cyclic values such as palette offsets.
+        Wrap range for cyclic numeric values.
 
     arity
         Number of components for tuple-like values.
@@ -273,6 +274,7 @@ Possible formats:
     point3 slash
     vector3 slash
     color rgb_tuple
+    colormap at_file
     angle degrees
     angle radians
 
@@ -295,6 +297,7 @@ Minimum useful type set:
     camera2d
     id_3d_view
     julibrot_view
+    colormap
     center_mag
     corners
     rgb_color
@@ -343,7 +346,7 @@ catalog-declared viewport parameter.
 Example:
 
     {
-      "parameter": "camera",
+      "name": "camera",
       "type": "camera2d",
       "output": "corners",
       "aspect": "source",
@@ -432,7 +435,7 @@ It writes catalog-declared outputs such as:
 Example:
 
     {
-      "parameter": "view",
+      "name": "view",
       "type": "id_3d_view",
       "outputs": {
         "rotation": "rotation",
@@ -492,7 +495,7 @@ It writes catalog-declared outputs such as:
 Example:
 
     {
-      "parameter": "julibrot_view",
+      "name": "julibrot_view",
       "type": "julibrot_view",
       "outputs": {
         "mode": "3dmode",
@@ -642,7 +645,7 @@ Example:
 
       "tracks": [
         {
-          "parameter": "julia",
+          "parameter": "params",
           "keys": [
             { "frame": 0,   "value": "-0.12/0.75" },
             { "frame": 300, "value": "-0.16/0.72" },
@@ -662,9 +665,12 @@ Example:
 
         {
           "parameter": "colors",
+          "type": "colormap",
+          "format": "at_file",
+          "output": "work/colors-%04d.map",
           "keys": [
-            { "frame": 0,   "value": 0 },
-            { "frame": 900, "value": 256, "curve": "linear" }
+            { "frame": 0,   "value": "maps/fire.map" },
+            { "frame": 900, "value": "maps/ice.map" }
           ]
         }
       ]
@@ -741,10 +747,10 @@ Example:
           "compose": "Screen",
           "tracks": [
             {
-              "parameter": "colors",
+              "parameter": "maxiter",
               "keys": [
-                { "frame": 0,   "value": 0 },
-                { "frame": 900, "value": 256 }
+                { "frame": 0,   "value": 100 },
+                { "frame": 900, "value": 1200 }
               ]
             }
           ]
@@ -814,20 +820,54 @@ The layer system does not read external animation files or emulate their
 blending vocabulary. The goal is similar layered rendering behavior using
 Iterated Dynamics and ImageMagick.
 
+## Colormap Tracks
+
+ID color animation may require a generated map file for each frame. Model
+that as a normal track for the real ID colors parameter, with a colormap
+type that writes a side file and returns an at-file value.
+
+Example:
+
+    {
+      "parameter": "colors",
+      "type": "colormap",
+      "format": "at_file",
+      "output": "work/colors-%04d.map",
+      "keys": [
+        { "frame": 0,   "value": "maps/fire.map" },
+        { "frame": 300, "value": "maps/ice.map" }
+      ]
+    }
+
+At each frame:
+
+    read the source ID map files
+    interpolate matching color entries
+    write work/colors-0000.map
+    return @work/colors-0000.map as the colors parameter value
+
+The colormap writer should emit an ID-compatible map file. Validation
+must reject mismatched palette sizes or malformed color entries.
+
+Use colors=@file for per-frame map files. The map parameter is a real ID
+parameter too, but it is better suited to selecting a default map than to
+recording the frame-local palette in generated par entries.
+
 ## Track Structure
 
 A track has:
 
-    parameter or virtual track name
+    parameter for ID tracks, or name for virtual tracks
     optional type override
     keyframes or path generator
     extrapolation behavior
     local options
 
-Most tracks write one par-file parameter. Virtual tracks such as
-camera2d may write another catalog parameter named by a local output
-option. Virtual adapters such as id_3d_view and julibrot_view may write
-multiple catalog parameters.
+Normal tracks write one ID par-file parameter named by parameter. Virtual
+tracks use name instead of parameter. Virtual tracks such as camera2d may
+write another catalog parameter named by a local output option. Virtual
+adapters such as id_3d_view and julibrot_view may write multiple catalog
+parameters.
 
 Conceptual C++ interface:
 
@@ -864,7 +904,7 @@ features.
 Example:
 
     {
-      "parameter": "julia",
+      "parameter": "params",
       "type": "complex",
       "path": {
         "kind": "circle",
@@ -927,17 +967,16 @@ Example:
       ],
 
       "parameters": {
-        "my_custom_param": {
-          "type": "numeric_tuple",
-          "arity": 3,
-          "format": "slash",
+        "params": {
+          "type": "complex",
+          "format": "slash_pair",
           "default_curve": "linear"
         }
       }
     }
 
-This lets local experiments define custom metadata without modifying the
-default catalog.
+This lets local experiments refine metadata for real ID parameters without
+modifying the default catalog.
 
 ## Enum Parameters
 
@@ -1109,9 +1148,9 @@ Errors should be specific.
 
 Examples:
 
-    Unknown animated parameter 'julac'.
-    No metadata exists for 'julac'.
-    Did you mean 'julia'?
+    Unknown animated parameter 'param'.
+    No metadata exists for 'param'.
+    Did you mean 'params'?
 
     Parameter 'maxiter' is type integer, but key at frame 120 has
     value 'abc'.
@@ -1194,6 +1233,7 @@ The generated frame loop should remain simple:
         for each track:
             apply track assignments at frame_number
 
+        write any side files produced by tracks
         append batch parameters
         append savename parameter
         append overwrite parameter
@@ -1214,6 +1254,8 @@ ImageMagick composition:
 
             for each layer track:
                 apply track assignments at frame_number
+
+            write any side files produced by layer tracks
 
             if opacity is 0 and write_when_hidden is false:
                 skip layer render
@@ -1245,7 +1287,7 @@ Implement in this order:
     6. angle and cyclic tracks
     7. enum hold and enum step tracks
     8. enum PWM tracks
-    9. color tracks
+    9. colormap tracks and per-frame map file writing
     10. path generators
     11. camera2d virtual tracks
     12. id_3d_view and julibrot_view virtual tracks
@@ -1264,6 +1306,7 @@ Hard-code:
     path generators
     format parsers
     validation rules
+    ID map file writer
     layer stack evaluation
     ImageMagick command generation
 
@@ -1276,6 +1319,7 @@ Do not hard-code:
     virtual adapter output parameter names
     default curves for individual parameters
     enum values used by PWM tracks
+    generated colormap filenames
     ParAnimator-specific blend aliases
 
 ## Summary
@@ -1288,6 +1332,7 @@ The final design is:
     parameter names and metadata come from JSON catalogs
     the animator knows types, not Iterated Dynamics parameter names
     virtual adapters map planned views onto real ID parameters
+    colormap tracks can write per-frame ID map files and emit colors=@file
     optional layer stacks render ID layer images and compose them with
     ImageMagick operators
     enum parameters are discrete by default
