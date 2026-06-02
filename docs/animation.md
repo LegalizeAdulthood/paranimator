@@ -233,7 +233,7 @@ Meanings:
         Unit hint, such as degrees, radians, raw, or percent.
 
     aliases
-        Alternative parameter names or old spellings.
+        Alternative parameter names accepted in par files.
 
     required
         Whether the parameter must exist in the base parameter set.
@@ -715,37 +715,20 @@ Examples:
     Parameter 'outside' uses PWM value 'atan', but 'atan' is not listed
     as a legal enum value.
 
-## Backward Compatibility
+## JSON File Replacement
 
-The existing from/to/interpolate config can remain as compatibility
-syntax.
+The new animation JSON format replaces the existing JSON files. Do not
+support old from/to/interpolate JSON as compatibility syntax.
 
-Old-style concept:
+Required behavior:
 
-    {
-      "from": { "file": "a.par", "name": "a" },
-      "to":   { "file": "b.par", "name": "b" },
-      "interpolate": [ "center-mag" ],
-      "num_frames": 300
-    }
+    load only the new source/tracks animation schema
+    reject old from/to/interpolate JSON with a clear error
+    provide examples that use only the new schema
+    remove code paths that desugar old JSON into tracks
 
-Internally, desugar this to:
-
-    {
-      "source": { "file": "a.par", "name": "a" },
-      "tracks": [
-        {
-          "parameter": "center-mag",
-          "type": "center_mag",
-          "keys": [
-            { "frame": 0,   "value": "value from a" },
-            { "frame": 299, "value": "value from b" }
-          ]
-        }
-      ]
-    }
-
-The old model becomes a shorthand for a one-track, two-key animation.
+The old model is not a shorthand. Existing animation JSON files must be
+rewritten as new source/tracks files before they are used.
 
 ## Suggested Internal Classes
 
@@ -829,7 +812,6 @@ Implement in this order:
     9. color tracks
     10. path generators
     11. formula-specific catalog files
-    12. compatibility desugaring for old from/to configs
 
 This order gets useful behavior early while keeping the design open.
 
