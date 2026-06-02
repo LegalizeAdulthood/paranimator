@@ -9,6 +9,7 @@ endforeach()
 set(input_directory "input")
 set(output_directory "output")
 set(generated_par "${output_directory}/par/frames.par")
+set(generated_script "${output_directory}/frames.bat")
 set(valid_config "${input_directory}/${TEST_NAME}.json")
 
 file(REMOVE_RECURSE "${input_directory}" "${output_directory}")
@@ -30,7 +31,7 @@ execute_process(
 )
 if(NOT generate_result EQUAL 0)
     message(FATAL_ERROR
-        "Failed to generate center-mag PAR file:\n"
+        "Failed to generate PAR file:\n"
         "${generate_output}\n"
         "${generate_error}"
     )
@@ -39,6 +40,24 @@ endif()
 if(NOT EXISTS "${generated_par}")
     message(FATAL_ERROR "Generated PAR file was not created: ${generated_par}")
 endif()
+
+if(NOT EXISTS "${generated_script}")
+    message(FATAL_ERROR
+        "Generated batch file was not created: ${generated_script}")
+endif()
+
+file(READ "${generated_script}" generated_script_text)
+foreach(expected
+        "librarydirs=${output_directory}"
+        "@frames.par/frame-0001"
+        "@frames.par/frame-0002"
+        "@frames.par/frame-0003")
+    string(FIND "${generated_script_text}" "${expected}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR
+            "Generated batch file is missing expected text: ${expected}")
+    endif()
+endforeach()
 
 execute_process(
     COMMAND
