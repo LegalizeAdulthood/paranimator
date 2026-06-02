@@ -268,6 +268,8 @@ Possible formats:
     complex comma_pair
     numeric_tuple slash
     numeric_tuple comma
+    point2 slash
+    vector2 slash
     point3 slash
     vector3 slash
     color rgb_tuple
@@ -286,8 +288,11 @@ Minimum useful type set:
     double
     complex
     numeric_tuple
+    point2
+    vector2
     point3
     vector3
+    camera2d
     center_mag
     corners
     rgb_color
@@ -325,6 +330,72 @@ tuple syntax.
 Use point3 for positions. Use vector3 for directions. A vector3 metadata
 entry may set normalize to true when the value must remain a unit vector
 after interpolation.
+
+## Virtual 2D Camera Tracks
+
+Iterated Dynamics does not have a 2D camera object. It has viewport
+parameters such as center-mag and corners. A camera2d track is therefore
+a virtual planning track. It evaluates camera curves, then writes one
+catalog-declared viewport parameter.
+
+Example:
+
+    {
+      "parameter": "camera",
+      "type": "camera2d",
+      "output": "corners",
+      "aspect": "source",
+      "look_at": {
+        "type": "point2",
+        "keys": [
+          { "frame": 0,   "value": "-0.5/0.0" },
+          { "frame": 300, "value": "-0.75/0.1" }
+        ]
+      },
+      "view_up": {
+        "type": "vector2",
+        "normalize": true,
+        "keys": [
+          { "frame": 0,   "value": "0/1" },
+          { "frame": 300, "value": "0.25/1" }
+        ]
+      },
+      "height": {
+        "type": "double",
+        "keys": [
+          { "frame": 0,   "value": 3.0 },
+          { "frame": 300, "value": 0.1, "curve": "geometric" }
+        ]
+      }
+    }
+
+At each frame:
+
+    look = evaluate look_at point2 track
+    up = normalize(evaluate view_up vector2 track)
+    right = perpendicular clockwise from up
+    height = evaluate height track
+    width = height * aspect
+
+    lower_left = look - right * width / 2 - up * height / 2
+    lower_right = look + right * width / 2 - up * height / 2
+    upper_left = look - right * width / 2 + up * height / 2
+
+The output names a catalog parameter. It is not a hard-coded Iterated
+Dynamics parameter name in the animator.
+
+For output corners, the output parameter metadata must have type corners.
+Format the computed points into the corners syntax supported by the
+target renderer.
+
+For output center-mag, the output parameter metadata must have type
+center_mag. Require the camera to be axis-aligned with the normal view-up
+vector. Reject rotated camera2d output to center-mag with a specific
+error rather than silently dropping orientation.
+
+The camera2d track lets the animator plan look_at, view_up, and height as
+independent curves while still writing only normal Iterated Dynamics
+parameters.
 
 ## Curves
 
@@ -453,11 +524,15 @@ The track does not need to repeat the type if the catalog declares it.
 
 A track has:
 
-    parameter name
+    parameter or virtual track name
     optional type override
     keyframes or path generator
     extrapolation behavior
     local options
+
+Most tracks write one par-file parameter. Virtual tracks such as
+camera2d may write another catalog parameter named by a local output
+option.
 
 Conceptual C++ interface:
 
@@ -467,6 +542,9 @@ Conceptual C++ interface:
         std::string parameter() const;
         std::string value_at(int frame) const;
     };
+
+The implementation may generalize this to return a list of parameter
+assignments when virtual tracks are added.
 
 A track evaluates as follows:
 
@@ -819,7 +897,7 @@ The generated frame loop should remain simple:
         frame = base_parameter_set
 
         for each track:
-            set frame parameter to track value at frame_number
+            apply track assignments at frame_number
 
         append batch parameters
         append savename parameter
@@ -837,7 +915,8 @@ animation.
 Implement in this order:
 
     1. parameter catalog loading
-    2. integer, double, numeric_tuple, point3, and vector3 tracks
+    2. integer, double, numeric_tuple, point2, vector2, point3, and
+       vector3 tracks
     3. per-parameter key timelines
     4. easing curves
     5. complex tracks
@@ -846,7 +925,8 @@ Implement in this order:
     8. enum PWM tracks
     9. color tracks
     10. path generators
-    11. formula-specific catalog files
+    11. camera2d virtual tracks
+    12. formula-specific catalog files
 
 This order gets useful behavior early while keeping the design open.
 
@@ -866,6 +946,7 @@ Do not hard-code:
     formula-specific parameter lists
     legal enum values
     which parameters are animatable
+    camera2d output parameter names
     default curves for individual parameters
     enum values used by PWM tracks
 
