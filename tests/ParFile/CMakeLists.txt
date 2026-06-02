@@ -25,6 +25,7 @@ add_executable(test-par-file
     TestConfig.cpp
     TestInterpolant.cpp
     TestInterpolator.cpp
+    TestJsonSchema.cpp
     TestOutputLayout.cpp
     TestParameter.cpp
     TestParFile.cpp
@@ -32,6 +33,7 @@ add_executable(test-par-file
     TestScript.cpp
 
     from.par.in
+    invalid-output-directory-type.json
     to.par.in
     config.json.in
     test.h.in
@@ -40,6 +42,7 @@ add_executable(test-par-file
     "${CMAKE_CURRENT_BINARY_DIR}/center-mag.json"
     "${CMAKE_CURRENT_BINARY_DIR}/corners.json"
     "${CMAKE_CURRENT_BINARY_DIR}/include/TestParFile/test.h"
+    "${CMAKE_SOURCE_DIR}/schemas/config.schema.json"
 )
 source_group("Template Files" REGULAR_EXPRESSION "^.*\\.in$")
 source_group("Data Files" REGULAR_EXPRESSION "^.*\\.(par|json)$")

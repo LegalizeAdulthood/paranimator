@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://legalize.github.io/paranimator/schemas/config.schema.json",
+  "title": "ParAnimator configuration",
+  "type": "object",
+  "required": [ "from", "to", "interpolate", "output", "video", "num_frames" ],
+  "additionalProperties": false,
+  "properties": {
+    "from": {
+      "type": "object",
+      "required": [ "file", "name" ],
+      "additionalProperties": false,
+      "properties": {
+        "file": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    },
+    "to": {
+      "type": "object",
+      "required": [ "file", "name" ],
+      "additionalProperties": false,
+      "properties": {
+        "file": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    },
+    "interpolate": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "output": {
+      "type": "object",
+      "required": [ "directory", "par", "entry", "script" ],
+      "additionalProperties": false,
+      "properties": {
+        "directory": { "type": "string" },
+        "par": { "type": "string" },
+        "entry": { "type": "string" },
+        "script": { "type": "string" }
+      }
+    },
+    "parallel": { "type": "integer" },
+    "video": { "type": "string" },
+    "num_frames": { "type": "integer" }
+  }
+}

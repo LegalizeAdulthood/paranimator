@@ -6,6 +6,7 @@
     "boost-algorithm",
     "boost-format",
     "boost-json",
-    "gtest"
+    "gtest",
+    "json-schema-validator"
   ]
 }
