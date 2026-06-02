@@ -4,8 +4,6 @@
 
 #include <ParFile/ParFile.h>
 
-#include <boost/json/object.hpp>
-
 #include <memory>
 #include <string>
 #include <vector>

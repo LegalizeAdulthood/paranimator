@@ -5,9 +5,7 @@
 #include <nlohmann/json-schema.hpp>
 #include <nlohmann/json.hpp>
 
-#include <fstream>
-#include <stdexcept>
-#include <string>
+#include <string_view>
 
 namespace ParFile
 {
@@ -15,29 +13,22 @@ namespace ParFile
 namespace
 {
 
-nlohmann::json read_json(const std::filesystem::path &path)
+nlohmann::json parse_json(std::string_view json_text)
 {
-    std::ifstream in{path};
-    if (!in)
-    {
-        throw std::runtime_error("Unable to read JSON file: " + path.string());
-    }
-    nlohmann::json json;
-    in >> json;
-    return json;
+    return nlohmann::json::parse(json_text.begin(), json_text.end());
 }
 
 } // namespace
 
 bool validate_json_schema(
-    const std::filesystem::path &schema_path,
-    const std::filesystem::path &instance_path)
+    std::string_view schema_json,
+    std::string_view instance_json)
 {
     try
     {
         nlohmann::json_schema::json_validator validator;
-        validator.set_root_schema(read_json(schema_path));
-        validator.validate(read_json(instance_path));
+        validator.set_root_schema(parse_json(schema_json));
+        validator.validate(parse_json(instance_json));
         return true;
     }
     catch (...)

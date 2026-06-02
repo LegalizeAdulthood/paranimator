@@ -5,22 +5,33 @@
 #include <TestParFile/test.h>
 
 #include <ParFile/Config.h>
-#include <ParFile/Json.h>
 
 #include <gtest/gtest.h>
 
+#include <fstream>
+#include <iterator>
+
+namespace
+{
+
+std::string read_text(const char *path)
+{
+    std::ifstream in{path};
+    return {std::istreambuf_iterator<char>{in}, std::istreambuf_iterator<char>{}};
+}
+
+} // namespace
+
 TEST(TestScript, construct)
 {
-    boost::json::object m_json{ParFile::read_json(TestParFile::CENTER_MAG_CONFIG_JSON).as_object()};
-    ParFile::Config config{ParFile::Config{m_json}};
+    ParFile::Config config{read_text(TestParFile::CENTER_MAG_CONFIG_JSON)};
 
     ParFile::Script script{config};
 }
 
 TEST(TestScript, commandForFrame)
 {
-    boost::json::object m_json{ParFile::read_json(TestParFile::CENTER_MAG_CONFIG_JSON).as_object()};
-    ParFile::Config config{ParFile::Config{m_json}};
+    ParFile::Config config{read_text(TestParFile::CENTER_MAG_CONFIG_JSON)};
     ParFile::Script script{config};
 
     const std::string commands{script.commands("frame-0001")};

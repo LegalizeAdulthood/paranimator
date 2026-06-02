@@ -3,6 +3,7 @@
 include(GoogleTest)
 
 find_package(GTest CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 set(TEST_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/output")
 set(TEST_OUTPUT_PAR "frames.par")
@@ -47,7 +48,7 @@ add_executable(test-par-file
 source_group("Template Files" REGULAR_EXPRESSION "^.*\\.in$")
 source_group("Data Files" REGULAR_EXPRESSION "^.*\\.(par|json)$")
 target_include_directories(test-par-file PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/include")
-target_link_libraries(test-par-file PUBLIC ParFile GTest::gtest_main)
+target_link_libraries(test-par-file PUBLIC ParFile GTest::gtest_main nlohmann_json::nlohmann_json)
 target_folder(test-par-file "Tests")
 
 gtest_discover_tests(test-par-file)

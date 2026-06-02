@@ -3,9 +3,9 @@
 #include <ParFile/Config.h>
 
 #include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
 
-using Array = boost::json::array;
-using Object = boost::json::object;
+using Object = nlohmann::json;
 
 namespace
 {
@@ -15,7 +15,7 @@ Object valid_json()
     return Object{
         {"from", Object{{"file", "foo.par"}, {"name", "foo"}}},         //
         {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},           //
-        {"interpolate", Array{"center-mag"}},                           //
+        {"interpolate", Object::array({"center-mag"})},                 //
         {"output", Object{{"directory", "out"},                         //
                        {"par", "output.par"},                           //
                        {"entry", "frame-%04d"},                         //
@@ -27,14 +27,14 @@ Object valid_json()
 
 void expect_invalid(const Object &json)
 {
-    EXPECT_THROW(ParFile::Config{json}, std::runtime_error);
+    EXPECT_THROW(ParFile::Config{json.dump()}, std::runtime_error);
 }
 
 } // namespace
 
 TEST(TestConfig, minimumValid)
 {
-    ParFile::Config config{valid_json()};
+    ParFile::Config config{valid_json().dump()};
 
     EXPECT_EQ("foo.par", config.from().file);
     EXPECT_EQ("foo", config.from().name);
@@ -54,9 +54,9 @@ TEST(TestConfig, minimumValid)
 TEST(TestConfig, optionalParallelValid)
 {
     Object json{valid_json()};
-    json.insert_or_assign("parallel", 20);
+    json["parallel"] = 20;
 
-    ParFile::Config config{json};
+    ParFile::Config config{json.dump()};
 
     EXPECT_EQ(20, config.parallel());
 }
@@ -72,7 +72,7 @@ TEST(TestConfig, missingFrom)
 TEST(TestConfig, fromMissingFile)
 {
     Object json{valid_json()};
-    json.at("from").as_object().erase("file");
+    json.at("from").erase("file");
 
     expect_invalid(json);
 }
@@ -80,7 +80,7 @@ TEST(TestConfig, fromMissingFile)
 TEST(TestConfig, fromMissingName)
 {
     Object json{valid_json()};
-    json.at("from").as_object().erase("name");
+    json.at("from").erase("name");
 
     expect_invalid(json);
 }
@@ -112,7 +112,7 @@ TEST(TestConfig, missingOutput)
 TEST(TestConfig, outputMissingDirectory)
 {
     Object json{valid_json()};
-    json.at("output").as_object().erase("directory");
+    json.at("output").erase("directory");
 
     expect_invalid(json);
 }
@@ -120,7 +120,7 @@ TEST(TestConfig, outputMissingDirectory)
 TEST(TestConfig, outputMissingPar)
 {
     Object json{valid_json()};
-    json.at("output").as_object().erase("par");
+    json.at("output").erase("par");
 
     expect_invalid(json);
 }
@@ -128,7 +128,7 @@ TEST(TestConfig, outputMissingPar)
 TEST(TestConfig, outputMissingEntry)
 {
     Object json{valid_json()};
-    json.at("output").as_object().erase("entry");
+    json.at("output").erase("entry");
 
     expect_invalid(json);
 }
@@ -136,7 +136,7 @@ TEST(TestConfig, outputMissingEntry)
 TEST(TestConfig, outputMissingScript)
 {
     Object json{valid_json()};
-    json.at("output").as_object().erase("script");
+    json.at("output").erase("script");
 
     expect_invalid(json);
 }

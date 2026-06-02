@@ -5,8 +5,8 @@
   "dependencies": [
     "boost-algorithm",
     "boost-format",
-    "boost-json",
     "gtest",
-    "json-schema-validator"
+    "json-schema-validator",
+    "nlohmann-json"
   ]
 }

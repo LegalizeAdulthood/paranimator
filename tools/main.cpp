@@ -2,16 +2,15 @@
 //
 #include <ParFile/Config.h>
 #include <ParFile/Interpolator.h>
-#include <ParFile/Json.h>
 #include <ParFile/OutputLayout.h>
 #include <ParFile/ParFile.h>
 #include <ParFile/Script.h>
 
-#include <boost/json.hpp>
-
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -70,6 +69,16 @@ void interpolate(const ParFile::Config &config)
     }
 }
 
+std::string read_text(const std::filesystem::path &path)
+{
+    std::ifstream in{path};
+    if (!in)
+    {
+        throw std::runtime_error("Unable to read file '" + path.string() + "'");
+    }
+    return {std::istreambuf_iterator<char>{in}, std::istreambuf_iterator<char>{}};
+}
+
 int main(const std::vector<std::string_view> &args)
 {
     try
@@ -79,7 +88,7 @@ int main(const std::vector<std::string_view> &args)
             return usage(args[0]);
         }
         const std::string_view json_file{args[1]};
-        interpolate(ParFile::read_json(json_file).as_object());
+        interpolate(ParFile::Config{read_text(std::filesystem::path{std::string{json_file}})});
 
         return 0;
     }

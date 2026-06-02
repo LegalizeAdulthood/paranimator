@@ -2,9 +2,8 @@
 //
 #pragma once
 
-#include <boost/json.hpp>
-
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace ParFile
@@ -30,7 +29,7 @@ public:
     Config() = default;
     Config(const Config &rhs) = default;
     Config(Config &&rhs) = default;
-    Config(const boost::json::object &json);
+    Config(std::string_view json_text);
     Config &operator=(const Config &rhs) = default;
     Config &operator=(Config &&rhs) = default;
 
@@ -70,7 +69,7 @@ private:
     OutputConfig m_output;
     int m_parallel{1};
     std::string m_video;
-    int m_num_frames;
+    int m_num_frames{};
 };
 
 } // namespace ParFile

@@ -2,13 +2,13 @@
 //
 #pragma once
 
-#include <filesystem>
+#include <string_view>
 
 namespace ParFile
 {
 
 bool validate_json_schema(
-    const std::filesystem::path &schema_path,
-    const std::filesystem::path &instance_path);
+    std::string_view schema_json,
+    std::string_view instance_json);
 
 } // namespace ParFile

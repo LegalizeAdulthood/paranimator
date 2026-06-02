@@ -2,28 +2,48 @@
 //
 #include <ParFile/Config.h>
 
-#include <boost/json.hpp>
+#include <nlohmann/json.hpp>
 
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
 namespace ParFile
 {
 
-using Object = boost::json::object;
+using Object = nlohmann::json;
 
-static Object load_object(const Object &json, std::string_view name)
+static Object parse_json(std::string_view json_text)
 {
-    if (!json.try_at(name) || !json.at(name).is_object())
+    try
+    {
+        Object json{Object::parse(json_text.begin(), json_text.end())};
+        if (!json.is_object())
+        {
+            throw std::runtime_error("Invalid config, root is not an object");
+        }
+        return json;
+    }
+    catch (const nlohmann::json::exception &bang)
+    {
+        throw std::runtime_error("Invalid config JSON: " + std::string{bang.what()});
+    }
+}
+
+static const Object &load_object(const Object &json, std::string_view name)
+{
+    const std::string key{name};
+    if (!json.contains(key) || !json.at(key).is_object())
     {
         throw std::runtime_error("Invalid config, missing object '" + std::string{name} + "'");
     }
-    return json.at(name).as_object();
+    return json.at(key);
 }
 
-static std::string_view load_string(const Object &json, std::string_view name, std::string_view field)
+static std::string load_string(const Object &json, std::string_view name, std::string_view field)
 {
-    if (!json.try_at(field) || !json.at(field).is_string())
+    const std::string key{field};
+    if (!json.contains(key) || !json.at(key).is_string())
     {
         std::string msg{"Invalid config, missing string '" + std::string{field} + "'"};
         if (!name.empty())
@@ -32,10 +52,10 @@ static std::string_view load_string(const Object &json, std::string_view name, s
         }
         throw std::runtime_error(msg);
     }
-    return json.at(field).as_string();
+    return json.at(key).get<std::string>();
 }
 
-static std::string_view load_string(const Object &json, std::string_view field)
+static std::string load_string(const Object &json, std::string_view field)
 {
     return load_string(json, {}, field);
 }
@@ -64,33 +84,36 @@ static OutputConfig load_output_config(const Object &json)
 
 static int load_int(const Object &json, std::string_view name)
 {
-    if (!json.try_at(name) || !json.at(name).is_int64())
+    const std::string key{name};
+    if (!json.contains(key) || !json.at(key).is_number_integer())
     {
         throw std::runtime_error("Invalid config, missing integer '" + std::string{name} + "'");
     }
-    return static_cast<int>(json.at(name).as_int64());
+    return json.at(key).get<int>();
 }
 
 static std::vector<std::string> load_string_vector(const Object &json, std::string_view name)
 {
-    if (!json.try_at(name) || !json.at(name).is_array())
+    const std::string key{name};
+    if (!json.contains(key) || !json.at(key).is_array())
     {
         throw std::runtime_error("Invalid config, missing string array '" + std::string{name} + "'");
     }
     std::vector<std::string> result;
-    for (const boost::json::value &val : json.at(name).as_array())
+    for (const Object &val : json.at(key))
     {
         if (!val.is_string())
         {
             throw std::runtime_error(
                 "Invalid config, string array '" + std::string{name} + "' contains non-string value");
         }
-        if (val.as_string().empty())
+        const std::string value{val.get<std::string>()};
+        if (value.empty())
         {
             throw std::runtime_error(
                 "Invalid config, string array '" + std::string{name} + "' contains empty string value");
         }
-        result.emplace_back(val.as_string());
+        result.emplace_back(value);
     }
     if (result.empty())
     {
@@ -99,21 +122,23 @@ static std::vector<std::string> load_string_vector(const Object &json, std::stri
     return result;
 }
 
-Config::Config(const boost::json::object &json) :
-    m_from(load_named_file_par_set(json, "from")),
-    m_to(load_named_file_par_set(json, "to")),
-    m_interpolate(load_string_vector(json, "interpolate")),
-    m_output(load_output_config(json)),
-    m_video(load_string(json, "video")),
-    m_num_frames(load_int(json, "num_frames"))
+Config::Config(std::string_view json_text)
 {
-    if (json.try_at("parallel"))
+    const Object json{parse_json(json_text)};
+    m_from = load_named_file_par_set(json, "from");
+    m_to = load_named_file_par_set(json, "to");
+    m_interpolate = load_string_vector(json, "interpolate");
+    m_output = load_output_config(json);
+    m_video = load_string(json, "video");
+    m_num_frames = load_int(json, "num_frames");
+
+    if (json.contains("parallel"))
     {
-        if (!json.at("parallel").is_int64())
+        if (!json.at("parallel").is_number_integer())
         {
             throw std::runtime_error("Invalid config, 'parallel' is not a number");
         }
-        m_parallel = static_cast<int>(json.at("parallel").as_int64());
+        m_parallel = json.at("parallel").get<int>();
     }
 }
 

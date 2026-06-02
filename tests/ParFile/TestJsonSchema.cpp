@@ -7,13 +7,21 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
+#include <fstream>
+#include <iterator>
 
 namespace
 {
 
+std::string read_text(const char *path)
+{
+    std::ifstream in{path};
+    return {std::istreambuf_iterator<char>{in}, std::istreambuf_iterator<char>{}};
+}
+
 bool validates_config_file(const char *path)
 {
-    return ParFile::validate_json_schema(TestParFile::CONFIG_SCHEMA_JSON, path);
+    return ParFile::validate_json_schema(read_text(TestParFile::CONFIG_SCHEMA_JSON), read_text(path));
 }
 
 } // namespace

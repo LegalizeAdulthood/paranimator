@@ -5,13 +5,22 @@
 #include <TestParFile/test.h>
 
 #include <ParFile/Config.h>
-#include <ParFile/Json.h>
-#include <boost/json.hpp>
 
 #include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
+
+#include <fstream>
+#include <iterator>
 
 namespace
 {
+
+nlohmann::json read_json(const char *path)
+{
+    std::ifstream in{path};
+    const std::string text{std::istreambuf_iterator<char>{in}, std::istreambuf_iterator<char>{}};
+    return nlohmann::json::parse(text.begin(), text.end());
+}
 
 struct TestInterpolator : testing::Test
 {
@@ -20,14 +29,14 @@ struct TestInterpolator : testing::Test
 protected:
     void SetUp() override
     {
-        m_json = ParFile::read_json(TestParFile::CENTER_MAG_CONFIG_JSON).as_object();
-        m_config = ParFile::Config{m_json};
+        m_json = read_json(TestParFile::CENTER_MAG_CONFIG_JSON);
+        m_config = ParFile::Config{m_json.dump()};
         m_lerper = ParFile::Interpolator{m_config};
     }
 
     void add_expected_params(ParFile::ParSet &frame, const std::string &save_name);
 
-    boost::json::object m_json;
+    nlohmann::json m_json;
     ParFile::Config m_config{};
     ParFile::Interpolator m_lerper{};
 };
@@ -54,8 +63,8 @@ TEST_F(TestInterpolator, firstFrameIsFrom)
 
 TEST_F(TestInterpolator, lastFrameIsTo)
 {
-    m_json.at("num_frames").as_int64() = 2;
-    m_config = ParFile::Config{m_json};
+    m_json["num_frames"] = 2;
+    m_config = ParFile::Config{m_json.dump()};
     m_lerper = ParFile::Interpolator{m_config};
     ParFile::ParSet expected{m_lerper.to()};
     expected.name = "frame-0002";
@@ -69,8 +78,8 @@ TEST_F(TestInterpolator, lastFrameIsTo)
 
 TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
 {
-    m_json.at("num_frames").as_int64() = 3;
-    m_config = ParFile::Config{m_json};
+    m_json["num_frames"] = 3;
+    m_config = ParFile::Config{m_json.dump()};
     m_lerper = ParFile::Interpolator{m_config};
     ParFile::ParSet expected{m_lerper.to()};
     expected.name = "frame-0002";
