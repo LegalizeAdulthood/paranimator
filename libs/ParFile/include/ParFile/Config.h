@@ -50,6 +50,10 @@ public:
     {
         return m_source;
     }
+    const std::vector<std::string> &parameter_catalogs() const
+    {
+        return m_parameter_catalogs;
+    }
     const OutputConfig &output() const
     {
         return m_output;
@@ -76,6 +80,7 @@ public:
     }
 
 private:
+    std::vector<std::string> m_parameter_catalogs;
     NamedFileParSet m_source;
     OutputConfig m_output;
     int m_parallel{1};

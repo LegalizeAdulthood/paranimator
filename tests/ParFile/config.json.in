@@ -1,4 +1,7 @@
 {
+  "parameter_catalogs": [
+    "viewport-catalog.json"
+  ],
   "source": {
     "file": "from.par",
     "name": "@TEST_SOURCE_PAR@"

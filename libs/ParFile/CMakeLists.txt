@@ -11,6 +11,7 @@ add_library(ParFile
     include/ParFile/Interpolator.h
     include/ParFile/JsonSchema.h
     include/ParFile/OutputLayout.h
+    include/ParFile/ParameterCatalog.h
     include/ParFile/ParFile.h
     include/ParFile/Script.h
     Config.cpp
@@ -18,6 +19,7 @@ add_library(ParFile
     Interpolator.cpp
     JsonSchema.cpp
     OutputLayout.cpp
+    ParameterCatalog.cpp
     ParFile.cpp
     Script.cpp
 )

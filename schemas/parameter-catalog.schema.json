@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://legalize.github.io/paranimator/schemas/parameter-catalog.schema.json",
+  "title": "ParAnimator parameter catalog",
+  "type": "object",
+  "required": [ "parameters" ],
+  "additionalProperties": false,
+  "properties": {
+    "parameters": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [ "type" ],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "type": "string" },
+          "format": { "type": "string" },
+          "default_curve": { "type": "string" },
+          "extrapolate": { "type": "string" }
+        }
+      }
+    }
+  }
+}

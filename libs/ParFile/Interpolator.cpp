@@ -4,11 +4,14 @@
 
 #include <ParFile/Config.h>
 #include <ParFile/Interpolant.h>
+#include <ParFile/ParameterCatalog.h>
 #include <ParFile/ParFile.h>
 
 #include <boost/format.hpp>
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -31,11 +34,32 @@ static ParSet load_par_set(const NamedFileParSet &par_entry)
     return *it;
 }
 
+static std::string read_text(const std::filesystem::path &path)
+{
+    std::ifstream in{path};
+    if (!in)
+    {
+        throw std::runtime_error("Unable to read file '" + path.string() + "'");
+    }
+    return {std::istreambuf_iterator<char>{in}, std::istreambuf_iterator<char>{}};
+}
+
+static ParameterCatalog load_parameter_catalog(const Config &config)
+{
+    if (config.parameter_catalogs().size() != 1U)
+    {
+        throw std::runtime_error("Expected exactly one parameter catalog");
+    }
+    return ParameterCatalog{read_text(config.parameter_catalogs()[0])};
+}
+
 std::vector<InterpolantPtr> Interpolator::load_interpolants(const Config &config, const ParSet &source)
 {
+    const ParameterCatalog catalog{load_parameter_catalog(config)};
     std::vector<InterpolantPtr> result;
     for (const TrackConfig &track : config.tracks())
     {
+        catalog.metadata(track.parameter);
         if (track.keys.size() != 2U)
         {
             throw std::runtime_error("Track '" + track.parameter + "' requires exactly two keyframes");

@@ -1,0 +1,16 @@
+{
+  "parameters": {
+    "center-mag": {
+      "type": "center_mag",
+      "format": "slash",
+      "default_curve": "geometric",
+      "extrapolate": "clamp"
+    },
+    "corners": {
+      "type": "corners",
+      "format": "slash",
+      "default_curve": "linear",
+      "extrapolate": "clamp"
+    }
+  }
+}

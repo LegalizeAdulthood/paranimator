@@ -7,12 +7,20 @@ namespace TestParFile
 
 constexpr const char *const FROM_PAR{"@CMAKE_CURRENT_BINARY_DIR@/from.par"};
 constexpr const char *const TO_PAR{"@CMAKE_CURRENT_BINARY_DIR@/to.par"};
-constexpr const char *const CENTER_MAG_CONFIG_JSON{"@CMAKE_CURRENT_BINARY_DIR@/center-mag.json"};
-constexpr const char *const CORNERS_CONFIG_JSON{"@CMAKE_CURRENT_BINARY_DIR@/corners.json"};
+constexpr const char *const VIEWPORT_CATALOG_JSON{
+    "@CMAKE_CURRENT_BINARY_DIR@/viewport-catalog.json"};
+constexpr const char *const CENTER_MAG_CONFIG_JSON{
+    "@CMAKE_CURRENT_BINARY_DIR@/center-mag.json"};
+constexpr const char *const CORNERS_CONFIG_JSON{
+    "@CMAKE_CURRENT_BINARY_DIR@/corners.json"};
 constexpr const char *const CONFIG_SCHEMA_JSON{"@CMAKE_SOURCE_DIR@/schemas/config.schema.json"};
+constexpr const char *const PARAMETER_CATALOG_SCHEMA_JSON{
+    "@CMAKE_SOURCE_DIR@/schemas/parameter-catalog.schema.json"};
 constexpr const char *const DATA_CONFIG_JSON{"@CMAKE_SOURCE_DIR@/data/config.json"};
 constexpr const char *const INVALID_OUTPUT_DIRECTORY_CONFIG_JSON{
     "@CMAKE_CURRENT_SOURCE_DIR@/invalid-output-directory-type.json"};
+constexpr const char *const INVALID_MISSING_METADATA_TYPE_JSON{
+    "@CMAKE_CURRENT_SOURCE_DIR@/invalid-missing-metadata-type.json"};
 constexpr const char *const TEST_VIDEO_MODE{"@TEST_VIDEO_MODE@"};
 constexpr const char *const TEST_OUTPUT_DIRECTORY{"@TEST_OUTPUT_DIRECTORY@"};
 constexpr const char *const TEST_OUTPUT_PAR{"@TEST_OUTPUT_PAR@"};

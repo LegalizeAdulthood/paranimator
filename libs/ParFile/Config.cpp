@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace ParFile
 {
@@ -59,6 +60,25 @@ static std::string load_string(const Object &json, std::string_view name, std::s
 static std::string load_string(const Object &json, std::string_view field)
 {
     return load_string(json, {}, field);
+}
+
+static std::vector<std::string> load_string_array(const Object &json, std::string_view name)
+{
+    const std::string key{name};
+    if (!json.contains(key) || !json.at(key).is_array())
+    {
+        throw std::runtime_error("Invalid config, missing array '" + std::string{name} + "'");
+    }
+    std::vector<std::string> result;
+    for (const Object &item : json.at(key))
+    {
+        if (!item.is_string())
+        {
+            throw std::runtime_error("Invalid config, array '" + std::string{name} + "' contains non-string value");
+        }
+        result.emplace_back(item.get<std::string>());
+    }
+    return result;
 }
 
 static NamedFileParSet load_named_file_par_set(const Object &json, std::string_view name)
@@ -150,6 +170,7 @@ static std::vector<TrackConfig> load_tracks(const Object &json, std::string_view
 Config::Config(std::string_view json_text)
 {
     const Object json{parse_json(json_text)};
+    m_parameter_catalogs = load_string_array(json, "parameter_catalogs");
     m_source = load_named_file_par_set(json, "source");
     m_output = load_output_config(json);
     m_video = load_string(json, "video");

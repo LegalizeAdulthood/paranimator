@@ -12,6 +12,7 @@ set(TEST_OUTPUT_SCRIPT "frames.bat")
 set(TEST_VIDEO_MODE "F6")
 configure_file("from.par.in" "from.par" @ONLY)
 configure_file("to.par.in" "to.par" @ONLY)
+configure_file("viewport-catalog.json" "viewport-catalog.json" COPYONLY)
 set(TEST_SOURCE_PAR "Mandel_Demo")
 set(TEST_TRACK_PARAMETER "center-mag")
 set(TEST_TRACK_FROM "-0.5/0/1")
@@ -31,6 +32,7 @@ add_executable(test-par-file
     TestJsonSchema.cpp
     TestOutputLayout.cpp
     TestParameter.cpp
+    TestParameterCatalog.cpp
     TestParFile.cpp
     TestParSet.cpp
     TestScript.cpp
@@ -39,17 +41,21 @@ add_executable(test-par-file
     from.par.in
     gold-center-mag.par
     invalid-extra-property.json
+    invalid-missing-metadata-type.json
     invalid-output-directory-type.json
     paranimator_test.cmake
     to.par.in
     config.json.in
+    viewport-catalog.json
     test.h.in
     "${CMAKE_CURRENT_BINARY_DIR}/from.par"
     "${CMAKE_CURRENT_BINARY_DIR}/to.par"
+    "${CMAKE_CURRENT_BINARY_DIR}/viewport-catalog.json"
     "${CMAKE_CURRENT_BINARY_DIR}/center-mag.json"
     "${CMAKE_CURRENT_BINARY_DIR}/corners.json"
     "${CMAKE_CURRENT_BINARY_DIR}/include/TestParFile/test.h"
     "${CMAKE_SOURCE_DIR}/schemas/config.schema.json"
+    "${CMAKE_SOURCE_DIR}/schemas/parameter-catalog.schema.json"
 )
 source_group("Template Files" REGULAR_EXPRESSION "^.*\\.in$")
 source_group("Data Files" REGULAR_EXPRESSION "^.*\\.(par|json)$")

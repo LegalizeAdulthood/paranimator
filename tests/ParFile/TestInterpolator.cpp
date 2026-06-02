@@ -11,6 +11,7 @@
 
 #include <fstream>
 #include <iterator>
+#include <stdexcept>
 
 namespace
 {
@@ -94,4 +95,12 @@ TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
     frame = m_lerper();
 
     ASSERT_EQ(expected, frame);
+}
+
+TEST_F(TestInterpolator, unknownAnimatedParameterRejected)
+{
+    m_json["tracks"][0]["parameter"] = "unknown";
+    m_config = ParFile::Config{m_json.dump()};
+
+    EXPECT_THROW(ParFile::Interpolator{m_config}, std::runtime_error);
 }

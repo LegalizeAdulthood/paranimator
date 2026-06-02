@@ -15,6 +15,7 @@ namespace
 Object valid_json()
 {
     return Object{
+        {"parameter_catalogs", Object::array({"viewport-catalog.json"})},       //
         {"source", Object{{"file", "foo.par"}, {"name", "foo"}}},       //
         {"output", Object{{"directory", "out"},                         //
                        {"par", "output.par"},                           //
@@ -38,6 +39,8 @@ TEST(TestConfig, minimumValid)
     ParFile::Config config{valid_json().dump()};
 
     EXPECT_EQ("foo.par", config.source().file);
+    ASSERT_EQ(1U, config.parameter_catalogs().size());
+    EXPECT_EQ("viewport-catalog.json", config.parameter_catalogs()[0]);
     EXPECT_EQ("foo", config.source().name);
     EXPECT_EQ("out", config.output().directory);
     EXPECT_EQ("output.par", config.output().par);
@@ -57,6 +60,14 @@ TEST(TestConfig, optionalParallelValid)
     ParFile::Config config{json.dump()};
 
     EXPECT_EQ(20, config.parallel());
+}
+
+TEST(TestConfig, missingParameterCatalogs)
+{
+    Object json{valid_json()};
+    json.erase("parameter_catalogs");
+
+    expect_invalid(json);
 }
 
 TEST(TestConfig, missingSource)
