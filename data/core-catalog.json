@@ -11,6 +11,12 @@
       "format": "slash",
       "default_curve": "linear",
       "extrapolate": "clamp"
+    },
+    "maxiter": {
+      "type": "integer",
+      "format": "raw",
+      "default_curve": "linear",
+      "extrapolate": "clamp"
     }
   }
 }

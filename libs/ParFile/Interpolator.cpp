@@ -4,11 +4,11 @@
 
 #include <ParFile/Config.h>
 #include <ParFile/Interpolant.h>
-#include <ParFile/ParameterCatalog.h>
 #include <ParFile/ParFile.h>
+#include <ParFile/ParameterCatalog.h>
 
-#include <boost/format.hpp>
 #include <algorithm>
+#include <boost/format.hpp>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -59,23 +59,13 @@ std::vector<InterpolantPtr> Interpolator::load_interpolants(const Config &config
     std::vector<InterpolantPtr> result;
     for (const TrackConfig &track : config.tracks())
     {
-        catalog.metadata(track.parameter);
-        if (track.keys.size() != 2U)
-        {
-            throw std::runtime_error("Track '" + track.parameter + "' requires exactly two keyframes");
-        }
-        if (track.keys[0].frame != 0 || track.keys[1].frame != config.num_frames() - 1)
-        {
-            throw std::runtime_error("Track '" + track.parameter + "' must span the full frame range");
-        }
+        const ParameterMetadata &metadata{catalog.metadata(track.parameter)};
         const auto is_name{[&](const Parameter &param) { return param.name == track.parameter; }};
         if (std::find_if(source.params.begin(), source.params.end(), is_name) == source.params.end())
         {
-            throw std::runtime_error(
-                "Parameter set '" + source.name + "' has no parameter '" + track.parameter + "'");
+            throw std::runtime_error("Parameter set '" + source.name + "' has no parameter '" + track.parameter + "'");
         }
-        result.emplace_back(
-            create_interpolant(track.parameter, track.keys[0].value, track.keys[1].value, config.num_frames()));
+        result.emplace_back(create_interpolant(metadata, track.keys, config.num_frames()));
     }
     return result;
 }
@@ -85,7 +75,8 @@ Interpolator::Interpolator(const Config &config) :
     m_video(config.video()),
     m_source(load_par_set(config.source())),
     m_interpolants(load_interpolants(config, m_source))
-{}
+{
+}
 
 ParSet Interpolator::operator()()
 {

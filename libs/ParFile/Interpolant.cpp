@@ -2,7 +2,9 @@
 //
 #include <ParFile/Interpolant.h>
 
+#include <ParFile/Config.h>
 #include <ParFile/ParFile.h>
+#include <ParFile/ParameterCatalog.h>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/format.hpp>
 
@@ -11,6 +13,8 @@
 #include <complex>
 #include <cstddef>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace ParFile
@@ -80,6 +84,52 @@ protected:
     SegmentEvaluator m_segment;
 };
 
+void validate_keyframes(const std::string &name, const std::vector<KeyframeConfig> &keys, int num_steps)
+{
+    if (keys.size() != 2U)
+    {
+        throw std::runtime_error("Track '" + name + "' requires exactly two keyframes");
+    }
+    if (keys[0].frame < 0 || keys[1].frame < 0 || keys[0].frame >= num_steps || keys[1].frame >= num_steps)
+    {
+        throw std::runtime_error("Track '" + name + "' has keyframes outside the frame range");
+    }
+    if (keys[0].frame >= keys[1].frame)
+    {
+        throw std::runtime_error("Track '" + name + "' keyframes must be in increasing order");
+    }
+}
+
+void validate_full_range(const std::string &name, const std::vector<KeyframeConfig> &keys, int num_steps)
+{
+    if (keys[0].frame != 0 || keys[1].frame != num_steps - 1)
+    {
+        throw std::runtime_error("Track '" + name + "' must span the full frame range");
+    }
+}
+
+int parse_integer(const std::string &text)
+{
+    try
+    {
+        std::size_t length{};
+        const int value{std::stoi(text, &length)};
+        if (length != text.size())
+        {
+            throw std::runtime_error("Invalid integer value '" + text + "'");
+        }
+        return value;
+    }
+    catch (const std::invalid_argument &)
+    {
+        throw std::runtime_error("Invalid integer value '" + text + "'");
+    }
+    catch (const std::out_of_range &)
+    {
+        throw std::runtime_error("Integer value out of range '" + text + "'");
+    }
+}
+
 struct CenterMag
 {
     CenterMag() = default;
@@ -112,7 +162,7 @@ CenterMag::CenterMag(const std::string &value)
 class CenterMagInterpolant : public Base
 {
 public:
-    CenterMagInterpolant(const std::string &from, const std::string &to, int num_steps);
+    CenterMagInterpolant(std::string_view name, const std::string &from, const std::string &to, int num_steps);
     CenterMagInterpolant(const CenterMagInterpolant &rhs) = delete;
     CenterMagInterpolant(CenterMagInterpolant &&rhs) = delete;
     CenterMagInterpolant &operator=(const CenterMagInterpolant &rhs) = delete;
@@ -126,8 +176,9 @@ private:
     CenterMag m_to;
 };
 
-CenterMagInterpolant::CenterMagInterpolant(const std::string &from, const std::string &to, int num_steps) :
-    Base("center-mag", num_steps),
+CenterMagInterpolant::CenterMagInterpolant(
+    std::string_view name, const std::string &from, const std::string &to, int num_steps) :
+    Base(name, num_steps),
     m_from(from),
     m_to(to)
 {
@@ -165,7 +216,7 @@ struct Corners
 class CornersInterpolant : public Base
 {
 public:
-    CornersInterpolant(const std::string &from, const std::string &to, int num_steps);
+    CornersInterpolant(std::string_view name, const std::string &from, const std::string &to, int num_steps);
     ~CornersInterpolant() override = default;
 
     std::string step() override;
@@ -188,8 +239,9 @@ Corners::Corners(const std::string &value)
     std::transform(text.begin(), text.end(), values.begin(), [](const std::string &item) { return std::stod(item); });
 }
 
-CornersInterpolant::CornersInterpolant(const std::string &from, const std::string &to, int num_steps) :
-    Base("corners", num_steps),
+CornersInterpolant::CornersInterpolant(
+    std::string_view name, const std::string &from, const std::string &to, int num_steps) :
+    Base(name, num_steps),
     m_from(from),
     m_to(to)
 {
@@ -215,21 +267,69 @@ std::string CornersInterpolant::step()
     return result;
 }
 
+class IntegerInterpolant : public Base
+{
+public:
+    IntegerInterpolant(std::string_view name, const std::vector<KeyframeConfig> &keys, int num_steps);
+    ~IntegerInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    int m_from_frame{};
+    int m_to_frame{};
+    int m_from{};
+    int m_to{};
+};
+
+IntegerInterpolant::IntegerInterpolant(std::string_view name, const std::vector<KeyframeConfig> &keys, int num_steps) :
+    Base(name, num_steps),
+    m_from_frame(keys[0].frame),
+    m_to_frame(keys[1].frame),
+    m_from(parse_integer(keys[0].value)),
+    m_to(parse_integer(keys[1].value))
+{
+}
+
+std::string IntegerInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+    if (frame <= m_from_frame)
+    {
+        return std::to_string(m_from);
+    }
+    if (frame >= m_to_frame)
+    {
+        return std::to_string(m_to);
+    }
+    const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+    const double value{m_from + fraction * (m_to - m_from)};
+    return std::to_string(static_cast<int>(std::lround(value)));
+}
+
 } // namespace
 
 InterpolantPtr create_interpolant(
-    const std::string &name, const std::string &from, const std::string &to, int num_steps)
+    const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, int num_steps)
 {
-    if (name == "center-mag")
+    validate_keyframes(metadata.name, keys, num_steps);
+    if (metadata.type == "center_mag")
     {
-        return std::make_shared<CenterMagInterpolant>(from, to, num_steps);
+        validate_full_range(metadata.name, keys, num_steps);
+        return std::make_shared<CenterMagInterpolant>(metadata.name, keys[0].value, keys[1].value, num_steps);
     }
-    if (name == "corners")
+    if (metadata.type == "corners")
     {
-        return std::make_shared<CornersInterpolant>(from, to, num_steps);
+        validate_full_range(metadata.name, keys, num_steps);
+        return std::make_shared<CornersInterpolant>(metadata.name, keys[0].value, keys[1].value, num_steps);
+    }
+    if (metadata.type == "integer")
+    {
+        return std::make_shared<IntegerInterpolant>(metadata.name, keys, num_steps);
     }
 
-    throw std::runtime_error("Unknown interpolant '" + name + "'");
+    throw std::runtime_error("Unknown track type '" + metadata.type + "' for parameter '" + metadata.name + "'");
 }
 
 } // namespace ParFile

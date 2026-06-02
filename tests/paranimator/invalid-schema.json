@@ -1,6 +1,6 @@
 {
   "parameter_catalogs": [
-    "input/viewport-catalog.json"
+    "input/core-catalog.json"
   ],
   "source": {
     "file": "input/source.par",

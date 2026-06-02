@@ -12,7 +12,7 @@ set(TEST_OUTPUT_SCRIPT "frames.bat")
 set(TEST_VIDEO_MODE "F6")
 configure_file("from.par.in" "from.par" @ONLY)
 configure_file("to.par.in" "to.par" @ONLY)
-configure_file("viewport-catalog.json" "viewport-catalog.json" COPYONLY)
+configure_file("${CMAKE_SOURCE_DIR}/data/core-catalog.json" "core-catalog.json" COPYONLY)
 set(TEST_SOURCE_PAR "Mandel_Demo")
 set(TEST_TRACK_PARAMETER "center-mag")
 set(TEST_TRACK_FROM "-0.5/0/1")
@@ -23,6 +23,11 @@ set(TEST_TRACK_PARAMETER "corners")
 set(TEST_TRACK_FROM "-3.570101/-0.0499383/-1.320061/1.320061")
 set(TEST_TRACK_TO "-1.8101050271/-1.8099342992/-6.37250230799e-05/6.4320896203e-05")
 configure_file("config.json.in" "corners.json" @ONLY)
+set(TEST_SOURCE_PAR "Mandel_Demo")
+set(TEST_TRACK_PARAMETER "maxiter")
+set(TEST_TRACK_FROM "100")
+set(TEST_TRACK_TO "200")
+configure_file("config.json.in" "maxiter.json" @ONLY)
 configure_file("test.h.in" "include/TestParFile/test.h" @ONLY)
 
 add_executable(test-par-file
@@ -42,13 +47,14 @@ add_executable(test-par-file
     invalid-output-directory-type.json
     to.par.in
     config.json.in
-    viewport-catalog.json
+    "${CMAKE_SOURCE_DIR}/data/core-catalog.json"
     test.h.in
     "${CMAKE_CURRENT_BINARY_DIR}/from.par"
     "${CMAKE_CURRENT_BINARY_DIR}/to.par"
-    "${CMAKE_CURRENT_BINARY_DIR}/viewport-catalog.json"
+    "${CMAKE_CURRENT_BINARY_DIR}/core-catalog.json"
     "${CMAKE_CURRENT_BINARY_DIR}/center-mag.json"
     "${CMAKE_CURRENT_BINARY_DIR}/corners.json"
+    "${CMAKE_CURRENT_BINARY_DIR}/maxiter.json"
     "${CMAKE_CURRENT_BINARY_DIR}/include/TestParFile/test.h"
     "${CMAKE_SOURCE_DIR}/schemas/config.schema.json"
     "${CMAKE_SOURCE_DIR}/schemas/parameter-catalog.schema.json"

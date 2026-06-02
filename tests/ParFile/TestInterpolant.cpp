@@ -2,7 +2,37 @@
 //
 #include <ParFile/Interpolant.h>
 
+#include <ParFile/Config.h>
+#include <ParFile/ParameterCatalog.h>
+
 #include <gtest/gtest.h>
+
+namespace
+{
+
+ParFile::ParameterMetadata metadata(const std::string &name, const std::string &type)
+{
+    return {name, type, "slash", "linear", "clamp"};
+}
+
+std::vector<ParFile::KeyframeConfig> keyframes(const std::string &from, const std::string &to, int num_steps)
+{
+    return {{0, from}, {num_steps - 1, to}};
+}
+
+ParFile::InterpolantPtr create_interpolant(
+    const std::string &name, const std::string &type, const std::string &from, const std::string &to, int num_steps)
+{
+    return ParFile::create_interpolant(metadata(name, type), keyframes(from, to, num_steps), num_steps);
+}
+
+ParFile::InterpolantPtr create_interpolant(
+    const std::string &name, const std::string &type, const std::vector<ParFile::KeyframeConfig> &keys, int num_steps)
+{
+    return ParFile::create_interpolant(metadata(name, type), keys, num_steps);
+}
+
+} // namespace
 
 TEST(TestInterpolant, centerMag)
 {
@@ -10,7 +40,7 @@ TEST(TestInterpolant, centerMag)
     const std::string to{"-0.5/0.0/10.0"};
     const int num_steps{3};
 
-    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("center-mag", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center_mag", from, to, num_steps)};
 
     ASSERT_TRUE(interpolant);
     ASSERT_EQ("center-mag", interpolant->name());
@@ -21,7 +51,7 @@ TEST(TestInterpolant, centerMagFrom)
     const std::string from{"-0.5/0/1"};
     const std::string to{"-0.5/0/10"};
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("center-mag", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center_mag", from, to, num_steps)};
 
     const std::string value{interpolant->step()};
 
@@ -33,7 +63,7 @@ TEST(TestInterpolant, centerMagMagnificationIsGeometric)
     const std::string from{"-0.5/0.0/1.0"};
     const std::string to{"-0.5/0.0/10.0"};
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("center-mag", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center_mag", from, to, num_steps)};
     static_cast<void>(interpolant->step());
 
     const std::string value{interpolant->step()};
@@ -46,7 +76,7 @@ TEST(TestInterpolant, centerMagCenterFraction)
     const std::string from{"-1/-2/1"};
     const std::string to{"1/2/1"};
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("center-mag", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center_mag", from, to, num_steps)};
     static_cast<void>(interpolant->step());
 
     const std::string value{interpolant->step()};
@@ -59,7 +89,7 @@ TEST(TestInterpolant, centerMagTo)
     const std::string from{"-0.5/0/1"};
     const std::string to{"-0.5/0/10"};
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("center-mag", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center_mag", from, to, num_steps)};
     static_cast<void>(interpolant->step());
     static_cast<void>(interpolant->step());
 
@@ -74,7 +104,7 @@ TEST(TestInterpolant, corners)
     const std::string to{"-1.8101050271/-1.8099342992/-6.37250230799e-05/6.4320896203e-05"};
     const int num_steps{3};
 
-    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("corners", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("corners", "corners", from, to, num_steps)};
 
     ASSERT_TRUE(interpolant);
     ASSERT_EQ("corners", interpolant->name());
@@ -85,7 +115,7 @@ TEST(TestInterpolant, cornersFrom)
     const std::string from{"-3.570101/-0.0499383/-1.320061/1.320061"};
     const std::string to{"-1.8101050271/-1.8099342992/-6.37250230799e-05/6.4320896203e-05"};
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("corners", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("corners", "corners", from, to, num_steps)};
 
     const std::string value{interpolant->step()};
 
@@ -97,7 +127,7 @@ TEST(TestInterpolant, cornersFraction)
     const std::string from{"-3.570101/-0.0499383/-1.320061/1.320061"};
     const std::string to{"-1.8101050271/-1.8099342992/-6.37250230799e-05/6.4320896203e-05"};
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("corners", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("corners", "corners", from, to, num_steps)};
     static_cast<void>(interpolant->step());
 
     const std::string value{interpolant->step()};
@@ -110,7 +140,7 @@ TEST(TestInterpolant, cornersTo)
     const std::string from{"-3.570101/-0.0499383/-1.320061/1.320061"};
     const std::string to{"-1.8101050271/-1.8099342992/-6.37250230799e-05/6.4320896203e-05"};
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("corners", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("corners", "corners", from, to, num_steps)};
     static_cast<void>(interpolant->step());
     static_cast<void>(interpolant->step());
 
@@ -124,7 +154,7 @@ TEST(TestInterpolant, cornersSixValueFraction)
     const std::string from{"0/10/0/10/1/2"};
     const std::string to{"10/20/10/20/3/4"};
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("corners", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("corners", "corners", from, to, num_steps)};
     static_cast<void>(interpolant->step());
 
     const std::string value{interpolant->step()};
@@ -138,7 +168,7 @@ TEST(TestInterpolant, cornersMismatchedArityRejected)
     const std::string to{"10/20/10/20/3/4"};
     const int num_steps{3};
 
-    EXPECT_THROW(ParFile::create_interpolant("corners", from, to, num_steps), std::runtime_error);
+    EXPECT_THROW(create_interpolant("corners", "corners", from, to, num_steps), std::runtime_error);
 }
 
 TEST(TestInterpolant, cornersInvalidArityRejected)
@@ -147,5 +177,61 @@ TEST(TestInterpolant, cornersInvalidArityRejected)
     const std::string to{"10/20/10/20/3"};
     const int num_steps{3};
 
-    EXPECT_THROW(ParFile::create_interpolant("corners", from, to, num_steps), std::runtime_error);
+    EXPECT_THROW(create_interpolant("corners", "corners", from, to, num_steps), std::runtime_error);
+}
+
+TEST(TestInterpolant, integerFrom)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_interpolant("maxiter", "integer", "100", "200", num_steps)};
+
+    const std::string value{interpolant->step()};
+
+    EXPECT_EQ("100", value);
+}
+
+TEST(TestInterpolant, integerTo)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_interpolant("maxiter", "integer", "100", "200", num_steps)};
+    static_cast<void>(interpolant->step());
+    static_cast<void>(interpolant->step());
+
+    const std::string value{interpolant->step()};
+
+    EXPECT_EQ("200", value);
+}
+
+TEST(TestInterpolant, integerFraction)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_interpolant("maxiter", "integer", "100", "200", num_steps)};
+    static_cast<void>(interpolant->step());
+
+    const std::string value{interpolant->step()};
+
+    EXPECT_EQ("150", value);
+}
+
+TEST(TestInterpolant, integerRoundingIsStable)
+{
+    const int num_steps{4};
+    ParFile::InterpolantPtr interpolant{create_interpolant("maxiter", "integer", "0", "2", num_steps)};
+    static_cast<void>(interpolant->step());
+
+    const std::string value{interpolant->step()};
+
+    EXPECT_EQ("1", value);
+}
+
+TEST(TestInterpolant, integerClampExtrapolation)
+{
+    const int num_steps{4};
+    const std::vector<ParFile::KeyframeConfig> keys{{1, "10"}, {2, "20"}};
+    ParFile::InterpolantPtr interpolant{create_interpolant("maxiter", "integer", keys, num_steps)};
+
+    EXPECT_EQ("10", interpolant->step());
+    EXPECT_EQ("10", interpolant->step());
+    EXPECT_EQ("20", interpolant->step());
+    EXPECT_EQ("20", interpolant->step());
 }

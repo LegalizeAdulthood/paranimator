@@ -8,6 +8,7 @@ function(add_paranimator_test name)
             "-DPARANIMATOR=$<SHELL_PATH:$<TARGET_FILE:paranimator>>"
             "-DTEST_NAME=${name}"
             "-DTEST_SOURCE_DIR=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}>"
+            "-DCORE_CATALOG=$<SHELL_PATH:${CMAKE_SOURCE_DIR}/data/core-catalog.json>"
             "-DGOLD_PAR=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/gold-${name}.par>"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/paranimator_test.cmake"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${name}"
@@ -23,6 +24,7 @@ function(add_paranimator_schema_test name)
             "-DPARANIMATOR=$<SHELL_PATH:$<TARGET_FILE:paranimator>>"
             "-DTEST_NAME=${name}"
             "-DTEST_SOURCE_DIR=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}>"
+            "-DCORE_CATALOG=$<SHELL_PATH:${CMAKE_SOURCE_DIR}/data/core-catalog.json>"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/schema_test.cmake"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${name}"
     )
@@ -31,4 +33,5 @@ endfunction()
 
 add_paranimator_test(center-mag)
 add_paranimator_test(corners)
+add_paranimator_test(maxiter)
 add_paranimator_schema_test(invalid-schema)

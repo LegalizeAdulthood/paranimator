@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
-foreach(name PARANIMATOR TEST_NAME TEST_SOURCE_DIR GOLD_PAR)
+foreach(name PARANIMATOR TEST_NAME TEST_SOURCE_DIR CORE_CATALOG GOLD_PAR)
     if(NOT DEFINED ${name})
         message(FATAL_ERROR "Missing required variable: ${name}")
     endif()
@@ -16,12 +16,12 @@ file(REMOVE_RECURSE "${input_directory}" "${output_directory}")
 file(MAKE_DIRECTORY "${input_directory}")
 foreach(input_file
         "${TEST_NAME}.json"
-        "source.par"
-        "viewport-catalog.json")
+        "source.par")
     file(COPY_FILE
         "${TEST_SOURCE_DIR}/${input_file}"
         "${input_directory}/${input_file}")
 endforeach()
+file(COPY_FILE "${CORE_CATALOG}" "${input_directory}/core-catalog.json")
 
 execute_process(
     COMMAND "${PARANIMATOR}" "${valid_config}"

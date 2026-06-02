@@ -1,5 +1,5 @@
 {
-  "parameter_catalogs": [ "input/viewport-catalog.json" ],
+  "parameter_catalogs": [ "input/core-catalog.json" ],
   "source": {
     "file": "input/source.par",
     "name": "Corners_Demo"

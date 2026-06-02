@@ -15,15 +15,16 @@ namespace
 Object valid_json()
 {
     return Object{
-        {"parameter_catalogs", Object::array({"viewport-catalog.json"})},       //
-        {"source", Object{{"file", "foo.par"}, {"name", "foo"}}},       //
-        {"output", Object{{"directory", "out"},                         //
-                       {"par", "output.par"},                           //
-                       {"entry", "frame-%04d"},                         //
-                       {"script", "output.bat"}}},                      //
-        {"video", "F6"},                                                //
-        {"num_frames", 60},                                             //
-        {"tracks", Object::array()}                                     //
+        {"parameter_catalogs", Object::array({"core-catalog.json"})}, //
+        {"source", Object{{"file", "foo.par"}, {"name", "foo"}}},     //
+        {"output",
+            Object{{"directory", "out"},    //
+                {"par", "output.par"},      //
+                {"entry", "frame-%04d"},    //
+                {"script", "output.bat"}}}, //
+        {"video", "F6"},                    //
+        {"num_frames", 60},                 //
+        {"tracks", Object::array()}         //
     };
 }
 
@@ -40,7 +41,7 @@ TEST(TestConfig, minimumValid)
 
     EXPECT_EQ("foo.par", config.source().file);
     ASSERT_EQ(1U, config.parameter_catalogs().size());
-    EXPECT_EQ("viewport-catalog.json", config.parameter_catalogs()[0]);
+    EXPECT_EQ("core-catalog.json", config.parameter_catalogs()[0]);
     EXPECT_EQ("foo", config.source().name);
     EXPECT_EQ("out", config.output().directory);
     EXPECT_EQ("output.par", config.output().par);
@@ -161,13 +162,10 @@ TEST(TestConfig, missingTracks)
 TEST(TestConfig, oneTrackValid)
 {
     Object json{valid_json()};
-    json["tracks"] = Object::array({Object{
-        {"parameter", "center-mag"},
-        {"keys", Object::array({
-            Object{{"frame", 0}, {"value", "-0.5/0/1"}},
-            Object{{"frame", 2}, {"value", "-0.5/0/10"}}
-        })}
-    }});
+    json["tracks"] = Object::array({Object{{"parameter", "center-mag"},
+        {"keys",
+            Object::array(
+                {Object{{"frame", 0}, {"value", "-0.5/0/1"}}, Object{{"frame", 2}, {"value", "-0.5/0/10"}}})}}});
 
     ParFile::Config config{json.dump()};
 

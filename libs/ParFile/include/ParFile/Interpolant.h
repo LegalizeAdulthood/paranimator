@@ -2,12 +2,16 @@
 //
 #pragma once
 
+#include <ParFile/Config.h>
+
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace ParFile
 {
 
+struct ParameterMetadata;
 struct Parameter;
 
 class Interpolant
@@ -22,6 +26,6 @@ public:
 using InterpolantPtr = std::shared_ptr<Interpolant>;
 
 InterpolantPtr create_interpolant(
-    const std::string &name, const std::string &from, const std::string &to, int num_steps);
+    const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, int num_steps);
 
 } // namespace ParFile

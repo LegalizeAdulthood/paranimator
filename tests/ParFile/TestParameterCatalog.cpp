@@ -20,16 +20,16 @@ std::string read_text(const char *path)
     return {std::istreambuf_iterator<char>{in}, std::istreambuf_iterator<char>{}};
 }
 
-ParFile::ParameterCatalog viewport_catalog()
+ParFile::ParameterCatalog core_catalog()
 {
-    return ParFile::ParameterCatalog{read_text(TestParFile::VIEWPORT_CATALOG_JSON)};
+    return ParFile::ParameterCatalog{read_text(TestParFile::CORE_CATALOG_JSON)};
 }
 
 } // namespace
 
 TEST(TestParameterCatalog, centerMagMetadataLoads)
 {
-    const ParFile::ParameterCatalog catalog{viewport_catalog()};
+    const ParFile::ParameterCatalog catalog{core_catalog()};
     const ParFile::ParameterMetadata &metadata{catalog.metadata("center-mag")};
 
     EXPECT_EQ("center-mag", metadata.name);
@@ -41,7 +41,7 @@ TEST(TestParameterCatalog, centerMagMetadataLoads)
 
 TEST(TestParameterCatalog, cornersMetadataLoads)
 {
-    const ParFile::ParameterCatalog catalog{viewport_catalog()};
+    const ParFile::ParameterCatalog catalog{core_catalog()};
     const ParFile::ParameterMetadata &metadata{catalog.metadata("corners")};
 
     EXPECT_EQ("corners", metadata.name);
@@ -51,14 +51,25 @@ TEST(TestParameterCatalog, cornersMetadataLoads)
     EXPECT_EQ("clamp", metadata.extrapolate);
 }
 
+TEST(TestParameterCatalog, maxiterMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("maxiter")};
+
+    EXPECT_EQ("maxiter", metadata.name);
+    EXPECT_EQ("integer", metadata.type);
+    EXPECT_EQ("raw", metadata.format);
+    EXPECT_EQ("linear", metadata.default_curve);
+    EXPECT_EQ("clamp", metadata.extrapolate);
+}
+
 TEST(TestParameterCatalog, unknownAnimatedParameterRejected)
 {
-    EXPECT_THROW(viewport_catalog().metadata("unknown"), std::runtime_error);
+    EXPECT_THROW(core_catalog().metadata("unknown"), std::runtime_error);
 }
 
 TEST(TestParameterCatalog, missingMetadataTypeRejected)
 {
     EXPECT_THROW(
-        ParFile::ParameterCatalog{read_text(TestParFile::INVALID_MISSING_METADATA_TYPE_JSON)},
-        std::runtime_error);
+        ParFile::ParameterCatalog{read_text(TestParFile::INVALID_MISSING_METADATA_TYPE_JSON)}, std::runtime_error);
 }

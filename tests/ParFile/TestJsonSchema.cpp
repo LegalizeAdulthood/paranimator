@@ -26,8 +26,7 @@ bool validates_config_file(const char *path)
 
 bool validates_parameter_catalog_file(const char *path)
 {
-    return ParFile::validate_json_schema(
-        read_text(TestParFile::PARAMETER_CATALOG_SCHEMA_JSON), read_text(path));
+    return ParFile::validate_json_schema(read_text(TestParFile::PARAMETER_CATALOG_SCHEMA_JSON), read_text(path));
 }
 
 } // namespace
@@ -44,6 +43,7 @@ TEST(TestJsonSchema, validConfigFilesPass)
 {
     EXPECT_TRUE(validates_config_file(TestParFile::CENTER_MAG_CONFIG_JSON));
     EXPECT_TRUE(validates_config_file(TestParFile::CORNERS_CONFIG_JSON));
+    EXPECT_TRUE(validates_config_file(TestParFile::MAXITER_CONFIG_JSON));
     EXPECT_TRUE(validates_config_file(TestParFile::DATA_CONFIG_JSON));
 }
 
@@ -57,7 +57,7 @@ TEST(TestJsonSchema, parameterCatalogSchemaPathStable)
 
 TEST(TestJsonSchema, validParameterCatalogPasses)
 {
-    EXPECT_TRUE(validates_parameter_catalog_file(TestParFile::VIEWPORT_CATALOG_JSON));
+    EXPECT_TRUE(validates_parameter_catalog_file(TestParFile::CORE_CATALOG_JSON));
 }
 
 TEST(TestJsonSchema, missingMetadataTypeRejected)
