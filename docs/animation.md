@@ -79,8 +79,8 @@ Example conceptual timing:
         frame 900    2000
 
     colors:
-        frame 0      maps/fire.map
-        frame 900    maps/ice.map
+        frame 0      fire.map
+        frame 900    ice.map
 
     lightsource:
         frame 200    -1/-1/1
@@ -637,9 +637,13 @@ Example:
         "name": "base"
       },
 
-      "output": "frames.par",
-      "script": "render.bat",
-      "frame": "frame%04d",
+      "output": {
+        "directory": "out/julia-pan",
+        "par": "frames.par",
+        "entry": "frame%04d",
+        "script": "render.bat",
+        "frames": "frame%04d.png"
+      },
       "video": "yes",
       "num_frames": 900,
 
@@ -667,16 +671,59 @@ Example:
           "parameter": "colors",
           "type": "colormap",
           "format": "at_file",
-          "output": "work/colors-%04d.map",
+          "output": "colors-%04d.map",
           "keys": [
-            { "frame": 0,   "value": "maps/fire.map" },
-            { "frame": 900, "value": "maps/ice.map" }
+            { "frame": 0,   "value": "fire.map" },
+            { "frame": 900, "value": "ice.map" }
           ]
         }
       ]
     }
 
 The track does not need to repeat the type if the catalog declares it.
+
+## Output Layout
+
+The animation file specifies one output directory. ParAnimator writes
+generated ID library files under that directory:
+
+    output-directory/par
+        Generated par files.
+
+    output-directory/map
+        Generated map files.
+
+    output-directory
+        Generated batch scripts.
+
+Rendered frame and layer images may use separate configured directories,
+but par files and map files must use ID's library layout.
+
+output.par is the generated par filename under output-directory/par.
+output.entry is the generated par entry name pattern.
+
+Batch commands and colormap values reference par and map files by
+filename only. Do not write generated map paths into colors values, and
+do not write generated par paths into ID @ arguments.
+
+Example generated colors value:
+
+    colors=@colors-0042.map
+
+Example batch command shape:
+
+    id batch=yes librarydirs=out/julia-pan @frames.par/frame0042
+
+This uses ID's @par/name syntax. Here par is frames.par, a generated file
+in output-directory/par, and name is frame0042, an entry in that file.
+
+The batch file passes librarydirs pointing at the animation output
+directory. ID then locates generated par files in the par subdirectory
+and generated map files in the map subdirectory.
+
+Source par and map names are filenames too. ParAnimator may resolve them
+using its own configured library search, but generated output should not
+embed those paths.
 
 ## Layered Animation Files
 
@@ -696,8 +743,11 @@ Example:
       ],
 
       "output": {
+        "directory": "out/layered-shot",
+        "par": "layers.par",
+        "entry": "layer-%s-%04d",
         "frames": "frames/frame%04d.png",
-        "layers": "work/layer-%s-%04d.png",
+        "layers": "layer-%s-%04d.png",
         "script": "render.bat",
         "compose_script": "compose.bat",
         "background": "black"
@@ -832,10 +882,10 @@ The simplest colormap track interpolates between map files:
       "parameter": "colors",
       "type": "colormap",
       "format": "at_file",
-      "output": "work/colors-%04d.map",
+      "output": "colors-%04d.map",
       "keys": [
-        { "frame": 0,   "value": "maps/fire.map" },
-        { "frame": 300, "value": "maps/ice.map" }
+        { "frame": 0,   "value": "fire.map" },
+        { "frame": 300, "value": "ice.map" }
       ]
     }
 
@@ -847,8 +897,8 @@ For richer animation, use a source map plus an ordered effect list:
       "parameter": "colors",
       "type": "colormap",
       "format": "at_file",
-      "output": "work/colors-%04d.map",
-      "source": "maps/base.map",
+      "output": "colors-%04d.map",
+      "source": "base.map",
       "effects": [
         {
           "kind": "rotate_range",
@@ -877,8 +927,8 @@ At each frame:
 
     evaluate the source map
     apply each effect in order
-    write work/colors-0000.map
-    return @work/colors-0000.map as the colors parameter value
+    write output-directory/map/colors-0000.map
+    return @colors-0000.map as the colors parameter value
 
 Effect parameters may be constants or keyed scalar, tuple, color, or enum
 tracks. This keeps timing local to the colormap track while reusing the
@@ -943,7 +993,7 @@ Example generated map:
       "parameter": "colors",
       "type": "colormap",
       "format": "at_file",
-      "output": "work/gradient-%04d.map",
+      "output": "gradient-%04d.map",
       "source": {
         "kind": "gradient",
         "stops": [
@@ -1354,14 +1404,14 @@ The generated frame loop should remain simple:
         for each track:
             apply track assignments at frame_number
 
-        write any side files produced by tracks
+        write map side files to output-directory/map
         append batch parameters
         append savename parameter
         append overwrite parameter
         append video parameter
 
-        write frame to output par file
-        write script command for frame
+        write frame entry to output-directory/par/<output.par>
+        write script command using librarydirs and @par/name
 
 This preserves the current ParAnimator workflow while allowing much richer
 animation.
@@ -1376,15 +1426,15 @@ ImageMagick composition:
             for each layer track:
                 apply track assignments at frame_number
 
-            write any side files produced by layer tracks
+            write map side files to output-directory/map
 
             if opacity is 0 and write_when_hidden is false:
                 skip layer render
             else:
                 append batch parameters
                 append layer savename parameter
-                write layer par entry
-                write ID command for layer image
+                write layer entry to output-directory/par/<output.par>
+                write ID command using librarydirs and @par/name
 
         start with a transparent canvas
 
