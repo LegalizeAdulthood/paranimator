@@ -20,6 +20,12 @@ std::vector<ParFile::KeyframeConfig> keyframes(const std::string &from, const st
     return {{0, from}, {num_steps - 1, to}};
 }
 
+std::vector<ParFile::KeyframeConfig> keyframes(
+    const std::string &from, const std::string &to, const std::string &curve, int num_steps)
+{
+    return {{0, from}, {num_steps - 1, to, curve}};
+}
+
 ParFile::InterpolantPtr create_interpolant(
     const std::string &name, const std::string &type, const std::string &from, const std::string &to, int num_steps)
 {
@@ -234,4 +240,36 @@ TEST(TestInterpolant, integerClampExtrapolation)
     EXPECT_EQ("10", interpolant->step());
     EXPECT_EQ("20", interpolant->step());
     EXPECT_EQ("20", interpolant->step());
+}
+
+TEST(TestInterpolant, integerHoldCurve)
+{
+    const int num_steps{4};
+    ParFile::InterpolantPtr interpolant{
+        create_interpolant("maxiter", "integer", keyframes("100", "200", "hold", num_steps), num_steps)};
+
+    EXPECT_EQ("100", interpolant->step());
+    EXPECT_EQ("100", interpolant->step());
+    EXPECT_EQ("100", interpolant->step());
+    EXPECT_EQ("200", interpolant->step());
+}
+
+TEST(TestInterpolant, integerStepCurve)
+{
+    const int num_steps{4};
+    ParFile::InterpolantPtr interpolant{
+        create_interpolant("maxiter", "integer", keyframes("100", "200", "step", num_steps), num_steps)};
+
+    EXPECT_EQ("100", interpolant->step());
+    EXPECT_EQ("100", interpolant->step());
+    EXPECT_EQ("100", interpolant->step());
+    EXPECT_EQ("200", interpolant->step());
+}
+
+TEST(TestInterpolant, integerUnknownCurveRejected)
+{
+    const int num_steps{4};
+
+    EXPECT_THROW(create_interpolant("maxiter", "integer", keyframes("100", "200", "unknown", num_steps), num_steps),
+        std::runtime_error);
 }

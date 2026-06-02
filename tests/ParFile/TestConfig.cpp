@@ -164,8 +164,8 @@ TEST(TestConfig, oneTrackValid)
     Object json{valid_json()};
     json["tracks"] = Object::array({Object{{"parameter", "center-mag"},
         {"keys",
-            Object::array(
-                {Object{{"frame", 0}, {"value", "-0.5/0/1"}}, Object{{"frame", 2}, {"value", "-0.5/0/10"}}})}}});
+            Object::array({Object{{"frame", 0}, {"value", "-0.5/0/1"}},
+                Object{{"frame", 2}, {"value", "-0.5/0/10"}, {"curve", "hold"}}})}}});
 
     ParFile::Config config{json.dump()};
 
@@ -174,6 +174,8 @@ TEST(TestConfig, oneTrackValid)
     ASSERT_EQ(2U, config.tracks()[0].keys.size());
     EXPECT_EQ(0, config.tracks()[0].keys[0].frame);
     EXPECT_EQ("-0.5/0/1", config.tracks()[0].keys[0].value);
+    EXPECT_TRUE(config.tracks()[0].keys[0].curve.empty());
     EXPECT_EQ(2, config.tracks()[0].keys[1].frame);
     EXPECT_EQ("-0.5/0/10", config.tracks()[0].keys[1].value);
+    EXPECT_EQ("hold", config.tracks()[0].keys[1].curve);
 }

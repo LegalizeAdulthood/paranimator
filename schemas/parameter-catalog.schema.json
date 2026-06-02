@@ -13,12 +13,30 @@
         "required": [ "type" ],
         "additionalProperties": false,
         "properties": {
-          "type": { "type": "string" },
-          "format": { "type": "string" },
-          "default_curve": { "type": "string" },
-          "extrapolate": { "type": "string" }
+          "type": { "$ref": "#/$defs/parameter_type" },
+          "format": { "$ref": "#/$defs/parameter_format" },
+          "default_curve": { "$ref": "#/$defs/curve" },
+          "extrapolate": { "$ref": "#/$defs/extrapolate" }
         }
       }
+    }
+  },
+  "$defs": {
+    "parameter_type": {
+      "type": "string",
+      "enum": [ "center_mag", "corners", "integer" ]
+    },
+    "parameter_format": {
+      "type": "string",
+      "enum": [ "raw", "slash" ]
+    },
+    "curve": {
+      "type": "string",
+      "enum": [ "geometric", "hold", "linear", "step" ]
+    },
+    "extrapolate": {
+      "type": "string",
+      "enum": [ "clamp" ]
     }
   }
 }

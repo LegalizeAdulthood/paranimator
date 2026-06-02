@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
-foreach(name PARANIMATOR TEST_NAME TEST_SOURCE_DIR CORE_CATALOG GOLD_PAR)
+foreach(name PARANIMATOR TEST_NAME TEST_FRAMES TEST_SOURCE_DIR CORE_CATALOG GOLD_PAR)
     if(NOT DEFINED ${name})
         message(FATAL_ERROR "Missing required variable: ${name}")
     endif()
@@ -47,11 +47,16 @@ if(NOT EXISTS "${generated_script}")
 endif()
 
 file(READ "${generated_script}" generated_script_text)
-foreach(expected
-        "librarydirs=${output_directory}"
-        "@frames.par/frame-0001"
-        "@frames.par/frame-0002"
-        "@frames.par/frame-0003")
+string(FIND "${generated_script_text}" "librarydirs=${output_directory}" found)
+if(found EQUAL -1)
+    message(FATAL_ERROR
+        "Generated batch file is missing expected text: librarydirs=${output_directory}")
+endif()
+foreach(frame RANGE 1 ${TEST_FRAMES})
+    string(REGEX REPLACE "^0*([0-9]+)$" "\\1" frame_number "${frame}")
+    string(LENGTH "${frame_number}" frame_number_length)
+    string(SUBSTRING "0000${frame_number}" "${frame_number_length}" 4 frame_text)
+    set(expected "@frames.par/frame-${frame_text}")
     string(FIND "${generated_script_text}" "${expected}" found)
     if(found EQUAL -1)
         message(FATAL_ERROR

@@ -62,6 +62,20 @@ static std::string load_string(const Object &json, std::string_view field)
     return load_string(json, {}, field);
 }
 
+static std::string load_optional_string(const Object &json, std::string_view field)
+{
+    const std::string key{field};
+    if (!json.contains(key))
+    {
+        return {};
+    }
+    if (!json.at(key).is_string())
+    {
+        throw std::runtime_error("Invalid config, field '" + std::string{field} + "' is not a string");
+    }
+    return json.at(key).get<std::string>();
+}
+
 static std::vector<std::string> load_string_array(const Object &json, std::string_view name)
 {
     const std::string key{name};
@@ -118,6 +132,7 @@ static KeyframeConfig load_keyframe_config(const Object &json)
     KeyframeConfig result;
     result.frame = load_int(json, "frame");
     result.value = load_string(json, "value");
+    result.curve = load_optional_string(json, "curve");
     return result;
 }
 

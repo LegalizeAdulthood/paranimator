@@ -28,6 +28,7 @@ struct KeyframeConfig
 {
     int frame{};
     std::string value;
+    std::string curve;
 };
 
 struct TrackConfig

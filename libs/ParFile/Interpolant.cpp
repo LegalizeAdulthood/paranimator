@@ -270,7 +270,8 @@ std::string CornersInterpolant::step()
 class IntegerInterpolant : public Base
 {
 public:
-    IntegerInterpolant(std::string_view name, const std::vector<KeyframeConfig> &keys, int num_steps);
+    IntegerInterpolant(
+        std::string_view name, const std::vector<KeyframeConfig> &keys, std::string_view curve, int num_steps);
     ~IntegerInterpolant() override = default;
 
     std::string step() override;
@@ -280,15 +281,22 @@ private:
     int m_to_frame{};
     int m_from{};
     int m_to{};
+    std::string m_curve;
 };
 
-IntegerInterpolant::IntegerInterpolant(std::string_view name, const std::vector<KeyframeConfig> &keys, int num_steps) :
+IntegerInterpolant::IntegerInterpolant(
+    std::string_view name, const std::vector<KeyframeConfig> &keys, std::string_view curve, int num_steps) :
     Base(name, num_steps),
     m_from_frame(keys[0].frame),
     m_to_frame(keys[1].frame),
     m_from(parse_integer(keys[0].value)),
-    m_to(parse_integer(keys[1].value))
+    m_to(parse_integer(keys[1].value)),
+    m_curve(curve)
 {
+    if (m_curve != "linear" && m_curve != "hold" && m_curve != "step")
+    {
+        throw std::runtime_error("Unsupported integer curve '" + m_curve + "'");
+    }
 }
 
 std::string IntegerInterpolant::step()
@@ -302,6 +310,10 @@ std::string IntegerInterpolant::step()
     if (frame >= m_to_frame)
     {
         return std::to_string(m_to);
+    }
+    if (m_curve == "hold" || m_curve == "step")
+    {
+        return std::to_string(m_from);
     }
     const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
     const double value{m_from + fraction * (m_to - m_from)};
@@ -326,7 +338,12 @@ InterpolantPtr create_interpolant(
     }
     if (metadata.type == "integer")
     {
-        return std::make_shared<IntegerInterpolant>(metadata.name, keys, num_steps);
+        std::string curve{metadata.default_curve};
+        if (!keys[1].curve.empty())
+        {
+            curve = keys[1].curve;
+        }
+        return std::make_shared<IntegerInterpolant>(metadata.name, keys, curve, num_steps);
     }
 
     throw std::runtime_error("Unknown track type '" + metadata.type + "' for parameter '" + metadata.name + "'");

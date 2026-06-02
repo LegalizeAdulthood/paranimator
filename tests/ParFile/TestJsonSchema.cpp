@@ -9,6 +9,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <string>
+#include <string_view>
 
 namespace
 {
@@ -24,9 +26,24 @@ bool validates_config_file(const char *path)
     return ParFile::validate_json_schema(read_text(TestParFile::CONFIG_SCHEMA_JSON), read_text(path));
 }
 
+bool validates_config_text(std::string_view json)
+{
+    return ParFile::validate_json_schema(read_text(TestParFile::CONFIG_SCHEMA_JSON), json);
+}
+
 bool validates_parameter_catalog_file(const char *path)
 {
     return ParFile::validate_json_schema(read_text(TestParFile::PARAMETER_CATALOG_SCHEMA_JSON), read_text(path));
+}
+
+bool validates_parameter_catalog_text(std::string_view json)
+{
+    return ParFile::validate_json_schema(read_text(TestParFile::PARAMETER_CATALOG_SCHEMA_JSON), json);
+}
+
+std::string catalog_with_metadata(std::string_view metadata)
+{
+    return "{\"parameters\":{\"x\":{" + std::string{metadata} + "}}}";
 }
 
 } // namespace
@@ -65,7 +82,54 @@ TEST(TestJsonSchema, missingMetadataTypeRejected)
     EXPECT_FALSE(validates_parameter_catalog_file(TestParFile::INVALID_MISSING_METADATA_TYPE_JSON));
 }
 
+TEST(TestJsonSchema, unknownMetadataTypeRejected)
+{
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"unknown")")));
+}
+
+TEST(TestJsonSchema, unknownMetadataFormatRejected)
+{
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","format":"unknown")")));
+}
+
+TEST(TestJsonSchema, unknownMetadataDefaultCurveRejected)
+{
+    EXPECT_FALSE(
+        validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","default_curve":"unknown")")));
+}
+
+TEST(TestJsonSchema, unknownMetadataExtrapolateRejected)
+{
+    EXPECT_FALSE(
+        validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","extrapolate":"unknown")")));
+}
+
 TEST(TestJsonSchema, invalidOutputDirectoryTypeRejected)
 {
     EXPECT_FALSE(validates_config_file(TestParFile::INVALID_OUTPUT_DIRECTORY_CONFIG_JSON));
+}
+
+TEST(TestJsonSchema, unknownKeyCurveRejected)
+{
+    EXPECT_FALSE(validates_config_text(R"({
+  "parameter_catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num_frames": 2,
+  "tracks": [
+    {
+      "parameter": "maxiter",
+      "keys": [
+        { "frame": 0, "value": "100" },
+        { "frame": 1, "value": "200", "curve": "unknown" }
+      ]
+    }
+  ]
+})"));
 }

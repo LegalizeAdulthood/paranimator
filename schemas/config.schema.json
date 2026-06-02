@@ -53,12 +53,19 @@
               "additionalProperties": false,
               "properties": {
                 "frame": { "type": "integer" },
-                "value": { "type": "string" }
+                "value": { "type": "string" },
+                "curve": { "$ref": "#/$defs/curve" }
               }
             }
           }
         }
       }
+    }
+  },
+  "$defs": {
+    "curve": {
+      "type": "string",
+      "enum": [ "geometric", "hold", "linear", "step" ]
     }
   }
 }
