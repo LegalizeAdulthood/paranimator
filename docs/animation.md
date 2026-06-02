@@ -1485,28 +1485,339 @@ ImageMagick composition:
         optionally flatten to output.background
         write final frame image
 
-## Priority Order
+## Implementation Slices
 
-Implement in this order:
+Each slice should be small, cohesive, and reviewable. Each slice adds unit
+tests that cover its new behavior. When a slice is implemented, remove it
+from this section.
 
-    1. local segment evaluator and easing table replacing tweeny
-    2. parameter catalog loading
-    3. integer, double, numeric_tuple, point2, vector2, point3, and
-       vector3 tracks
-    4. per-parameter key timelines
-    5. complex tracks
-    6. angle and cyclic tracks
-    7. enum hold and enum step tracks
-    8. enum PWM tracks
-    9. colormap tracks, ID map reading, and map file writing
-    10. basic colormap interpolation and rotation effects
-    11. gradient and color adjustment colormap effects
-    12. path generators
-    13. camera2d virtual tracks
-    14. id_3d_view and julibrot_view virtual tracks
-    15. layer stacks
-    16. ImageMagick compose operators and opacity
-    17. formula-specific catalog files
+### 1. Replace Tweeny With Local Curves
+
+Implement a local segment evaluator for scalar values. It should locate
+the active segment by frame, normalize segment time, apply one curve, and
+return a value without using tweeny.
+
+Supported curves for this slice:
+
+    linear
+    hold
+    step
+    smoothstep
+    smootherstep
+    ease_in
+    ease_out
+    ease_in_out
+
+Keep the existing two-endpoint interpolation behavior passing while the
+old interpolant path is moved to the local evaluator. Once no source file
+includes tweeny, remove tweeny from the dependency manifest.
+
+Unit tests:
+
+- linear interpolation returns exact endpoints and midpoint values.
+- hold keeps the source value until the target frame.
+- step jumps to the target value at the target frame.
+- smoothstep and smootherstep are monotonic and hit exact endpoints.
+- the old center-mag and corners tests still pass without tweeny.
+
+### 2. Load Parameter Catalogs
+
+Add catalog loading for parameter metadata. Support one or more catalog
+files, include lists, local overrides, and duplicate parameter override
+rules.
+
+Required fields for each parameter:
+
+    type
+    default_curve
+    extrapolate
+
+Optional fields include format, min, max, arity, values, rounding, units,
+normalize, aliases, required, and write_when_unchanged.
+
+Unit tests:
+
+- a single catalog loads metadata for maxiter and params.
+- multiple catalogs merge into one metadata table.
+- a later catalog overrides a field from an earlier catalog.
+- a missing type is rejected with the parameter name in the error.
+- an unknown type is rejected with the parameter name in the error.
+
+### 3. Add Numeric Track Types
+
+Add typed tracks for integer, double, numeric_tuple, point2, vector2,
+point3, and vector3. Reuse one tuple parser for all tuple-like types.
+
+Validation rules:
+
+    integer tracks apply rounding.
+    min and max are enforced.
+    tuple arity must match metadata.
+    vector tracks normalize when normalize is true.
+    point tracks do not normalize.
+
+Unit tests:
+
+- integer tracks round according to metadata.
+- double tracks preserve fractional values.
+- numeric_tuple rejects the wrong arity.
+- point3 formats one slash-delimited ID value.
+- vector3 normalizes interpolated values when requested.
+
+### 4. Add Per-Parameter Key Timelines
+
+Replace the old from/to/interpolate model with independent tracks. Each
+track has its own keys, curves, and extrapolation.
+
+Supported extrapolation for this slice:
+
+    clamp
+    base
+    omit
+    cycle
+    ping_pong
+
+Unit tests:
+
+- two tracks with different key frames evaluate independently.
+- clamp uses the nearest key outside the keyed range.
+- base returns the base par value outside the keyed range.
+- omit produces no assignment outside the keyed range.
+- cycle and ping_pong map frames to the expected source segment.
+
+### 5. Add Complex, Center-Mag, And Corners Tracks
+
+Add complex, center_mag, and corners tracks. Complex values use the
+declared format. Center-mag keeps geometric magnification behavior.
+Corners interpolate all declared corner components.
+
+Unit tests:
+
+- complex slash_pair parses and formats real and imaginary values.
+- center-mag interpolates center linearly and magnification
+  geometrically.
+- center-mag rejects non-positive geometric endpoints by falling back to
+  linear magnification.
+- corners accepts 4-value and 6-value forms.
+- corners rejects mismatched source and target arity.
+
+### 6. Add Angle And Cyclic Tracks
+
+Add angle, cyclic_integer, and cyclic_double tracks. Cyclic tracks should
+interpolate through the shortest wrapped distance unless metadata requests
+direct interpolation.
+
+Unit tests:
+
+- angle degrees wrap from 350 to 10 through 0.
+- cyclic_integer respects modulus metadata.
+- cyclic_double respects modulus metadata.
+- direct interpolation can be selected by metadata.
+
+### 7. Add Enum Hold And Step Tracks
+
+Add enum tracks with hold and step behavior. Enum values are discrete and
+must never be numerically interpolated.
+
+Unit tests:
+
+- enum hold keeps the previous value until the next key.
+- enum step changes at the destination key.
+- an enum key not listed in metadata is rejected.
+- an enum track without legal values is rejected.
+
+### 8. Add Enum PWM Tracks
+
+Add PWM mode for enum tracks. The track evaluates a duty cycle and emits
+one of two declared enum values per frame.
+
+Unit tests:
+
+- mix 0 emits only value a.
+- mix 1 emits only value b.
+- mix 0.25 emits value b for the expected frame count in one window.
+- off and on aliases behave like a and b.
+- invalid enum values and window values below 2 are rejected.
+
+### 9. Add Output Library Layout
+
+Add output.directory, output.par, output.entry, and output.script. Write
+generated par files under output-directory/par. Write generated map files
+under output-directory/map. Batch commands must pass librarydirs pointing
+to the output directory and invoke ID with @par/name syntax.
+
+Generated par and map references use filenames only.
+
+Unit tests:
+
+- output paths create par and map subdirectories under the output root.
+- generated colors values use @filename, not @path.
+- generated batch commands include librarydirs=output-directory.
+- generated batch commands use @par/name, not a pathful par reference.
+- output.entry formats the expected frame entry name.
+
+### 10. Add Colormap File Tracks
+
+Add colormap tracks for the real ID colors parameter. The track reads ID
+map files, writes one generated map file per frame, and returns
+colors=@filename.
+
+Unit tests:
+
+- an ID map file with 256 RGB entries is parsed.
+- malformed map entries are rejected.
+- mismatched palette sizes are rejected.
+- generated map files are written under output-directory/map.
+- the track assignment is colors=@generated-name.map.
+
+### 11. Add Basic Colormap Effects
+
+Add interpolate, sequence, rotate, rotate_range, reverse, and ping_pong
+effects. Effects are applied in order to the current frame's map.
+
+Unit tests:
+
+- interpolate blends two maps at 0, 0.5, and 1.
+- sequence selects the expected source map at each key range.
+- rotate wraps all palette indices.
+- rotate_range rotates only the selected index range.
+- reverse reverses only the selected range when range is supplied.
+- ping_pong maps offsets forward and backward as expected.
+
+### 12. Add Generated Gradient Maps
+
+Add generated gradient sources for colormap tracks. A gradient source
+uses indexed RGB color stops and produces an ID-compatible 256-entry map.
+
+Unit tests:
+
+- two-stop gradients fill all 256 entries.
+- three-stop gradients interpolate each interval independently.
+- stop indexes outside 0 through 255 are rejected.
+- color components outside ID's 0 through 63 range are rejected.
+
+### 13. Add Colormap Color Adjustments
+
+Add hue_shift, saturation, brightness, contrast, gamma, posterize, pulse,
+mask_blend, remap, and sparkle effects.
+
+Unit tests:
+
+- brightness scales and clamps each RGB component.
+- gamma changes midpoint intensity and preserves endpoints.
+- posterize reduces colors to the requested number of levels.
+- pulse blends only the requested index range toward the flash color.
+- mask_blend blends only selected ranges between maps.
+- sparkle requires a seed and produces repeatable output.
+
+### 14. Add Basic Path Generators
+
+Add line, circle, ellipse, lissajous, spiral, constant, and ping_pong path
+generators for scalar, complex, point, and tuple tracks.
+
+Unit tests:
+
+- line path matches the equivalent keyed linear track.
+- circle path returns to its start after one turn.
+- ellipse uses independent x and y radii.
+- lissajous is deterministic for the same phase and frequency.
+- ping_pong path mirrors the forward path.
+
+### 15. Add Spline Path Generators
+
+Add bezier and catmull_rom path generators. Keep the JSON names local to
+ParAnimator. Use Boost.Math or TinySpline internally only if it reduces
+the implementation.
+
+Unit tests:
+
+- bezier paths hit the first and last control points.
+- catmull_rom paths pass through the declared control points.
+- too few control points are rejected.
+- tuple-valued spline paths preserve component arity.
+
+### 16. Add Camera2D Virtual Tracks
+
+Add camera2d tracks with look_at, view_up, and height curves. The adapter
+writes a declared output parameter, either corners or center-mag.
+
+Unit tests:
+
+- an axis-aligned camera writes expected corners.
+- an axis-aligned camera writes expected center-mag.
+- a rotated camera writes corners with the expected third corner.
+- a rotated camera targeting center-mag is rejected.
+- view_up is normalized before output calculation.
+
+### 17. Add ID 3D View Adapter
+
+Add id_3d_view virtual tracks. The adapter evaluates planned view fields
+and writes catalog-declared ID parameters such as rotation, perspective,
+xyshift, scalexyz, and stereo controls.
+
+Unit tests:
+
+- rotation writes a 3-value slash tuple.
+- perspective writes an integer value.
+- xyshift writes a 2-value slash tuple.
+- unsupported output names are rejected.
+- target-specific unsupported 3D outputs are rejected.
+
+### 18. Add Julibrot View Adapter
+
+Add julibrot_view virtual tracks. The adapter writes 3dmode,
+julibrot3d, julibroteyes, and julibrotfromto.
+
+Unit tests:
+
+- 3dmode writes one legal enum value.
+- julibrot3d writes six geometry components.
+- julibroteyes writes a scalar value.
+- julibrotfromto writes four values.
+- requests for arbitrary look_at or view_up are rejected.
+
+### 19. Add Layer Stack Evaluation
+
+Add layer stacks with layer id, source, tracks, opacity, compose, and
+write_when_hidden. Each visible layer writes its own par entry and ID
+render command.
+
+Unit tests:
+
+- layers are evaluated from bottom to top.
+- each layer applies only its own tracks.
+- opacity 0 skips rendering unless write_when_hidden is true.
+- generated layer entry names include the layer id and frame number.
+- duplicate layer ids are rejected.
+
+### 20. Add ImageMagick Composition
+
+Add command generation for composing rendered layer images with
+ImageMagick. Use ImageMagick compose operator names directly. Do not add
+ParAnimator-specific blend aliases.
+
+Unit tests:
+
+- generated commands composite layers in stack order.
+- opacity is applied before composition.
+- compose values are passed through as ImageMagick operators.
+- unsupported compose operators are rejected by validation.
+- output.background adds a flatten step when configured.
+
+### 21. Add Formula-Specific Catalog Files
+
+Add default catalog files for core ID parameters, coloring, 3D viewing,
+and selected formula families. Animation files include only the catalogs
+they need.
+
+Unit tests:
+
+- core catalog contains common parameters such as type, maxiter, params,
+  center-mag, corners, inside, outside, and colors.
+- coloring catalog declares colors as colormap.
+- 3D catalog declares ID 3D view parameters with correct arity.
+- formula-specific catalogs can override params arity and format.
+- catalog inclusion fails clearly when a referenced file is missing.
 
 This order gets useful behavior early while keeping the design open.
 
