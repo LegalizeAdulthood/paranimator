@@ -55,7 +55,7 @@ interpolant list with a more general track list.
 
 The animation has one global frame range:
 
-    frame 0 through num_frames - 1
+- Frame 0 through num_frames - 1.
 
 Every track is evaluated against that same frame number. Tracks do not
 need to share keyframe locations.
@@ -67,24 +67,12 @@ parameters should not be forced to change at the same frames.
 
 Example conceptual timing:
 
-    params for type=julia:
-        frame 0      value A
-        frame 300    value B
-        frame 900    value A
-
-    maxiter:
-        frame 0      100
-        frame 120    100
-        frame 500    2000
-        frame 900    2000
-
-    colors:
-        frame 0      fire.map
-        frame 900    ice.map
-
-    lightsource:
-        frame 200    -1/-1/1
-        frame 700    1/1/1
+| Parameter | Timing |
+| --- | --- |
+| `params` for `type=julia` | 0:A; 300:B; 900:A |
+| `maxiter` | 0:100; 120:100; 500:2000; 900:2000 |
+| `colors` | 0:`fire.map`; 900:`ice.map` |
+| `lightsource` | 200:`-1/-1/1`; 700:`1/1/1` |
 
 These are independent rhythms:
 
@@ -138,14 +126,6 @@ Example parameter catalog:
           "extrapolate": "clamp"
         },
 
-        "params": {
-          "type": "complex",
-          "description": "Julia constant for type=julia",
-          "format": "slash_pair",
-          "default_curve": "smoothstep",
-          "extrapolate": "clamp"
-        },
-
         "colors": {
           "type": "colormap",
           "format": "at_file",
@@ -177,72 +157,23 @@ Example parameter catalog:
 
 ## Catalog Metadata Fields
 
-Useful metadata fields:
-
-    type
-    description
-    format
-    default_curve
-    extrapolate
-    min
-    max
-    modulus
-    arity
-    values
-    rounding
-    units
-    normalize
-    aliases
-    required
-    write_when_unchanged
-
-Meanings:
-
-    type
-        Selects the parser, interpolator, and formatter.
-
-    description
-        Human-readable explanation of the parameter.
-
-    format
-        Describes the textual syntax used in the par file.
-
-    default_curve
-        Curve used by track segments unless overridden.
-
-    extrapolate
-        Behavior outside the track key range.
-
-    min and max
-        Validation limits. They may also be used for clamping.
-
-    modulus
-        Wrap range for cyclic numeric values.
-
-    arity
-        Number of components for tuple-like values.
-
-    values
-        Legal enum values.
-
-    rounding
-        How integer-like values are produced from continuous values.
-
-    units
-        Unit hint, such as degrees, radians, raw, or percent.
-
-    normalize
-        Whether vector-like values are normalized after interpolation.
-
-    aliases
-        Alternative parameter names accepted in par files.
-
-    required
-        Whether the parameter must exist in the base parameter set.
-
-    write_when_unchanged
-        Whether the generated frame should include the value even when it
-        matches the base value.
+| Field Name | Meaning |
+| --- | --- |
+| `type` | Selects parser, interpolator, and formatter. |
+| `description` | Human-readable parameter explanation. |
+| `format` | Text syntax used in par files. |
+| `default_curve` | Curve used by segments unless overridden. |
+| `extrapolate` | Behavior outside the keyed range. |
+| `min` | Lower validation limit; may clamp. |
+| `max` | Upper validation limit; may clamp. |
+| `arity` | Component count for tuple-like values. |
+| `values` | Legal enum values. |
+| `rounding` | Rule for producing integer-like values. |
+| `units` | Unit hint: degrees, radians, raw, percent. |
+| `normalize` | Normalize vector-like values after interpolation. |
+| `aliases` | Alternative parameter names accepted in par files. |
+| `required` | Parameter must exist in the base parameter set. |
+| `write_when_unchanged` | Write value even when it matches base. |
 
 ## Type Versus Format
 
@@ -250,63 +181,237 @@ Type and format should be separate.
 
 Do not make a separate type for every textual spelling.
 
-Bad model:
+Example:
 
-    slash_complex
-    comma_complex
-    paren_complex
-
-Better model:
-
-    type: complex
-    format: slash_pair
+    {
+      "type": "complex",
+      "format": "slash_pair"
+    }
 
 Possible formats:
 
-    integer raw
-    double raw
-    complex slash_pair
-    complex comma_pair
-    numeric_tuple slash
-    numeric_tuple comma
-    point2 slash
-    vector2 slash
-    point3 slash
-    vector3 slash
-    color rgb_tuple
-    colormap at_file
-    angle degrees
-    angle radians
+| Type | Format |
+| --- | --- |
+| `integer` | `raw` |
+| `double` | `raw` |
+| `complex` | `slash_pair` |
+| `numeric_tuple` | `slash` |
+| `point2` | `slash` |
+| `vector2` | `slash` |
+| `point3` | `slash` |
+| `vector3` | `slash` |
+| `color` | `rgb_tuple` |
+| `colormap` | `at_file` |
+| `angle` | `degrees` |
+| `angle` | `radians` |
 
-This lets one complex interpolator support several textual syntaxes.
+This lets typed interpolation stay separate from ID parameter formatting.
+
+For ID parameter files, complex values use slash-separated real and
+imaginary parts. The help documents examples such as
+`params=-0.480/0.626` and `initorbit=nnn/nnn`. Comma-pair notation appears
+in formula-language prose, not in parameter syntax.
+
+## Fractal-Specific Params
+
+`params=` is a slash-delimited vector, not one semantic parameter. ID
+stores up to ten values in `g_params[]`. The active fractal type decides
+which indexes exist and what each index means.
+
+ID's `type_has_param()` checks the first four parameter names from the
+fractal-specific table, then checks extra names from
+`g_more_fractal_params`. For `type=formula`, unused formula parameters
+are suppressed. ID's `put_fractal_params()` writes one `params=` command
+through the highest parameter index used by the active type.
+
+ParAnimator should model `params` as a context-scoped parameter vector.
+The context comes from:
+
+- `type` in the source par entry
+- `orbitname` or orbit type for Julibrot
+- `formulaname` plus user catalog overrides for formulas
+- the layer source, when rendering layered animations
+
+Catalogs may describe slots and named groups for fractal types whose
+`params=` values have stable type-specific meaning:
+
+    {
+      "fractal_types": {
+        "julia": {
+          "params": {
+            "format": "slash_list",
+            "slots": [
+              { "index": 0, "name": "c_real", "type": "double" },
+              { "index": 1, "name": "c_imag", "type": "double" }
+            ],
+            "groups": {
+              "c": {
+                "type": "complex",
+                "slots": [ 0, 1 ],
+                "format": "slash_pair"
+              }
+            }
+          }
+        }
+      }
+    }
+
+For `type=formula`, the assignment of `params=` values to formula
+variables is fixed by ID and is not catalog metadata:
+
+| Variable | Values |
+| --- | --- |
+| `p1` | `params[0]` and `params[1]` |
+| `p2` | `params[2]` and `params[3]` |
+| `p3` | `params[4]` and `params[5]` |
+| `p4` | `params[6]` and `params[7]` |
+
+These variable names cannot be changed. Formula authors often use `p1`,
+`p2`, `p3`, and `p4` as complex values. They also often use the real and
+imaginary pieces as unrelated knobs. ParAnimator should not infer those
+meanings from the formula source. User or bundled metadata should attach
+human-readable names that describe how the formula entry uses the fixed
+`p1` through `p4` variables:
+
+    {
+      "formula_entries": {
+        "MandelbrotMix4": {
+          "params": {
+            "knobs": {
+              "bailout": {
+                "type": "real",
+                "variable": "p1.real"
+              },
+              "scale factor": {
+                "type": "real",
+                "variable": "p1.imag"
+              },
+              "c": {
+                "type": "complex",
+                "variable": "p2"
+              }
+            }
+          },
+          "functions": {
+            "fn1": { "type": "enum", "values": "id_functions" },
+            "fn2": { "type": "enum", "values": "id_functions" },
+            "fn3": { "type": "enum", "values": "id_functions" },
+            "fn4": { "type": "enum", "values": "id_functions" }
+          }
+        }
+      }
+    }
+
+Tracks may target formula-entry knobs such as `MandelbrotMix4.bailout`,
+`MandelbrotMix4["scale factor"]`, or `MandelbrotMix4.c`. These names are
+ParAnimator metadata describing the formula entry's use of fixed ID
+variables. ID never sees them, and the formula source still refers only to
+`p1`, `p2`, `p3`, and `p4`.
+
+Each formula params knob is keyed by its human-readable name and declares:
+
+| Field | Meaning |
+| --- | --- |
+| `type` | `integer`, `real`, or `complex`. |
+| `variable` | Fixed formula variable or component being described. |
+
+Integer and real knobs may bind to `pN.real` or `pN.imag`, where
+1 <= N <= 4. Complex knobs may bind only to `pN`, where 1 <= N <= 4.
+The metadata annotates the fixed binding; it does not create or rename
+formula variables.
+
+When a source has `type=formula`, ParAnimator resolves the active
+`formulaname` value and treats it as the formula entry name. Params knob
+metadata is looked up from the matching `formula_entries` entry. If no
+metadata exists for that entry name, only raw `params.p1`,
+`params.p1.real`, and related `p1` through `p4` variable targets are
+available.
+
+If two tracks write overlapping formula variables or components,
+validation must reject the animation unless the overlap is exactly the
+same declared knob. This keeps `params.p1`, `params.p1.real`, and
+formula-specific knobs from fighting over the same generated `params=`
+value.
+
+Formula entry metadata may also expose fixed function keys backed by
+`function=fn1/fn2/fn3/fn4`. The key names are always `fn1`, `fn2`, `fn3`,
+and `fn4`; formula metadata cannot rename them. Tracks target formula
+entry keys such as `MandelbrotMix4.fn1`. Each function key is an enum
+using the fixed `id_functions` value set. The writer starts from the
+source par entry or ID reset defaults, applies function key updates, and
+emits one slash-delimited `function=` assignment through the highest
+required function key.
+
+The fixed `id_functions` enum contains the function names recognized by
+ID: `sin`, `cos`, `tan`, `cotan`, `sinh`, `cosh`, `tanh`, `cotanh`,
+`exp`, `log`, `sqr`, `recip`, `ident`, `cosxx`, `flip`, `conj`, `zero`,
+`one`, `asin`, `asinh`, `acos`, `acosh`, `atan`, `atanh`, `sqrt`, `abs`,
+`cabs`, `floor`, `ceil`, `trunc`, and `round`.
+
+ID leaves omitted `function=` values unchanged. ParAnimator should still
+compose from known base/default values before writing, so generated
+frames do not depend on prior process state.
+
+For non-formula params vectors, tracks may target the whole vector, an
+indexed slot such as `params[0]`, or a named group such as `params.c`. The
+writer starts from the source par entry's base `params`, applies all slot
+and group updates, then emits one slash-delimited `params=` assignment
+through the highest required slot. This preserves untouched values. Do not
+emit partial `params` assignments, because ID treats omitted values as
+zero after a `params=` command.
+
+For the first implementation, a layer's fractal type must be stable when
+it has params tracks. If `type` is animated and the reachable types do not
+share the same params schema, validation must reject the animation. Use
+separate layers or separate animations for those cases.
 
 ## Built-In Track Types
 
-Minimum useful type set:
+Minimum useful interpolated track type set:
 
-    string
-    enum
-    integer
-    double
-    complex
-    numeric_tuple
-    point2
-    vector2
-    point3
-    vector3
-    camera2d
-    id_3d_view
-    julibrot_view
-    colormap
-    center_mag
-    corners
-    rgb_color
-    angle
-    cyclic_integer
-    cyclic_double
+- `enum`
+- `integer`
+- `double`
+- `complex`
+- `numeric_tuple`
+- `point2`
+- `vector2`
+- `point3`
+- `vector3`
+- `camera2d`
+- `id_3d_view`
+- `julibrot_view`
+- `colormap`
+- `center_mag`
+- `corners`
+- `rgb_color`
+- `angle`
 
 The animator may hard-code these types. That is a small type system, not
 a list of Iterated Dynamics parameters.
+
+String parameters are discrete keyframed values, not interpolated values.
+Use strings for held selector, entry-name, and filename parameters that
+choose ID resources or metadata context. These are arbitrary ID strings,
+such as entry names in formula, L-system, IFS, and orbit files.
+
+Concrete string parameters include:
+
+- `formulaname`
+- `lname`
+- `ifs`
+- `orbitname`
+- `formulafile`
+- `lfile`
+- `ifsfile`
+- `filename`
+- `savename`
+
+For animation planning, the important string selectors are
+`formulaname`, which selects formula entry metadata, and `orbitname`,
+which selects Julibrot orbit context. String parameters may appear in
+keyframes, but they must use hold or step behavior. Do not interpolate
+strings.
 
 ## 3D Point And Vector Parameters
 
@@ -418,19 +523,19 @@ orbital types such as lorenz3d and ifs3d.
 
 It writes catalog-declared outputs such as:
 
-    rotation
-    perspective
-    xyshift
-    xyadjust
-    scalexyz
-    roughness
-    sphere
-    longitude
-    latitude
-    radius
-    stereo
-    interocular
-    converge
+- `rotation`
+- `perspective`
+- `xyshift`
+- `xyadjust`
+- `scalexyz`
+- `roughness`
+- `sphere`
+- `longitude`
+- `latitude`
+- `radius`
+- `stereo`
+- `interocular`
+- `converge`
 
 Example:
 
@@ -487,10 +592,10 @@ does not use ID's general rotation parameters.
 
 It writes catalog-declared outputs such as:
 
-    3dmode
-    julibrot3d
-    julibroteyes
-    julibrotfromto
+- `3dmode`
+- `julibrot3d`
+- `julibroteyes`
+- `julibrotfromto`
 
 Example:
 
@@ -536,12 +641,12 @@ Example:
 
 The six geometry components are:
 
-    z dots
-    origin
-    depth
-    height
-    width
-    viewer distance
+- z dots
+- origin
+- depth
+- height
+- width
+- viewer distance
 
 Julibrot has no arbitrary view_up, roll, or look_at camera. If a planned
 camera path asks for those, the adapter must reject it unless the request
@@ -559,40 +664,33 @@ the destination key or on the segment itself.
 
 If specified on the destination key:
 
-    key i - 1 to key i uses key i curve
+- Key i - 1 to key i uses key i curve.
 
 Useful curves:
 
-    linear
-    step
-    hold
-    smoothstep
-    smootherstep
-    ease_in
-    ease_out
-    ease_in_out
-    sine
-    triangle
-    sawtooth
-    pulse
-    ping_pong
+- `linear`
+- `step`
+- `hold`
+- `smoothstep`
+- `smootherstep`
+- `ease_in`
+- `ease_out`
+- `ease_in_out`
+- `sine`
+- `triangle`
+- `sawtooth`
+- `pulse`
+- `ping_pong`
 
 Suggested behavior:
 
-    hold
-        Keep the previous key value until the next key is reached.
-
-    step
-        Jump at the destination key.
-
-    linear
-        Interpolate linearly in local segment time.
-
-    smoothstep
-        Ease in and ease out with a smooth polynomial.
-
-    geometric
-        Useful for positive scale or magnification values.
+| Curve | Behavior |
+| --- | --- |
+| `hold` | Keep the previous key value until the next key is reached. |
+| `step` | Jump at the destination key. |
+| `linear` | Interpolate linearly in local segment time. |
+| `smoothstep` | Ease in and ease out with a smooth polynomial. |
+| `geometric` | Useful for positive scale or magnification values. |
 
 ## Implementation Libraries
 
@@ -603,10 +701,10 @@ such as per-frame map files.
 
 The new track engine should have a small local curve evaluator:
 
-    local segment lookup by frame
-    local easing functions
-    local typed interpolation
-    local extrapolation handling
+- local segment lookup by frame
+- local easing functions
+- local typed interpolation
+- local extrapolation handling
 
 This should replace the existing tweeny-backed interpolant path in the
 first implementation slice. Once no source file includes tweeny, remove
@@ -614,25 +712,15 @@ tweeny from the dependency manifest.
 
 Dependency guidance:
 
-    Boost.JSON
-        Keep for JSON parsing and serialization.
+| Library | Guidance |
+| --- | --- |
+| `Boost.JSON` | JSON parsing and serialization. |
+| `Boost.Math` interpolators | Do not use for core tracks; evaluate only at the Catmull-Rom or spline path slice. |
+| `TinySpline` | Consider at the same path slice only if paths need knots or arc-length sampling. |
+| `GLM` or local vector types | Camera and 3D adapter math only if it reduces code. |
+| `ImageMagick` | External command-line renderer for layer composition. |
 
-    Boost.Math interpolators
-        Do not use for core tracks, easing, or simple paths. Evaluate it
-        at the Catmull-Rom or spline path slice only, and use it only
-        behind the PathGenerator abstraction if it keeps that slice
-        smaller and clearer.
-
-    TinySpline
-        Consider only after the same Catmull-Rom or spline path decision
-        point, if paths need control points, knots, arbitrary-dimensional
-        splines, or arc-length sampling.
-
-    GLM or local vector types
-        Use for camera and 3D adapter math only if it reduces code.
-
-    ImageMagick
-        Keep as an external command-line renderer for layer composition.
+If Boost.Math or TinySpline is used, hide it behind `PathGenerator`.
 
 Do not expose dependency-specific names or behavior in JSON. JSON names
 belong to ParAnimator's track model.
@@ -643,24 +731,17 @@ Each track controls behavior before its first key and after its last key.
 
 Useful extrapolation modes:
 
-    clamp
-        Use the nearest key value.
-
-    base
-        Use the value from the base parameter set.
-
-    omit
-        Do not write this parameter outside the keyed range.
-
-    cycle
-        Repeat the track.
-
-    ping_pong
-        Repeat the track forward and backward.
+| Mode | Behavior |
+| --- | --- |
+| `clamp` | Use the nearest key value. |
+| `base` | Use the value from the base parameter set. |
+| `omit` | Do not write this parameter outside the keyed range. |
+| `cycle` | Repeat the track. |
+| `ping_pong` | Repeat the track forward and backward. |
 
 Safe default:
 
-    clamp
+- `clamp`
 
 ## Animation File
 
@@ -730,14 +811,11 @@ The track does not need to repeat the type if the catalog declares it.
 The animation file specifies one output directory. ParAnimator writes
 generated ID library files under that directory:
 
-    output-directory/par
-        Generated par files.
-
-    output-directory/map
-        Generated map files.
-
-    output-directory
-        Generated batch scripts.
+| Path | Contents |
+| --- | --- |
+| `output-directory/par` | Generated par files. |
+| `output-directory/map` | Generated map files. |
+| `output-directory` | Generated batch scripts. |
 
 Rendered frame and layer images may use separate configured directories,
 but par files and map files must use ID's library layout.
@@ -851,54 +929,33 @@ Example:
       ]
     }
 
-Layer fields:
+Layer field meanings:
 
-    id
-    source
-    tracks
-    opacity
-    compose
-    write_when_hidden
+| Field | Meaning |
+| --- | --- |
+| `id` | Stable identifier used in filenames and scoped track names. |
+| `source` | Base parameter set for this layer. |
+| `tracks` | Parameter timelines evaluated only for this layer. |
+| `opacity` | Percent opacity; animate to 0 instead of inserting or deleting layers over time. |
+| `compose` | ImageMagick compose operator placed over the current frame image. |
+| `write_when_hidden` | Whether to render the layer even when evaluated opacity is 0. |
+| `output.background` | Optional flatten color for final frame formats that do not keep alpha. |
 
-Meanings:
-
-    id
-        Stable identifier used in filenames and scoped track names.
-
-    source
-        Base parameter set for this layer.
-
-    tracks
-        Parameter timelines evaluated only for this layer.
-
-    opacity
-        Percent opacity. Animate opacity to 0 instead of inserting or
-        deleting layers over time.
-
-    compose
-        ImageMagick compose operator used when this layer is placed over
-        the current frame image.
-
-    write_when_hidden
-        Whether to render the layer even when evaluated opacity is 0.
-
-    output.background
-        Optional flatten color for final frame formats that do not keep
-        alpha. If omitted, keep the composed frame alpha channel.
+If `output.background` is omitted, keep the composed frame alpha channel.
 
 The compose value is an ImageMagick compositing operator name, such as:
 
-    Over
-    Multiply
-    Screen
-    Overlay
-    HardLight
-    SoftLight
-    Darken
-    Lighten
-    Difference
-    Plus
-    Minus
+- `Over`
+- `Multiply`
+- `Screen`
+- `Overlay`
+- `HardLight`
+- `SoftLight`
+- `Darken`
+- `Lighten`
+- `Difference`
+- `Plus`
+- `Minus`
 
 Do not invent ParAnimator-specific blend aliases. Validate compose
 operators against the ImageMagick operators supported by the installed
@@ -968,10 +1025,10 @@ For richer animation, use a source map plus an ordered effect list:
 
 At each frame:
 
-    evaluate the source map
-    apply each effect in order
-    write output-directory/map/colors-0000.map
-    return @colors-0000.map as the colors parameter value
+- Evaluate the source map.
+- Apply each effect in order.
+- Write `output-directory/map/colors-0000.map`.
+- Return `@colors-0000.map` as the colors parameter value.
 
 Effect parameters may be constants or keyed scalar, tuple, color, or enum
 tracks. This keeps timing local to the colormap track while reusing the
@@ -979,56 +1036,25 @@ normal track interpolation machinery.
 
 Core colormap effects:
 
-    interpolate
-        Blend two or more ID map files with keyed weights.
-
-    sequence
-        Step through map files, with optional crossfade frames.
-
-    rotate
-        Shift all palette indices by a keyed offset.
-
-    rotate_range
-        Shift only an inclusive index range.
-
-    reverse
-        Reverse the full map or one inclusive index range.
-
-    ping_pong
-        Oscillate an index range forward and backward.
-
-    gradient
-        Generate a map from keyed RGB color stops.
-
-    hue_shift
-        Rotate hue in HSL or HSV space.
-
-    saturation
-        Scale color saturation.
-
-    brightness
-        Scale color intensity.
-
-    contrast
-        Expand or compress color distance from midgray.
-
-    gamma
-        Apply nonlinear intensity shaping.
-
-    posterize
-        Reduce color levels to bands.
-
-    remap
-        Reindex the palette through a curve or lookup table.
-
-    pulse
-        Blend a range toward a keyed flash color.
-
-    mask_blend
-        Blend selected index ranges between maps.
-
-    sparkle
-        Apply seeded, bounded random color perturbations.
+| Effect | Meaning |
+| --- | --- |
+| `interpolate` | Blend two or more ID map files with keyed weights. |
+| `sequence` | Step through map files, with optional crossfade frames. |
+| `rotate` | Shift all palette indices by a keyed offset. |
+| `rotate_range` | Shift only an inclusive index range. |
+| `reverse` | Reverse the full map or one inclusive index range. |
+| `ping_pong` | Oscillate an index range forward and backward. |
+| `gradient` | Generate a map from keyed RGB color stops. |
+| `hue_shift` | Rotate hue in HSL or HSV space. |
+| `saturation` | Scale color saturation. |
+| `brightness` | Scale color intensity. |
+| `contrast` | Expand or compress color distance from midgray. |
+| `gamma` | Apply nonlinear intensity shaping. |
+| `posterize` | Reduce color levels to bands. |
+| `remap` | Reindex the palette through a curve or lookup table. |
+| `pulse` | Blend a range toward a keyed flash color. |
+| `mask_blend` | Blend selected index ranges between maps. |
+| `sparkle` | Apply seeded, bounded random color perturbations. |
 
 Example generated map:
 
@@ -1071,11 +1097,11 @@ recording the frame-local palette in generated par entries.
 
 A track has:
 
-    parameter for ID tracks, or name for virtual tracks
-    optional type override
-    keyframes or path generator
-    extrapolation behavior
-    local options
+- a `parameter` for ID tracks, or a `name` for virtual tracks
+- an optional type override
+- keyframes or a path generator
+- extrapolation behavior
+- local options
 
 Normal tracks write one ID par-file parameter named by parameter. Virtual
 tracks use name instead of parameter. Virtual tracks such as camera2d may
@@ -1097,18 +1123,14 @@ assignments when virtual tracks are added.
 
 A track evaluates as follows:
 
-    if frame is before the first key:
-        apply before-range extrapolation
-
-    if frame is after the last key:
-        apply after-range extrapolation
-
-    otherwise:
-        find the enclosing key segment
-        normalize local time to 0 through 1
-        apply the segment curve
-        interpolate typed values
-        format the result in par-file syntax
+1. If `frame` is before the first key, apply before-range
+   extrapolation.
+2. If `frame` is after the last key, apply after-range extrapolation.
+3. Otherwise, find the enclosing key segment.
+4. Normalize local time to 0 through 1.
+5. Apply the segment curve.
+6. Interpolate typed values.
+7. Format the result in par-file syntax.
 
 ## Path Generators
 
@@ -1132,16 +1154,16 @@ Example:
 
 Useful path kinds:
 
-    line
-    circle
-    ellipse
-    lissajous
-    spiral
-    bezier
-    catmull_rom
-    constant
-    ping_pong
-    noise
+- `line`
+- `circle`
+- `ellipse`
+- `lissajous`
+- `spiral`
+- `bezier`
+- `catmull_rom`
+- `constant`
+- `ping_pong`
+- `noise`
 
 A track can use keys, a path, or an expression. They all expose the same
 runtime operation:
@@ -1154,14 +1176,14 @@ Parameter metadata can be split into multiple files.
 
 Suggested layout:
 
-    parameters/core.json
-    parameters/coloring.json
-    parameters/3d.json
-    parameters/fractals/mandel.json
-    parameters/fractals/julia.json
-    parameters/fractals/phoenix.json
-    parameters/fractals/newton.json
-    parameters/fractals/ifs.json
+- `parameters/core.json`
+- `parameters/coloring.json`
+- `parameters/3d.json`
+- `parameters/fractals/mandel.json`
+- `parameters/fractals/julia.json`
+- `parameters/fractals/phoenix.json`
+- `parameters/fractals/newton.json`
+- `parameters/fractals/ifs.json`
 
 The animation file includes only the catalogs it needs.
 
@@ -1180,11 +1202,18 @@ Example:
         "id-default-parameters.json"
       ],
 
-      "parameters": {
-        "params": {
-          "type": "complex",
-          "format": "slash_pair",
-          "default_curve": "linear"
+      "fractal_types": {
+        "julia": {
+          "params": {
+            "groups": {
+              "c": {
+                "type": "complex",
+                "slots": [ 0, 1 ],
+                "format": "slash_pair",
+                "default_curve": "linear"
+              }
+            }
+          }
         }
       }
     }
@@ -1248,14 +1277,11 @@ Example:
 
 Semantics:
 
-    mix = 0.0
-        Always emit value a.
-
-    mix = 1.0
-        Always emit value b.
-
-    mix = 0.25
-        Emit value b for about 25 percent of frames.
+| Mix | Behavior |
+| --- | --- |
+| `0.0` | Always emit value `a`. |
+| `1.0` | Always emit value `b`. |
+| `0.25` | Emit value `b` for about 25 percent of frames. |
 
 The user explicitly specifies which enum values are used for the PWM
 off/on pair. Do not infer the pair from enum order.
@@ -1281,14 +1307,15 @@ Example with explicit off and on:
 
 Validation rules:
 
-    a must be a legal enum value
-    b must be a legal enum value
-    off must be a legal enum value
-    on must be a legal enum value
-    a and b may be equal, but this should warn
-    mix must be in the range 0 through 1 unless clamping is enabled
-    duty must be in the range 0 through 1 unless clamping is enabled
-    window must be at least 2
+- `a` must be a legal enum value.
+- `b` must be a legal enum value.
+- `off` must be a legal enum value.
+- `on` must be a legal enum value.
+- `a` and `b` may be equal, but this should warn.
+- `mix` must be in the range 0 through 1 unless clamping is enabled.
+- `duty` must be in the range 0 through 1 unless clamping is
+  enabled.
+- `window` must be at least 2.
 
 Simple evaluation:
 
@@ -1306,11 +1333,11 @@ blue-noise-like pattern.
 
 Possible distribution modes:
 
-    regular
-    ordered
-    random_seeded
-    low_discrepancy
-    blue_noise
+- `regular`
+- `ordered`
+- `random_seeded`
+- `low_discrepancy`
+- `blue_noise`
 
 For reproducible builds, avoid unseeded randomness.
 
@@ -1324,23 +1351,23 @@ renderer, not ParAnimator.
 
 PWM works best for:
 
-    coloring mode
-    inside method
-    outside method
-    decomposition mode
-    orbit trap mode
-    palette selection
-    rendering style
-    overlay mode
+- coloring mode
+- inside method
+- outside method
+- decomposition mode
+- orbit trap mode
+- palette selection
+- rendering style
+- overlay mode
 
 PWM is usually bad for:
 
-    fractal formula
-    major coordinate interpretation
-    symmetry mode
-    precision mode
-    rendering backend
-    algorithm switch that changes image structure completely
+- fractal formula
+- major coordinate interpretation
+- symmetry mode
+- precision mode
+- rendering backend
+- algorithm switch that changes image structure completely
 
 If two enum values produce unrelated images, PWM becomes flicker rather
 than interpolation.
@@ -1349,30 +1376,25 @@ than interpolation.
 
 On startup:
 
-    load parameter catalogs
-    merge includes and overrides
-    load the base parameter set
-    load animation tracks
-    for each track:
-        look up parameter metadata
-        validate keys and options
-        construct the typed track
+1. Load parameter catalogs.
+2. Merge includes and overrides.
+3. Load the base parameter set.
+4. Load animation tracks.
+5. For each track, look up parameter metadata, validate keys and
+   options, and construct the typed track.
 
 Errors should be specific.
 
 Examples:
 
-    Unknown animated parameter 'param'.
-    No metadata exists for 'param'.
-    Did you mean 'params'?
-
-    Parameter 'maxiter' is type integer, but key at frame 120 has
-    value 'abc'.
-
-    Parameter 'inside' is enum, but value 'foo' is not listed.
-
-    Parameter 'outside' uses PWM value 'atan', but 'atan' is not listed
-    as a legal enum value.
+- `Unknown animated parameter 'param'.`
+- `No metadata exists for 'param'.`
+- `Did you mean 'params'?`
+- `Parameter 'maxiter' is type integer, but key at frame 120 has value
+  'abc'.`
+- `Parameter 'inside' is enum, but value 'foo' is not listed.`
+- `Parameter 'outside' uses PWM value 'atan', but 'atan' is not listed
+  as a legal enum value.`
 
 ## JSON File Replacement
 
@@ -1381,10 +1403,10 @@ support old from/to/interpolate JSON as compatibility syntax.
 
 Required behavior:
 
-    load only the new source/tracks animation schema
-    reject old from/to/interpolate JSON with a clear error
-    provide examples that use only the new schema
-    remove code paths that desugar old JSON into tracks
+- load only the new source/tracks animation schema
+- reject old from/to/interpolate JSON with a clear error
+- provide examples that use only the new schema
+- remove code paths that desugar old JSON into tracks
 
 The old model is not a shorthand. Existing animation JSON files must be
 rewritten as new source/tracks files before they are used.
@@ -1403,7 +1425,6 @@ Sketch:
 
         std::optional<double> min;
         std::optional<double> max;
-        std::optional<int> modulus;
         std::optional<int> arity;
         bool normalize{false};
 
@@ -1637,18 +1658,52 @@ Unit tests:
 - ping_pong maps frames forward and backward.
 - boundary frames are not duplicated incorrectly.
 
-### 13. Add Complex Params Tracks
+### 13. Add Type-Scoped Params Tracks
 
-Add complex slash_pair parsing and formatting. Use it to animate the real
-ID params parameter for type=julia sources.
+Add params as a type-scoped slash-list vector. For type=julia, support the
+named complex group `params.c` over slots 0 and 1. Compose one `params=`
+assignment from the source value plus track updates.
 
 Unit tests:
 
-- params parses real and imaginary slash values.
-- params writes one slash_pair assignment.
-- malformed complex values are rejected.
+- type=julia resolves `params.c` to slots 0 and 1.
+- `params.c` parses real and imaginary slash values.
+- updating slot 0 preserves slot 1 from the source params.
+- generated output writes one slash-delimited `params=` assignment.
+- params slot 2 is rejected for a type with no slot 2.
 
-### 14. Add Numeric Tuple Tracks
+### 14. Add Formula Entry Params Knobs
+
+Add params knob metadata attached to formula entry names. The active
+`formulaname` value selects the entry. Support integer, real, and complex
+knobs that map to `p1` through `p4`.
+
+Unit tests:
+
+- `formulaname=MandelbrotMix4` loads `formula_entries.MandelbrotMix4`.
+- formula entry metadata names the `p1.real` use as `bailout`.
+- formula entry metadata names the `p1.imag` use as `scale factor`.
+- formula entry metadata names the `p2` use as `c`.
+- real and integer knobs reject variables without `.real` or `.imag`.
+- complex knobs reject variables with `.real` or `.imag`.
+- formula params knobs reject `p5` variables.
+- updating a formula knob preserves all untouched params values.
+- overlapping formula knobs are rejected.
+
+### 15. Add Formula Function Keys
+
+Add formula-entry function metadata. Support enum keys named `fn1`
+through `fn4` and write one composed `function=` assignment.
+
+Unit tests:
+
+- formula entry metadata exposes `MandelbrotMix4.fn1`.
+- `MandelbrotMix4.fn1` accepts legal ID function enum values.
+- `MandelbrotMix4.fn1` rejects unknown function names.
+- updating `fn2` preserves `fn1` from the source function value.
+- generated output writes one slash-delimited `function=` assignment.
+
+### 16. Add Numeric Tuple Tracks
 
 Add numeric_tuple with metadata arity and slash formatting.
 
@@ -1658,7 +1713,7 @@ Unit tests:
 - a 3-value tuple writes a slash-delimited value.
 - wrong arity is rejected.
 
-### 15. Add Point And Vector Aliases
+### 17. Add Point And Vector Aliases
 
 Add point2, vector2, point3, and vector3 aliases over numeric_tuple.
 Vector aliases support normalize=true.
@@ -1669,7 +1724,7 @@ Unit tests:
 - vector3 normalizes when requested.
 - point aliases do not normalize.
 
-### 16. Add Enum Hold Tracks
+### 18. Add Enum Hold Tracks
 
 Add enum tracks with hold behavior.
 
@@ -1679,7 +1734,7 @@ Unit tests:
 - an enum value not listed in metadata is rejected.
 - enum values are not numerically interpolated.
 
-### 17. Add Enum Step Tracks
+### 19. Add Enum Step Tracks
 
 Add step behavior for enum tracks.
 
@@ -1689,7 +1744,7 @@ Unit tests:
 - hold behavior remains unchanged.
 - missing enum values still fail validation.
 
-### 18. Add Enum PWM Tracks
+### 20. Add Enum PWM Tracks
 
 Add PWM mode for enum tracks using explicit a and b values.
 
@@ -1699,7 +1754,7 @@ Unit tests:
 - mix 1 emits only b.
 - window values below 2 are rejected.
 
-### 19. Read And Write ID Map Files
+### 21. Read And Write ID Map Files
 
 Add ID map file parsing and writing. Do not add animation effects yet.
 
@@ -1709,7 +1764,7 @@ Unit tests:
 - malformed RGB entries are rejected.
 - written map files use ID-compatible RGB values.
 
-### 20. Add Static Colormap Tracks
+### 22. Add Static Colormap Tracks
 
 Add colormap tracks that copy or emit one map per frame and return
 colors=@filename. Generated maps are written under output-directory/map.
@@ -1720,7 +1775,7 @@ Unit tests:
 - colors assignment uses @filename only.
 - source map filenames are not written as paths.
 
-### 21. Add Colormap Interpolation
+### 23. Add Colormap Interpolation
 
 Add the interpolate colormap effect.
 
@@ -1730,7 +1785,7 @@ Unit tests:
 - blend 0.5 averages matching entries.
 - blend 1 returns the second map.
 
-### 22. Add Colormap Rotation
+### 24. Add Colormap Rotation
 
 Add the rotate colormap effect.
 
@@ -1740,7 +1795,7 @@ Unit tests:
 - negative offsets wrap palette entries.
 - offset 0 leaves the map unchanged.
 
-### 23. Add Ranged Colormap Rotation
+### 25. Add Ranged Colormap Rotation
 
 Add rotate_range for inclusive palette index ranges.
 
@@ -1750,7 +1805,7 @@ Unit tests:
 - entries outside the range are unchanged.
 - invalid ranges are rejected.
 
-### 24. Add Colormap Sequence
+### 26. Add Colormap Sequence
 
 Add the sequence effect for stepping through map filenames.
 
@@ -1760,7 +1815,7 @@ Unit tests:
 - optional crossfade uses interpolation.
 - missing sequence maps are rejected.
 
-### 25. Add Colormap Reverse And Ping-Pong
+### 27. Add Colormap Reverse And Ping-Pong
 
 Add reverse and ping_pong effects for whole maps and ranges.
 
@@ -1770,7 +1825,7 @@ Unit tests:
 - ping_pong alternates forward and backward offsets.
 - invalid ranges are rejected.
 
-### 26. Add Gradient Map Sources
+### 28. Add Gradient Map Sources
 
 Add generated gradient sources with indexed RGB stops.
 
@@ -1780,7 +1835,7 @@ Unit tests:
 - three stops interpolate each interval.
 - RGB components outside 0 through 63 are rejected.
 
-### 27. Add One Color Adjustment Effect
+### 29. Add One Color Adjustment Effect
 
 Add brightness as the first color adjustment effect.
 
@@ -1790,7 +1845,7 @@ Unit tests:
 - values clamp to ID's 0 through 63 range.
 - amount 1 leaves the map unchanged.
 
-### 28. Add More Color Adjustment Effects
+### 30. Add More Color Adjustment Effects
 
 Add gamma, contrast, saturation, and hue_shift one at a time in one
 reviewable change if the implementation is still small.
@@ -1801,7 +1856,7 @@ Unit tests:
 - each effect has one non-identity test.
 - each effect clamps output to ID's valid RGB range.
 
-### 29. Add Masked Colormap Effects
+### 31. Add Masked Colormap Effects
 
 Add pulse, mask_blend, remap, and seeded sparkle one at a time in one
 reviewable change if the implementation is still small.
@@ -1812,7 +1867,7 @@ Unit tests:
 - mask_blend affects only selected ranges.
 - sparkle requires a seed and is repeatable.
 
-### 30. Add Constant And Line Paths
+### 32. Add Constant And Line Paths
 
 Add constant and line path generators for scalar and complex tracks.
 
@@ -1822,7 +1877,7 @@ Unit tests:
 - line matches an equivalent keyed linear track.
 - complex line paths preserve slash_pair formatting.
 
-### 31. Add Circle And Ellipse Paths
+### 33. Add Circle And Ellipse Paths
 
 Add circle and ellipse paths for complex and point tracks.
 
@@ -1832,7 +1887,7 @@ Unit tests:
 - ellipse uses independent x and y radii.
 - phase changes the starting point.
 
-### 32. Add Lissajous And Spiral Paths
+### 34. Add Lissajous And Spiral Paths
 
 Add lissajous and spiral path generators.
 
@@ -1842,7 +1897,7 @@ Unit tests:
 - spiral radius changes over time.
 - invalid frequency or radius values are rejected.
 
-### 33. Add Bezier Paths
+### 35. Add Bezier Paths
 
 Add bezier path generation.
 
@@ -1852,7 +1907,7 @@ Unit tests:
 - too few control points are rejected.
 - tuple-valued paths preserve arity.
 
-### 34. Add Catmull-Rom Paths
+### 36. Add Catmull-Rom Paths
 
 Add catmull_rom path generation. This is the first point where
 Boost.Math should be considered. Do not add it earlier. Keep it hidden
@@ -1866,7 +1921,7 @@ Unit tests:
 - too few control points are rejected.
 - tuple-valued paths preserve arity.
 
-### 35. Add Camera2D Corners Output
+### 37. Add Camera2D Corners Output
 
 Add camera2d with look_at, view_up, and height curves targeting corners.
 
@@ -1876,7 +1931,7 @@ Unit tests:
 - rotated camera writes expected third corner.
 - view_up is normalized before output.
 
-### 36. Add Camera2D Center-Mag Output
+### 38. Add Camera2D Center-Mag Output
 
 Add camera2d output to center-mag for axis-aligned cameras.
 
@@ -1886,7 +1941,7 @@ Unit tests:
 - rotated camera targeting center-mag is rejected.
 - aspect handling matches the source image shape.
 
-### 37. Add Basic ID 3D View Adapter
+### 39. Add Basic ID 3D View Adapter
 
 Add id_3d_view output for rotation, perspective, and xyshift.
 
@@ -1896,7 +1951,7 @@ Unit tests:
 - perspective writes an integer value.
 - xyshift writes a 2-value slash tuple.
 
-### 38. Add More ID 3D View Outputs
+### 40. Add More ID 3D View Outputs
 
 Add scalexyz, roughness, sphere, longitude, latitude, radius, stereo,
 interocular, and converge outputs.
@@ -1907,7 +1962,7 @@ Unit tests:
 - stereo controls write legal values.
 - unsupported target outputs are rejected.
 
-### 39. Add Julibrot View Adapter
+### 41. Add Julibrot View Adapter
 
 Add julibrot_view output for 3dmode, julibrot3d, julibroteyes, and
 julibrotfromto.
@@ -1918,7 +1973,7 @@ Unit tests:
 - julibrot3d writes six components.
 - arbitrary look_at or view_up requests are rejected.
 
-### 40. Add Single-Layer Stack
+### 42. Add Single-Layer Stack
 
 Allow animations to define one layer. It should behave like the existing
 single-source animation but use the layer schema.
@@ -1929,7 +1984,7 @@ Unit tests:
 - layer tracks apply to that layer.
 - duplicate layer ids are rejected.
 
-### 41. Add Multi-Layer Rendering
+### 43. Add Multi-Layer Rendering
 
 Allow multiple layers to render separate ID images before composition.
 
@@ -1939,7 +1994,7 @@ Unit tests:
 - each layer applies only its own tracks.
 - generated layer entry names include layer id and frame number.
 
-### 42. Add Layer Opacity
+### 44. Add Layer Opacity
 
 Add layer opacity evaluation and hidden-layer skipping.
 
@@ -1949,7 +2004,7 @@ Unit tests:
 - write_when_hidden renders opacity 0 layers.
 - opacity values outside 0 through 100 are rejected.
 
-### 43. Add ImageMagick Over Composition
+### 45. Add ImageMagick Over Composition
 
 Generate ImageMagick commands for Over composition.
 
@@ -1959,7 +2014,7 @@ Unit tests:
 - opacity is applied before composition.
 - output.background adds a flatten step when configured.
 
-### 44. Add More ImageMagick Compose Operators
+### 46. Add More ImageMagick Compose Operators
 
 Allow configured ImageMagick compose operators and validate them.
 
@@ -1969,24 +2024,25 @@ Unit tests:
 - unsupported operators are rejected.
 - no ParAnimator-specific blend aliases are accepted.
 
-### 45. Add Core Catalog Files
+### 47. Add Core Catalog Files
 
 Add default catalogs for core ID parameters and coloring.
 
 Unit tests:
 
-- core catalog declares type, maxiter, params, center-mag, and corners.
+- core catalog declares type, maxiter, center-mag, and corners.
 - coloring catalog declares colors as colormap.
 - catalog inclusion fails clearly for missing files.
 
-### 46. Add 3D And Formula Catalog Files
+### 48. Add 3D And Formula Catalog Files
 
 Add default catalogs for ID 3D viewing and selected formula families.
 
 Unit tests:
 
 - 3D catalog declares rotation and julibrot3d arity.
-- formula catalogs can override params arity and format.
+- formula catalogs attach params knob and function key metadata to formula
+  entry names.
 - animation files include only the catalogs they need.
 
 The intent is not to finish a large subsystem before anything runs. The
@@ -1997,48 +2053,48 @@ that path working while each later feature is added.
 
 Hard-code:
 
-    track types
-    curves
-    path generators
-    format parsers
-    validation rules
-    colormap effect algorithms
-    ID map file writer
-    layer stack evaluation
-    ImageMagick command generation
+- track types
+- curves
+- path generators
+- format parsers
+- validation rules
+- colormap effect algorithms
+- ID map file writer
+- layer stack evaluation
+- ImageMagick command generation
 
 Do not hard-code:
 
-    Iterated Dynamics parameter names
-    formula-specific parameter lists
-    legal enum values
-    which parameters are animatable
-    virtual adapter output parameter names
-    default curves for individual parameters
-    enum values used by PWM tracks
-    generated colormap filenames
-    source map filenames
-    ParAnimator-specific blend aliases
-    dependency-specific curve or track names
+- Iterated Dynamics parameter names
+- formula-specific parameter lists
+- legal enum values
+- which parameters are animatable
+- virtual adapter output parameter names
+- default curves for individual parameters
+- enum values used by PWM tracks
+- generated colormap filenames
+- source map filenames
+- ParAnimator-specific blend aliases
+- dependency-specific curve or track names
 
 ## Summary
 
 The final design is:
 
-    one global frame clock
-    many independent parameter timelines
-    each timeline has its own keys, curves, type, and extrapolation
-    local frame-addressable curve evaluation replaces tweeny
-    parameter names and metadata come from JSON catalogs
-    the animator knows types, not Iterated Dynamics parameter names
-    virtual adapters map planned views onto real ID parameters
-    colormap tracks can apply effects, write per-frame ID map files, and
-    emit colors=@file
-    optional layer stacks render ID layer images and compose them with
-    ImageMagick operators
-    enum parameters are discrete by default
-    enum PWM is an optional temporal dithering mode
-    PWM tracks explicitly choose their a and b enum values
+- one global frame clock
+- many independent parameter timelines
+- each timeline has its own keys, curves, type, and extrapolation
+- local frame-addressable curve evaluation replaces tweeny
+- parameter names and metadata come from JSON catalogs
+- the animator knows types, not Iterated Dynamics parameter names
+- virtual adapters map planned views onto real ID parameters
+- colormap tracks can apply effects, write per-frame ID map files, and
+  emit `colors=@file`
+- optional layer stacks render ID layer images and compose them with
+  ImageMagick operators
+- enum parameters are discrete by default
+- enum PWM is an optional temporal dithering mode
+- PWM tracks explicitly choose their `a` and `b` enum values
 
 This turns ParAnimator into a data-driven parameter animation sequencer
 rather than a viewport interpolation tool.
