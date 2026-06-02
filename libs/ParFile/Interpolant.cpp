@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <cstddef>
 #include <stdexcept>
 #include <vector>
 
@@ -158,8 +159,7 @@ struct Corners
     Corners &operator=(const Corners &rhs) = default;
     Corners &operator=(Corners &&rhs) = default;
 
-    std::complex<double> lower_left;
-    std::complex<double> upper_right;
+    std::vector<double> values;
 };
 
 class CornersInterpolant : public Base
@@ -178,14 +178,14 @@ private:
 Corners::Corners(const std::string &value)
 {
     std::vector<std::string> text;
-    text.reserve(4);
     boost::algorithm::split(text, value, [](char c) { return c == '/'; });
-    std::vector<double> numbers(text.size());
-    std::transform(text.begin(), text.end(), numbers.begin(), [](const std::string &text) { return std::stod(text); });
-    lower_left.real(numbers[0]);
-    upper_right.real(numbers[1]);
-    lower_left.imag(numbers[2]);
-    upper_right.imag(numbers[3]);
+    if (text.size() != 4U && text.size() != 6U)
+    {
+        throw std::runtime_error(
+            "Corners parameter must have 4 or 6 values; have " + std::to_string(text.size()) + " in '" + value + "'");
+    }
+    values.resize(text.size());
+    std::transform(text.begin(), text.end(), values.begin(), [](const std::string &item) { return std::stod(item); });
 }
 
 CornersInterpolant::CornersInterpolant(const std::string &from, const std::string &to, int num_steps) :
@@ -193,14 +193,26 @@ CornersInterpolant::CornersInterpolant(const std::string &from, const std::strin
     m_from(from),
     m_to(to)
 {
+    if (m_from.values.size() != m_to.values.size())
+    {
+        throw std::runtime_error("Corners keyframes must have matching arity");
+    }
 }
 
 std::string CornersInterpolant::step()
 {
     ++m_step;
-    const std::complex<double> ll{m_segment.linear_value_at(m_step, m_from.lower_left, m_to.lower_left)};
-    const std::complex<double> ur{m_segment.linear_value_at(m_step, m_from.upper_right, m_to.upper_right)};
-    return (boost::format("%.12g/%.12g/%.12g/%.12g") % ll.real() % ur.real() % ll.imag() % ur.imag()).str();
+    std::string result;
+    for (std::size_t i = 0; i < m_from.values.size(); ++i)
+    {
+        if (!result.empty())
+        {
+            result += '/';
+        }
+        const double value{m_segment.linear_value_at(m_step, m_from.values[i], m_to.values[i])};
+        result += (boost::format("%.12g") % value).str();
+    }
+    return result;
 }
 
 } // namespace

@@ -118,3 +118,34 @@ TEST(TestInterpolant, cornersTo)
 
     EXPECT_EQ(to, value);
 }
+
+TEST(TestInterpolant, cornersSixValueFraction)
+{
+    const std::string from{"0/10/0/10/1/2"};
+    const std::string to{"10/20/10/20/3/4"};
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant("corners", from, to, num_steps)};
+    static_cast<void>(interpolant->step());
+
+    const std::string value{interpolant->step()};
+
+    EXPECT_EQ("5/15/5/15/2/3", value);
+}
+
+TEST(TestInterpolant, cornersMismatchedArityRejected)
+{
+    const std::string from{"0/10/0/10"};
+    const std::string to{"10/20/10/20/3/4"};
+    const int num_steps{3};
+
+    EXPECT_THROW(ParFile::create_interpolant("corners", from, to, num_steps), std::runtime_error);
+}
+
+TEST(TestInterpolant, cornersInvalidArityRejected)
+{
+    const std::string from{"0/10/0/10/1"};
+    const std::string to{"10/20/10/20/3"};
+    const int num_steps{3};
+
+    EXPECT_THROW(ParFile::create_interpolant("corners", from, to, num_steps), std::runtime_error);
+}
