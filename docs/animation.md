@@ -826,7 +826,7 @@ ID color animation may require a generated map file for each frame. Model
 that as a normal track for the real ID colors parameter, with a colormap
 type that writes a side file and returns an at-file value.
 
-Example:
+The simplest colormap track interpolates between map files:
 
     {
       "parameter": "colors",
@@ -839,15 +839,136 @@ Example:
       ]
     }
 
+This is shorthand for an interpolate effect.
+
+For richer animation, use a source map plus an ordered effect list:
+
+    {
+      "parameter": "colors",
+      "type": "colormap",
+      "format": "at_file",
+      "output": "work/colors-%04d.map",
+      "source": "maps/base.map",
+      "effects": [
+        {
+          "kind": "rotate_range",
+          "range": [32, 127],
+          "offset": {
+            "keys": [
+              { "frame": 0,   "value": 0 },
+              { "frame": 300, "value": 96 }
+            ]
+          }
+        },
+        {
+          "kind": "brightness",
+          "amount": {
+            "keys": [
+              { "frame": 0,   "value": 1.0 },
+              { "frame": 150, "value": 1.4 },
+              { "frame": 300, "value": 1.0 }
+            ]
+          }
+        }
+      ]
+    }
+
 At each frame:
 
-    read the source ID map files
-    interpolate matching color entries
+    evaluate the source map
+    apply each effect in order
     write work/colors-0000.map
     return @work/colors-0000.map as the colors parameter value
 
+Effect parameters may be constants or keyed scalar, tuple, color, or enum
+tracks. This keeps timing local to the colormap track while reusing the
+normal track interpolation machinery.
+
+Core colormap effects:
+
+    interpolate
+        Blend two or more ID map files with keyed weights.
+
+    sequence
+        Step through map files, with optional crossfade frames.
+
+    rotate
+        Shift all palette indices by a keyed offset.
+
+    rotate_range
+        Shift only an inclusive index range.
+
+    reverse
+        Reverse the full map or one inclusive index range.
+
+    ping_pong
+        Oscillate an index range forward and backward.
+
+    gradient
+        Generate a map from keyed RGB color stops.
+
+    hue_shift
+        Rotate hue in HSL or HSV space.
+
+    saturation
+        Scale color saturation.
+
+    brightness
+        Scale color intensity.
+
+    contrast
+        Expand or compress color distance from midgray.
+
+    gamma
+        Apply nonlinear intensity shaping.
+
+    posterize
+        Reduce color levels to bands.
+
+    remap
+        Reindex the palette through a curve or lookup table.
+
+    pulse
+        Blend a range toward a keyed flash color.
+
+    mask_blend
+        Blend selected index ranges between maps.
+
+    sparkle
+        Apply seeded, bounded random color perturbations.
+
+Example generated map:
+
+    {
+      "parameter": "colors",
+      "type": "colormap",
+      "format": "at_file",
+      "output": "work/gradient-%04d.map",
+      "source": {
+        "kind": "gradient",
+        "stops": [
+          { "index": 0,   "color": "0/0/0" },
+          { "index": 128, "color": "63/10/0" },
+          { "index": 255, "color": "63/63/63" }
+        ]
+      },
+      "effects": [
+        {
+          "kind": "hue_shift",
+          "amount": {
+            "keys": [
+              { "frame": 0,   "value": 0 },
+              { "frame": 300, "value": 360 }
+            ]
+          }
+        }
+      ]
+    }
+
 The colormap writer should emit an ID-compatible map file. Validation
 must reject mismatched palette sizes or malformed color entries.
+Stochastic effects such as sparkle must require an explicit seed so
+renders are repeatable.
 
 Use colors=@file for per-frame map files. The map parameter is a real ID
 parameter too, but it is better suited to selecting a default map than to
@@ -1287,13 +1408,15 @@ Implement in this order:
     6. angle and cyclic tracks
     7. enum hold and enum step tracks
     8. enum PWM tracks
-    9. colormap tracks and per-frame map file writing
-    10. path generators
-    11. camera2d virtual tracks
-    12. id_3d_view and julibrot_view virtual tracks
-    13. layer stacks
-    14. ImageMagick compose operators and opacity
-    15. formula-specific catalog files
+    9. colormap tracks, ID map reading, and map file writing
+    10. basic colormap interpolation and rotation effects
+    11. gradient and color adjustment colormap effects
+    12. path generators
+    13. camera2d virtual tracks
+    14. id_3d_view and julibrot_view virtual tracks
+    15. layer stacks
+    16. ImageMagick compose operators and opacity
+    17. formula-specific catalog files
 
 This order gets useful behavior early while keeping the design open.
 
@@ -1306,6 +1429,7 @@ Hard-code:
     path generators
     format parsers
     validation rules
+    colormap effect algorithms
     ID map file writer
     layer stack evaluation
     ImageMagick command generation
@@ -1320,6 +1444,7 @@ Do not hard-code:
     default curves for individual parameters
     enum values used by PWM tracks
     generated colormap filenames
+    source map filenames
     ParAnimator-specific blend aliases
 
 ## Summary
@@ -1332,7 +1457,8 @@ The final design is:
     parameter names and metadata come from JSON catalogs
     the animator knows types, not Iterated Dynamics parameter names
     virtual adapters map planned views onto real ID parameters
-    colormap tracks can write per-frame ID map files and emit colors=@file
+    colormap tracks can apply effects, write per-frame ID map files, and
+    emit colors=@file
     optional layer stacks render ID layer images and compose them with
     ImageMagick operators
     enum parameters are discrete by default
