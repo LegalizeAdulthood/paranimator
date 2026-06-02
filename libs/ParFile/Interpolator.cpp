@@ -7,10 +7,7 @@
 #include <ParFile/ParFile.h>
 
 #include <boost/format.hpp>
-#include <boost/algorithm/string/split.hpp>
-
 #include <algorithm>
-#include <filesystem>
 #include <fstream>
 #include <stdexcept>
 #include <string>
@@ -34,51 +31,42 @@ static ParSet load_par_set(const NamedFileParSet &par_entry)
     return *it;
 }
 
-std::vector<InterpolantPtr> Interpolator::load_interpolants(
-    const Config &config, const ParSet &from, const ParSet &to, int num_steps)
+std::vector<InterpolantPtr> Interpolator::load_interpolants(const Config &config, const ParSet &source)
 {
     std::vector<InterpolantPtr> result;
-    std::vector<std::string> values;
-    for (const std::string &name : config.interpolate())
+    for (const TrackConfig &track : config.tracks())
     {
-        const auto is_name{[&](const Parameter &param) { return param.name == name; }};
-        const auto from_param{std::find_if(from.params.begin(), from.params.end(), is_name)};
-        if (from_param == from.params.end())
+        if (track.keys.size() != 2U)
         {
-            throw std::runtime_error("Parameter set '" + from.name + "' has no parameter '" + name + "'");
+            throw std::runtime_error("Track '" + track.parameter + "' requires exactly two keyframes");
         }
-        const auto to_param{std::find_if(to.params.begin(), to.params.end(), is_name)};
-        if (to_param == to.params.end())
+        if (track.keys[0].frame != 0 || track.keys[1].frame != config.num_frames() - 1)
         {
-            throw std::runtime_error("Parameter set '" + to.name + "' has no parameter '" + name + "'");
+            throw std::runtime_error("Track '" + track.parameter + "' must span the full frame range");
         }
-        
-        result.emplace_back(create_interpolant(name, from_param->value, to_param->value, num_steps));
+        const auto is_name{[&](const Parameter &param) { return param.name == track.parameter; }};
+        if (std::find_if(source.params.begin(), source.params.end(), is_name) == source.params.end())
+        {
+            throw std::runtime_error(
+                "Parameter set '" + source.name + "' has no parameter '" + track.parameter + "'");
+        }
+        result.emplace_back(
+            create_interpolant(track.parameter, track.keys[0].value, track.keys[1].value, config.num_frames()));
     }
-
     return result;
 }
 
 Interpolator::Interpolator(const Config &config) :
-    m_num_frames(config.num_frames()),
     m_frame_name(config.output().entry),
     m_video(config.video()),
-    m_from(load_par_set(config.from())),
-    m_to(load_par_set(config.to())),
-    m_interpolants(load_interpolants(config, m_from, m_to, m_num_frames))
-{
-    const auto it{std::find_if(
-        m_from.params.begin(), m_from.params.end(), [](const Parameter &param) { return param.name == "center-mag"; })};
-    if (it == m_from.params.end())
-    {
-        throw std::runtime_error("Missing center-mag parameter in set '" + m_from.name + "'");
-    }
-}
+    m_source(load_par_set(config.source())),
+    m_interpolants(load_interpolants(config, m_source))
+{}
 
 ParSet Interpolator::operator()()
 {
     ++m_frame;
-    ParSet par_set{m_from};
+    ParSet par_set{m_source};
     for (const InterpolantPtr &lerper : m_interpolants)
     {
         const auto it{std::find_if(par_set.params.begin(), par_set.params.end(),

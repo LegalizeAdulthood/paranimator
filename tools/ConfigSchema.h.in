@@ -1,0 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0-only
+//
+#pragma once
+
+namespace ParAnimator
+{
+
+constexpr const char *config_schema_json = "@PARANIMATOR_CONFIG_SCHEMA_JSON@";
+
+} // namespace ParAnimator

@@ -5,6 +5,8 @@
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
+#include <stdexcept>
+
 using Object = nlohmann::json;
 
 namespace
@@ -13,15 +15,14 @@ namespace
 Object valid_json()
 {
     return Object{
-        {"from", Object{{"file", "foo.par"}, {"name", "foo"}}},         //
-        {"to", Object{{"file", "bar.par"}, {"name", "bar"}}},           //
-        {"interpolate", Object::array({"center-mag"})},                 //
+        {"source", Object{{"file", "foo.par"}, {"name", "foo"}}},       //
         {"output", Object{{"directory", "out"},                         //
                        {"par", "output.par"},                           //
                        {"entry", "frame-%04d"},                         //
                        {"script", "output.bat"}}},                      //
         {"video", "F6"},                                                //
-        {"num_frames", 60}                                              //
+        {"num_frames", 60},                                             //
+        {"tracks", Object::array()}                                     //
     };
 }
 
@@ -36,12 +37,8 @@ TEST(TestConfig, minimumValid)
 {
     ParFile::Config config{valid_json().dump()};
 
-    EXPECT_EQ("foo.par", config.from().file);
-    EXPECT_EQ("foo", config.from().name);
-    EXPECT_EQ("bar.par", config.to().file);
-    EXPECT_EQ("bar", config.to().name);
-    ASSERT_EQ(1U, config.interpolate().size());
-    EXPECT_EQ("center-mag", config.interpolate()[0]);
+    EXPECT_EQ("foo.par", config.source().file);
+    EXPECT_EQ("foo", config.source().name);
     EXPECT_EQ("out", config.output().directory);
     EXPECT_EQ("output.par", config.output().par);
     EXPECT_EQ("frame-%04d", config.output().entry);
@@ -49,6 +46,7 @@ TEST(TestConfig, minimumValid)
     EXPECT_EQ(1, config.parallel());
     EXPECT_EQ("F6", config.video());
     EXPECT_EQ(60, config.num_frames());
+    EXPECT_EQ(0U, config.num_tracks());
 }
 
 TEST(TestConfig, optionalParallelValid)
@@ -61,42 +59,26 @@ TEST(TestConfig, optionalParallelValid)
     EXPECT_EQ(20, config.parallel());
 }
 
-TEST(TestConfig, missingFrom)
+TEST(TestConfig, missingSource)
 {
     Object json{valid_json()};
-    json.erase("from");
+    json.erase("source");
 
     expect_invalid(json);
 }
 
-TEST(TestConfig, fromMissingFile)
+TEST(TestConfig, sourceMissingFile)
 {
     Object json{valid_json()};
-    json.at("from").erase("file");
+    json.at("source").erase("file");
 
     expect_invalid(json);
 }
 
-TEST(TestConfig, fromMissingName)
+TEST(TestConfig, sourceMissingName)
 {
     Object json{valid_json()};
-    json.at("from").erase("name");
-
-    expect_invalid(json);
-}
-
-TEST(TestConfig, missingTo)
-{
-    Object json{valid_json()};
-    json.erase("to");
-
-    expect_invalid(json);
-}
-
-TEST(TestConfig, missingInterpolate)
-{
-    Object json{valid_json()};
-    json.erase("interpolate");
+    json.at("source").erase("name");
 
     expect_invalid(json);
 }
@@ -155,4 +137,34 @@ TEST(TestConfig, missingNumFrames)
     json.erase("num_frames");
 
     expect_invalid(json);
+}
+
+TEST(TestConfig, missingTracks)
+{
+    Object json{valid_json()};
+    json.erase("tracks");
+
+    expect_invalid(json);
+}
+
+TEST(TestConfig, oneTrackValid)
+{
+    Object json{valid_json()};
+    json["tracks"] = Object::array({Object{
+        {"parameter", "center-mag"},
+        {"keys", Object::array({
+            Object{{"frame", 0}, {"value", "-0.5/0/1"}},
+            Object{{"frame", 2}, {"value", "-0.5/0/10"}}
+        })}
+    }});
+
+    ParFile::Config config{json.dump()};
+
+    ASSERT_EQ(1U, config.tracks().size());
+    EXPECT_EQ("center-mag", config.tracks()[0].parameter);
+    ASSERT_EQ(2U, config.tracks()[0].keys.size());
+    EXPECT_EQ(0, config.tracks()[0].keys[0].frame);
+    EXPECT_EQ("-0.5/0/1", config.tracks()[0].keys[0].value);
+    EXPECT_EQ(2, config.tracks()[0].keys[1].frame);
+    EXPECT_EQ("-0.5/0/10", config.tracks()[0].keys[1].value);
 }

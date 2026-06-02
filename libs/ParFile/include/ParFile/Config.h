@@ -2,6 +2,7 @@
 //
 #pragma once
 
+#include <cstddef>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -23,6 +24,18 @@ struct OutputConfig
     std::string script;
 };
 
+struct KeyframeConfig
+{
+    int frame{};
+    std::string value;
+};
+
+struct TrackConfig
+{
+    std::string parameter;
+    std::vector<KeyframeConfig> keys;
+};
+
 class Config
 {
 public:
@@ -33,17 +46,9 @@ public:
     Config &operator=(const Config &rhs) = default;
     Config &operator=(Config &&rhs) = default;
 
-    const NamedFileParSet &from() const
+    const NamedFileParSet &source() const
     {
-        return m_from;
-    }
-    const NamedFileParSet &to() const
-    {
-        return m_to;
-    }
-    const std::vector<std::string> &interpolate() const
-    {
-        return m_interpolate;
+        return m_source;
     }
     const OutputConfig &output() const
     {
@@ -61,15 +66,22 @@ public:
     {
         return m_num_frames;
     }
+    std::size_t num_tracks() const
+    {
+        return m_tracks.size();
+    }
+    const std::vector<TrackConfig> &tracks() const
+    {
+        return m_tracks;
+    }
 
 private:
-    NamedFileParSet m_from;
-    NamedFileParSet m_to;
-    std::vector<std::string> m_interpolate;
+    NamedFileParSet m_source;
     OutputConfig m_output;
     int m_parallel{1};
     std::string m_video;
     int m_num_frames{};
+    std::vector<TrackConfig> m_tracks;
 };
 
 } // namespace ParFile

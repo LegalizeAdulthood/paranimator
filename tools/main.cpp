@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-only
 //
+#include <ConfigSchema.h>
+
 #include <ParFile/Config.h>
 #include <ParFile/Interpolator.h>
+#include <ParFile/JsonSchema.h>
 #include <ParFile/OutputLayout.h>
 #include <ParFile/ParFile.h>
 #include <ParFile/Script.h>
@@ -69,6 +72,20 @@ void interpolate(const ParFile::Config &config)
     }
 }
 
+std::string read_text(const std::filesystem::path &path);
+
+ParFile::Config load_config(const std::filesystem::path &path)
+{
+    const std::string config_json{read_text(path)};
+    const std::string schema_json{read_text(ParAnimator::config_schema_json)};
+    if (!ParFile::validate_json_schema(schema_json, config_json))
+    {
+        throw std::runtime_error("Config file does not match schema '" +
+            std::string{ParAnimator::config_schema_json} + "'");
+    }
+    return ParFile::Config{config_json};
+}
+
 std::string read_text(const std::filesystem::path &path)
 {
     std::ifstream in{path};
@@ -88,7 +105,7 @@ int main(const std::vector<std::string_view> &args)
             return usage(args[0]);
         }
         const std::string_view json_file{args[1]};
-        interpolate(ParFile::Config{read_text(std::filesystem::path{std::string{json_file}})});
+        interpolate(load_config(std::filesystem::path{std::string{json_file}}));
 
         return 0;
     }

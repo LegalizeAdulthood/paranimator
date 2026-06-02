@@ -1,13 +1,8 @@
 {
-  "from": {
+  "source": {
     "file": "from.par",
-    "name": "@TEST_FROM_PAR@"
+    "name": "@TEST_SOURCE_PAR@"
   },
-  "to": {
-    "file": "to.par",
-    "name": "@TEST_TO_PAR@"
-  },
-  "interpolate": [ "@TEST_INTERPOLATE@" ],
   "output": {
     "directory": "@TEST_OUTPUT_DIRECTORY@",
     "par": "@TEST_OUTPUT_PAR@",
@@ -15,5 +10,14 @@
     "script": "@TEST_OUTPUT_SCRIPT@"
   },
   "video": "@TEST_VIDEO_MODE@",
-  "num_frames": 60
+  "num_frames": 60,
+  "tracks": [
+    {
+      "parameter": "@TEST_TRACK_PARAMETER@",
+      "keys": [
+        { "frame": 0, "value": "@TEST_TRACK_FROM@" },
+        { "frame": 59, "value": "@TEST_TRACK_TO@" }
+      ]
+    }
+  ]
 }

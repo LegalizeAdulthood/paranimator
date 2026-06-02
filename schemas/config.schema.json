@@ -3,10 +3,10 @@
   "$id": "https://legalize.github.io/paranimator/schemas/config.schema.json",
   "title": "ParAnimator configuration",
   "type": "object",
-  "required": [ "from", "to", "interpolate", "output", "video", "num_frames" ],
+  "required": [ "source", "output", "video", "num_frames", "tracks" ],
   "additionalProperties": false,
   "properties": {
-    "from": {
+    "source": {
       "type": "object",
       "required": [ "file", "name" ],
       "additionalProperties": false,
@@ -14,20 +14,6 @@
         "file": { "type": "string" },
         "name": { "type": "string" }
       }
-    },
-    "to": {
-      "type": "object",
-      "required": [ "file", "name" ],
-      "additionalProperties": false,
-      "properties": {
-        "file": { "type": "string" },
-        "name": { "type": "string" }
-      }
-    },
-    "interpolate": {
-      "type": "array",
-      "minItems": 1,
-      "items": { "type": "string" }
     },
     "output": {
       "type": "object",
@@ -42,6 +28,31 @@
     },
     "parallel": { "type": "integer" },
     "video": { "type": "string" },
-    "num_frames": { "type": "integer" }
+    "num_frames": { "type": "integer" },
+    "tracks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [ "parameter", "keys" ],
+        "additionalProperties": false,
+        "properties": {
+          "parameter": { "type": "string" },
+          "keys": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "required": [ "frame", "value" ],
+              "additionalProperties": false,
+              "properties": {
+                "frame": { "type": "integer" },
+                "value": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

@@ -4,6 +4,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <cstddef>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -92,32 +93,56 @@ static int load_int(const Object &json, std::string_view name)
     return json.at(key).get<int>();
 }
 
-static std::vector<std::string> load_string_vector(const Object &json, std::string_view name)
+static KeyframeConfig load_keyframe_config(const Object &json)
+{
+    KeyframeConfig result;
+    result.frame = load_int(json, "frame");
+    result.value = load_string(json, "value");
+    return result;
+}
+
+static std::vector<KeyframeConfig> load_keyframes(const Object &json)
+{
+    const std::string key{"keys"};
+    if (!json.contains(key) || !json.at(key).is_array())
+    {
+        throw std::runtime_error("Invalid config, missing array 'keys'");
+    }
+    std::vector<KeyframeConfig> result;
+    for (const Object &item : json.at(key))
+    {
+        if (!item.is_object())
+        {
+            throw std::runtime_error("Invalid config, array 'keys' contains non-object value");
+        }
+        result.emplace_back(load_keyframe_config(item));
+    }
+    return result;
+}
+
+static TrackConfig load_track_config(const Object &json)
+{
+    TrackConfig result;
+    result.parameter = load_string(json, "parameter");
+    result.keys = load_keyframes(json);
+    return result;
+}
+
+static std::vector<TrackConfig> load_tracks(const Object &json, std::string_view name)
 {
     const std::string key{name};
     if (!json.contains(key) || !json.at(key).is_array())
     {
-        throw std::runtime_error("Invalid config, missing string array '" + std::string{name} + "'");
+        throw std::runtime_error("Invalid config, missing array '" + std::string{name} + "'");
     }
-    std::vector<std::string> result;
-    for (const Object &val : json.at(key))
+    std::vector<TrackConfig> result;
+    for (const Object &item : json.at(key))
     {
-        if (!val.is_string())
+        if (!item.is_object())
         {
-            throw std::runtime_error(
-                "Invalid config, string array '" + std::string{name} + "' contains non-string value");
+            throw std::runtime_error("Invalid config, array '" + std::string{name} + "' contains non-object value");
         }
-        const std::string value{val.get<std::string>()};
-        if (value.empty())
-        {
-            throw std::runtime_error(
-                "Invalid config, string array '" + std::string{name} + "' contains empty string value");
-        }
-        result.emplace_back(value);
-    }
-    if (result.empty())
-    {
-        throw std::runtime_error("Invalid config, string array '" + std::string{name} + "' is empty");
+        result.emplace_back(load_track_config(item));
     }
     return result;
 }
@@ -125,12 +150,11 @@ static std::vector<std::string> load_string_vector(const Object &json, std::stri
 Config::Config(std::string_view json_text)
 {
     const Object json{parse_json(json_text)};
-    m_from = load_named_file_par_set(json, "from");
-    m_to = load_named_file_par_set(json, "to");
-    m_interpolate = load_string_vector(json, "interpolate");
+    m_source = load_named_file_par_set(json, "source");
     m_output = load_output_config(json);
     m_video = load_string(json, "video");
     m_num_frames = load_int(json, "num_frames");
+    m_tracks = load_tracks(json, "tracks");
 
     if (json.contains("parallel"))
     {

@@ -4,12 +4,13 @@
     "name": "Mandel_Demo"
   },
   "output": {
-    "directory": 1,
+    "directory": "e2e-output",
     "par": "frames.par",
     "entry": "frame-%04d",
     "script": "frames.bat"
   },
   "video": "F6",
-  "num_frames": 60,
-  "tracks": []
+  "num_frames": 1,
+  "tracks": [],
+  "unexpected": true
 }

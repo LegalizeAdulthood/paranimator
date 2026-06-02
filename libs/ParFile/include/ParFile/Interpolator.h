@@ -11,9 +11,9 @@
 namespace ParFile
 {
 
-struct NamedFileParSet;
 class Config;
 class Interpolant;
+struct NamedFileParSet;
 using InterpolantPtr = std::shared_ptr<Interpolant>;
 
 class Interpolator
@@ -26,25 +26,18 @@ public:
     Interpolator &operator=(const Interpolator &rhs) = default;
     Interpolator &operator=(Interpolator &&rhs) = default;
 
-    const ParSet &from() const
+    const ParSet &source() const
     {
-        return m_from;
-    }
-    const ParSet &to() const
-    {
-        return m_to;
+        return m_source;
     }
 
     ParSet operator()();
 
 private:
-    static std::vector<InterpolantPtr> load_interpolants(
-        const Config &config, const ParSet &from, const ParSet &to, int num_steps);
-    int m_num_frames;
+    static std::vector<InterpolantPtr> load_interpolants(const Config &config, const ParSet &source);
     std::string m_frame_name;
     std::string m_video;
-    ParSet m_from;
-    ParSet m_to;
+    ParSet m_source;
     std::vector<InterpolantPtr> m_interpolants;
     int m_frame{};
 };

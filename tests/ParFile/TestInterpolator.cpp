@@ -51,9 +51,10 @@ void TestInterpolator::add_expected_params(ParFile::ParSet &expected, const std:
 
 } // namespace
 
-TEST_F(TestInterpolator, firstFrameIsFrom)
+TEST_F(TestInterpolator, firstFrameCopiesSource)
 {
-    ParFile::ParSet expected{m_lerper.from()};
+    ParFile::ParSet expected{m_lerper.source()};
+    expected.params[2].value = "-0.5/0/1";
     expected.name = "frame-0001";
     add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
@@ -61,12 +62,14 @@ TEST_F(TestInterpolator, firstFrameIsFrom)
     ASSERT_EQ(expected, frame);
 }
 
-TEST_F(TestInterpolator, lastFrameIsTo)
+TEST_F(TestInterpolator, lastFrameIsTrackEndValue)
 {
     m_json["num_frames"] = 2;
+    m_json["tracks"][0]["keys"][1]["frame"] = 1;
     m_config = ParFile::Config{m_json.dump()};
     m_lerper = ParFile::Interpolator{m_config};
-    ParFile::ParSet expected{m_lerper.to()};
+    ParFile::ParSet expected{m_lerper.source()};
+    expected.params[2].value = "-0.5/0/10";
     expected.name = "frame-0002";
     add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
@@ -79,11 +82,12 @@ TEST_F(TestInterpolator, lastFrameIsTo)
 TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
 {
     m_json["num_frames"] = 3;
+    m_json["tracks"][0]["keys"][1]["frame"] = 2;
     m_config = ParFile::Config{m_json.dump()};
     m_lerper = ParFile::Interpolator{m_config};
-    ParFile::ParSet expected{m_lerper.to()};
-    expected.name = "frame-0002";
+    ParFile::ParSet expected{m_lerper.source()};
     expected.params[2].value = "-0.5/0/3.16228";
+    expected.name = "frame-0002";
     add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
 
