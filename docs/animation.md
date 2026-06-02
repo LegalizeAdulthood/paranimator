@@ -594,6 +594,46 @@ Suggested behavior:
     geometric
         Useful for positive scale or magnification values.
 
+## Implementation Libraries
+
+Do not use tweeny as the new animation engine. It is shaped around
+object tweening, while ParAnimator needs frame-addressable typed tracks,
+ID parameter formatting, virtual adapters, validation, and side effects
+such as per-frame map files.
+
+The new track engine should have a small local curve evaluator:
+
+    local segment lookup by frame
+    local easing functions
+    local typed interpolation
+    local extrapolation handling
+
+This should replace the existing tweeny-backed interpolant path in the
+first implementation slice. Once no source file includes tweeny, remove
+tweeny from the dependency manifest.
+
+Dependency guidance:
+
+    Boost.JSON
+        Keep for JSON parsing and serialization.
+
+    Boost.Math interpolators
+        Use behind path generators if Catmull-Rom, Bezier, Akima, PCHIP,
+        or B-spline paths become useful.
+
+    TinySpline
+        Consider only if spline paths need control points, knots,
+        arbitrary-dimensional splines, or arc-length sampling.
+
+    GLM or local vector types
+        Use for camera and 3D adapter math only if it reduces code.
+
+    ImageMagick
+        Keep as an external command-line renderer for layer composition.
+
+Do not expose dependency-specific names or behavior in JSON. JSON names
+belong to ParAnimator's track model.
+
 ## Extrapolation
 
 Each track controls behavior before its first key and after its last key.
@@ -1449,11 +1489,11 @@ ImageMagick composition:
 
 Implement in this order:
 
-    1. parameter catalog loading
-    2. integer, double, numeric_tuple, point2, vector2, point3, and
+    1. local segment evaluator and easing table replacing tweeny
+    2. parameter catalog loading
+    3. integer, double, numeric_tuple, point2, vector2, point3, and
        vector3 tracks
-    3. per-parameter key timelines
-    4. easing curves
+    4. per-parameter key timelines
     5. complex tracks
     6. angle and cyclic tracks
     7. enum hold and enum step tracks
@@ -1496,6 +1536,7 @@ Do not hard-code:
     generated colormap filenames
     source map filenames
     ParAnimator-specific blend aliases
+    dependency-specific curve or track names
 
 ## Summary
 
@@ -1504,6 +1545,7 @@ The final design is:
     one global frame clock
     many independent parameter timelines
     each timeline has its own keys, curves, type, and extrapolation
+    local frame-addressable curve evaluation replaces tweeny
     parameter names and metadata come from JSON catalogs
     the animator knows types, not Iterated Dynamics parameter names
     virtual adapters map planned views onto real ID parameters
