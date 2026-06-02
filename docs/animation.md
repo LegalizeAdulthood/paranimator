@@ -410,8 +410,8 @@ The adapter type is hard-coded. The output parameter names are not.
 ## ID Euler 3D View Adapter
 
 The id_3d_view adapter targets ID's Euler-style 3D view controls. This is
-the right adapter for the general 3D transform and for 3D orbital types
-such as lorenz3d and ifs3d.
+the right adapter for ID's general 3D viewing parameters and for 3D
+orbital types such as lorenz3d and ifs3d.
 
 It writes catalog-declared outputs such as:
 
@@ -472,8 +472,8 @@ when they can be converted to ID's x/y/z rotation, perspective, and shift
 controls. If the requested camera motion needs an unsupported target,
 roll, projection, or center of interest, reject it with a clear error.
 
-The general 3D transform supports the broader output set. Orbital 3D
-types such as lorenz3d and ifs3d support a smaller set: rotation,
+The general 3D view supports the broader output set. Orbital 3D types
+such as lorenz3d and ifs3d support a smaller set: rotation,
 perspective, xyshift, and stereo controls. Validate against the selected
 target.
 
@@ -635,7 +635,7 @@ Example:
       },
 
       "output": "frames.par",
-      "script": "render.cmd",
+      "script": "render.bat",
       "frame": "frame%04d",
       "video": "yes",
       "num_frames": 900,
@@ -671,6 +671,148 @@ Example:
     }
 
 The track does not need to repeat the type if the catalog declares it.
+
+## Layered Animation Files
+
+An animation may define a layer stack instead of a single source
+parameter set. Each layer renders an Iterated Dynamics image for the
+current frame. The final animation frame is produced by compositing those
+layer images with ImageMagick.
+
+Layers are evaluated from bottom to top.
+
+Example:
+
+    {
+      "parameter_catalogs": [
+        "parameters/core.json",
+        "parameters/coloring.json"
+      ],
+
+      "output": {
+        "frames": "frames/frame%04d.png",
+        "layers": "work/layer-%s-%04d.png",
+        "script": "render.bat",
+        "compose_script": "compose.bat",
+        "background": "black"
+      },
+
+      "num_frames": 900,
+      "fps": 30,
+      "video": "yes",
+
+      "layers": [
+        {
+          "id": "base",
+          "source": {
+            "file": "examples.par",
+            "name": "base"
+          },
+          "opacity": {
+            "keys": [
+              { "frame": 0, "value": 100 }
+            ]
+          },
+          "compose": "Over",
+          "tracks": [
+            {
+              "parameter": "center-mag",
+              "keys": [
+                { "frame": 0,   "value": "-0.5/0/1" },
+                { "frame": 900, "value": "-0.7/0.1/64" }
+              ]
+            }
+          ]
+        },
+
+        {
+          "id": "glow",
+          "source": {
+            "file": "examples.par",
+            "name": "glow"
+          },
+          "opacity": {
+            "keys": [
+              { "frame": 0,   "value": 0 },
+              { "frame": 120, "value": 65 },
+              { "frame": 900, "value": 20 }
+            ]
+          },
+          "compose": "Screen",
+          "tracks": [
+            {
+              "parameter": "colors",
+              "keys": [
+                { "frame": 0,   "value": 0 },
+                { "frame": 900, "value": 256 }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+
+Layer fields:
+
+    id
+    source
+    tracks
+    opacity
+    compose
+    write_when_hidden
+
+Meanings:
+
+    id
+        Stable identifier used in filenames and scoped track names.
+
+    source
+        Base parameter set for this layer.
+
+    tracks
+        Parameter timelines evaluated only for this layer.
+
+    opacity
+        Percent opacity. Animate opacity to 0 instead of inserting or
+        deleting layers over time.
+
+    compose
+        ImageMagick compose operator used when this layer is placed over
+        the current frame image.
+
+    write_when_hidden
+        Whether to render the layer even when evaluated opacity is 0.
+
+    output.background
+        Optional flatten color for final frame formats that do not keep
+        alpha. If omitted, keep the composed frame alpha channel.
+
+The compose value is an ImageMagick compositing operator name, such as:
+
+    Over
+    Multiply
+    Screen
+    Overlay
+    HardLight
+    SoftLight
+    Darken
+    Lighten
+    Difference
+    Plus
+    Minus
+
+Do not invent ParAnimator-specific blend aliases. Validate compose
+operators against the ImageMagick operators supported by the installed
+toolchain.
+
+The layer stack has no separate post-render geometry stage. A layer may
+animate normal ID parameters, including viewport and virtual camera
+tracks, but the composition step only controls opacity and ImageMagick
+compose.
+
+The layer system does not read external animation files or emulate their
+blending vocabulary. The goal is similar layered rendering behavior using
+Iterated Dynamics and ImageMagick.
 
 ## Track Structure
 
@@ -1063,6 +1205,33 @@ The generated frame loop should remain simple:
 This preserves the current ParAnimator workflow while allowing much richer
 animation.
 
+Layered animations use the same track evaluation per layer, followed by
+ImageMagick composition:
+
+    for frame_number in 0 through num_frames - 1:
+        for each layer from bottom to top:
+            frame = layer.base_parameter_set
+
+            for each layer track:
+                apply track assignments at frame_number
+
+            if opacity is 0 and write_when_hidden is false:
+                skip layer render
+            else:
+                append batch parameters
+                append layer savename parameter
+                write layer par entry
+                write ID command for layer image
+
+        start with a transparent canvas
+
+        for each rendered layer from bottom to top:
+            apply evaluated opacity to layer alpha
+            composite layer with its ImageMagick compose operator
+
+        optionally flatten to output.background
+        write final frame image
+
 ## Priority Order
 
 Implement in this order:
@@ -1080,7 +1249,9 @@ Implement in this order:
     10. path generators
     11. camera2d virtual tracks
     12. id_3d_view and julibrot_view virtual tracks
-    13. formula-specific catalog files
+    13. layer stacks
+    14. ImageMagick compose operators and opacity
+    15. formula-specific catalog files
 
 This order gets useful behavior early while keeping the design open.
 
@@ -1093,6 +1264,8 @@ Hard-code:
     path generators
     format parsers
     validation rules
+    layer stack evaluation
+    ImageMagick command generation
 
 Do not hard-code:
 
@@ -1103,6 +1276,7 @@ Do not hard-code:
     virtual adapter output parameter names
     default curves for individual parameters
     enum values used by PWM tracks
+    ParAnimator-specific blend aliases
 
 ## Summary
 
@@ -1114,6 +1288,8 @@ The final design is:
     parameter names and metadata come from JSON catalogs
     the animator knows types, not Iterated Dynamics parameter names
     virtual adapters map planned views onto real ID parameters
+    optional layer stacks render ID layer images and compose them with
+    ImageMagick operators
     enum parameters are discrete by default
     enum PWM is an optional temporal dithering mode
     PWM tracks explicitly choose their a and b enum values
