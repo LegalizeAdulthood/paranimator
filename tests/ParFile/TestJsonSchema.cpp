@@ -52,6 +52,12 @@ std::string catalog_with_formula_knob(std::string_view metadata)
         "}}}}}}";
 }
 
+std::string catalog_with_formula_function(std::string_view metadata)
+{
+    return "{\"parameters\":{},\"formula-entries\":{\"foo\":{\"functions\":{\"fn1\":{" + std::string{metadata} +
+        "}}}}}";
+}
+
 } // namespace
 
 TEST(TestJsonSchema, schemaPathStable)
@@ -146,6 +152,26 @@ TEST(TestJsonSchema, invalidFormulaParamsVariableRejected)
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_formula_knob(R"("type":"real","variable":"p1")")));
     EXPECT_FALSE(
         validates_parameter_catalog_text(catalog_with_formula_knob(R"("type":"complex","variable":"p1.real")")));
+}
+
+TEST(TestJsonSchema, invalidFormulaFunctionValuesRejected)
+{
+    EXPECT_FALSE(
+        validates_parameter_catalog_text(catalog_with_formula_function(R"("type":"enum","values":"unknown")")));
+}
+
+TEST(TestJsonSchema, invalidFormulaFunctionNameRejected)
+{
+    EXPECT_FALSE(validates_parameter_catalog_text(R"({
+  "parameters": {},
+  "formula-entries": {
+    "foo": {
+      "functions": {
+        "fn5": { "type": "enum", "values": "id-functions" }
+      }
+    }
+  }
+})"));
 }
 
 TEST(TestJsonSchema, invalidOutputDirectoryTypeRejected)

@@ -63,6 +63,25 @@ std::string source_formula_name(const ParSet &source)
     return source_parameter(source, "formulaname").value;
 }
 
+int formula_function_slot(std::string_view name)
+{
+    if (name.size() == 3U && name[0] == 'f' && name[1] == 'n' && name[2] >= '1' && name[2] <= '4')
+    {
+        return name[2] - '1';
+    }
+    return -1;
+}
+
+std::string default_function_value(int slot)
+{
+    std::string result{"ident"};
+    for (int i = 0; i < slot; ++i)
+    {
+        result += "/ident";
+    }
+    return result;
+}
+
 int parse_params_slot(std::string_view parameter)
 {
     if (!starts_with(parameter, "params[") || parameter.back() != ']')
@@ -91,7 +110,7 @@ int parse_params_slot(std::string_view parameter)
     }
 }
 
-std::optional<std::string> formula_knob_name(std::string_view track, std::string_view formula_name)
+std::optional<std::string> formula_member_name(std::string_view track, std::string_view formula_name)
 {
     const std::string dotted_prefix{std::string{formula_name} + "."};
     if (starts_with(track, dotted_prefix))
@@ -143,7 +162,7 @@ ResolvedTrack resolve_params_group(
 ResolvedTrack resolve_formula_params_knob(
     const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source, std::string_view formula_name)
 {
-    const std::optional<std::string> knob{formula_knob_name(track.parameter, formula_name)};
+    const std::optional<std::string> knob{formula_member_name(track.parameter, formula_name)};
     if (!knob)
     {
         throw std::runtime_error("Invalid formula params track '" + track.parameter + "'");
@@ -151,6 +170,21 @@ ResolvedTrack resolve_formula_params_knob(
     const FormulaParamsKnobMetadata &knob_metadata{catalog.formula_params_knob(formula_name, *knob)};
     const Parameter &params{source_parameter(source, "params")};
     return {track.parameter, knob_metadata.metadata, params.value, track.keys, "params", knob_metadata.slots};
+}
+
+ResolvedTrack resolve_formula_function(
+    const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source, std::string_view formula_name)
+{
+    const std::optional<std::string> name{formula_member_name(track.parameter, formula_name)};
+    if (!name)
+    {
+        throw std::runtime_error("Invalid formula function track '" + track.parameter + "'");
+    }
+    const FormulaFunctionMetadata &function_metadata{catalog.formula_function(formula_name, *name)};
+    const Parameter *function{find_source_parameter(source, "function")};
+    const std::string base_value{
+        function == nullptr ? default_function_value(function_metadata.slot) : function->value};
+    return {track.parameter, function_metadata.metadata, base_value, track.keys, "function", {function_metadata.slot}};
 }
 
 ResolvedTrack resolve_regular_track(const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source)
@@ -165,8 +199,12 @@ ResolvedTrack resolve_track(const TrackConfig &track, const ParameterCatalog &ca
     if (source_is_formula(source))
     {
         const std::string formula_name{source_formula_name(source)};
-        if (formula_knob_name(track.parameter, formula_name))
+        if (const std::optional<std::string> member_name{formula_member_name(track.parameter, formula_name)})
         {
+            if (formula_function_slot(*member_name) >= 0)
+            {
+                return resolve_formula_function(track, catalog, source, formula_name);
+            }
             return resolve_formula_params_knob(track, catalog, source, formula_name);
         }
     }

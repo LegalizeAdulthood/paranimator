@@ -21,6 +21,7 @@ struct ParameterMetadata
     std::optional<ExtrapolateMode> extrapolate;
     std::optional<double> min;
     std::optional<double> max;
+    std::vector<std::string> values;
 };
 
 struct ParamsSlotMetadata
@@ -61,10 +62,23 @@ struct FormulaParamsMetadata
     std::vector<FormulaParamsKnobMetadata> knobs;
 };
 
+struct FormulaFunctionMetadata
+{
+    std::string name;
+    ParameterMetadata metadata;
+    int slot{};
+};
+
+struct FormulaFunctionsMetadata
+{
+    std::vector<FormulaFunctionMetadata> keys;
+};
+
 struct FormulaEntryMetadata
 {
     std::string name;
     FormulaParamsMetadata params;
+    FormulaFunctionsMetadata functions;
 };
 
 struct ParameterCatalog
@@ -73,6 +87,7 @@ struct ParameterCatalog
     const ParamsSlotMetadata &params_slot(std::string_view fractal_type, int slot) const;
     const ParamsGroupMetadata &params_group(std::string_view fractal_type, std::string_view group) const;
     const FormulaParamsKnobMetadata &formula_params_knob(std::string_view formula_name, std::string_view knob) const;
+    const FormulaFunctionMetadata &formula_function(std::string_view formula_name, std::string_view name) const;
 
     std::vector<ParameterMetadata> parameters;
     std::vector<FractalTypeMetadata> fractal_types;

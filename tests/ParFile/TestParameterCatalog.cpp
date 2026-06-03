@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
@@ -43,6 +44,12 @@ std::string formula_catalog_text(std::string_view knob)
 {
     return "{\"parameters\":{},\"formula-entries\":{\"foo\":{\"params\":{\"knobs\":{\"x\":{" + std::string{knob} +
         "}}}}}}";
+}
+
+std::string formula_function_catalog_text(std::string_view function)
+{
+    return "{\"parameters\":{},\"formula-entries\":{\"foo\":{\"functions\":{\"fn1\":{" + std::string{function} +
+        "}}}}}";
 }
 
 ParFile::ParameterMetadata read_metadata(std::string_view metadata)
@@ -212,12 +219,32 @@ TEST(TestParameterCatalog, formulaParamsIntegerKnobMetadataLoads)
     EXPECT_EQ(4, knob.slots[0]);
 }
 
+TEST(TestParameterCatalog, formulaFunctionMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::FormulaFunctionMetadata &function{catalog.formula_function("MandelbrotMix4", "fn1")};
+
+    EXPECT_EQ("fn1", function.name);
+    EXPECT_EQ("MandelbrotMix4.fn1", function.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, function.metadata.type);
+    EXPECT_EQ(0, function.slot);
+    ASSERT_TRUE(function.metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::RAW, *function.metadata.format);
+    ASSERT_TRUE(function.metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *function.metadata.default_curve);
+    EXPECT_NE(function.metadata.values.end(),
+        std::find(function.metadata.values.begin(), function.metadata.values.end(), "sin"));
+    EXPECT_NE(function.metadata.values.end(),
+        std::find(function.metadata.values.begin(), function.metadata.values.end(), "round"));
+}
+
 TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
 {
     EXPECT_EQ(ParFile::ParameterType::CENTER_MAG, read_metadata(R"("type":"center-mag")").type);
     EXPECT_EQ(ParFile::ParameterType::COMPLEX, read_metadata(R"("type":"complex")").type);
     EXPECT_EQ(ParFile::ParameterType::CORNERS, read_metadata(R"("type":"corners")").type);
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, read_metadata(R"("type":"double")").type);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, read_metadata(R"("type":"enum")").type);
     EXPECT_EQ(ParFile::ParameterType::INTEGER, read_metadata(R"("type":"integer")").type);
 }
 
@@ -289,6 +316,25 @@ TEST(TestParameterCatalog, unknownParamsGroupRejected)
 TEST(TestParameterCatalog, unknownFormulaParamsKnobRejected)
 {
     EXPECT_THROW(core_catalog().formula_params_knob("MandelbrotMix4", "unknown"), std::runtime_error);
+}
+
+TEST(TestParameterCatalog, unknownFormulaFunctionRejected)
+{
+    EXPECT_THROW(core_catalog().formula_function("MandelbrotMix4", "fn5"), std::runtime_error);
+}
+
+TEST(TestParameterCatalog, unknownFormulaFunctionValuesRejected)
+{
+    EXPECT_THROW(ParFile::read_parameter_catalog(formula_function_catalog_text(R"("type":"enum","values":"unknown")")),
+        std::runtime_error);
+}
+
+TEST(TestParameterCatalog, invalidFormulaFunctionNameRejected)
+{
+    EXPECT_THROW(
+        ParFile::read_parameter_catalog("{\"parameters\":{},\"formula-entries\":{\"foo\":{\"functions\":{\"fn5\":{"
+                                        "\"type\":\"enum\",\"values\":\"id-functions\"}}}}}"),
+        std::runtime_error);
 }
 
 TEST(TestParameterCatalog, realFormulaParamsKnobRejectsComplexVariable)

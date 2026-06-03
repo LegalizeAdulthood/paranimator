@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/format.hpp>
+#include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -90,7 +91,10 @@ static void merge_slotted_value(Parameter &param, const std::string &value, cons
     const std::vector<std::string> update{split_slash_values(value)};
     if (current.size() < update.size())
     {
-        current.resize(update.size(), "0");
+        const std::size_t old_size{current.size()};
+        current.resize(update.size());
+        std::copy(std::next(update.begin(), static_cast<std::ptrdiff_t>(old_size)), update.end(),
+            std::next(current.begin(), static_cast<std::ptrdiff_t>(old_size)));
     }
     for (const int slot : slots)
     {

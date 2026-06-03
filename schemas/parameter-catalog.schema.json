@@ -101,6 +101,16 @@
               "additionalProperties": { "$ref": "#/$defs/formula-params-knob-metadata" }
             }
           }
+        },
+        "functions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fn1": { "$ref": "#/$defs/formula-function-metadata" },
+            "fn2": { "$ref": "#/$defs/formula-function-metadata" },
+            "fn3": { "$ref": "#/$defs/formula-function-metadata" },
+            "fn4": { "$ref": "#/$defs/formula-function-metadata" }
+          }
         }
       }
     },
@@ -132,9 +142,21 @@
       "type": "string",
       "enum": [ "complex", "integer", "real" ]
     },
+    "formula-function-metadata": {
+      "type": "object",
+      "required": [ "type", "values" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "enum" },
+        "values": { "const": "id-functions" },
+        "format": { "$ref": "#/$defs/parameter-format" },
+        "default-curve": { "$ref": "#/$defs/curve" },
+        "extrapolate": { "$ref": "#/$defs/extrapolate" }
+      }
+    },
     "parameter-type": {
       "type": "string",
-      "enum": [ "center-mag", "complex", "corners", "double", "integer" ]
+      "enum": [ "center-mag", "complex", "corners", "double", "enum", "integer" ]
     },
     "parameter-format": {
       "type": "string",

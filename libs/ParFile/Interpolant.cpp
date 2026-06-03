@@ -199,6 +199,27 @@ std::string format_slash_doubles(const std::vector<double> &values)
     return result;
 }
 
+std::vector<std::string> split_slash_strings(const std::string &value)
+{
+    std::vector<std::string> result;
+    boost::algorithm::split(result, value, [](char c) { return c == '/'; });
+    return result;
+}
+
+std::string format_slash_strings(const std::vector<std::string> &values)
+{
+    std::string result;
+    for (const std::string &value : values)
+    {
+        if (!result.empty())
+        {
+            result += '/';
+        }
+        result += value;
+    }
+    return result;
+}
+
 std::complex<double> parse_slash_pair(const std::string &value)
 {
     const std::vector<double> values{parse_slash_doubles(value)};
@@ -208,6 +229,15 @@ std::complex<double> parse_slash_pair(const std::string &value)
             std::to_string(values.size()) + " in '" + value + "'");
     }
     return {values[0], values[1]};
+}
+
+void validate_enum_value(const ParameterMetadata &metadata, const std::string &value)
+{
+    const auto it{std::find(metadata.values.begin(), metadata.values.end(), value)};
+    if (it == metadata.values.end())
+    {
+        throw std::runtime_error("Invalid enum value '" + value + "' for parameter '" + metadata.name + "'");
+    }
 }
 
 void validate_bounds(const ParameterMetadata &metadata, double value)
@@ -225,6 +255,14 @@ void validate_bounds(const ParameterMetadata &metadata, double value)
 void validate_scalar_curve(std::string_view type, Curve curve)
 {
     if (curve != Curve::LINEAR && curve != Curve::HOLD && curve != Curve::STEP)
+    {
+        throw std::runtime_error("Unsupported " + std::string{type} + " curve '" + std::string{to_string(curve)} + "'");
+    }
+}
+
+void validate_discrete_curve(std::string_view type, Curve curve)
+{
+    if (curve != Curve::HOLD && curve != Curve::STEP)
     {
         throw std::runtime_error("Unsupported " + std::string{type} + " curve '" + std::string{to_string(curve)} + "'");
     }
@@ -731,6 +769,61 @@ std::string ParamsComplexInterpolant::step()
     return format_slash_doubles(values);
 }
 
+class FunctionEnumInterpolant : public Base
+{
+public:
+    FunctionEnumInterpolant(const ResolvedTrack &track, Curve curve, int num_steps);
+    ~FunctionEnumInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    int m_from_frame{};
+    int m_to_frame{};
+    int m_slot{};
+    std::string m_from;
+    std::string m_to;
+    std::vector<std::string> m_base_values;
+    Curve m_curve{};
+};
+
+FunctionEnumInterpolant::FunctionEnumInterpolant(const ResolvedTrack &track, Curve curve, int num_steps) :
+    Base(track.output_parameter, num_steps, track.slots),
+    m_from_frame(track.keys[0].frame),
+    m_to_frame(track.keys[1].frame),
+    m_from(track.keys[0].value),
+    m_to(track.keys[1].value),
+    m_base_values(split_slash_strings(track.base_value)),
+    m_curve(curve)
+{
+    if (track.slots.size() != 1U)
+    {
+        throw std::runtime_error("Track '" + track.parameter + "' requires exactly one function slot");
+    }
+    m_slot = track.slots[0];
+    validate_discrete_curve("enum", m_curve);
+    validate_enum_value(track.metadata, m_from);
+    validate_enum_value(track.metadata, m_to);
+    if (m_slot < 0)
+    {
+        throw std::runtime_error("Track '" + track.parameter + "' has an invalid function slot");
+    }
+    if (static_cast<std::size_t>(m_slot) >= m_base_values.size())
+    {
+        m_base_values.resize(static_cast<std::size_t>(m_slot) + 1U, "ident");
+    }
+}
+
+std::string FunctionEnumInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+
+    std::vector<std::string> values{m_base_values};
+    values[static_cast<std::size_t>(m_slot)] = frame >= m_to_frame ? m_to : m_from;
+    return format_slash_strings(values);
+}
+
 } // namespace
 
 InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
@@ -787,6 +880,20 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
             return std::make_shared<ParamsDoubleInterpolant>(track, curve, num_steps);
         }
         return std::make_shared<DoubleInterpolant>(metadata, keys, curve, track.base_value, num_steps);
+    }
+    case ParameterType::ENUM:
+    {
+        validate_full_range(metadata.name, keys, num_steps);
+        Curve curve{default_curve(metadata)};
+        if (keys[1].curve)
+        {
+            curve = *keys[1].curve;
+        }
+        if (track.output_parameter == "function")
+        {
+            return std::make_shared<FunctionEnumInterpolant>(track, curve, num_steps);
+        }
+        break;
     }
     }
 

@@ -11,6 +11,13 @@
 namespace
 {
 
+std::vector<std::string> id_functions()
+{
+    return {"sin", "cos", "tan", "cotan", "sinh", "cosh", "tanh", "cotanh", "exp", "log", "sqr", "recip", "ident",
+        "cosxx", "flip", "conj", "zero", "one", "asin", "asinh", "acos", "acosh", "atan", "atanh", "sqrt", "abs",
+        "cabs", "floor", "ceil", "trunc", "round"};
+}
+
 ParFile::ParameterCatalog catalog_data()
 {
     ParFile::ParameterCatalog result{
@@ -45,7 +52,15 @@ ParFile::ParameterCatalog catalog_data()
             {"c",
                 {"MandelbrotMix4.c", ParFile::ParameterType::COMPLEX, ParFile::ParameterFormat::SLASH_PAIR,
                     ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
-                {2, 3}}}}});
+                {2, 3}}}},
+        {{{"fn1",
+              {"MandelbrotMix4.fn1", ParFile::ParameterType::ENUM, ParFile::ParameterFormat::RAW, ParFile::Curve::HOLD,
+                  ParFile::ExtrapolateMode::CLAMP, {}, {}, id_functions()},
+              0},
+            {"fn2",
+                {"MandelbrotMix4.fn2", ParFile::ParameterType::ENUM, ParFile::ParameterFormat::RAW,
+                    ParFile::Curve::HOLD, ParFile::ExtrapolateMode::CLAMP, {}, {}, id_functions()},
+                1}}}});
     return result;
 }
 
@@ -81,7 +96,9 @@ ParFile::Config formula_config_data(std::string_view parameter)
 
 ParFile::ParSet formula_source_set()
 {
-    return {"source", {{"type", "formula"}, {"formulaname", "MandelbrotMix4"}, {"params", "0.05/3/-1.5/-2/0/0"}}};
+    return {"source",
+        {{"type", "formula"}, {"formulaname", "MandelbrotMix4"}, {"function", "sin/cos"},
+            {"params", "0.05/3/-1.5/-2/0/0"}}};
 }
 
 } // namespace
@@ -212,4 +229,22 @@ TEST(TestResolvedAnimation, overlappingFormulaParamsKnobsRejected)
     config.tracks.push_back({"MandelbrotMix4.bailout-copy", {{0, "11"}, {2, "21"}}});
 
     EXPECT_THROW(ParFile::resolve_animation(config, catalog_data(), formula_source_set()), std::runtime_error);
+}
+
+TEST(TestResolvedAnimation, formulaFunctionKeyResolvesFromActiveFormulaname)
+{
+    ParFile::Config config{formula_config_data("MandelbrotMix4.fn2")};
+    config.tracks[0].keys = {{0, "tan"}, {2, "log"}};
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(config, catalog_data(), formula_source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    EXPECT_EQ("MandelbrotMix4.fn2", track.parameter);
+    EXPECT_EQ("MandelbrotMix4.fn2", track.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, track.metadata.type);
+    EXPECT_EQ("sin/cos", track.base_value);
+    EXPECT_EQ("function", track.output_parameter);
+    ASSERT_EQ(1U, track.slots.size());
+    EXPECT_EQ(1, track.slots[0]);
 }

@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <array>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -18,6 +19,10 @@ namespace
 {
 
 using Object = nlohmann::json;
+
+constexpr std::array<std::string_view, 31> ID_FUNCTIONS{"sin", "cos", "tan", "cotan", "sinh", "cosh", "tanh", "cotanh",
+    "exp", "log", "sqr", "recip", "ident", "cosxx", "flip", "conj", "zero", "one", "asin", "asinh", "acos", "acosh",
+    "atan", "atanh", "sqrt", "abs", "cabs", "floor", "ceil", "trunc", "round"};
 
 Object parse_json(std::string_view json_text)
 {
@@ -55,6 +60,17 @@ std::string load_required_string(const Object &json, std::string_view parameter,
             "Invalid parameter metadata '" + std::string{parameter} + "', missing string '" + std::string{field} + "'");
     }
     return json.at(key).get<std::string>();
+}
+
+std::string load_required_id_function_values(const Object &json, std::string_view parameter)
+{
+    const std::string value_set{load_required_string(json, parameter, "values")};
+    if (value_set != "id-functions")
+    {
+        throw std::runtime_error(
+            "Invalid formula function metadata '" + std::string{parameter} + "', unknown values '" + value_set + "'");
+    }
+    return value_set;
 }
 
 std::optional<std::string> load_optional_string(const Object &json, std::string_view field)
@@ -139,6 +155,17 @@ void load_optional_metadata_fields(ParameterMetadata &metadata, const Object &js
     }
     metadata.min = load_optional_number(json, "min");
     metadata.max = load_optional_number(json, "max");
+}
+
+std::vector<std::string> id_function_values()
+{
+    std::vector<std::string> result;
+    result.reserve(ID_FUNCTIONS.size());
+    for (const std::string_view value : ID_FUNCTIONS)
+    {
+        result.emplace_back(value);
+    }
+    return result;
 }
 
 ParameterType load_formula_knob_type(std::string_view name, const Object &json)
@@ -356,6 +383,62 @@ FormulaParamsMetadata load_formula_params(std::string_view formula_name, const O
     return result;
 }
 
+int formula_function_slot(std::string_view name)
+{
+    if (name.size() == 3U && name[0] == 'f' && name[1] == 'n' && name[2] >= '1' && name[2] <= '4')
+    {
+        return name[2] - '1';
+    }
+    return -1;
+}
+
+FormulaFunctionMetadata load_formula_function(std::string_view formula_name, std::string_view name, const Object &json)
+{
+    if (!json.is_object())
+    {
+        throw std::runtime_error(
+            "Invalid formula function metadata '" + std::string{name} + "', value is not an object");
+    }
+
+    FormulaFunctionMetadata result;
+    result.name = std::string{name};
+    result.slot = formula_function_slot(name);
+    if (result.slot < 0)
+    {
+        throw std::runtime_error("Invalid formula function key '" + std::string{name} + "'");
+    }
+    const std::string type{load_required_string(json, name, "type")};
+    if (type != "enum")
+    {
+        throw std::runtime_error("Invalid formula function metadata '" + std::string{name} + "', type is not enum");
+    }
+    load_required_id_function_values(json, name);
+    result.metadata.name = std::string{formula_name} + "." + std::string{name};
+    result.metadata.type = ParameterType::ENUM;
+    result.metadata.format = ParameterFormat::RAW;
+    result.metadata.default_curve = Curve::HOLD;
+    result.metadata.extrapolate = ExtrapolateMode::CLAMP;
+    result.metadata.values = id_function_values();
+    load_optional_metadata_fields(result.metadata, json);
+    return result;
+}
+
+FormulaFunctionsMetadata load_formula_functions(std::string_view formula_name, const Object &json)
+{
+    if (!json.is_object())
+    {
+        throw std::runtime_error(
+            "Invalid formula entry metadata '" + std::string{formula_name} + "', functions is not an object");
+    }
+
+    FormulaFunctionsMetadata result;
+    for (const auto &[name, function] : json.items())
+    {
+        result.keys.emplace_back(load_formula_function(formula_name, name, function));
+    }
+    return result;
+}
+
 FormulaEntryMetadata load_formula_entry(std::string_view name, const Object &json)
 {
     if (!json.is_object())
@@ -368,6 +451,10 @@ FormulaEntryMetadata load_formula_entry(std::string_view name, const Object &jso
     if (json.contains("params"))
     {
         result.params = load_formula_params(name, json.at("params"));
+    }
+    if (json.contains("functions"))
+    {
+        result.functions = load_formula_functions(name, json.at("functions"));
     }
     return result;
 }
@@ -493,6 +580,29 @@ const FormulaParamsKnobMetadata &ParameterCatalog::formula_params_knob(
             "Unknown formula params knob '" + std::string{knob} + "' for formula '" + std::string{formula_name} + "'");
     }
     return *knob_it;
+}
+
+const FormulaFunctionMetadata &ParameterCatalog::formula_function(
+    std::string_view formula_name, std::string_view name) const
+{
+    const std::string formula_key{formula_name};
+    const auto is_formula{[&](const FormulaEntryMetadata &metadata) { return metadata.name == formula_key; }};
+    const auto formula_it{std::find_if(formula_entries.begin(), formula_entries.end(), is_formula)};
+    if (formula_it == formula_entries.end())
+    {
+        throw std::runtime_error("Unknown formula entry metadata '" + std::string{formula_name} + "'");
+    }
+
+    const std::string function_key{name};
+    const auto is_function{[&](const FormulaFunctionMetadata &metadata) { return metadata.name == function_key; }};
+    const auto function_it{
+        std::find_if(formula_it->functions.keys.begin(), formula_it->functions.keys.end(), is_function)};
+    if (function_it == formula_it->functions.keys.end())
+    {
+        throw std::runtime_error(
+            "Unknown formula function '" + std::string{name} + "' for formula '" + std::string{formula_name} + "'");
+    }
+    return *function_it;
 }
 
 } // namespace ParFile

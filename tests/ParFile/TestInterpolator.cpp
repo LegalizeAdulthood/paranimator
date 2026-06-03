@@ -146,6 +146,24 @@ TEST_F(TestInterpolator, formulaParamsTracksMergeOneParamsAssignment)
     ASSERT_EQ(expected, frame);
 }
 
+TEST_F(TestInterpolator, formulaFunctionTrackWritesOneFunctionAssignment)
+{
+    m_config_data.source.name = "Formula_Demo";
+    m_config_data.num_frames = 3;
+    m_config_data.tracks = {{"MandelbrotMix4.fn2", {{0, "tan"}, {2, "log"}}}};
+    m_config = m_config_data;
+    m_lerper = ParFile::Interpolator{m_config};
+    ParFile::ParSet expected{m_lerper.source()};
+    set_param(expected, "function", "sin/tan");
+    expected.name = "frame-0002";
+    add_expected_params(expected, expected.name + ".gif");
+    ParFile::ParSet frame{m_lerper()};
+
+    frame = m_lerper();
+
+    ASSERT_EQ(expected, frame);
+}
+
 TEST_F(TestInterpolator, multipleTracksHaveIndependentKeys)
 {
     m_config_data.num_frames = 3;

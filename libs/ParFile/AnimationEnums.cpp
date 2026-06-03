@@ -27,6 +27,10 @@ ParameterType parse_parameter_type(std::string_view text)
     {
         return ParameterType::DOUBLE;
     }
+    if (text == "enum")
+    {
+        return ParameterType::ENUM;
+    }
     if (text == "integer")
     {
         return ParameterType::INTEGER;
@@ -113,6 +117,8 @@ std::string_view to_string(ParameterType value)
         return "corners";
     case ParameterType::DOUBLE:
         return "double";
+    case ParameterType::ENUM:
+        return "enum";
     case ParameterType::INTEGER:
         return "integer";
     }

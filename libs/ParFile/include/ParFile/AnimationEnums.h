@@ -13,6 +13,7 @@ enum class ParameterType
     COMPLEX,
     CORNERS,
     DOUBLE,
+    ENUM,
     INTEGER
 };
 
