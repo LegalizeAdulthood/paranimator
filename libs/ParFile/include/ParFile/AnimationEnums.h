@@ -15,7 +15,11 @@ enum class ParameterType
     DOUBLE,
     ENUM,
     INTEGER,
-    NUMERIC_TUPLE
+    NUMERIC_TUPLE,
+    POINT2,
+    POINT3,
+    VECTOR2,
+    VECTOR3
 };
 
 enum class ParameterFormat

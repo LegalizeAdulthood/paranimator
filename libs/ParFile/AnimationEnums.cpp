@@ -39,6 +39,22 @@ ParameterType parse_parameter_type(std::string_view text)
     {
         return ParameterType::NUMERIC_TUPLE;
     }
+    if (text == "point2")
+    {
+        return ParameterType::POINT2;
+    }
+    if (text == "point3")
+    {
+        return ParameterType::POINT3;
+    }
+    if (text == "vector2")
+    {
+        return ParameterType::VECTOR2;
+    }
+    if (text == "vector3")
+    {
+        return ParameterType::VECTOR3;
+    }
     throw std::runtime_error("Unknown parameter type '" + std::string{text} + "'");
 }
 
@@ -127,6 +143,14 @@ std::string_view to_string(ParameterType value)
         return "integer";
     case ParameterType::NUMERIC_TUPLE:
         return "numeric-tuple";
+    case ParameterType::POINT2:
+        return "point2";
+    case ParameterType::POINT3:
+        return "point3";
+    case ParameterType::VECTOR2:
+        return "vector2";
+    case ParameterType::VECTOR3:
+        return "vector3";
     }
     return {};
 }

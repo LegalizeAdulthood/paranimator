@@ -326,6 +326,67 @@ void validate_params_slot(std::string_view name, const std::vector<double> &valu
     }
 }
 
+int tuple_alias_arity(ParameterType type)
+{
+    switch (type)
+    {
+    case ParameterType::POINT2:
+    case ParameterType::VECTOR2:
+        return 2;
+    case ParameterType::POINT3:
+    case ParameterType::VECTOR3:
+        return 3;
+    default:
+        return 0;
+    }
+}
+
+int tuple_arity(const ParameterMetadata &metadata)
+{
+    const int alias_arity{tuple_alias_arity(metadata.type)};
+    if (alias_arity != 0)
+    {
+        if (metadata.arity && *metadata.arity != alias_arity)
+        {
+            throw std::runtime_error("Numeric tuple parameter '" + metadata.name + "' arity does not match type");
+        }
+        return alias_arity;
+    }
+    if (!metadata.arity)
+    {
+        throw std::runtime_error("Numeric tuple parameter '" + metadata.name + "' is missing arity");
+    }
+    return *metadata.arity;
+}
+
+bool is_vector_alias(ParameterType type)
+{
+    return type == ParameterType::VECTOR2 || type == ParameterType::VECTOR3;
+}
+
+void normalize_vector(const ParameterMetadata &metadata, std::vector<double> &values)
+{
+    if (!metadata.normalize || !is_vector_alias(metadata.type))
+    {
+        return;
+    }
+
+    double length_squared{};
+    for (double value : values)
+    {
+        length_squared += value * value;
+    }
+    if (length_squared == 0.0)
+    {
+        throw std::runtime_error("Cannot normalize zero vector parameter '" + metadata.name + "'");
+    }
+    const double length{std::sqrt(length_squared)};
+    for (double &value : values)
+    {
+        value /= length;
+    }
+}
+
 struct CenterMag
 {
     CenterMag() = default;
@@ -784,6 +845,7 @@ private:
     std::vector<double> m_from;
     std::vector<double> m_to;
     Curve m_curve{};
+    ParameterMetadata m_metadata;
 };
 
 NumericTupleInterpolant::NumericTupleInterpolant(
@@ -793,13 +855,10 @@ NumericTupleInterpolant::NumericTupleInterpolant(
     m_to_frame(keys[1].frame),
     m_from(parse_slash_doubles(keys[0].value)),
     m_to(parse_slash_doubles(keys[1].value)),
-    m_curve(curve)
+    m_curve(curve),
+    m_metadata(metadata)
 {
-    if (!metadata.arity)
-    {
-        throw std::runtime_error("Numeric tuple parameter '" + metadata.name + "' is missing arity");
-    }
-    const std::size_t arity{static_cast<std::size_t>(*metadata.arity)};
+    const std::size_t arity{static_cast<std::size_t>(tuple_arity(metadata))};
     if (m_from.size() != arity || m_to.size() != arity)
     {
         throw std::runtime_error(
@@ -834,6 +893,7 @@ std::string NumericTupleInterpolant::step()
             values[i] = m_from[i] + fraction * (m_to[i] - m_from[i]);
         }
     }
+    normalize_vector(m_metadata, values);
     return format_slash_doubles(values);
 }
 
@@ -950,6 +1010,10 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
         return std::make_shared<DoubleInterpolant>(metadata, keys, curve, track.base_value, num_steps);
     }
     case ParameterType::NUMERIC_TUPLE:
+    case ParameterType::POINT2:
+    case ParameterType::POINT3:
+    case ParameterType::VECTOR2:
+    case ParameterType::VECTOR3:
     {
         validate_full_range(metadata.name, keys, num_steps);
         Curve curve{default_curve(metadata)};

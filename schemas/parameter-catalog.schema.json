@@ -87,6 +87,10 @@
           "description": "Required component count for tuple-like values.",
           "type": "integer",
           "minimum": 1
+        },
+        "normalize": {
+          "description": "Normalize vector alias values after interpolation.",
+          "type": "boolean"
         }
       }
     },
@@ -133,6 +137,10 @@
           "description": "Required component count for tuple-like slot values.",
           "type": "integer",
           "minimum": 1
+        },
+        "normalize": {
+          "description": "Normalize vector alias slot values after interpolation.",
+          "type": "boolean"
         }
       }
     },
@@ -170,6 +178,10 @@
           "description": "Required component count for tuple-like group values.",
           "type": "integer",
           "minimum": 1
+        },
+        "normalize": {
+          "description": "Normalize vector alias group values after interpolation.",
+          "type": "boolean"
         },
         "slots": {
           "description": "Zero-based params= slots occupied by this group.",
@@ -263,6 +275,10 @@
           "description": "Required component count for tuple-like knob values.",
           "type": "integer",
           "minimum": 1
+        },
+        "normalize": {
+          "description": "Normalize vector alias knob values after interpolation.",
+          "type": "boolean"
         }
       },
       "allOf": [
@@ -400,6 +416,22 @@
         {
           "const": "numeric-tuple",
           "description": "Fixed-arity tuple of floating-point numeric components."
+        },
+        {
+          "const": "point2",
+          "description": "Two-component point alias over numeric-tuple."
+        },
+        {
+          "const": "point3",
+          "description": "Three-component point alias over numeric-tuple."
+        },
+        {
+          "const": "vector2",
+          "description": "Two-component vector alias over numeric-tuple."
+        },
+        {
+          "const": "vector3",
+          "description": "Three-component vector alias over numeric-tuple."
         }
       ]
     },

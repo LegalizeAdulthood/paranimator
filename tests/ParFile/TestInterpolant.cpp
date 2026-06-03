@@ -492,6 +492,41 @@ TEST(TestInterpolant, numericTupleMissingArityRejected)
     EXPECT_THROW(create_interpolant(parameter_metadata, "0/1", "10/11", num_steps), std::runtime_error);
 }
 
+TEST(TestInterpolant, point3WritesThreeValueTuple)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{
+        create_interpolant(metadata("lightsource", ParFile::ParameterType::POINT3), "0/10/20", "10/20/30", num_steps)};
+
+    EXPECT_EQ("0/10/20", interpolant->step());
+    EXPECT_EQ("5/15/25", interpolant->step());
+    EXPECT_EQ("10/20/30", interpolant->step());
+}
+
+TEST(TestInterpolant, vector3NormalizesWhenRequested)
+{
+    const int num_steps{3};
+    ParFile::ParameterMetadata parameter_metadata{metadata("view-up", ParFile::ParameterType::VECTOR3)};
+    parameter_metadata.normalize = true;
+    ParFile::InterpolantPtr interpolant{create_interpolant(parameter_metadata, "10/0/0", "0/10/0", num_steps)};
+
+    EXPECT_EQ("1/0/0", interpolant->step());
+    EXPECT_EQ("0.707106781187/0.707106781187/0", interpolant->step());
+    EXPECT_EQ("0/1/0", interpolant->step());
+}
+
+TEST(TestInterpolant, point3DoesNotNormalize)
+{
+    const int num_steps{3};
+    ParFile::ParameterMetadata parameter_metadata{metadata("look-at", ParFile::ParameterType::POINT3)};
+    parameter_metadata.normalize = true;
+    ParFile::InterpolantPtr interpolant{create_interpolant(parameter_metadata, "10/0/0", "0/10/0", num_steps)};
+
+    EXPECT_EQ("10/0/0", interpolant->step());
+    EXPECT_EQ("5/5/0", interpolant->step());
+    EXPECT_EQ("0/10/0", interpolant->step());
+}
+
 TEST(TestInterpolant, paramsComplexInterpolatesSlashPair)
 {
     const int num_steps{3};

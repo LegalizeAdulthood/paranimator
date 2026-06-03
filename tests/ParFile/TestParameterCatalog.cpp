@@ -264,6 +264,10 @@ TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
     EXPECT_EQ(ParFile::ParameterType::ENUM, read_metadata(R"("type":"enum")").type);
     EXPECT_EQ(ParFile::ParameterType::INTEGER, read_metadata(R"("type":"integer")").type);
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, read_metadata(R"("type":"numeric-tuple")").type);
+    EXPECT_EQ(ParFile::ParameterType::POINT2, read_metadata(R"("type":"point2")").type);
+    EXPECT_EQ(ParFile::ParameterType::POINT3, read_metadata(R"("type":"point3")").type);
+    EXPECT_EQ(ParFile::ParameterType::VECTOR2, read_metadata(R"("type":"vector2")").type);
+    EXPECT_EQ(ParFile::ParameterType::VECTOR3, read_metadata(R"("type":"vector3")").type);
 }
 
 TEST(TestParameterCatalog, legalParameterFormatStringsDecode)
@@ -301,6 +305,24 @@ TEST(TestParameterCatalog, optionalArityDecodes)
     EXPECT_EQ(3, *metadata.arity);
 }
 
+TEST(TestParameterCatalog, tupleAliasArityDecodes)
+{
+    const ParFile::ParameterMetadata point2{read_metadata(R"("type":"point2")")};
+    const ParFile::ParameterMetadata vector3{read_metadata(R"("type":"vector3")")};
+
+    ASSERT_TRUE(point2.arity);
+    EXPECT_EQ(2, *point2.arity);
+    ASSERT_TRUE(vector3.arity);
+    EXPECT_EQ(3, *vector3.arity);
+}
+
+TEST(TestParameterCatalog, optionalNormalizeDecodes)
+{
+    const ParFile::ParameterMetadata metadata{read_metadata(R"("type":"vector3","normalize":true)")};
+
+    EXPECT_TRUE(metadata.normalize);
+}
+
 TEST(TestParameterCatalog, unknownParameterTypeStringRejected)
 {
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"unknown")")), std::runtime_error);
@@ -328,6 +350,17 @@ TEST(TestParameterCatalog, invalidArityRejected)
 {
     EXPECT_THROW(
         ParFile::read_parameter_catalog(catalog_text(R"("type":"numeric-tuple","arity":0)")), std::runtime_error);
+}
+
+TEST(TestParameterCatalog, tupleAliasArityMismatchRejected)
+{
+    EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"point3","arity":2)")), std::runtime_error);
+}
+
+TEST(TestParameterCatalog, invalidNormalizeRejected)
+{
+    EXPECT_THROW(
+        ParFile::read_parameter_catalog(catalog_text(R"("type":"vector3","normalize":"true")")), std::runtime_error);
 }
 
 TEST(TestParameterCatalog, unknownAnimatedParameterRejected)

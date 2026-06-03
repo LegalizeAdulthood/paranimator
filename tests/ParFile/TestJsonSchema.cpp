@@ -104,6 +104,12 @@ TEST(TestJsonSchema, numericTupleMetadataAccepted)
     EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"numeric-tuple","arity":3)")));
 }
 
+TEST(TestJsonSchema, tupleAliasMetadataAccepted)
+{
+    EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"point3")")));
+    EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"vector3","normalize":true)")));
+}
+
 TEST(TestJsonSchema, unknownMetadataFormatRejected)
 {
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","format":"unknown")")));
@@ -156,6 +162,11 @@ TEST(TestJsonSchema, invalidMetadataArityRejected)
 {
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"numeric-tuple","arity":0)")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"numeric-tuple","arity":"3")")));
+}
+
+TEST(TestJsonSchema, invalidMetadataNormalizeRejected)
+{
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"vector3","normalize":"true")")));
 }
 
 TEST(TestJsonSchema, invalidFormulaParamsVariableRejected)

@@ -131,6 +131,49 @@ std::optional<int> load_optional_positive_int(const Object &json, std::string_vi
     return value;
 }
 
+std::optional<bool> load_optional_bool(const Object &json, std::string_view field)
+{
+    const std::string key{field};
+    if (!json.contains(key))
+    {
+        return {};
+    }
+    if (!json.at(key).is_boolean())
+    {
+        throw std::runtime_error("Invalid parameter metadata, field '" + std::string{field} + "' is not a boolean");
+    }
+    return json.at(key).get<bool>();
+}
+
+std::optional<int> tuple_alias_arity(ParameterType type)
+{
+    switch (type)
+    {
+    case ParameterType::POINT2:
+    case ParameterType::VECTOR2:
+        return 2;
+    case ParameterType::POINT3:
+    case ParameterType::VECTOR3:
+        return 3;
+    default:
+        return {};
+    }
+}
+
+void apply_tuple_alias_metadata(ParameterMetadata &metadata)
+{
+    const std::optional<int> arity{tuple_alias_arity(metadata.type)};
+    if (!arity)
+    {
+        return;
+    }
+    if (metadata.arity && *metadata.arity != *arity)
+    {
+        throw std::runtime_error("Invalid parameter metadata '" + metadata.name + "', arity does not match type");
+    }
+    metadata.arity = arity;
+}
+
 ParameterMetadata load_metadata(std::string_view name, const Object &json)
 {
     if (!json.is_object())
@@ -156,6 +199,8 @@ ParameterMetadata load_metadata(std::string_view name, const Object &json)
     result.min = load_optional_number(json, "min");
     result.max = load_optional_number(json, "max");
     result.arity = load_optional_positive_int(json, "arity");
+    result.normalize = load_optional_bool(json, "normalize").value_or(false);
+    apply_tuple_alias_metadata(result);
     return result;
 }
 
@@ -176,6 +221,8 @@ void load_optional_metadata_fields(ParameterMetadata &metadata, const Object &js
     metadata.min = load_optional_number(json, "min");
     metadata.max = load_optional_number(json, "max");
     metadata.arity = load_optional_positive_int(json, "arity");
+    metadata.normalize = load_optional_bool(json, "normalize").value_or(false);
+    apply_tuple_alias_metadata(metadata);
 }
 
 std::vector<std::string> id_function_values()

@@ -23,6 +23,7 @@ struct ParameterMetadata
     std::optional<double> max;
     std::vector<std::string> values;
     std::optional<int> arity;
+    bool normalize{};
 };
 
 struct ParamsSlotMetadata
