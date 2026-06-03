@@ -9,9 +9,11 @@
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
+#include <string>
 
 namespace
 {
@@ -48,6 +50,14 @@ void TestInterpolator::add_expected_params(ParFile::ParSet &expected, const std:
     expected.params.push_back({"savename", save_name});
     expected.params.push_back({"overwrite", "yes"});
     expected.params.push_back({"video", TestParFile::TEST_VIDEO_MODE});
+}
+
+void set_param(ParFile::ParSet &par_set, const std::string &name, const std::string &value)
+{
+    const auto it{std::find_if(par_set.params.begin(), par_set.params.end(),
+        [&](const ParFile::Parameter &param) { return param.name == name; })};
+    ASSERT_NE(par_set.params.end(), it);
+    it->value = value;
 }
 
 } // namespace
@@ -88,6 +98,32 @@ TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
     m_lerper = ParFile::Interpolator{m_config};
     ParFile::ParSet expected{m_lerper.source()};
     expected.params[2].value = "-0.5/0/3.16228";
+    expected.name = "frame-0002";
+    add_expected_params(expected, expected.name + ".gif");
+    ParFile::ParSet frame{m_lerper()};
+
+    frame = m_lerper();
+
+    ASSERT_EQ(expected, frame);
+}
+
+TEST_F(TestInterpolator, multipleTracksHaveIndependentKeys)
+{
+    m_json["num_frames"] = 3;
+    m_json["tracks"][0]["keys"][1]["frame"] = 2;
+    m_json["tracks"].push_back({
+        {"parameter", "maxiter"},
+        {"keys",
+            {
+                {{"frame", 0}, {"value", "100"}},
+                {{"frame", 1}, {"value", "200"}},
+            }},
+    });
+    m_config = ParFile::Config{m_json.dump()};
+    m_lerper = ParFile::Interpolator{m_config};
+    ParFile::ParSet expected{m_lerper.source()};
+    set_param(expected, "center-mag", "-0.5/0/3.16228");
+    set_param(expected, "maxiter", "200");
     expected.name = "frame-0002";
     add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
