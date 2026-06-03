@@ -18,6 +18,8 @@ struct ResolvedTrack
     ParameterMetadata metadata;
     std::string base_value;
     std::vector<KeyframeConfig> keys;
+    std::string output_parameter;
+    std::vector<int> slots;
 };
 
 struct ResolvedAnimation

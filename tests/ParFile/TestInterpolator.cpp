@@ -109,6 +109,24 @@ TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
     ASSERT_EQ(expected, frame);
 }
 
+TEST_F(TestInterpolator, paramsTrackWritesOneParamsAssignment)
+{
+    m_config_data.source.name = "Julia_Demo";
+    m_config_data.num_frames = 3;
+    m_config_data.tracks = {{"params.c", {{0, "0/1"}, {2, "2/3"}}}};
+    m_config = m_config_data;
+    m_lerper = ParFile::Interpolator{m_config};
+    ParFile::ParSet expected{m_lerper.source()};
+    set_param(expected, "params", "1/2");
+    expected.name = "frame-0002";
+    add_expected_params(expected, expected.name + ".gif");
+    ParFile::ParSet frame{m_lerper()};
+
+    frame = m_lerper();
+
+    ASSERT_EQ(expected, frame);
+}
+
 TEST_F(TestInterpolator, multipleTracksHaveIndependentKeys)
 {
     m_config_data.num_frames = 3;

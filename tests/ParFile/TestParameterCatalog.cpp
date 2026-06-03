@@ -51,6 +51,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(4U, catalog.parameters.size());
+    EXPECT_EQ(1U, catalog.fractal_types.size());
 }
 
 TEST(TestParameterCatalog, centerMagMetadataLoads)
@@ -125,9 +126,38 @@ TEST(TestParameterCatalog, typedCatalogFindsMetadataByName)
     EXPECT_EQ(ParFile::ParameterType::INTEGER, metadata.type);
 }
 
+TEST(TestParameterCatalog, juliaParamsSlotMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParamsSlotMetadata &slot{catalog.params_slot("julia", 0)};
+
+    EXPECT_EQ(0, slot.index);
+    EXPECT_EQ("c-real", slot.name);
+    EXPECT_EQ("params[0]", slot.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::DOUBLE, slot.metadata.type);
+    ASSERT_TRUE(slot.metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::RAW, *slot.metadata.format);
+}
+
+TEST(TestParameterCatalog, juliaParamsGroupMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParamsGroupMetadata &group{catalog.params_group("julia", "c")};
+
+    EXPECT_EQ("c", group.name);
+    EXPECT_EQ("params.c", group.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::COMPLEX, group.metadata.type);
+    ASSERT_TRUE(group.metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::SLASH_PAIR, *group.metadata.format);
+    ASSERT_EQ(2U, group.slots.size());
+    EXPECT_EQ(0, group.slots[0]);
+    EXPECT_EQ(1, group.slots[1]);
+}
+
 TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
 {
     EXPECT_EQ(ParFile::ParameterType::CENTER_MAG, read_metadata(R"("type":"center-mag")").type);
+    EXPECT_EQ(ParFile::ParameterType::COMPLEX, read_metadata(R"("type":"complex")").type);
     EXPECT_EQ(ParFile::ParameterType::CORNERS, read_metadata(R"("type":"corners")").type);
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, read_metadata(R"("type":"double")").type);
     EXPECT_EQ(ParFile::ParameterType::INTEGER, read_metadata(R"("type":"integer")").type);
@@ -137,6 +167,8 @@ TEST(TestParameterCatalog, legalParameterFormatStringsDecode)
 {
     EXPECT_EQ(ParFile::ParameterFormat::RAW, *read_metadata(R"("type":"integer","format":"raw")").format);
     EXPECT_EQ(ParFile::ParameterFormat::SLASH, *read_metadata(R"("type":"integer","format":"slash")").format);
+    EXPECT_EQ(ParFile::ParameterFormat::SLASH_LIST, *read_metadata(R"("type":"integer","format":"slash-list")").format);
+    EXPECT_EQ(ParFile::ParameterFormat::SLASH_PAIR, *read_metadata(R"("type":"integer","format":"slash-pair")").format);
 }
 
 TEST(TestParameterCatalog, legalCurveStringsDecode)
@@ -184,6 +216,16 @@ TEST(TestParameterCatalog, unknownExtrapolateStringRejected)
 TEST(TestParameterCatalog, unknownAnimatedParameterRejected)
 {
     EXPECT_THROW(typed_catalog().metadata("unknown"), std::runtime_error);
+}
+
+TEST(TestParameterCatalog, unknownParamsSlotRejected)
+{
+    EXPECT_THROW(core_catalog().params_slot("julia", 2), std::runtime_error);
+}
+
+TEST(TestParameterCatalog, unknownParamsGroupRejected)
+{
+    EXPECT_THROW(core_catalog().params_group("julia", "unknown"), std::runtime_error);
 }
 
 TEST(TestParameterCatalog, missingMetadataTypeRejected)

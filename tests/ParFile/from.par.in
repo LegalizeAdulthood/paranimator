@@ -5,6 +5,11 @@ Mandel_Demo        { ; PAR for initialization of Fractint demo
    sound=no maxiter=678
 }
 
+Julia_Demo        { ; PAR for initialization of Julia demo
+   reset type=julia center-mag=-0.5/0/1 params=0/1 inside=0
+   sound=no maxiter=678
+}
+
 trunc_demo        { ; PAR for initialization of Fractint demo (New in 19.4)
    reset type=lambda(fn||fn) function=conj/trunc
    center-mag=-4.44089e-015/3.55271e-015/0.2339956

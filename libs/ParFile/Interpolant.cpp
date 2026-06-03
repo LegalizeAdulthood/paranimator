@@ -12,6 +12,7 @@
 #include <cmath>
 #include <complex>
 #include <cstddef>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -157,6 +158,47 @@ double parse_double(const std::string &text)
     }
 }
 
+std::string format_double(double value)
+{
+    return (boost::format("%.12g") % value).str();
+}
+
+std::vector<double> parse_slash_doubles(const std::string &value)
+{
+    std::vector<std::string> value_text;
+    boost::algorithm::split(value_text, value, [](char c) { return c == '/'; });
+
+    std::vector<double> result;
+    result.reserve(value_text.size());
+    std::transform(value_text.begin(), value_text.end(), std::back_inserter(result), parse_double);
+    return result;
+}
+
+std::string format_slash_doubles(const std::vector<double> &values)
+{
+    std::string result;
+    for (double value : values)
+    {
+        if (!result.empty())
+        {
+            result += '/';
+        }
+        result += format_double(value);
+    }
+    return result;
+}
+
+std::complex<double> parse_slash_pair(const std::string &value)
+{
+    const std::vector<double> values{parse_slash_doubles(value)};
+    if (values.size() != 2U)
+    {
+        throw std::runtime_error("Complex value must have 2 slash-delimited values; have " +
+            std::to_string(values.size()) + " in '" + value + "'");
+    }
+    return {values[0], values[1]};
+}
+
 void validate_bounds(const ParameterMetadata &metadata, double value)
 {
     if (metadata.min && value < *metadata.min)
@@ -224,6 +266,15 @@ Curve default_curve(const ParameterMetadata &metadata)
         throw std::runtime_error("Missing default curve for parameter '" + metadata.name + "'");
     }
     return *metadata.default_curve;
+}
+
+void validate_params_slot(std::string_view name, const std::vector<double> &values, int slot)
+{
+    if (slot < 0 || static_cast<std::size_t>(slot) >= values.size())
+    {
+        throw std::runtime_error("Track '" + std::string{name} + "' references missing params slot " +
+            std::to_string(slot) + " in source value");
+    }
 }
 
 struct CenterMag
@@ -324,15 +375,12 @@ private:
 
 Corners::Corners(const std::string &value)
 {
-    std::vector<std::string> text;
-    boost::algorithm::split(text, value, [](char c) { return c == '/'; });
-    if (text.size() != 4U && text.size() != 6U)
+    values = parse_slash_doubles(value);
+    if (values.size() != 4U && values.size() != 6U)
     {
         throw std::runtime_error(
-            "Corners parameter must have 4 or 6 values; have " + std::to_string(text.size()) + " in '" + value + "'");
+            "Corners parameter must have 4 or 6 values; have " + std::to_string(values.size()) + " in '" + value + "'");
     }
-    values.resize(text.size());
-    std::transform(text.begin(), text.end(), values.begin(), [](const std::string &item) { return std::stod(item); });
 }
 
 CornersInterpolant::CornersInterpolant(
@@ -358,7 +406,7 @@ std::string CornersInterpolant::step()
             result += '/';
         }
         const double value{m_segment.linear_value_at(m_step, m_from.values[i], m_to.values[i])};
-        result += (boost::format("%.12g") % value).str();
+        result += format_double(value);
     }
     return result;
 }
@@ -494,7 +542,125 @@ std::string DoubleInterpolant::step()
         const double fraction{(sample_frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
         value = m_from + fraction * (m_to - m_from);
     }
-    return (boost::format("%.12g") % value).str();
+    return format_double(value);
+}
+
+class ParamsDoubleInterpolant : public Base
+{
+public:
+    ParamsDoubleInterpolant(const ResolvedTrack &track, Curve curve, int num_steps);
+    ~ParamsDoubleInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    int m_from_frame{};
+    int m_to_frame{};
+    int m_slot{};
+    double m_from{};
+    double m_to{};
+    std::vector<double> m_base_values;
+    Curve m_curve{};
+};
+
+ParamsDoubleInterpolant::ParamsDoubleInterpolant(const ResolvedTrack &track, Curve curve, int num_steps) :
+    Base(track.output_parameter, num_steps),
+    m_from_frame(track.keys[0].frame),
+    m_to_frame(track.keys[1].frame),
+    m_from(parse_double(track.keys[0].value)),
+    m_to(parse_double(track.keys[1].value)),
+    m_base_values(parse_slash_doubles(track.base_value)),
+    m_curve(curve)
+{
+    if (track.slots.size() != 1U)
+    {
+        throw std::runtime_error("Track '" + track.parameter + "' requires exactly one params slot");
+    }
+    m_slot = track.slots[0];
+    validate_scalar_curve("double", m_curve);
+    validate_bounds(track.metadata, m_from);
+    validate_bounds(track.metadata, m_to);
+    validate_params_slot(track.parameter, m_base_values, m_slot);
+}
+
+std::string ParamsDoubleInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+
+    double value{m_from};
+    if (frame >= m_to_frame)
+    {
+        value = m_to;
+    }
+    else if (frame > m_from_frame && m_curve != Curve::HOLD && m_curve != Curve::STEP)
+    {
+        const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        value = m_from + fraction * (m_to - m_from);
+    }
+
+    std::vector<double> values{m_base_values};
+    values[static_cast<std::size_t>(m_slot)] = value;
+    return format_slash_doubles(values);
+}
+
+class ParamsComplexInterpolant : public Base
+{
+public:
+    ParamsComplexInterpolant(const ResolvedTrack &track, Curve curve, int num_steps);
+    ~ParamsComplexInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    int m_from_frame{};
+    int m_to_frame{};
+    std::vector<int> m_slots;
+    std::complex<double> m_from;
+    std::complex<double> m_to;
+    std::vector<double> m_base_values;
+    Curve m_curve{};
+};
+
+ParamsComplexInterpolant::ParamsComplexInterpolant(const ResolvedTrack &track, Curve curve, int num_steps) :
+    Base(track.output_parameter, num_steps),
+    m_from_frame(track.keys[0].frame),
+    m_to_frame(track.keys[1].frame),
+    m_slots(track.slots),
+    m_from(parse_slash_pair(track.keys[0].value)),
+    m_to(parse_slash_pair(track.keys[1].value)),
+    m_base_values(parse_slash_doubles(track.base_value)),
+    m_curve(curve)
+{
+    if (m_slots.size() != 2U)
+    {
+        throw std::runtime_error("Track '" + track.parameter + "' requires exactly two params slots");
+    }
+    validate_scalar_curve("complex", m_curve);
+    validate_params_slot(track.parameter, m_base_values, m_slots[0]);
+    validate_params_slot(track.parameter, m_base_values, m_slots[1]);
+}
+
+std::string ParamsComplexInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+
+    std::complex<double> value{m_from};
+    if (frame >= m_to_frame)
+    {
+        value = m_to;
+    }
+    else if (frame > m_from_frame && m_curve != Curve::HOLD && m_curve != Curve::STEP)
+    {
+        const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        value = m_from + fraction * (m_to - m_from);
+    }
+
+    std::vector<double> values{m_base_values};
+    values[static_cast<std::size_t>(m_slots[0])] = value.real();
+    values[static_cast<std::size_t>(m_slots[1])] = value.imag();
+    return format_slash_doubles(values);
 }
 
 } // namespace
@@ -509,6 +675,20 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
     case ParameterType::CENTER_MAG:
         validate_full_range(metadata.name, keys, num_steps);
         return std::make_shared<CenterMagInterpolant>(metadata.name, keys[0].value, keys[1].value, num_steps);
+    case ParameterType::COMPLEX:
+    {
+        validate_full_range(metadata.name, keys, num_steps);
+        Curve curve{default_curve(metadata)};
+        if (keys[1].curve)
+        {
+            curve = *keys[1].curve;
+        }
+        if (track.output_parameter == "params")
+        {
+            return std::make_shared<ParamsComplexInterpolant>(track, curve, num_steps);
+        }
+        break;
+    }
     case ParameterType::CORNERS:
         validate_full_range(metadata.name, keys, num_steps);
         return std::make_shared<CornersInterpolant>(metadata.name, keys[0].value, keys[1].value, num_steps);
@@ -527,6 +707,11 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
         if (keys[1].curve)
         {
             curve = *keys[1].curve;
+        }
+        if (track.output_parameter == "params")
+        {
+            validate_full_range(metadata.name, keys, num_steps);
+            return std::make_shared<ParamsDoubleInterpolant>(track, curve, num_steps);
         }
         return std::make_shared<DoubleInterpolant>(metadata, keys, curve, track.base_value, num_steps);
     }

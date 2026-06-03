@@ -9,28 +9,88 @@
     "parameters": {
       "type": "object",
       "additionalProperties": {
+        "$ref": "#/$defs/parameter-metadata"
+      }
+    },
+    "fractal-types": {
+      "type": "object",
+      "additionalProperties": {
         "type": "object",
-        "required": [ "type" ],
         "additionalProperties": false,
         "properties": {
-          "type": { "$ref": "#/$defs/parameter-type" },
-          "format": { "$ref": "#/$defs/parameter-format" },
-          "default-curve": { "$ref": "#/$defs/curve" },
-          "extrapolate": { "$ref": "#/$defs/extrapolate" },
-          "min": { "type": "number" },
-          "max": { "type": "number" }
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "format": { "$ref": "#/$defs/parameter-format" },
+              "slots": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/params-slot-metadata" }
+              },
+              "groups": {
+                "type": "object",
+                "additionalProperties": { "$ref": "#/$defs/params-group-metadata" }
+              }
+            }
+          }
         }
       }
     }
   },
   "$defs": {
+    "parameter-metadata": {
+      "type": "object",
+      "required": [ "type" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "$ref": "#/$defs/parameter-type" },
+        "format": { "$ref": "#/$defs/parameter-format" },
+        "default-curve": { "$ref": "#/$defs/curve" },
+        "extrapolate": { "$ref": "#/$defs/extrapolate" },
+        "min": { "type": "number" },
+        "max": { "type": "number" }
+      }
+    },
+    "params-slot-metadata": {
+      "type": "object",
+      "required": [ "index", "name", "type" ],
+      "additionalProperties": false,
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "name": { "type": "string" },
+        "type": { "$ref": "#/$defs/parameter-type" },
+        "format": { "$ref": "#/$defs/parameter-format" },
+        "default-curve": { "$ref": "#/$defs/curve" },
+        "extrapolate": { "$ref": "#/$defs/extrapolate" },
+        "min": { "type": "number" },
+        "max": { "type": "number" }
+      }
+    },
+    "params-group-metadata": {
+      "type": "object",
+      "required": [ "type", "slots" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "$ref": "#/$defs/parameter-type" },
+        "format": { "$ref": "#/$defs/parameter-format" },
+        "default-curve": { "$ref": "#/$defs/curve" },
+        "extrapolate": { "$ref": "#/$defs/extrapolate" },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "slots": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
     "parameter-type": {
       "type": "string",
-      "enum": [ "center-mag", "corners", "double", "integer" ]
+      "enum": [ "center-mag", "complex", "corners", "double", "integer" ]
     },
     "parameter-format": {
       "type": "string",
-      "enum": [ "raw", "slash" ]
+      "enum": [ "raw", "slash", "slash-list", "slash-pair" ]
     },
     "curve": {
       "type": "string",

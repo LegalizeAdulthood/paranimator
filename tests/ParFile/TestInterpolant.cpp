@@ -8,6 +8,8 @@
 #include <gtest/gtest.h>
 
 #include <optional>
+#include <utility>
+#include <vector>
 
 namespace
 {
@@ -34,13 +36,19 @@ std::vector<ParFile::KeyframeConfig> keyframes(
 ParFile::ResolvedTrack resolved_track(const std::string &name, ParFile::ParameterType type,
     const std::vector<ParFile::KeyframeConfig> &keys, const std::string &base_value)
 {
-    return {name, metadata(name, type), base_value, keys};
+    return {name, metadata(name, type), base_value, keys, name, {}};
 }
 
 ParFile::ResolvedTrack resolved_track(const ParFile::ParameterMetadata &parameter_metadata,
     const std::vector<ParFile::KeyframeConfig> &keys, const std::string &base_value)
 {
-    return {parameter_metadata.name, parameter_metadata, base_value, keys};
+    return {parameter_metadata.name, parameter_metadata, base_value, keys, parameter_metadata.name, {}};
+}
+
+ParFile::ResolvedTrack resolved_params_track(const std::string &name, ParFile::ParameterType type,
+    const std::vector<ParFile::KeyframeConfig> &keys, const std::string &base_value, std::vector<int> slots)
+{
+    return {name, metadata(name, type), base_value, keys, "params", std::move(slots)};
 }
 
 ParFile::InterpolantPtr create_interpolant(
@@ -424,4 +432,32 @@ TEST(TestInterpolant, doublePingPongExtrapolation)
     EXPECT_EQ("2", interpolant->step());
     EXPECT_EQ("3", interpolant->step());
     EXPECT_EQ("2", interpolant->step());
+}
+
+TEST(TestInterpolant, paramsComplexInterpolatesSlashPair)
+{
+    const int num_steps{3};
+    const std::vector<ParFile::KeyframeConfig> keys{{0, "0/1"}, {2, "2/3"}};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_params_track("params.c", ParFile::ParameterType::COMPLEX, keys, "0/1/52", {0, 1}), num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("params", interpolant->name());
+    EXPECT_EQ("0/1/52", interpolant->step());
+    EXPECT_EQ("1/2/52", interpolant->step());
+    EXPECT_EQ("2/3/52", interpolant->step());
+}
+
+TEST(TestInterpolant, paramsSlotPreservesOtherSlots)
+{
+    const int num_steps{3};
+    const std::vector<ParFile::KeyframeConfig> keys{{0, "2"}, {2, "4"}};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_params_track("params[0]", ParFile::ParameterType::DOUBLE, keys, "0/1", {0}), num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("params", interpolant->name());
+    EXPECT_EQ("2/1", interpolant->step());
+    EXPECT_EQ("3/1", interpolant->step());
+    EXPECT_EQ("4/1", interpolant->step());
 }

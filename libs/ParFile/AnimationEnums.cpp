@@ -19,6 +19,10 @@ ParameterType parse_parameter_type(std::string_view text)
     {
         return ParameterType::CORNERS;
     }
+    if (text == "complex")
+    {
+        return ParameterType::COMPLEX;
+    }
     if (text == "double")
     {
         return ParameterType::DOUBLE;
@@ -39,6 +43,14 @@ ParameterFormat parse_parameter_format(std::string_view text)
     if (text == "slash")
     {
         return ParameterFormat::SLASH;
+    }
+    if (text == "slash-list")
+    {
+        return ParameterFormat::SLASH_LIST;
+    }
+    if (text == "slash-pair")
+    {
+        return ParameterFormat::SLASH_PAIR;
     }
     throw std::runtime_error("Unknown parameter format '" + std::string{text} + "'");
 }
@@ -95,6 +107,8 @@ std::string_view to_string(ParameterType value)
     {
     case ParameterType::CENTER_MAG:
         return "center-mag";
+    case ParameterType::COMPLEX:
+        return "complex";
     case ParameterType::CORNERS:
         return "corners";
     case ParameterType::DOUBLE:
@@ -113,6 +127,10 @@ std::string_view to_string(ParameterFormat value)
         return "raw";
     case ParameterFormat::SLASH:
         return "slash";
+    case ParameterFormat::SLASH_LIST:
+        return "slash-list";
+    case ParameterFormat::SLASH_PAIR:
+        return "slash-pair";
     }
     return {};
 }

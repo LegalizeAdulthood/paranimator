@@ -10,6 +10,7 @@ namespace ParFile
 enum class ParameterType
 {
     CENTER_MAG,
+    COMPLEX,
     CORNERS,
     DOUBLE,
     INTEGER
@@ -18,7 +19,9 @@ enum class ParameterType
 enum class ParameterFormat
 {
     RAW,
-    SLASH
+    SLASH,
+    SLASH_LIST,
+    SLASH_PAIR
 };
 
 enum class Curve

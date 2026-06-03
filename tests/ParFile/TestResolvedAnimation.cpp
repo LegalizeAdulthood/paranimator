@@ -5,16 +5,31 @@
 #include <gtest/gtest.h>
 
 #include <stdexcept>
+#include <string>
+#include <string_view>
 
 namespace
 {
 
 ParFile::ParameterCatalog catalog_data()
 {
-    return {{{"center-mag", ParFile::ParameterType::CENTER_MAG, ParFile::ParameterFormat::SLASH,
-                 ParFile::Curve::GEOMETRIC, ParFile::ExtrapolateMode::CLAMP, {}, {}},
-        {"maxiter", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
-            ParFile::ExtrapolateMode::CLAMP, {}, {}}}};
+    ParFile::ParameterCatalog result{
+        {{"center-mag", ParFile::ParameterType::CENTER_MAG, ParFile::ParameterFormat::SLASH, ParFile::Curve::GEOMETRIC,
+             ParFile::ExtrapolateMode::CLAMP, {}, {}},
+            {"maxiter", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}}}};
+    result.fractal_types.push_back({"julia",
+        {{{0, "c-real",
+              {"params[0]", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                  ParFile::ExtrapolateMode::CLAMP, {}, {}}},
+             {1, "c-imag",
+                 {"params[1]", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                     ParFile::ExtrapolateMode::CLAMP, {}, {}}}},
+            {{"c",
+                {"params.c", ParFile::ParameterType::COMPLEX, ParFile::ParameterFormat::SLASH_PAIR,
+                    ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
+                {0, 1}}}}});
+    return result;
 }
 
 ParFile::Config config_data()
@@ -26,6 +41,18 @@ ParFile::Config config_data()
 ParFile::ParSet source_set()
 {
     return {"source", {{"center-mag", "-0.5/0/1"}, {"maxiter", "100"}}};
+}
+
+ParFile::Config julia_config_data(std::string_view parameter)
+{
+    ParFile::Config result{config_data()};
+    result.tracks = {{std::string{parameter}, {{0, "0/1"}, {2, "2/3"}}}};
+    return result;
+}
+
+ParFile::ParSet julia_source_set()
+{
+    return {"source", {{"type", "julia"}, {"params", "0/1/52"}}};
 }
 
 } // namespace
@@ -66,4 +93,43 @@ TEST(TestResolvedAnimation, resolvedTrackCarriesParameterMetadataBaseValueAndKey
     EXPECT_EQ("-0.5/0/1", track.keys[0].value);
     EXPECT_EQ(2, track.keys[1].frame);
     EXPECT_EQ("-0.5/0/10", track.keys[1].value);
+}
+
+TEST(TestResolvedAnimation, juliaParamsGroupResolvesToParamsSlots)
+{
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(julia_config_data("params.c"), catalog_data(), julia_source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    EXPECT_EQ("params.c", track.parameter);
+    EXPECT_EQ("params.c", track.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::COMPLEX, track.metadata.type);
+    EXPECT_EQ("0/1/52", track.base_value);
+    EXPECT_EQ("params", track.output_parameter);
+    ASSERT_EQ(2U, track.slots.size());
+    EXPECT_EQ(0, track.slots[0]);
+    EXPECT_EQ(1, track.slots[1]);
+}
+
+TEST(TestResolvedAnimation, juliaParamsSlotResolvesToParamsSlot)
+{
+    ParFile::Config config{julia_config_data("params[0]")};
+    config.tracks[0].keys = {{0, "2"}, {2, "4"}};
+    const ParFile::ResolvedAnimation animation{ParFile::resolve_animation(config, catalog_data(), julia_source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    EXPECT_EQ("params[0]", track.parameter);
+    EXPECT_EQ("params[0]", track.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::DOUBLE, track.metadata.type);
+    EXPECT_EQ("params", track.output_parameter);
+    ASSERT_EQ(1U, track.slots.size());
+    EXPECT_EQ(0, track.slots[0]);
+}
+
+TEST(TestResolvedAnimation, juliaParamsSlot2Rejected)
+{
+    EXPECT_THROW(ParFile::resolve_animation(julia_config_data("params[2]"), catalog_data(), julia_source_set()),
+        std::runtime_error);
 }
