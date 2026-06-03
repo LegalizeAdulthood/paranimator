@@ -53,6 +53,17 @@ struct ColorMapRangeConfig
     int last{};
 };
 
+struct ColorMapGradientStopConfig
+{
+    int index{};
+    std::string color;
+};
+
+struct ColorMapGradientConfig
+{
+    std::vector<ColorMapGradientStopConfig> stops;
+};
+
 struct NumberKeyframeConfig
 {
     int frame{};
@@ -77,6 +88,7 @@ struct ColorMapConfig
     TrackFormat format{TrackFormat::AT_FILE};
     std::string output;
     std::optional<std::string> source;
+    std::optional<ColorMapGradientConfig> gradient;
     std::vector<ColorMapEffectConfig> effects;
 };
 

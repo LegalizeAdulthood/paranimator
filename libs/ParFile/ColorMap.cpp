@@ -114,6 +114,28 @@ void validate_sequence(const std::vector<ColorMapSequenceEntry> &sequence, int c
     }
 }
 
+void validate_gradient_stops(const std::vector<ColorMapGradientStop> &stops)
+{
+    if (stops.size() < 2U)
+    {
+        throw std::runtime_error("Gradient color map requires at least two stops");
+    }
+    for (std::size_t i = 0; i < stops.size(); ++i)
+    {
+        if (stops[i].index < 0 || stops[i].index >= static_cast<int>(COLOR_MAP_SIZE))
+        {
+            throw std::runtime_error("Gradient color map stop index is outside the range 0 through 255");
+        }
+        validate_component(stops[i].color.red);
+        validate_component(stops[i].color.green);
+        validate_component(stops[i].color.blue);
+        if (i != 0U && stops[i - 1U].index >= stops[i].index)
+        {
+            throw std::runtime_error("Gradient color map stop indexes must be increasing");
+        }
+    }
+}
+
 int ping_pong_offset(int offset, int length)
 {
     if (length <= 1)
@@ -183,6 +205,36 @@ ColorMap interpolate_color_map(const ColorMap &from, const ColorMap &to, double 
         result[i] = {interpolate_component(from[i].red, to[i].red, blend),
             interpolate_component(from[i].green, to[i].green, blend),
             interpolate_component(from[i].blue, to[i].blue, blend)};
+    }
+    return result;
+}
+
+ColorMap gradient_color_map(const std::vector<ColorMapGradientStop> &stops)
+{
+    validate_gradient_stops(stops);
+    ColorMap result;
+
+    std::size_t stop_index{};
+    for (std::size_t i = 0; i < result.size(); ++i)
+    {
+        while (stop_index + 1U < stops.size() &&
+            stops[stop_index + 1U].index < static_cast<int>(i))
+        {
+            ++stop_index;
+        }
+
+        const ColorMapGradientStop &from{stops[stop_index]};
+        if (static_cast<int>(i) <= from.index || stop_index + 1U == stops.size())
+        {
+            result[i] = from.color;
+            continue;
+        }
+
+        const ColorMapGradientStop &to{stops[stop_index + 1U]};
+        const double blend{(static_cast<int>(i) - from.index) / static_cast<double>(to.index - from.index)};
+        result[i] = {interpolate_component(from.color.red, to.color.red, blend),
+            interpolate_component(from.color.green, to.color.green, blend),
+            interpolate_component(from.color.blue, to.color.blue, blend)};
     }
     return result;
 }

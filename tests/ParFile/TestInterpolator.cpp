@@ -321,6 +321,49 @@ TEST_F(TestInterpolator, colorMapEffectTrackWritesGeneratedMapsAndAtFileValues)
     EXPECT_EQ("@colors-0005.map", colors_value(last_frame));
 }
 
+TEST_F(TestInterpolator, colorMapGradientSourceWritesGeneratedMap)
+{
+    const std::filesystem::path root{std::filesystem::path{TestParFile::TEST_OUTPUT_DIRECTORY} / "color-map-gradient"};
+    const std::filesystem::path output{root / "output"};
+    std::filesystem::remove_all(root);
+    ParFile::ColorMapConfig color_map;
+    color_map.format = ParFile::TrackFormat::AT_FILE;
+    color_map.output = "colors-%04d.map";
+    color_map.gradient = ParFile::ColorMapGradientConfig{{{{0, "black"}, {2, "white"}}}};
+    m_config_data.output.directory = output.string();
+    m_config_data.num_frames = 1;
+    m_config_data.tracks = {{"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP,
+        color_map}};
+    m_config = m_config_data;
+    m_lerper = ParFile::Interpolator{m_config};
+
+    const ParFile::ParSet frame{m_lerper()};
+
+    const ParFile::ColorMap map{read_map_file(output / "map" / "colors-0001.map")};
+    EXPECT_EQ(0, map[0].red);
+    EXPECT_EQ(128, map[1].red);
+    EXPECT_EQ(255, map[2].red);
+    EXPECT_EQ(255, map[255].red);
+    const auto it{std::find_if(frame.params.begin(), frame.params.end(),
+        [](const ParFile::Parameter &param) { return param.name == "colors"; })};
+    ASSERT_NE(frame.params.end(), it);
+    EXPECT_EQ("@colors-0001.map", it->value);
+}
+
+TEST_F(TestInterpolator, colorMapGradientSourceRejectsInvalidColorSpec)
+{
+    ParFile::ColorMapConfig color_map;
+    color_map.format = ParFile::TrackFormat::AT_FILE;
+    color_map.output = "colors-%04d.map";
+    color_map.gradient = ParFile::ColorMapGradientConfig{{{{0, "black"}, {255, "rgb:300/0/0"}}}};
+    m_config_data.num_frames = 1;
+    m_config_data.tracks = {{"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP,
+        color_map}};
+    m_config = m_config_data;
+
+    EXPECT_THROW(ParFile::Interpolator{m_config}, std::runtime_error);
+}
+
 TEST_F(TestInterpolator, unknownAnimatedParameterRejected)
 {
     m_config_data.tracks[0].parameter = "unknown";

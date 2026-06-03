@@ -262,6 +262,62 @@ static NumberTrackConfig load_number_track_config(const Object &json, std::strin
     return result;
 }
 
+static ColorMapGradientStopConfig load_color_map_gradient_stop_config(const Object &json)
+{
+    ColorMapGradientStopConfig result;
+    result.index = load_int(json, "index");
+    result.color = load_string(json, "color");
+    return result;
+}
+
+static ColorMapGradientConfig load_color_map_gradient_config(const Object &json)
+{
+    const std::string kind{load_string(json, "kind")};
+    if (kind != "gradient")
+    {
+        throw std::runtime_error("Invalid config, unknown color map source kind '" + kind + "'");
+    }
+
+    const std::string key{"stops"};
+    if (!json.contains(key) || !json.at(key).is_array())
+    {
+        throw std::runtime_error("Invalid config, missing array 'stops'");
+    }
+
+    ColorMapGradientConfig result;
+    for (const Object &item : json.at(key))
+    {
+        if (!item.is_object())
+        {
+            throw std::runtime_error("Invalid config, array 'stops' contains non-object value");
+        }
+        result.stops.emplace_back(load_color_map_gradient_stop_config(item));
+    }
+    return result;
+}
+
+static void load_color_map_source_config(const Object &json, ColorMapConfig &result)
+{
+    const std::string key{"source"};
+    if (!json.contains(key))
+    {
+        return;
+    }
+
+    const Object &source{json.at(key)};
+    if (source.is_string())
+    {
+        result.source = source.get<std::string>();
+        return;
+    }
+    if (source.is_object())
+    {
+        result.gradient = load_color_map_gradient_config(source);
+        return;
+    }
+    throw std::runtime_error("Invalid config, color map source must be a string or object");
+}
+
 static ColorMapEffectConfig load_color_map_effect_config(const Object &json)
 {
     ColorMapEffectConfig result;
@@ -316,7 +372,7 @@ static ColorMapConfig load_color_map_config(const Object &json)
     ColorMapConfig result;
     result.format = parse_track_format(load_string(json, "format"));
     result.output = load_string(json, "output");
-    result.source = load_optional_string(json, "source");
+    load_color_map_source_config(json, result);
     result.effects = load_color_map_effects(json);
     return result;
 }

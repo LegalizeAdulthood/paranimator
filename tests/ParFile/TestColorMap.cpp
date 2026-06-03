@@ -156,6 +156,39 @@ TEST(TestColorMap, interpolateBlendOneReturnsSecondMap)
     EXPECT_EQ(6, result[0].blue);
 }
 
+TEST(TestColorMap, gradientTwoStopsAccepted)
+{
+    const ParFile::ColorMap map{
+        ParFile::gradient_color_map({{0, {0, 0, 0}}, {255, {255, 255, 255}}})};
+
+    EXPECT_EQ(0, map[0].red);
+    EXPECT_EQ(128, map[128].red);
+    EXPECT_EQ(255, map[255].red);
+}
+
+TEST(TestColorMap, gradientAdjacentStopPairsInterpolateEachInterval)
+{
+    const ParFile::ColorMap map{
+        ParFile::gradient_color_map({{0, {0, 0, 0}}, {2, {10, 0, 0}}, {4, {10, 10, 0}}})};
+
+    EXPECT_EQ(5, map[1].red);
+    EXPECT_EQ(0, map[1].green);
+    EXPECT_EQ(10, map[3].red);
+    EXPECT_EQ(5, map[3].green);
+}
+
+TEST(TestColorMap, gradientInvalidStopsAreRejected)
+{
+    EXPECT_THROW(
+        static_cast<void>(ParFile::gradient_color_map({{0, {0, 0, 0}}})), std::runtime_error);
+    EXPECT_THROW(static_cast<void>(
+                     ParFile::gradient_color_map({{2, {0, 0, 0}}, {1, {255, 255, 255}}})),
+        std::runtime_error);
+    EXPECT_THROW(static_cast<void>(
+                     ParFile::gradient_color_map({{-1, {0, 0, 0}}, {255, {255, 255, 255}}})),
+        std::runtime_error);
+}
+
 TEST(TestColorMap, rotatePositiveOffsetWrapsPaletteEntries)
 {
     const ParFile::ColorMap map{indexed_map()};

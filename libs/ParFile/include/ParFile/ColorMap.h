@@ -27,9 +27,16 @@ struct ColorMapSequenceEntry
     ColorMap map;
 };
 
+struct ColorMapGradientStop
+{
+    int index{};
+    RgbColor color;
+};
+
 ColorMap read_color_map(std::istream &contents);
 void write_color_map(std::ostream &contents, const ColorMap &map);
 ColorMap interpolate_color_map(const ColorMap &from, const ColorMap &to, double blend);
+ColorMap gradient_color_map(const std::vector<ColorMapGradientStop> &stops);
 ColorMap rotate_color_map(const ColorMap &map, int offset);
 ColorMap rotate_color_map_range(const ColorMap &map, int first, int last, int offset);
 ColorMap reverse_color_map(const ColorMap &map);

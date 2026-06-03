@@ -310,6 +310,31 @@ TEST(TestConfig, jsonDeserializesColorMapEffectTrack)
     EXPECT_EQ(4.0, config.tracks[0].color_map->effects[1].offset->keys[1].value);
 }
 
+TEST(TestConfig, jsonDeserializesColorMapGradientSourceTrack)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"parameter", "colors"},
+        {"type", "color-map"},
+        {"format", "at-file"},
+        {"output", "colors-%04d.map"},
+        {"source",
+            Object{{"kind", "gradient"},
+                {"stops",
+                    Object::array(
+                        {Object{{"index", 0}, {"color", "black"}}, Object{{"index", 255}, {"color", "white"}}})}}}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_TRUE(config.tracks[0].color_map);
+    ASSERT_TRUE(config.tracks[0].color_map->gradient);
+    ASSERT_EQ(2U, config.tracks[0].color_map->gradient->stops.size());
+    EXPECT_EQ(0, config.tracks[0].color_map->gradient->stops[0].index);
+    EXPECT_EQ("black", config.tracks[0].color_map->gradient->stops[0].color);
+    EXPECT_EQ(255, config.tracks[0].color_map->gradient->stops[1].index);
+    EXPECT_EQ("white", config.tracks[0].color_map->gradient->stops[1].color);
+}
+
 TEST(TestConfig, pwmWindowBelowTwoRejected)
 {
     Object json = valid_json();

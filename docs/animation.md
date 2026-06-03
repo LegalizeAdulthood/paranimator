@@ -1634,22 +1634,7 @@ is likely, add a shared schema file and external `$ref` loader support.
 Every new schema object, field, and enum or const value must include a
 `description` string when the schema element is added.
 
-### 1. Add Gradient Map Sources
-
-Add generated gradient sources with indexed color stops.
-
-Schema work:
-
-- create or update JSON schemas for fields or metadata JSON files added by
-  this slice.
-
-Unit tests:
-
-- two or more stops are accepted.
-- adjacent stop pairs interpolate each interval.
-- invalid color specifications are rejected.
-
-### 2. Add One Color Adjustment Effect
+### 1. Add One Color Adjustment Effect
 
 Add brightness as the first color adjustment effect.
 
@@ -1664,7 +1649,7 @@ Unit tests:
 - values clamp to Id's 0 through 255 range.
 - amount 1 leaves the map unchanged.
 
-### 3. Add More Color Adjustment Effects
+### 2. Add More Color Adjustment Effects
 
 Add gamma, contrast, saturation, and hue-shift one at a time in one
 reviewable change if the implementation is still small.
@@ -1680,7 +1665,7 @@ Unit tests:
 - each effect has one non-identity test.
 - each effect clamps output to Id's valid RGB range.
 
-### 4. Add Masked Colormap Effects
+### 3. Add Masked Colormap Effects
 
 Add pulse, mask-blend, remap, and seeded sparkle one at a time in one
 reviewable change if the implementation is still small.
@@ -1696,7 +1681,7 @@ Unit tests:
 - mask-blend affects only selected ranges.
 - sparkle requires a seed and is repeatable.
 
-### 5. Add Constant And Line Paths
+### 4. Add Constant And Line Paths
 
 Add constant and line path generators for scalar and complex tracks.
 
@@ -1711,7 +1696,7 @@ Unit tests:
 - line matches an equivalent keyed linear track.
 - complex line paths preserve slash-pair formatting.
 
-### 6. Add Circle And Ellipse Paths
+### 5. Add Circle And Ellipse Paths
 
 Add circle and ellipse paths for complex and point tracks.
 
@@ -1726,7 +1711,7 @@ Unit tests:
 - ellipse uses independent x and y radii.
 - phase changes the starting point.
 
-### 7. Add Lissajous And Spiral Paths
+### 6. Add Lissajous And Spiral Paths
 
 Add lissajous and spiral path generators.
 
@@ -1741,7 +1726,7 @@ Unit tests:
 - spiral radius changes over time.
 - invalid frequency or radius values are rejected.
 
-### 8. Add Bezier Paths
+### 7. Add Bezier Paths
 
 Add bezier path generation.
 
@@ -1756,7 +1741,7 @@ Unit tests:
 - too few control points are rejected.
 - tuple-valued paths preserve arity.
 
-### 9. Add Catmull-Rom Paths
+### 8. Add Catmull-Rom Paths
 
 Add catmull-rom path generation. This is the first point where
 Boost.Math should be considered. Do not add it earlier. Keep it hidden
@@ -1775,7 +1760,7 @@ Unit tests:
 - too few control points are rejected.
 - tuple-valued paths preserve arity.
 
-### 10. Add Camera2D Corners Output
+### 9. Add Camera2D Corners Output
 
 Add camera2d with look-at, view-up, and height curves targeting corners.
 
@@ -1790,7 +1775,7 @@ Unit tests:
 - rotated camera writes expected third corner.
 - view-up is normalized before output.
 
-### 11. Add Camera2D Center-Mag Output
+### 10. Add Camera2D Center-Mag Output
 
 Add camera2d output to center-mag for axis-aligned cameras.
 
@@ -1805,7 +1790,7 @@ Unit tests:
 - rotated camera targeting center-mag is rejected.
 - aspect handling matches the source image shape.
 
-### 12. Add Basic Id 3D View Adapter
+### 11. Add Basic Id 3D View Adapter
 
 Add id-3d-view output for rotation, perspective, and xyshift.
 
@@ -1820,7 +1805,7 @@ Unit tests:
 - perspective writes an integer value.
 - xyshift writes a 2-value slash tuple.
 
-### 13. Add More Id 3D View Outputs
+### 12. Add More Id 3D View Outputs
 
 Add scalexyz, roughness, sphere, longitude, latitude, radius, stereo,
 interocular, and converge outputs.
@@ -1836,7 +1821,7 @@ Unit tests:
 - stereo controls write legal values.
 - unsupported target outputs are rejected.
 
-### 14. Add Julibrot View Adapter
+### 13. Add Julibrot View Adapter
 
 Add julibrot-view output for 3dmode, julibrot3d, julibroteyes, and
 julibrotfromto.
@@ -1852,7 +1837,7 @@ Unit tests:
 - julibrot3d writes six components.
 - arbitrary look-at or view-up requests are rejected.
 
-### 15. Add Single-Layer Stack
+### 14. Add Single-Layer Stack
 
 Allow animations to define one layer. It should behave like the existing
 single-source animation but use the layer schema.
@@ -1868,7 +1853,7 @@ Unit tests:
 - layer tracks apply to that layer.
 - duplicate layer ids are rejected.
 
-### 16. Add Multi-Layer Rendering
+### 15. Add Multi-Layer Rendering
 
 Allow multiple layers to render separate Id images before composition.
 
@@ -1883,7 +1868,7 @@ Unit tests:
 - each layer applies only its own tracks.
 - generated layer entry names include layer id and frame number.
 
-### 17. Add Layer Opacity
+### 16. Add Layer Opacity
 
 Add layer opacity evaluation and hidden-layer skipping.
 
@@ -1898,7 +1883,7 @@ Unit tests:
 - write-when-hidden renders opacity 0 layers.
 - opacity values outside 0 through 100 are rejected.
 
-### 18. Add source-over Composition
+### 17. Add source-over Composition
 
 Generate ImageMagick commands for the neutral `source-over` operator.
 
@@ -1913,7 +1898,7 @@ Unit tests:
 - opacity is applied before composition.
 - output.background adds a flatten step when configured.
 
-### 19. Add More Neutral Compose Operators
+### 18. Add More Neutral Compose Operators
 
 Allow configured neutral compose operators and validate them. Map those
 operators to ImageMagick names only inside the ImageMagick adapter.
@@ -1934,7 +1919,7 @@ Unit tests:
 - unsupported operators are rejected.
 - ImageMagick-specific operator spellings are rejected in animation JSON.
 
-### 20. Add Core Catalog Files
+### 19. Add Core Catalog Files
 
 Add default catalogs for core Id parameters and coloring.
 
@@ -1949,7 +1934,7 @@ Unit tests:
 - coloring catalog declares colors as color-map.
 - catalog inclusion fails clearly for missing files.
 
-### 21. Add 3D And Formula Catalog Files
+### 20. Add 3D And Formula Catalog Files
 
 Add default catalogs for Id 3D viewing and selected formula families.
 

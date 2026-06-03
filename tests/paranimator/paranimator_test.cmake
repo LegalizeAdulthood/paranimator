@@ -87,3 +87,24 @@ if(NOT compare_result EQUAL 0)
         "  generated: ${generated_par}"
     )
 endif()
+
+if(DEFINED OUTPUT_MAP AND NOT OUTPUT_MAP STREQUAL "")
+    set(generated_map "${output_directory}/map/${OUTPUT_MAP}")
+    if(NOT EXISTS "${generated_map}")
+        message(FATAL_ERROR "Generated map file was not created: ${generated_map}")
+    endif()
+    execute_process(
+        COMMAND
+            "${CMAKE_COMMAND}" -E compare_files
+            "${GOLD_MAP}"
+            "${generated_map}"
+        RESULT_VARIABLE map_compare_result
+    )
+    if(NOT map_compare_result EQUAL 0)
+        message(FATAL_ERROR
+            "Generated map file does not match gold map file:\n"
+            "  gold: ${GOLD_MAP}\n"
+            "  generated: ${generated_map}"
+        )
+    endif()
+endif()

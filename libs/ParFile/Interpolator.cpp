@@ -3,6 +3,7 @@
 #include <ParFile/Interpolator.h>
 
 #include <ParFile/ColorMap.h>
+#include <ParFile/ColorSpec.h>
 #include <ParFile/Config.h>
 #include <ParFile/Interpolant.h>
 #include <ParFile/OutputLayout.h>
@@ -112,6 +113,7 @@ private:
     double blend_at_frame(int frame) const;
     ColorMap map_at_frame(int frame) const;
     ColorMap apply_effect(const ColorMap &map, const ColorMapEffectConfig &effect, int frame) const;
+    static ColorMap load_gradient_map(const ColorMapGradientConfig &gradient);
     std::string output_filename(int frame) const;
     ColorMap read_source_map(const std::string &filename) const;
     void write_generated_map(const std::filesystem::path &filename, const ColorMap &map) const;
@@ -119,6 +121,7 @@ private:
     std::string m_parameter;
     std::vector<KeyframeConfig> m_keys;
     std::optional<std::string> m_source;
+    std::optional<ColorMap> m_gradient;
     std::vector<ColorMapEffectConfig> m_effects;
     std::filesystem::path m_map_directory;
     std::string m_output;
@@ -142,8 +145,16 @@ ColorMapInterpolant::ColorMapInterpolant(
     }
     m_output = track.color_map->output;
     m_source = track.color_map->source;
+    if (track.color_map->gradient)
+    {
+        m_gradient = load_gradient_map(*track.color_map->gradient);
+    }
+    if (m_source && m_gradient)
+    {
+        throw std::runtime_error("Color map track '" + track.parameter + "' has multiple sources");
+    }
     m_effects = track.color_map->effects;
-    if (!m_source)
+    if (!m_source && !m_gradient)
     {
         validate_track_keyframes(track.parameter, track.keys, num_frames);
         if (track.keys[1].curve == Curve::GEOMETRIC)
@@ -183,6 +194,15 @@ double ColorMapInterpolant::blend_at_frame(int frame) const
 
 ColorMap ColorMapInterpolant::map_at_frame(int frame) const
 {
+    if (m_gradient)
+    {
+        ColorMap result{*m_gradient};
+        for (const ColorMapEffectConfig &effect : m_effects)
+        {
+            result = apply_effect(result, effect, frame);
+        }
+        return result;
+    }
     if (m_source)
     {
         ColorMap result{read_source_map(*m_source)};
@@ -222,6 +242,17 @@ ColorMap ColorMapInterpolant::apply_effect(const ColorMap &map, const ColorMapEf
     }
     }
     return map;
+}
+
+ColorMap ColorMapInterpolant::load_gradient_map(const ColorMapGradientConfig &gradient)
+{
+    std::vector<ColorMapGradientStop> stops;
+    stops.reserve(gradient.stops.size());
+    for (const ColorMapGradientStopConfig &stop : gradient.stops)
+    {
+        stops.push_back({stop.index, parse_color_spec(stop.color)});
+    }
+    return gradient_color_map(stops);
 }
 
 std::string ColorMapInterpolant::output_filename(int frame) const

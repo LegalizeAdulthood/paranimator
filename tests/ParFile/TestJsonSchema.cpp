@@ -58,6 +58,37 @@ std::string catalog_with_formula_function(std::string_view metadata)
         "}}}}}";
 }
 
+std::string config_with_gradient_stop_color(std::string_view color)
+{
+    return R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 1,
+  "tracks": [
+    {
+      "parameter": "colors",
+      "type": "color-map",
+      "format": "at-file",
+      "output": "colors-%04d.map",
+      "source": {
+        "kind": "gradient",
+        "stops": [
+          { "index": 0, "color": "black" },
+          { "index": 255, "color": ")" + std::string{color} + R"(" }
+        ]
+      }
+    }
+  ]
+})";
+}
+
 } // namespace
 
 TEST(TestJsonSchema, schemaPathStable)
@@ -375,6 +406,83 @@ TEST(TestJsonSchema, colorMapEffectTrackAccepted)
     }
   ]
 })"));
+}
+
+TEST(TestJsonSchema, colorMapGradientSourceAccepted)
+{
+    EXPECT_TRUE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 1,
+  "tracks": [
+    {
+      "parameter": "colors",
+      "type": "color-map",
+      "format": "at-file",
+      "output": "colors-%04d.map",
+      "source": {
+        "kind": "gradient",
+        "stops": [
+          { "index": 0, "color": "black" },
+          { "index": 255, "color": "white" }
+        ]
+      }
+    }
+  ]
+})"));
+}
+
+TEST(TestJsonSchema, colorMapGradientSourceRequiresTwoStops)
+{
+    EXPECT_FALSE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 1,
+  "tracks": [
+    {
+      "parameter": "colors",
+      "type": "color-map",
+      "format": "at-file",
+      "output": "colors-%04d.map",
+      "source": {
+        "kind": "gradient",
+        "stops": [
+          { "index": 0, "color": "black" }
+        ]
+      }
+    }
+  ]
+})"));
+}
+
+TEST(TestJsonSchema, colorMapGradientSourceColorSpecificationsAccepted)
+{
+    EXPECT_TRUE(validates_config_text(config_with_gradient_stop_color("white")));
+    EXPECT_TRUE(validates_config_text(config_with_gradient_stop_color("rgb:255/40/0")));
+    EXPECT_TRUE(validates_config_text(config_with_gradient_stop_color("255/40/0")));
+    EXPECT_TRUE(validates_config_text(config_with_gradient_stop_color("hsv:20/1/1")));
+    EXPECT_TRUE(validates_config_text(config_with_gradient_stop_color("hsl:60/1/0.5")));
+}
+
+TEST(TestJsonSchema, malformedGradientColorSpecificationRejected)
+{
+    EXPECT_FALSE(validates_config_text(config_with_gradient_stop_color("rgb:300/0/0")));
+    EXPECT_FALSE(validates_config_text(config_with_gradient_stop_color("rgb:1/2")));
+    EXPECT_FALSE(validates_config_text(config_with_gradient_stop_color("cmyk:0/0/0/0")));
 }
 
 TEST(TestJsonSchema, invalidColorMapEffectRangeRejected)

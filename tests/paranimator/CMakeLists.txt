@@ -2,7 +2,7 @@
 #
 function(add_paranimator_test name)
     set(options)
-    set(one_value_args CATALOG FRAMES INDEXED_MAP)
+    set(one_value_args CATALOG FRAMES INDEXED_MAP OUTPUT_MAP)
     set(multi_value_args)
     cmake_parse_arguments(TEST
         "${options}"
@@ -29,6 +29,8 @@ function(add_paranimator_test name)
             "-DCORE_CATALOG=$<SHELL_PATH:${TEST_CATALOG_PATH}>"
             "-DGOLD_PAR=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/gold-${name}.par>"
             "-DINDEXED_MAP=${TEST_INDEXED_MAP}"
+            "-DOUTPUT_MAP=${TEST_OUTPUT_MAP}"
+            "-DGOLD_MAP=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/gold-${name}.map>"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/paranimator_test.cmake"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${name}"
     )
@@ -63,4 +65,5 @@ add_paranimator_test(maxiter-hold FRAMES 4)
 add_paranimator_test(maxiter-step FRAMES 4)
 add_paranimator_test(inside-hold)
 add_paranimator_test(color-map-reverse-ping-pong FRAMES 5 INDEXED_MAP indexed.map)
+add_paranimator_test(color-map-gradient FRAMES 1 OUTPUT_MAP gradient-0001.map)
 add_paranimator_schema_test(invalid-schema)

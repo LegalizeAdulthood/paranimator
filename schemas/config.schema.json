@@ -211,7 +211,7 @@
       }
     },
     "color-map-track": {
-      "description": "Track that writes generated frame map files using keyed maps or a source map plus effects.",
+      "description": "Track that writes generated frame map files using keyed maps, source maps, or generated sources.",
       "type": "object",
       "required": [ "parameter", "type", "format", "output" ],
       "additionalProperties": false,
@@ -227,8 +227,8 @@
           }
         },
         {
-          "description": "Color-map effect track that starts from one source map file.",
-          "required": [ "source", "effects" ],
+          "description": "Color-map track that starts from one file or generated source.",
+          "required": [ "source" ],
           "not": { "required": [ "keys" ] }
         }
       ],
@@ -259,8 +259,8 @@
           }
         },
         "source": {
-          "description": "Source Id map file read before applying ordered effects.",
-          "type": "string"
+          "description": "Source Id map file or generated source read before applying ordered effects.",
+          "$ref": "#/$defs/color-map-source"
         },
         "effects": {
           "description": "Ordered color-map effects applied to the source map.",
@@ -271,6 +271,80 @@
           }
         }
       }
+    },
+    "color-map-source": {
+      "description": "Source used to produce a frame color map before effects.",
+      "oneOf": [
+        {
+          "description": "Source Id map file read from disk.",
+          "type": "string"
+        },
+        {
+          "description": "Generated gradient source object.",
+          "$ref": "#/$defs/gradient-color-map-source"
+        }
+      ]
+    },
+    "gradient-color-map-source": {
+      "description": "Generated color map made from indexed color stops.",
+      "type": "object",
+      "required": [ "kind", "stops" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "gradient",
+          "description": "Generate a color map by interpolating indexed color stops."
+        },
+        "stops": {
+          "description": "Color stops sorted by palette index.",
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "description": "One indexed color stop.",
+            "$ref": "#/$defs/gradient-color-map-stop"
+          }
+        }
+      }
+    },
+    "gradient-color-map-stop": {
+      "description": "One indexed color stop in a generated gradient map.",
+      "type": "object",
+      "required": [ "index", "color" ],
+      "additionalProperties": false,
+      "properties": {
+        "index": {
+          "description": "Palette index for this color stop.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "color": {
+          "description": "Color specification used at this palette index.",
+          "$ref": "#/$defs/color-specification"
+        }
+      }
+    },
+    "color-specification": {
+      "description": "Concrete color written as a CSS named color, RGB tuple, HSV tuple, or HSL tuple.",
+      "type": "string",
+      "oneOf": [
+        {
+          "description": "CSS named color, case-insensitive; accepted names are checked against the W3C CSS Color Module Level 4 named-colors table.",
+          "pattern": "^[A-Za-z]+$"
+        },
+        {
+          "description": "RGB slash tuple, with optional rgb: prefix and integer components from 0 through 255.",
+          "pattern": "^(?:rgb:)?(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$"
+        },
+        {
+          "description": "HSV slash tuple with hue from 0 through 360 and saturation/value from 0 through 1.",
+          "pattern": "^hsv:(?:360(?:\\.0*)?|3[0-5][0-9](?:\\.[0-9]*)?|[12][0-9][0-9](?:\\.[0-9]*)?|[1-9]?[0-9](?:\\.[0-9]*)?)/(?:1(?:\\.0*)?|0(?:\\.[0-9]*)?)/(?:1(?:\\.0*)?|0(?:\\.[0-9]*)?)$"
+        },
+        {
+          "description": "HSL slash tuple with hue from 0 through 360 and saturation/lightness from 0 through 1.",
+          "pattern": "^hsl:(?:360(?:\\.0*)?|3[0-5][0-9](?:\\.[0-9]*)?|[12][0-9][0-9](?:\\.[0-9]*)?|[1-9]?[0-9](?:\\.[0-9]*)?)/(?:1(?:\\.0*)?|0(?:\\.[0-9]*)?)/(?:1(?:\\.0*)?|0(?:\\.[0-9]*)?)$"
+        }
+      ]
     },
     "color-map-effect": {
       "description": "One transformation applied to a color map.",
