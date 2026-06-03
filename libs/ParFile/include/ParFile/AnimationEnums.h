@@ -59,7 +59,8 @@ enum class TrackKind
 {
     PARAMETER,
     CAMERA2D,
-    COLOR_MAP
+    COLOR_MAP,
+    ID_3D_VIEW
 };
 
 enum class TrackFormat

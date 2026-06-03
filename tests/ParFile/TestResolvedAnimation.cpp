@@ -25,6 +25,12 @@ ParFile::ParameterCatalog catalog_data()
              ParFile::ExtrapolateMode::CLAMP, {}, {}},
             {"corners", ParFile::ParameterType::CORNERS, ParFile::ParameterFormat::SLASH, ParFile::Curve::LINEAR,
                 ParFile::ExtrapolateMode::CLAMP, {}, {}},
+            {"rotation", ParFile::ParameterType::NUMERIC_TUPLE, ParFile::ParameterFormat::SLASH, ParFile::Curve::LINEAR,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}, {}, 3},
+            {"perspective", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}},
+            {"xyshift", ParFile::ParameterType::NUMERIC_TUPLE, ParFile::ParameterFormat::SLASH, ParFile::Curve::LINEAR,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}, {}, 2},
             {"maxiter", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
                 ParFile::ExtrapolateMode::CLAMP, {}, {}}}};
     result.fractal_types.push_back({"julia",
@@ -110,6 +116,29 @@ ParFile::Config camera2d_config_data(std::string_view output = "corners")
     track.parameter = "camera";
     track.kind = ParFile::TrackKind::CAMERA2D;
     track.camera2d = camera;
+
+    ParFile::Config result{config_data()};
+    result.tracks = {track};
+    return result;
+}
+
+ParFile::Config id_3d_view_config_data()
+{
+    ParFile::Id3DViewConfig view;
+    view.name = "view";
+    view.outputs.rotation = "rotation";
+    view.outputs.perspective = "perspective";
+    view.outputs.xyshift = "xyshift";
+    view.rotation =
+        ParFile::Id3DViewValueTrackConfig{ParFile::ParameterType::NUMERIC_TUPLE, 3, {{0, "60/30/0"}, {2, "70/50/10"}}};
+    view.perspective = ParFile::Id3DViewValueTrackConfig{ParFile::ParameterType::INTEGER, {}, {{0, "0"}, {2, "100"}}};
+    view.xyshift =
+        ParFile::Id3DViewValueTrackConfig{ParFile::ParameterType::NUMERIC_TUPLE, 2, {{0, "0/0"}, {2, "20/-10"}}};
+
+    ParFile::TrackConfig track;
+    track.parameter = "view";
+    track.kind = ParFile::TrackKind::ID_3D_VIEW;
+    track.id_3d_view = view;
 
     ParFile::Config result{config_data()};
     result.tracks = {track};
@@ -204,6 +233,27 @@ TEST(TestResolvedAnimation, camera2dCenterMagRejectsUnknownVideoShape)
     config.video = "unknown";
 
     EXPECT_THROW(ParFile::resolve_animation(config, catalog_data(), source_set()), std::runtime_error);
+}
+
+TEST(TestResolvedAnimation, id3DViewResolvesToOutputTracks)
+{
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(id_3d_view_config_data(), catalog_data(), source_set())};
+
+    ASSERT_EQ(3U, animation.tracks.size());
+    EXPECT_EQ("view.rotation", animation.tracks[0].parameter);
+    EXPECT_EQ("rotation", animation.tracks[0].metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, animation.tracks[0].metadata.type);
+    EXPECT_EQ("rotation", animation.tracks[0].output_parameter);
+    EXPECT_EQ("60/30/0", animation.tracks[0].base_value);
+    EXPECT_EQ("view.perspective", animation.tracks[1].parameter);
+    EXPECT_EQ("perspective", animation.tracks[1].output_parameter);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, animation.tracks[1].metadata.type);
+    EXPECT_EQ("0", animation.tracks[1].base_value);
+    EXPECT_EQ("view.xyshift", animation.tracks[2].parameter);
+    EXPECT_EQ("xyshift", animation.tracks[2].output_parameter);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, animation.tracks[2].metadata.type);
+    EXPECT_EQ("0/0", animation.tracks[2].base_value);
 }
 
 TEST(TestResolvedAnimation, juliaParamsGroupResolvesToParamsSlots)

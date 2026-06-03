@@ -461,6 +461,42 @@ TEST(TestJsonSchema, camera2dCenterMagTrackAccepted)
     })")));
 }
 
+TEST(TestJsonSchema, id3DViewTrackAccepted)
+{
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "name": "view",
+      "type": "id-3d-view",
+      "outputs": {
+        "rotation": "rotation",
+        "perspective": "perspective",
+        "xyshift": "xyshift"
+      },
+      "rotation": {
+        "type": "numeric-tuple",
+        "arity": 3,
+        "keys": [
+          { "frame": 0, "value": "60/30/0" },
+          { "frame": 2, "value": "70/50/10" }
+        ]
+      },
+      "perspective": {
+        "type": "integer",
+        "keys": [
+          { "frame": 0, "value": 0 },
+          { "frame": 2, "value": 100 }
+        ]
+      },
+      "xyshift": {
+        "type": "numeric-tuple",
+        "arity": 2,
+        "keys": [
+          { "frame": 0, "value": "0/0" },
+          { "frame": 2, "value": "20/-10" }
+        ]
+      }
+    })")));
+}
+
 TEST(TestJsonSchema, camera2dTrackRejectsInvalidShape)
 {
     EXPECT_FALSE(validates_config_text(config_with_track(R"({

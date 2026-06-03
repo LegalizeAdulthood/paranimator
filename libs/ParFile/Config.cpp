@@ -144,6 +144,16 @@ static int load_int(const Object &json, std::string_view name)
     return json.at(key).get<int>();
 }
 
+static int load_positive_int(const Object &json, std::string_view name)
+{
+    const int value{load_int(json, name)};
+    if (value < 1)
+    {
+        throw std::runtime_error("Invalid config, integer '" + std::string{name} + "' must be positive");
+    }
+    return value;
+}
+
 static std::string format_config_double(double value)
 {
     std::ostringstream out;
@@ -307,6 +317,123 @@ static Camera2DConfig load_camera2d_config(const Object &json)
     result.look_at = load_camera2d_value_track_config(json, "look-at", ParameterType::POINT2, false);
     result.view_up = load_camera2d_value_track_config(json, "view-up", ParameterType::VECTOR2, false);
     result.height = load_camera2d_value_track_config(json, "height", ParameterType::DOUBLE, true);
+    return result;
+}
+
+static std::string load_id_3d_view_keyframe_value(const Object &json, ParameterType type)
+{
+    const std::string key{"value"};
+    if (type == ParameterType::INTEGER)
+    {
+        if (!json.contains(key) || !json.at(key).is_number_integer())
+        {
+            throw std::runtime_error("Invalid config, missing integer 'value'");
+        }
+        return std::to_string(json.at(key).get<int>());
+    }
+    return load_string(json, "value");
+}
+
+static KeyframeConfig load_id_3d_view_keyframe_config(const Object &json, ParameterType type)
+{
+    KeyframeConfig result;
+    result.frame = load_int(json, "frame");
+    result.value = load_id_3d_view_keyframe_value(json, type);
+    if (const std::optional<std::string> curve{load_optional_string(json, "curve")})
+    {
+        result.curve = parse_curve(*curve);
+    }
+    return result;
+}
+
+static std::vector<KeyframeConfig> load_id_3d_view_keyframes(
+    const Object &json, std::string_view name, ParameterType type)
+{
+    const std::string key{"keys"};
+    if (!json.contains(key) || !json.at(key).is_array())
+    {
+        throw std::runtime_error("Invalid config, missing array '" + std::string{name} + ".keys'");
+    }
+
+    std::vector<KeyframeConfig> result;
+    for (const Object &item : json.at(key))
+    {
+        if (!item.is_object())
+        {
+            throw std::runtime_error(
+                "Invalid config, array '" + std::string{name} + ".keys' contains non-object value");
+        }
+        result.emplace_back(load_id_3d_view_keyframe_config(item, type));
+    }
+    return result;
+}
+
+static std::optional<Id3DViewValueTrackConfig> load_optional_id_3d_view_value_track_config(
+    const Object &json, std::string_view name, ParameterType expected_type, int expected_arity)
+{
+    const std::string key{name};
+    if (!json.contains(key))
+    {
+        return {};
+    }
+
+    const Object &track{load_object(json, name)};
+    Id3DViewValueTrackConfig result;
+    result.type = parse_parameter_type(load_string(track, name, "type"));
+    if (result.type != expected_type)
+    {
+        throw std::runtime_error("Invalid config, id-3d-view '" + std::string{name} + "' has the wrong type");
+    }
+    if (expected_arity > 0)
+    {
+        result.arity = load_positive_int(track, "arity");
+        if (*result.arity != expected_arity)
+        {
+            throw std::runtime_error("Invalid config, id-3d-view '" + std::string{name} + "' has the wrong arity");
+        }
+    }
+    result.keys = load_id_3d_view_keyframes(track, name, result.type);
+    return result;
+}
+
+static Id3DViewOutputsConfig load_id_3d_view_outputs_config(const Object &json)
+{
+    const Object &outputs{load_object(json, "outputs")};
+    Id3DViewOutputsConfig result;
+    result.rotation = load_optional_string(outputs, "rotation");
+    result.perspective = load_optional_string(outputs, "perspective");
+    result.xyshift = load_optional_string(outputs, "xyshift");
+    if (!result.rotation && !result.perspective && !result.xyshift)
+    {
+        throw std::runtime_error("Invalid config, id-3d-view outputs must name at least one output");
+    }
+    return result;
+}
+
+static void validate_id_3d_view_member(
+    const char *name, const std::optional<std::string> &output, const std::optional<Id3DViewValueTrackConfig> &track)
+{
+    if (output && !track)
+    {
+        throw std::runtime_error("Invalid config, id-3d-view output '" + std::string{name} + "' has no track");
+    }
+    if (!output && track)
+    {
+        throw std::runtime_error("Invalid config, id-3d-view track '" + std::string{name} + "' has no output");
+    }
+}
+
+static Id3DViewConfig load_id_3d_view_config(const Object &json)
+{
+    Id3DViewConfig result;
+    result.name = load_string(json, "name");
+    result.outputs = load_id_3d_view_outputs_config(json);
+    result.rotation = load_optional_id_3d_view_value_track_config(json, "rotation", ParameterType::NUMERIC_TUPLE, 3);
+    result.perspective = load_optional_id_3d_view_value_track_config(json, "perspective", ParameterType::INTEGER, 0);
+    result.xyshift = load_optional_id_3d_view_value_track_config(json, "xyshift", ParameterType::NUMERIC_TUPLE, 2);
+    validate_id_3d_view_member("rotation", result.outputs.rotation, result.rotation);
+    validate_id_3d_view_member("perspective", result.outputs.perspective, result.perspective);
+    validate_id_3d_view_member("xyshift", result.outputs.xyshift, result.xyshift);
     return result;
 }
 
@@ -753,6 +880,12 @@ static TrackConfig load_track_config(const Object &json, int num_frames)
     {
         result.camera2d = load_camera2d_config(json);
         result.parameter = result.camera2d->name;
+        return result;
+    }
+    if (result.kind == TrackKind::ID_3D_VIEW)
+    {
+        result.id_3d_view = load_id_3d_view_config(json);
+        result.parameter = result.id_3d_view->name;
         return result;
     }
 

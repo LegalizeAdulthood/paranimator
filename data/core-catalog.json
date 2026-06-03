@@ -12,6 +12,19 @@
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
+    "rotation": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 3,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "perspective": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
     "xyshift": {
       "type": "numeric-tuple",
       "format": "slash",

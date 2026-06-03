@@ -160,6 +160,10 @@ TrackKind parse_track_kind(std::string_view text)
     {
         return TrackKind::COLOR_MAP;
     }
+    if (text == "id-3d-view")
+    {
+        return TrackKind::ID_3D_VIEW;
+    }
     throw std::runtime_error("Unknown track kind '" + std::string{text} + "'");
 }
 
@@ -278,6 +282,8 @@ std::string_view to_string(TrackKind value)
         return "camera2d";
     case TrackKind::COLOR_MAP:
         return "color-map";
+    case TrackKind::ID_3D_VIEW:
+        return "id-3d-view";
     }
     return {};
 }

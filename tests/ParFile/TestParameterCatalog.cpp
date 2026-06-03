@@ -63,7 +63,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
 {
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
-    EXPECT_EQ(7U, catalog.parameters.size());
+    EXPECT_EQ(9U, catalog.parameters.size());
     EXPECT_EQ(1U, catalog.fractal_types.size());
     EXPECT_EQ(1U, catalog.formula_entries.size());
 }
@@ -113,6 +113,20 @@ TEST(TestParameterCatalog, xyshiftMetadataLoads)
     EXPECT_EQ(ParFile::Curve::LINEAR, *metadata.default_curve);
     ASSERT_TRUE(metadata.extrapolate);
     EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
+}
+
+TEST(TestParameterCatalog, id3DViewMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &rotation{catalog.metadata("rotation")};
+    const ParFile::ParameterMetadata &perspective{catalog.metadata("perspective")};
+
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, rotation.type);
+    ASSERT_TRUE(rotation.arity);
+    EXPECT_EQ(3, *rotation.arity);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, perspective.type);
+    ASSERT_TRUE(perspective.format);
+    EXPECT_EQ(ParFile::ParameterFormat::RAW, *perspective.format);
 }
 
 TEST(TestParameterCatalog, maxiterMetadataLoads)

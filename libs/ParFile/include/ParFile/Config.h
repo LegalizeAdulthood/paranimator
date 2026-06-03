@@ -155,6 +155,29 @@ struct Camera2DConfig
     Camera2DValueTrackConfig height;
 };
 
+struct Id3DViewValueTrackConfig
+{
+    ParameterType type{};
+    std::optional<int> arity;
+    std::vector<KeyframeConfig> keys;
+};
+
+struct Id3DViewOutputsConfig
+{
+    std::optional<std::string> rotation;
+    std::optional<std::string> perspective;
+    std::optional<std::string> xyshift;
+};
+
+struct Id3DViewConfig
+{
+    std::string name;
+    Id3DViewOutputsConfig outputs;
+    std::optional<Id3DViewValueTrackConfig> rotation;
+    std::optional<Id3DViewValueTrackConfig> perspective;
+    std::optional<Id3DViewValueTrackConfig> xyshift;
+};
+
 struct TrackConfig
 {
     std::string parameter;
@@ -165,6 +188,7 @@ struct TrackConfig
     std::optional<ColorMapConfig> color_map;
     std::optional<PathConfig> path;
     std::optional<Camera2DConfig> camera2d;
+    std::optional<Id3DViewConfig> id_3d_view;
 };
 
 struct Config

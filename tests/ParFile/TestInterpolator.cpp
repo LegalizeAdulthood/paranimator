@@ -40,13 +40,9 @@ ParFile::Config parsed_config(std::string_view source_name, int num_frames, cons
     const Object json{{"parameter-catalogs", Object::array({TestParFile::CORE_CATALOG_JSON})},
         {"source", Object{{"file", TestParFile::FROM_PAR}, {"name", std::string{source_name}}}},
         {"output",
-            Object{{"directory", TestParFile::TEST_OUTPUT_DIRECTORY},
-                {"par", TestParFile::TEST_OUTPUT_PAR},
-                {"entry", TestParFile::TEST_OUTPUT_ENTRY},
-                {"script", TestParFile::TEST_OUTPUT_SCRIPT}}},
-        {"video", TestParFile::TEST_VIDEO_MODE},
-        {"num-frames", num_frames},
-        {"tracks", Object::array({track})}};
+            Object{{"directory", TestParFile::TEST_OUTPUT_DIRECTORY}, {"par", TestParFile::TEST_OUTPUT_PAR},
+                {"entry", TestParFile::TEST_OUTPUT_ENTRY}, {"script", TestParFile::TEST_OUTPUT_SCRIPT}}},
+        {"video", TestParFile::TEST_VIDEO_MODE}, {"num-frames", num_frames}, {"tracks", Object::array({track})}};
     return ParFile::read_config(json.dump());
 }
 
@@ -139,6 +135,37 @@ TEST_F(TestInterpolator, firstFrameCopiesSource)
     ASSERT_EQ(expected, frame);
 }
 
+TEST_F(TestInterpolator, id3DViewWritesRotationPerspectiveAndXyshift)
+{
+    const Object track{{"name", "view"}, {"type", "id-3d-view"},
+        {"outputs", Object{{"rotation", "rotation"}, {"perspective", "perspective"}, {"xyshift", "xyshift"}}},
+        {"rotation",
+            Object{{"type", "numeric-tuple"}, {"arity", 3},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "60/30/0"}}, Object{{"frame", 2}, {"value", "70/50/10"}}})}}},
+        {"perspective",
+            Object{{"type", "integer"},
+                {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 2}, {"value", 100}}})}}},
+        {"xyshift",
+            Object{{"type", "numeric-tuple"}, {"arity", 2},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "0/0"}}, Object{{"frame", 2}, {"value", "20/-10"}}})}}}};
+    const ParFile::Config config{parsed_config("Mandel_Demo", 3, track)};
+    ParFile::Interpolator lerper{config};
+
+    const ParFile::ParSet first{lerper()};
+    EXPECT_EQ("60/30/0", parameter_value(first, "rotation"));
+    EXPECT_EQ("0", parameter_value(first, "perspective"));
+    EXPECT_EQ("0/0", parameter_value(first, "xyshift"));
+
+    const ParFile::ParSet second{lerper()};
+    EXPECT_EQ("65/40/5", parameter_value(second, "rotation"));
+    EXPECT_EQ("50", parameter_value(second, "perspective"));
+    EXPECT_EQ("10/-5", parameter_value(second, "xyshift"));
+}
+
 TEST_F(TestInterpolator, lastFrameIsTrackEndValue)
 {
     m_config_data.num_frames = 2;
@@ -202,8 +229,8 @@ TEST_F(TestInterpolator, linePathMatchesEquivalentKeyedLinearTrack)
 
 TEST_F(TestInterpolator, complexLinePathPreservesSlashPairFormatting)
 {
-    m_config = parsed_config(
-        "Julia_Demo", 3, Object{{"parameter", "params.c"}, {"path", Object{{"kind", "line"}, {"from", "0/1"}, {"to", "2/3"}}}});
+    m_config = parsed_config("Julia_Demo", 3,
+        Object{{"parameter", "params.c"}, {"path", Object{{"kind", "line"}, {"from", "0/1"}, {"to", "2/3"}}}});
     m_lerper = ParFile::Interpolator{m_config};
 
     EXPECT_EQ("0/1", parameter_value(m_lerper(), "params"));
@@ -355,8 +382,8 @@ TEST_F(TestInterpolator, colorMapEffectTrackWritesGeneratedMapsAndAtFileValues)
     color_map.effects = {reverse, ping_pong};
     m_config_data.output.directory = output.string();
     m_config_data.num_frames = 5;
-    m_config_data.tracks = {{"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP,
-        color_map}};
+    m_config_data.tracks = {
+        {"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP, color_map}};
     m_config = m_config_data;
     m_lerper = ParFile::Interpolator{m_config};
 
@@ -397,8 +424,8 @@ TEST_F(TestInterpolator, colorMapGradientSourceWritesGeneratedMap)
     color_map.gradient = ParFile::ColorMapGradientConfig{{{{0, "black"}, {2, "white"}}}};
     m_config_data.output.directory = output.string();
     m_config_data.num_frames = 1;
-    m_config_data.tracks = {{"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP,
-        color_map}};
+    m_config_data.tracks = {
+        {"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP, color_map}};
     m_config = m_config_data;
     m_lerper = ParFile::Interpolator{m_config};
 
@@ -417,7 +444,8 @@ TEST_F(TestInterpolator, colorMapGradientSourceWritesGeneratedMap)
 
 TEST_F(TestInterpolator, colorMapBrightnessEffectWritesGeneratedMap)
 {
-    const std::filesystem::path root{std::filesystem::path{TestParFile::TEST_OUTPUT_DIRECTORY} / "color-map-brightness"};
+    const std::filesystem::path root{
+        std::filesystem::path{TestParFile::TEST_OUTPUT_DIRECTORY} / "color-map-brightness"};
     const std::filesystem::path output{root / "output"};
     const std::filesystem::path base_map{root / "input" / "base.map"};
     std::filesystem::remove_all(root);
@@ -432,8 +460,8 @@ TEST_F(TestInterpolator, colorMapBrightnessEffectWritesGeneratedMap)
     color_map.effects = {brightness};
     m_config_data.output.directory = output.string();
     m_config_data.num_frames = 3;
-    m_config_data.tracks = {{"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP,
-        color_map}};
+    m_config_data.tracks = {
+        {"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP, color_map}};
     m_config = m_config_data;
     m_lerper = ParFile::Interpolator{m_config};
 
@@ -477,8 +505,8 @@ TEST_F(TestInterpolator, colorMapAdjustmentEffectsWriteGeneratedMap)
     color_map.effects = {gamma, contrast, saturation, hue_shift};
     m_config_data.output.directory = output.string();
     m_config_data.num_frames = 3;
-    m_config_data.tracks = {{"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP,
-        color_map}};
+    m_config_data.tracks = {
+        {"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP, color_map}};
     m_config = m_config_data;
     m_lerper = ParFile::Interpolator{m_config};
 
@@ -535,8 +563,8 @@ TEST_F(TestInterpolator, colorMapMaskedEffectsWriteGeneratedMap)
     color_map.effects = {remap, pulse, mask_blend, sparkle};
     m_config_data.output.directory = output.string();
     m_config_data.num_frames = 3;
-    m_config_data.tracks = {{"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP,
-        color_map}};
+    m_config_data.tracks = {
+        {"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP, color_map}};
     m_config = m_config_data;
     m_lerper = ParFile::Interpolator{m_config};
 
@@ -566,8 +594,8 @@ TEST_F(TestInterpolator, colorMapGradientSourceRejectsInvalidColorSpec)
     color_map.output = "colors-%04d.map";
     color_map.gradient = ParFile::ColorMapGradientConfig{{{{0, "black"}, {255, "rgb:300/0/0"}}}};
     m_config_data.num_frames = 1;
-    m_config_data.tracks = {{"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP,
-        color_map}};
+    m_config_data.tracks = {
+        {"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP, color_map}};
     m_config = m_config_data;
 
     EXPECT_THROW(ParFile::Interpolator{m_config}, std::runtime_error);

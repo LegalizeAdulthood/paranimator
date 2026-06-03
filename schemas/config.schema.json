@@ -78,7 +78,8 @@
           { "$ref": "#/$defs/value-track" },
           { "$ref": "#/$defs/pwm-track" },
           { "$ref": "#/$defs/color-map-track" },
-          { "$ref": "#/$defs/camera2d-track" }
+          { "$ref": "#/$defs/camera2d-track" },
+          { "$ref": "#/$defs/id-3d-view-track" }
         ]
       }
     }
@@ -91,6 +92,10 @@
         {
           "const": "color-map",
           "description": "Track that writes generated Id map files and emits colors=@filename."
+        },
+        {
+          "const": "id-3d-view",
+          "description": "Virtual track that writes Id Euler-style 3D view parameters."
         }
       ]
     },
@@ -306,6 +311,177 @@
         "curve": {
           "description": "Optional interpolation curve ending at this height key.",
           "$ref": "#/$defs/curve"
+        }
+      }
+    },
+    "id-3d-view-track": {
+      "description": "Virtual Id 3D view track that writes catalog-declared Euler-style output parameters.",
+      "type": "object",
+      "required": [ "name", "type", "outputs" ],
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "description": "Adapter includes a rotation component track.",
+          "required": [ "rotation" ]
+        },
+        {
+          "description": "Adapter includes a perspective component track.",
+          "required": [ "perspective" ]
+        },
+        {
+          "description": "Adapter includes an xyshift component track.",
+          "required": [ "xyshift" ]
+        }
+      ],
+      "properties": {
+        "name": {
+          "description": "Local name used to report id-3d-view validation errors.",
+          "type": "string"
+        },
+        "type": {
+          "const": "id-3d-view",
+          "description": "Selects virtual Id 3D view evaluation."
+        },
+        "outputs": {
+          "description": "Catalog parameter keys that receive computed 3D view values.",
+          "$ref": "#/$defs/id-3d-view-outputs"
+        },
+        "rotation": {
+          "description": "Keyed x/y/z rotation values.",
+          "$ref": "#/$defs/id-3d-view-rotation-track"
+        },
+        "perspective": {
+          "description": "Keyed perspective values.",
+          "$ref": "#/$defs/id-3d-view-perspective-track"
+        },
+        "xyshift": {
+          "description": "Keyed x/y image shift values.",
+          "$ref": "#/$defs/id-3d-view-xyshift-track"
+        }
+      }
+    },
+    "id-3d-view-outputs": {
+      "description": "Output parameter names for the Id 3D view adapter.",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "rotation": {
+          "description": "Catalog key that receives the rotation tuple.",
+          "type": "string"
+        },
+        "perspective": {
+          "description": "Catalog key that receives the perspective integer.",
+          "type": "string"
+        },
+        "xyshift": {
+          "description": "Catalog key that receives the xyshift tuple.",
+          "type": "string"
+        }
+      }
+    },
+    "id-3d-view-rotation-track": {
+      "description": "Id 3D rotation component track.",
+      "type": "object",
+      "required": [ "type", "arity", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "numeric-tuple",
+          "description": "Declares a slash-delimited numeric tuple value."
+        },
+        "arity": {
+          "const": 3,
+          "description": "Rotation uses three components: x, y, and z."
+        },
+        "keys": {
+          "description": "Exactly two keyed rotation tuple values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/id-3d-view-tuple-keyframe" }
+        }
+      }
+    },
+    "id-3d-view-perspective-track": {
+      "description": "Id 3D perspective component track.",
+      "type": "object",
+      "required": [ "type", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "integer",
+          "description": "Declares an integer value."
+        },
+        "keys": {
+          "description": "Exactly two keyed perspective integer values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/id-3d-view-integer-keyframe" }
+        }
+      }
+    },
+    "id-3d-view-xyshift-track": {
+      "description": "Id 3D xyshift component track.",
+      "type": "object",
+      "required": [ "type", "arity", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "numeric-tuple",
+          "description": "Declares a slash-delimited numeric tuple value."
+        },
+        "arity": {
+          "const": 2,
+          "description": "Xyshift uses two components: x and y."
+        },
+        "keys": {
+          "description": "Exactly two keyed xyshift tuple values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/id-3d-view-tuple-keyframe" }
+        }
+      }
+    },
+    "id-3d-view-tuple-keyframe": {
+      "description": "One keyed Id 3D tuple value.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this tuple key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Slash-delimited tuple value at this keyframe.",
+          "type": "string"
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this tuple key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
+      }
+    },
+    "id-3d-view-integer-keyframe": {
+      "description": "One keyed Id 3D integer value.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this integer key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Integer value at this keyframe.",
+          "type": "integer"
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this integer key.",
+          "$ref": "#/$defs/scalar-curve"
         }
       }
     },

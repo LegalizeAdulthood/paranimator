@@ -426,6 +426,52 @@ TEST(TestConfig, jsonDeserializesCamera2DCornersTrack)
     EXPECT_EQ(ParFile::Curve::GEOMETRIC, *camera.height.keys[1].curve);
 }
 
+TEST(TestConfig, jsonDeserializesId3DViewTrack)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"name", "view"}, {"type", "id-3d-view"},
+        {"outputs", Object{{"rotation", "rotation"}, {"perspective", "perspective"}, {"xyshift", "xyshift"}}},
+        {"rotation",
+            Object{{"type", "numeric-tuple"}, {"arity", 3},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "60/30/0"}}, Object{{"frame", 59}, {"value", "70/50/10"}}})}}},
+        {"perspective",
+            Object{{"type", "integer"},
+                {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 59}, {"value", 100}}})}}},
+        {"xyshift",
+            Object{{"type", "numeric-tuple"}, {"arity", 2},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "0/0"}}, Object{{"frame", 59}, {"value", "20/-10"}}})}}}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    EXPECT_EQ("view", config.tracks[0].parameter);
+    EXPECT_EQ(ParFile::TrackKind::ID_3D_VIEW, config.tracks[0].kind);
+    ASSERT_TRUE(config.tracks[0].id_3d_view);
+    const ParFile::Id3DViewConfig &view{*config.tracks[0].id_3d_view};
+    EXPECT_EQ("view", view.name);
+    ASSERT_TRUE(view.outputs.rotation);
+    ASSERT_TRUE(view.outputs.perspective);
+    ASSERT_TRUE(view.outputs.xyshift);
+    EXPECT_EQ("rotation", *view.outputs.rotation);
+    EXPECT_EQ("perspective", *view.outputs.perspective);
+    EXPECT_EQ("xyshift", *view.outputs.xyshift);
+    ASSERT_TRUE(view.rotation);
+    ASSERT_TRUE(view.perspective);
+    ASSERT_TRUE(view.xyshift);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, view.rotation->type);
+    ASSERT_TRUE(view.rotation->arity);
+    EXPECT_EQ(3, *view.rotation->arity);
+    EXPECT_EQ("60/30/0", view.rotation->keys[0].value);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, view.perspective->type);
+    EXPECT_EQ("100", view.perspective->keys[1].value);
+    ASSERT_TRUE(view.xyshift->arity);
+    EXPECT_EQ(2, *view.xyshift->arity);
+}
+
 TEST(TestConfig, jsonRejectsTrackWithKeysAndPath)
 {
     Object json = valid_json();
