@@ -1,5 +1,5 @@
 {
-  "parameter_catalogs": [ "input/core-catalog.json" ],
+  "parameter-catalogs": [ "input/core-catalog.json" ],
   "source": {
     "file": "input/source.par",
     "name": "Bailout_Demo"
@@ -11,7 +11,7 @@
     "script": "frames.bat"
   },
   "video": "F6",
-  "num_frames": 3,
+  "num-frames": 3,
   "tracks": [
     {
       "parameter": "bailout",

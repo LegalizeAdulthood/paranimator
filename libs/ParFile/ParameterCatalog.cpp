@@ -95,7 +95,7 @@ ParameterMetadata load_metadata(std::string_view name, const Object &json)
     result.name = std::string{name};
     result.type = load_required_string(json, name, "type");
     result.format = load_optional_string(json, "format");
-    result.default_curve = load_optional_string(json, "default_curve");
+    result.default_curve = load_optional_string(json, "default-curve");
     result.extrapolate = load_optional_string(json, "extrapolate");
     result.min = load_optional_number(json, "min");
     result.max = load_optional_number(json, "max");

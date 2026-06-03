@@ -33,7 +33,7 @@ TEST(TestParameterCatalog, centerMagMetadataLoads)
     const ParFile::ParameterMetadata &metadata{catalog.metadata("center-mag")};
 
     EXPECT_EQ("center-mag", metadata.name);
-    EXPECT_EQ("center_mag", metadata.type);
+    EXPECT_EQ("center-mag", metadata.type);
     EXPECT_EQ("slash", metadata.format);
     EXPECT_EQ("geometric", metadata.default_curve);
     EXPECT_EQ("clamp", metadata.extrapolate);

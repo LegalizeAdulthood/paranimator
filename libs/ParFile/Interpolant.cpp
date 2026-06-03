@@ -504,7 +504,7 @@ InterpolantPtr create_interpolant(const ParameterMetadata &metadata, const std::
     int num_steps, std::string_view base_value)
 {
     validate_keyframes(metadata.name, keys, num_steps);
-    if (metadata.type == "center_mag")
+    if (metadata.type == "center-mag")
     {
         validate_full_range(metadata.name, keys, num_steps);
         return std::make_shared<CenterMagInterpolant>(metadata.name, keys[0].value, keys[1].value, num_steps);

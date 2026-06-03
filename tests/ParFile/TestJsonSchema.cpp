@@ -95,7 +95,7 @@ TEST(TestJsonSchema, unknownMetadataFormatRejected)
 TEST(TestJsonSchema, unknownMetadataDefaultCurveRejected)
 {
     EXPECT_FALSE(
-        validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","default_curve":"unknown")")));
+        validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","default-curve":"unknown")")));
 }
 
 TEST(TestJsonSchema, unknownMetadataExtrapolateRejected)
@@ -143,7 +143,7 @@ TEST(TestJsonSchema, invalidOutputDirectoryTypeRejected)
 TEST(TestJsonSchema, unknownKeyCurveRejected)
 {
     EXPECT_FALSE(validates_config_text(R"({
-  "parameter_catalogs": [ "core-catalog.json" ],
+  "parameter-catalogs": [ "core-catalog.json" ],
   "source": { "file": "from.par", "name": "Mandel_Demo" },
   "output": {
     "directory": "out",
@@ -152,7 +152,7 @@ TEST(TestJsonSchema, unknownKeyCurveRejected)
     "script": "frames.bat"
   },
   "video": "F6",
-  "num_frames": 2,
+  "num-frames": 2,
   "tracks": [
     {
       "parameter": "maxiter",

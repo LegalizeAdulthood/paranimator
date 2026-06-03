@@ -1,5 +1,5 @@
 {
-  "parameter_catalogs": [
+  "parameter-catalogs": [
     "core-catalog.json"
   ],
   "source": {
@@ -13,7 +13,7 @@
     "script": "@TEST_OUTPUT_SCRIPT@"
   },
   "video": "@TEST_VIDEO_MODE@",
-  "num_frames": 60,
+  "num-frames": 60,
   "tracks": [
     {
       "parameter": "@TEST_TRACK_PARAMETER@",

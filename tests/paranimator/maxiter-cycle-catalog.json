@@ -3,7 +3,7 @@
     "maxiter": {
       "type": "integer",
       "format": "raw",
-      "default_curve": "linear",
+      "default-curve": "linear",
       "extrapolate": "cycle"
     }
   }

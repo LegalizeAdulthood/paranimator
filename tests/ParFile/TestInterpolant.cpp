@@ -55,7 +55,7 @@ TEST(TestInterpolant, centerMag)
     const std::string to{"-0.5/0.0/10.0"};
     const int num_steps{3};
 
-    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center_mag", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center-mag", from, to, num_steps)};
 
     ASSERT_TRUE(interpolant);
     ASSERT_EQ("center-mag", interpolant->name());
@@ -66,7 +66,7 @@ TEST(TestInterpolant, centerMagFrom)
     const std::string from{"-0.5/0/1"};
     const std::string to{"-0.5/0/10"};
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center_mag", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center-mag", from, to, num_steps)};
 
     const std::string value{interpolant->step()};
 
@@ -78,7 +78,7 @@ TEST(TestInterpolant, centerMagMagnificationIsGeometric)
     const std::string from{"-0.5/0.0/1.0"};
     const std::string to{"-0.5/0.0/10.0"};
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center_mag", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center-mag", from, to, num_steps)};
     static_cast<void>(interpolant->step());
 
     const std::string value{interpolant->step()};
@@ -91,7 +91,7 @@ TEST(TestInterpolant, centerMagCenterFraction)
     const std::string from{"-1/-2/1"};
     const std::string to{"1/2/1"};
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center_mag", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center-mag", from, to, num_steps)};
     static_cast<void>(interpolant->step());
 
     const std::string value{interpolant->step()};
@@ -104,7 +104,7 @@ TEST(TestInterpolant, centerMagTo)
     const std::string from{"-0.5/0/1"};
     const std::string to{"-0.5/0/10"};
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center_mag", from, to, num_steps)};
+    ParFile::InterpolantPtr interpolant{create_interpolant("center-mag", "center-mag", from, to, num_steps)};
     static_cast<void>(interpolant->step());
     static_cast<void>(interpolant->step());
 

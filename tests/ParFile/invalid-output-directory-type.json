@@ -1,5 +1,5 @@
 {
-  "parameter_catalogs": [
+  "parameter-catalogs": [
     "core-catalog.json"
   ],
   "source": {
@@ -13,6 +13,6 @@
     "script": "frames.bat"
   },
   "video": "F6",
-  "num_frames": 60,
+  "num-frames": 60,
   "tracks": []
 }

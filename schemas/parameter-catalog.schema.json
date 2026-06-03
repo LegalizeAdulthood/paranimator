@@ -13,9 +13,9 @@
         "required": [ "type" ],
         "additionalProperties": false,
         "properties": {
-          "type": { "$ref": "#/$defs/parameter_type" },
-          "format": { "$ref": "#/$defs/parameter_format" },
-          "default_curve": { "$ref": "#/$defs/curve" },
+          "type": { "$ref": "#/$defs/parameter-type" },
+          "format": { "$ref": "#/$defs/parameter-format" },
+          "default-curve": { "$ref": "#/$defs/curve" },
           "extrapolate": { "$ref": "#/$defs/extrapolate" },
           "min": { "type": "number" },
           "max": { "type": "number" }
@@ -24,11 +24,11 @@
     }
   },
   "$defs": {
-    "parameter_type": {
+    "parameter-type": {
       "type": "string",
-      "enum": [ "center_mag", "corners", "double", "integer" ]
+      "enum": [ "center-mag", "corners", "double", "integer" ]
     },
-    "parameter_format": {
+    "parameter-format": {
       "type": "string",
       "enum": [ "raw", "slash" ]
     },

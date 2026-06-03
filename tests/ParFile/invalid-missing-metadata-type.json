@@ -2,7 +2,7 @@
   "parameters": {
     "center-mag": {
       "format": "slash",
-      "default_curve": "geometric",
+      "default-curve": "geometric",
       "extrapolate": "clamp"
     }
   }

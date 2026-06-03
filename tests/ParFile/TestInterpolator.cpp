@@ -75,7 +75,7 @@ TEST_F(TestInterpolator, firstFrameCopiesSource)
 
 TEST_F(TestInterpolator, lastFrameIsTrackEndValue)
 {
-    m_json["num_frames"] = 2;
+    m_json["num-frames"] = 2;
     m_json["tracks"][0]["keys"][1]["frame"] = 1;
     m_config = ParFile::Config{m_json.dump()};
     m_lerper = ParFile::Interpolator{m_config};
@@ -92,7 +92,7 @@ TEST_F(TestInterpolator, lastFrameIsTrackEndValue)
 
 TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
 {
-    m_json["num_frames"] = 3;
+    m_json["num-frames"] = 3;
     m_json["tracks"][0]["keys"][1]["frame"] = 2;
     m_config = ParFile::Config{m_json.dump()};
     m_lerper = ParFile::Interpolator{m_config};
@@ -109,7 +109,7 @@ TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
 
 TEST_F(TestInterpolator, multipleTracksHaveIndependentKeys)
 {
-    m_json["num_frames"] = 3;
+    m_json["num-frames"] = 3;
     m_json["tracks"][0]["keys"][1]["frame"] = 2;
     m_json["tracks"].push_back({
         {"parameter", "maxiter"},

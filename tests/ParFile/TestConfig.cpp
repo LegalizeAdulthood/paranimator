@@ -15,7 +15,7 @@ namespace
 Object valid_json()
 {
     return Object{
-        {"parameter_catalogs", Object::array({"core-catalog.json"})}, //
+        {"parameter-catalogs", Object::array({"core-catalog.json"})}, //
         {"source", Object{{"file", "foo.par"}, {"name", "foo"}}},     //
         {"output",
             Object{{"directory", "out"},    //
@@ -23,7 +23,7 @@ Object valid_json()
                 {"entry", "frame-%04d"},    //
                 {"script", "output.bat"}}}, //
         {"video", "F6"},                    //
-        {"num_frames", 60},                 //
+        {"num-frames", 60},                 //
         {"tracks", Object::array()}         //
     };
 }
@@ -66,7 +66,7 @@ TEST(TestConfig, optionalParallelValid)
 TEST(TestConfig, missingParameterCatalogs)
 {
     Object json{valid_json()};
-    json.erase("parameter_catalogs");
+    json.erase("parameter-catalogs");
 
     expect_invalid(json);
 }
@@ -146,7 +146,7 @@ TEST(TestConfig, missingVideo)
 TEST(TestConfig, missingNumFrames)
 {
     Object json{valid_json()};
-    json.erase("num_frames");
+    json.erase("num-frames");
 
     expect_invalid(json);
 }

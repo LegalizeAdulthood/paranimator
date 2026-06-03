@@ -1,27 +1,27 @@
 {
   "parameters": {
     "center-mag": {
-      "type": "center_mag",
+      "type": "center-mag",
       "format": "slash",
-      "default_curve": "geometric",
+      "default-curve": "geometric",
       "extrapolate": "clamp"
     },
     "corners": {
       "type": "corners",
       "format": "slash",
-      "default_curve": "linear",
+      "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "maxiter": {
       "type": "integer",
       "format": "raw",
-      "default_curve": "linear",
+      "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "bailout": {
       "type": "double",
       "format": "raw",
-      "default_curve": "linear",
+      "default-curve": "linear",
       "extrapolate": "clamp",
       "min": 0,
       "max": 1000

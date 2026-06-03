@@ -55,7 +55,7 @@ interpolant list with a more general track list.
 
 The animation has one global frame range:
 
-- Frame 0 through num_frames - 1.
+- Frame 0 through num-frames - 1.
 
 Every track is evaluated against that same frame number. Tracks do not
 need to share keyframe locations.
@@ -97,16 +97,16 @@ Example parameter catalog:
     {
       "parameters": {
         "center-mag": {
-          "type": "center_mag",
+          "type": "center-mag",
           "description": "Viewport center and magnification",
-          "default_curve": "geometric",
+          "default-curve": "geometric",
           "extrapolate": "clamp"
         },
 
         "corners": {
           "type": "corners",
           "description": "Viewport rectangle",
-          "default_curve": "linear",
+          "default-curve": "linear",
           "extrapolate": "clamp"
         },
 
@@ -114,7 +114,7 @@ Example parameter catalog:
           "type": "integer",
           "min": 1,
           "max": 2147483647,
-          "default_curve": "step",
+          "default-curve": "step",
           "rounding": "nearest",
           "extrapolate": "clamp"
         },
@@ -122,34 +122,34 @@ Example parameter catalog:
         "bailout": {
           "type": "double",
           "min": 0.0,
-          "default_curve": "smoothstep",
+          "default-curve": "smoothstep",
           "extrapolate": "clamp"
         },
 
         "colors": {
           "type": "colormap",
-          "format": "at_file",
-          "default_curve": "smoothstep",
+          "format": "at-file",
+          "default-curve": "smoothstep",
           "extrapolate": "clamp"
         },
 
         "inside": {
           "type": "enum",
           "values": [ "bof60", "zmag", "epscross", "startrail" ],
-          "default_curve": "hold",
+          "default-curve": "hold",
           "extrapolate": "clamp"
         },
 
         "outside": {
           "type": "enum",
-          "default_curve": "hold",
+          "default-curve": "hold",
           "extrapolate": "clamp"
         },
 
         "lightsource": {
           "type": "point3",
           "format": "slash",
-          "default_curve": "smoothstep",
+          "default-curve": "smoothstep",
           "extrapolate": "clamp"
         }
       }
@@ -162,7 +162,7 @@ Example parameter catalog:
 | `type` | Selects parser, interpolator, and formatter. |
 | `description` | Human-readable parameter explanation. |
 | `format` | Text syntax used in par files. |
-| `default_curve` | Curve used by segments unless overridden. |
+| `default-curve` | Curve used by segments unless overridden. |
 | `extrapolate` | Behavior outside the keyed range. |
 | `min` | Lower validation limit; may clamp. |
 | `max` | Upper validation limit; may clamp. |
@@ -173,7 +173,7 @@ Example parameter catalog:
 | `normalize` | Normalize vector-like values after interpolation. |
 | `aliases` | Alternative parameter names accepted in par files. |
 | `required` | Parameter must exist in the base parameter set. |
-| `write_when_unchanged` | Write value even when it matches base. |
+| `write-when-unchanged` | Write value even when it matches base. |
 
 ## Type Versus Format
 
@@ -185,7 +185,7 @@ Example:
 
     {
       "type": "complex",
-      "format": "slash_pair"
+      "format": "slash-pair"
     }
 
 Possible formats:
@@ -194,14 +194,14 @@ Possible formats:
 | --- | --- |
 | `integer` | `raw` |
 | `double` | `raw` |
-| `complex` | `slash_pair` |
-| `numeric_tuple` | `slash` |
+| `complex` | `slash-pair` |
+| `numeric-tuple` | `slash` |
 | `point2` | `slash` |
 | `vector2` | `slash` |
 | `point3` | `slash` |
 | `vector3` | `slash` |
-| `color` | `rgb_tuple` |
-| `colormap` | `at_file` |
+| `color` | `rgb-tuple` |
+| `colormap` | `at-file` |
 | `angle` | `degrees` |
 | `angle` | `radians` |
 
@@ -236,19 +236,19 @@ Catalogs may describe slots and named groups for fractal types whose
 `params=` values have stable type-specific meaning:
 
     {
-      "fractal_types": {
+      "fractal-types": {
         "julia": {
           "params": {
-            "format": "slash_list",
+            "format": "slash-list",
             "slots": [
-              { "index": 0, "name": "c_real", "type": "double" },
-              { "index": 1, "name": "c_imag", "type": "double" }
+              { "index": 0, "name": "c-real", "type": "double" },
+              { "index": 1, "name": "c-imag", "type": "double" }
             ],
             "groups": {
               "c": {
                 "type": "complex",
                 "slots": [ 0, 1 ],
-                "format": "slash_pair"
+                "format": "slash-pair"
               }
             }
           }
@@ -274,7 +274,7 @@ human-readable names that describe how the formula entry uses the fixed
 `p1` through `p4` variables:
 
     {
-      "formula_entries": {
+      "formula-entries": {
         "MandelbrotMix4": {
           "params": {
             "knobs": {
@@ -293,10 +293,10 @@ human-readable names that describe how the formula entry uses the fixed
             }
           },
           "functions": {
-            "fn1": { "type": "enum", "values": "id_functions" },
-            "fn2": { "type": "enum", "values": "id_functions" },
-            "fn3": { "type": "enum", "values": "id_functions" },
-            "fn4": { "type": "enum", "values": "id_functions" }
+            "fn1": { "type": "enum", "values": "id-functions" },
+            "fn2": { "type": "enum", "values": "id-functions" },
+            "fn3": { "type": "enum", "values": "id-functions" },
+            "fn4": { "type": "enum", "values": "id-functions" }
           }
         }
       }
@@ -322,7 +322,7 @@ formula variables.
 
 When a source has `type=formula`, ParAnimator resolves the active
 `formulaname` value and treats it as the formula entry name. Params knob
-metadata is looked up from the matching `formula_entries` entry. If no
+metadata is looked up from the matching `formula-entries` entry. If no
 metadata exists for that entry name, only raw `params.p1`,
 `params.p1.real`, and related `p1` through `p4` variable targets are
 available.
@@ -337,12 +337,12 @@ Formula entry metadata may also expose fixed function keys backed by
 `function=fn1/fn2/fn3/fn4`. The key names are always `fn1`, `fn2`, `fn3`,
 and `fn4`; formula metadata cannot rename them. Tracks target formula
 entry keys such as `MandelbrotMix4.fn1`. Each function key is an enum
-using the fixed `id_functions` value set. The writer starts from the
+using the fixed `id-functions` value set. The writer starts from the
 source par entry or ID reset defaults, applies function key updates, and
 emits one slash-delimited `function=` assignment through the highest
 required function key.
 
-The fixed `id_functions` enum contains the function names recognized by
+The fixed `id-functions` enum contains the function names recognized by
 ID: `sin`, `cos`, `tan`, `cotan`, `sinh`, `cosh`, `tanh`, `cotanh`,
 `exp`, `log`, `sqr`, `recip`, `ident`, `cosxx`, `flip`, `conj`, `zero`,
 `one`, `asin`, `asinh`, `acos`, `acosh`, `atan`, `atanh`, `sqrt`, `abs`,
@@ -373,18 +373,18 @@ Minimum useful interpolated track type set:
 - `integer`
 - `double`
 - `complex`
-- `numeric_tuple`
+- `numeric-tuple`
 - `point2`
 - `vector2`
 - `point3`
 - `vector3`
 - `camera2d`
-- `id_3d_view`
-- `julibrot_view`
+- `id-3d-view`
+- `julibrot-view`
 - `colormap`
-- `center_mag`
+- `center-mag`
 - `corners`
-- `rgb_color`
+- `rgb-color`
 - `angle`
 
 The animator may hard-code these types. That is a small type system, not
@@ -426,14 +426,14 @@ Example:
         "lightsource": {
           "type": "point3",
           "format": "slash",
-          "default_curve": "smoothstep",
+          "default-curve": "smoothstep",
           "extrapolate": "clamp"
         }
       }
     }
 
-The point3 and vector3 types are convenience aliases over numeric_tuple
-with arity 3. They use the numeric_tuple parser, interpolate each
+The point3 and vector3 types are convenience aliases over numeric-tuple
+with arity 3. They use the numeric-tuple parser, interpolate each
 component independently, and format one value back into the original
 tuple syntax.
 
@@ -455,14 +455,14 @@ Example:
       "type": "camera2d",
       "output": "corners",
       "aspect": "source",
-      "look_at": {
+      "look-at": {
         "type": "point2",
         "keys": [
           { "frame": 0,   "value": "-0.5/0.0" },
           { "frame": 300, "value": "-0.75/0.1" }
         ]
       },
-      "view_up": {
+      "view-up": {
         "type": "vector2",
         "normalize": true,
         "keys": [
@@ -481,8 +481,8 @@ Example:
 
 At each frame:
 
-    look = evaluate look_at point2 track
-    up = normalize(evaluate view_up vector2 track)
+    look = evaluate look-at point2 track
+    up = normalize(evaluate view-up vector2 track)
     right = perpendicular clockwise from up
     height = evaluate height track
     width = height * aspect
@@ -499,11 +499,11 @@ Format the computed points into the corners syntax supported by the
 target renderer.
 
 For output center-mag, the output parameter metadata must have type
-center_mag. Require the camera to be axis-aligned with the normal view-up
+center-mag. Require the camera to be axis-aligned with the normal view-up
 vector. Reject rotated camera2d output to center-mag with a specific
 error rather than silently dropping orientation.
 
-The camera2d track lets the animator plan look_at, view_up, and height as
+The camera2d track lets the animator plan look-at, view-up, and height as
 independent curves while still writing only normal Iterated Dynamics
 parameters.
 
@@ -517,7 +517,7 @@ The adapter type is hard-coded. The output parameter names are not.
 
 ## ID Euler 3D View Adapter
 
-The id_3d_view adapter targets ID's Euler-style 3D view controls. This is
+The id-3d-view adapter targets ID's Euler-style 3D view controls. This is
 the right adapter for ID's general 3D viewing parameters and for 3D
 orbital types such as lorenz3d and ifs3d.
 
@@ -541,7 +541,7 @@ Example:
 
     {
       "name": "view",
-      "type": "id_3d_view",
+      "type": "id-3d-view",
       "outputs": {
         "rotation": "rotation",
         "perspective": "perspective",
@@ -549,7 +549,7 @@ Example:
         "scalexyz": "scalexyz"
       },
       "rotation": {
-        "type": "numeric_tuple",
+        "type": "numeric-tuple",
         "arity": 3,
         "rounding": "nearest",
         "keys": [
@@ -565,7 +565,7 @@ Example:
         ]
       },
       "xyshift": {
-        "type": "numeric_tuple",
+        "type": "numeric-tuple",
         "arity": 2,
         "rounding": "nearest",
         "keys": [
@@ -575,7 +575,7 @@ Example:
       }
     }
 
-The adapter may offer eye, look_at, and view_up as planning inputs only
+The adapter may offer eye, look-at, and view-up as planning inputs only
 when they can be converted to ID's x/y/z rotation, perspective, and shift
 controls. If the requested camera motion needs an unsupported target,
 roll, projection, or center of interest, reject it with a clear error.
@@ -587,7 +587,7 @@ target.
 
 ## Julibrot View Adapter
 
-The julibrot_view adapter targets Julibrot's slice and stereo renderer. It
+The julibrot-view adapter targets Julibrot's slice and stereo renderer. It
 does not use ID's general rotation parameters.
 
 It writes catalog-declared outputs such as:
@@ -600,13 +600,13 @@ It writes catalog-declared outputs such as:
 Example:
 
     {
-      "name": "julibrot_view",
-      "type": "julibrot_view",
+      "name": "julibrot-view",
+      "type": "julibrot-view",
       "outputs": {
         "mode": "3dmode",
         "geometry": "julibrot3d",
         "eyes": "julibroteyes",
-        "from_to": "julibrotfromto"
+        "from-to": "julibrotfromto"
       },
       "mode": {
         "type": "enum",
@@ -615,7 +615,7 @@ Example:
         ]
       },
       "geometry": {
-        "type": "numeric_tuple",
+        "type": "numeric-tuple",
         "arity": 6,
         "keys": [
           { "frame": 0,   "value": "128/8/8/7/10/24" },
@@ -629,8 +629,8 @@ Example:
           { "frame": 300, "value": 1.0 }
         ]
       },
-      "from_to": {
-        "type": "numeric_tuple",
+      "from-to": {
+        "type": "numeric-tuple",
         "arity": 4,
         "keys": [
           { "frame": 0,   "value": "-0.83/-0.83/0.25/-0.25" },
@@ -648,7 +648,7 @@ The six geometry components are:
 - width
 - viewer distance
 
-Julibrot has no arbitrary view_up, roll, or look_at camera. If a planned
+Julibrot has no arbitrary view-up, roll, or look-at camera. If a planned
 camera path asks for those, the adapter must reject it unless the request
 can be expressed by Julibrot's origin, depth, screen size, viewer
 distance, eye separation, and from/to slice parameters.
@@ -673,14 +673,14 @@ Useful curves:
 - `hold`
 - `smoothstep`
 - `smootherstep`
-- `ease_in`
-- `ease_out`
-- `ease_in_out`
+- `ease-in`
+- `ease-out`
+- `ease-in-out`
 - `sine`
 - `triangle`
 - `sawtooth`
 - `pulse`
-- `ping_pong`
+- `ping-pong`
 
 Suggested behavior:
 
@@ -737,7 +737,7 @@ Useful extrapolation modes:
 | `base` | Use the value from the base parameter set. |
 | `omit` | Do not write this parameter outside the keyed range. |
 | `cycle` | Repeat the track. |
-| `ping_pong` | Repeat the track forward and backward. |
+| `ping-pong` | Repeat the track forward and backward. |
 
 Safe default:
 
@@ -750,7 +750,7 @@ The animation file references the parameter catalog and defines tracks.
 Example:
 
     {
-      "parameter_catalogs": [
+      "parameter-catalogs": [
         "parameters/core.json",
         "parameters/coloring.json",
         "parameters/fractals/julia.json"
@@ -769,7 +769,7 @@ Example:
         "frames": "frame%04d.png"
       },
       "video": "yes",
-      "num_frames": 900,
+      "num-frames": 900,
 
       "tracks": [
         {
@@ -786,7 +786,7 @@ Example:
           "keys": [
             { "frame": 0,   "value": 100 },
             { "frame": 120, "value": 100,  "curve": "hold" },
-            { "frame": 500, "value": 2000, "curve": "ease_out" },
+            { "frame": 500, "value": 2000, "curve": "ease-out" },
             { "frame": 900, "value": 2000, "curve": "hold" }
           ]
         },
@@ -794,7 +794,7 @@ Example:
         {
           "parameter": "colors",
           "type": "colormap",
-          "format": "at_file",
+          "format": "at-file",
           "output": "colors-%04d.map",
           "keys": [
             { "frame": 0,   "value": "fire.map" },
@@ -858,7 +858,7 @@ Layers are evaluated from bottom to top.
 Example:
 
     {
-      "parameter_catalogs": [
+      "parameter-catalogs": [
         "parameters/core.json",
         "parameters/coloring.json"
       ],
@@ -870,11 +870,11 @@ Example:
         "frames": "frames/frame%04d.png",
         "layers": "layer-%s-%04d.png",
         "script": "render.bat",
-        "compose_script": "compose.bat",
+        "compose-script": "compose.bat",
         "background": "black"
       },
 
-      "num_frames": 900,
+      "num-frames": 900,
       "fps": 30,
       "video": "yes",
 
@@ -938,7 +938,7 @@ Layer field meanings:
 | `tracks` | Parameter timelines evaluated only for this layer. |
 | `opacity` | Percent opacity; animate to 0 instead of inserting or deleting layers over time. |
 | `compose` | Backend-neutral layer operator applied over the current frame image. |
-| `write_when_hidden` | Whether to render the layer even when evaluated opacity is 0. |
+| `write-when-hidden` | Whether to render the layer even when evaluated opacity is 0. |
 | `output.background` | Optional flatten color for final frame formats that do not keep alpha. |
 
 If `output.background` is omitted, keep the composed frame alpha channel.
@@ -1008,7 +1008,7 @@ The simplest colormap track interpolates between map files:
     {
       "parameter": "colors",
       "type": "colormap",
-      "format": "at_file",
+      "format": "at-file",
       "output": "colors-%04d.map",
       "keys": [
         { "frame": 0,   "value": "fire.map" },
@@ -1023,12 +1023,12 @@ For richer animation, use a source map plus an ordered effect list:
     {
       "parameter": "colors",
       "type": "colormap",
-      "format": "at_file",
+      "format": "at-file",
       "output": "colors-%04d.map",
       "source": "base.map",
       "effects": [
         {
-          "kind": "rotate_range",
+          "kind": "rotate-range",
           "range": [32, 127],
           "offset": {
             "keys": [
@@ -1068,11 +1068,11 @@ Core colormap effects:
 | `interpolate` | Blend two or more ID map files with keyed weights. |
 | `sequence` | Step through map files, with optional crossfade frames. |
 | `rotate` | Shift all palette indices by a keyed offset. |
-| `rotate_range` | Shift only an inclusive index range. |
+| `rotate-range` | Shift only an inclusive index range. |
 | `reverse` | Reverse the full map or one inclusive index range. |
-| `ping_pong` | Oscillate an index range forward and backward. |
+| `ping-pong` | Oscillate an index range forward and backward. |
 | `gradient` | Generate a map from keyed RGB color stops. |
-| `hue_shift` | Rotate hue in HSL or HSV space. |
+| `hue-shift` | Rotate hue in HSL or HSV space. |
 | `saturation` | Scale color saturation. |
 | `brightness` | Scale color intensity. |
 | `contrast` | Expand or compress color distance from midgray. |
@@ -1080,7 +1080,7 @@ Core colormap effects:
 | `posterize` | Reduce color levels to bands. |
 | `remap` | Reindex the palette through a curve or lookup table. |
 | `pulse` | Blend a range toward a keyed flash color. |
-| `mask_blend` | Blend selected index ranges between maps. |
+| `mask-blend` | Blend selected index ranges between maps. |
 | `sparkle` | Apply seeded, bounded random color perturbations. |
 
 Example generated map:
@@ -1088,7 +1088,7 @@ Example generated map:
     {
       "parameter": "colors",
       "type": "colormap",
-      "format": "at_file",
+      "format": "at-file",
       "output": "gradient-%04d.map",
       "source": {
         "kind": "gradient",
@@ -1100,7 +1100,7 @@ Example generated map:
       },
       "effects": [
         {
-          "kind": "hue_shift",
+          "kind": "hue-shift",
           "amount": {
             "keys": [
               { "frame": 0,   "value": 0 },
@@ -1133,7 +1133,7 @@ A track has:
 Normal tracks write one ID par-file parameter named by parameter. Virtual
 tracks use name instead of parameter. Virtual tracks such as camera2d may
 write another catalog parameter named by a local output option. Virtual
-adapters such as id_3d_view and julibrot_view may write multiple catalog
+adapters such as id-3d-view and julibrot-view may write multiple catalog
 parameters.
 
 Conceptual C++ interface:
@@ -1171,8 +1171,8 @@ Example:
       "type": "complex",
       "path": {
         "kind": "circle",
-        "from_frame": 0,
-        "to_frame": 900,
+        "from-frame": 0,
+        "to-frame": 900,
         "center": "-0.12/0.75",
         "radius": 0.04,
         "turns": 1
@@ -1187,9 +1187,9 @@ Useful path kinds:
 - `lissajous`
 - `spiral`
 - `bezier`
-- `catmull_rom`
+- `catmull-rom`
 - `constant`
-- `ping_pong`
+- `ping-pong`
 - `noise`
 
 A track can use keys, a path, or an expression. They all expose the same
@@ -1229,15 +1229,15 @@ Example:
         "id-default-parameters.json"
       ],
 
-      "fractal_types": {
+      "fractal-types": {
         "julia": {
           "params": {
             "groups": {
               "c": {
                 "type": "complex",
                 "slots": [ 0, 1 ],
-                "format": "slash_pair",
-                "default_curve": "linear"
+                "format": "slash-pair",
+                "default-curve": "linear"
               }
             }
           }
@@ -1261,7 +1261,7 @@ Example metadata:
         "inside": {
           "type": "enum",
           "values": [ "bof60", "zmag", "epscross", "startrail" ],
-          "default_curve": "hold"
+          "default-curve": "hold"
         }
       }
     }
@@ -1362,9 +1362,9 @@ Possible distribution modes:
 
 - `regular`
 - `ordered`
-- `random_seeded`
-- `low_discrepancy`
-- `blue_noise`
+- `random-seeded`
+- `low-discrepancy`
+- `blue-noise`
 
 For reproducible builds, avoid unseeded randomness.
 
@@ -1519,7 +1519,7 @@ ImageMagick composition:
 
             write map side files to output-directory/map
 
-            if opacity is 0 and write_when_hidden is false:
+            if opacity is 0 and write-when-hidden is false:
                 skip layer render
             else:
                 append batch parameters
@@ -1586,7 +1586,7 @@ Schema work:
 
 Unit tests:
 
-- `formulaname=MandelbrotMix4` loads `formula_entries.MandelbrotMix4`.
+- `formulaname=MandelbrotMix4` loads `formula-entries.MandelbrotMix4`.
 - formula entry metadata names the `p1.real` use as `bailout`.
 - formula entry metadata names the `p1.imag` use as `scale factor`.
 - formula entry metadata names the `p2` use as `c`.
@@ -1616,7 +1616,7 @@ Unit tests:
 
 ### 4. Add Numeric Tuple Tracks
 
-Add numeric_tuple with metadata arity and slash formatting.
+Add numeric-tuple with metadata arity and slash formatting.
 
 Schema work:
 
@@ -1631,7 +1631,7 @@ Unit tests:
 
 ### 5. Add Point And Vector Aliases
 
-Add point2, vector2, point3, and vector3 aliases over numeric_tuple.
+Add point2, vector2, point3, and vector3 aliases over numeric-tuple.
 Vector aliases support normalize=true.
 
 Schema work:
@@ -1753,7 +1753,7 @@ Unit tests:
 
 ### 13. Add Ranged Colormap Rotation
 
-Add rotate_range for inclusive palette index ranges.
+Add rotate-range for inclusive palette index ranges.
 
 Schema work:
 
@@ -1783,7 +1783,7 @@ Unit tests:
 
 ### 15. Add Colormap Reverse And Ping-Pong
 
-Add reverse and ping_pong effects for whole maps and ranges.
+Add reverse and ping-pong effects for whole maps and ranges.
 
 Schema work:
 
@@ -1793,7 +1793,7 @@ Schema work:
 Unit tests:
 
 - reverse flips the selected range.
-- ping_pong alternates forward and backward offsets.
+- ping-pong alternates forward and backward offsets.
 - invalid ranges are rejected.
 
 ### 16. Add Gradient Map Sources
@@ -1828,7 +1828,7 @@ Unit tests:
 
 ### 18. Add More Color Adjustment Effects
 
-Add gamma, contrast, saturation, and hue_shift one at a time in one
+Add gamma, contrast, saturation, and hue-shift one at a time in one
 reviewable change if the implementation is still small.
 
 Schema work:
@@ -1844,7 +1844,7 @@ Unit tests:
 
 ### 19. Add Masked Colormap Effects
 
-Add pulse, mask_blend, remap, and seeded sparkle one at a time in one
+Add pulse, mask-blend, remap, and seeded sparkle one at a time in one
 reviewable change if the implementation is still small.
 
 Schema work:
@@ -1855,7 +1855,7 @@ Schema work:
 Unit tests:
 
 - pulse affects only the selected range.
-- mask_blend affects only selected ranges.
+- mask-blend affects only selected ranges.
 - sparkle requires a seed and is repeatable.
 
 ### 20. Add Constant And Line Paths
@@ -1871,7 +1871,7 @@ Unit tests:
 
 - constant returns the same value for every frame.
 - line matches an equivalent keyed linear track.
-- complex line paths preserve slash_pair formatting.
+- complex line paths preserve slash-pair formatting.
 
 ### 21. Add Circle And Ellipse Paths
 
@@ -1920,7 +1920,7 @@ Unit tests:
 
 ### 24. Add Catmull-Rom Paths
 
-Add catmull_rom path generation. This is the first point where
+Add catmull-rom path generation. This is the first point where
 Boost.Math should be considered. Do not add it earlier. Keep it hidden
 behind PathGenerator, and add it only if local code would be larger or
 less clear. Consider TinySpline at the same point only if Catmull-Rom
@@ -1939,7 +1939,7 @@ Unit tests:
 
 ### 25. Add Camera2D Corners Output
 
-Add camera2d with look_at, view_up, and height curves targeting corners.
+Add camera2d with look-at, view-up, and height curves targeting corners.
 
 Schema work:
 
@@ -1950,7 +1950,7 @@ Unit tests:
 
 - axis-aligned camera writes expected corners.
 - rotated camera writes expected third corner.
-- view_up is normalized before output.
+- view-up is normalized before output.
 
 ### 26. Add Camera2D Center-Mag Output
 
@@ -1969,7 +1969,7 @@ Unit tests:
 
 ### 27. Add Basic ID 3D View Adapter
 
-Add id_3d_view output for rotation, perspective, and xyshift.
+Add id-3d-view output for rotation, perspective, and xyshift.
 
 Schema work:
 
@@ -2000,7 +2000,7 @@ Unit tests:
 
 ### 29. Add Julibrot View Adapter
 
-Add julibrot_view output for 3dmode, julibrot3d, julibroteyes, and
+Add julibrot-view output for 3dmode, julibrot3d, julibroteyes, and
 julibrotfromto.
 
 Schema work:
@@ -2012,7 +2012,7 @@ Unit tests:
 
 - 3dmode writes one legal enum value.
 - julibrot3d writes six components.
-- arbitrary look_at or view_up requests are rejected.
+- arbitrary look-at or view-up requests are rejected.
 
 ### 30. Add Single-Layer Stack
 
@@ -2057,7 +2057,7 @@ Schema work:
 Unit tests:
 
 - opacity 0 skips rendering by default.
-- write_when_hidden renders opacity 0 layers.
+- write-when-hidden renders opacity 0 layers.
 - opacity values outside 0 through 100 are rejected.
 
 ### 33. Add source-over Composition
