@@ -224,7 +224,7 @@ Possible formats:
 | `vector2` | `slash` |
 | `point3` | `slash` |
 | `vector3` | `slash` |
-| `color` | `rgb-tuple` |
+| `color` | `color-spec` |
 | `color-map` | `at-file` |
 | `angle` | `degrees` |
 | `angle` | `radians` |
@@ -410,7 +410,7 @@ Minimum useful interpolated track type set:
 - `color-map`
 - `center-mag`
 - `corners`
-- `rgb-color`
+- `color`
 - `angle`
 
 The animator may hard-code these types. That is a small type system, not
@@ -438,6 +438,25 @@ For animation planning, the important string selectors are
 which selects Julibrot orbit context. String parameters may appear in
 keyframes, but they must use hold or step behavior. Do not interpolate
 strings.
+
+## Color Specifications
+
+Color specifications are strings used anywhere the animation format names
+a concrete color, such as gradient stops, flash colors, and flatten
+backgrounds. A bare slash tuple is RGB and means `rgb:red/green/blue`.
+The explicit prefixes are:
+
+| Prefix | Components |
+| --- | --- |
+| `rgb:` | `red/green/blue`, integers from 0 through 255. |
+| `hsv:` | `hue/saturation/value`, hue degrees and normalized floats. |
+| `hsl:` | `hue/saturation/lightness`, hue degrees and normalized floats. |
+
+The prefix is optional and defaults to `rgb:`. Thus `255/40/0` and
+`rgb:255/40/0` are the same color. HSV and HSL values are converted to
+RGB before writing Id map files or passing a color to a backend. Hue is
+validated from 0 through 360, and saturation, value, and lightness are
+validated from 0 through 1.
 
 The inside and outside types are discrete Id coloring values. A value may
 be either one declared method string or an integer colormap index. Catalog
@@ -907,7 +926,7 @@ Example:
         "layers": "layer-%s-%04d.png",
         "script": "render.bat",
         "compose-script": "compose.bat",
-        "background": "black"
+        "background": "rgb:0/0/0"
       },
 
       "num-frames": 900,
@@ -975,7 +994,7 @@ Layer field meanings:
 | `opacity` | Percent opacity; animate to 0 instead of inserting or deleting layers over time. |
 | `compose` | Backend-neutral layer operator applied over the current frame image. |
 | `write-when-hidden` | Whether to render the layer even when evaluated opacity is 0. |
-| `output.background` | Optional flatten color for final frame formats that do not keep alpha. |
+| `output.background` | Optional flatten color specification for final frame formats that do not keep alpha. |
 
 If `output.background` is omitted, keep the composed frame alpha channel.
 
@@ -1093,9 +1112,9 @@ At each frame:
 - Write `output-directory/map/colors-0000.map`.
 - Return `@colors-0000.map` as the colors parameter value.
 
-Effect parameters may be constants or keyed scalar, tuple, color, or enum
-tracks. This keeps timing local to the colormap track while reusing the
-normal track interpolation machinery.
+Effect parameters may be constants or keyed scalar, tuple, color
+specification, or enum tracks. This keeps timing local to the colormap
+track while reusing the normal track interpolation machinery.
 
 Core colormap effects:
 
@@ -1107,7 +1126,7 @@ Core colormap effects:
 | `rotate-range` | Shift only an inclusive index range. |
 | `reverse` | Reverse the full map or one inclusive index range. |
 | `ping-pong` | Oscillate an index range forward and backward. |
-| `gradient` | Generate a map from keyed RGB color stops. |
+| `gradient` | Generate a map from keyed color stops. |
 | `hue-shift` | Rotate hue in HSL or HSV space. |
 | `saturation` | Scale color saturation. |
 | `brightness` | Scale color intensity. |
@@ -1118,6 +1137,9 @@ Core colormap effects:
 | `pulse` | Blend a range toward a keyed flash color. |
 | `mask-blend` | Blend selected index ranges between maps. |
 | `sparkle` | Apply seeded, bounded random color perturbations. |
+
+Gradient sources accept two or more stops. Each adjacent stop pair defines
+one interpolation interval.
 
 Example generated map:
 
@@ -1130,8 +1152,9 @@ Example generated map:
         "kind": "gradient",
         "stops": [
           { "index": 0,   "color": "0/0/0" },
-          { "index": 128, "color": "255/40/0" },
-          { "index": 255, "color": "255/255/255" }
+          { "index": 64,  "color": "hsv:20/1/1" },
+          { "index": 128, "color": "hsl:60/1/0.5" },
+          { "index": 255, "color": "hsl:0/0/1" }
         ]
       },
       "effects": [
@@ -1602,9 +1625,11 @@ is likely, add a shared schema file and external `$ref` loader support.
 Every new schema object, field, and enum or const value must include a
 `description` string when the schema element is added.
 
-### 1. Add Gradient Map Sources
+### 1. Add Color Space Prefixes To Colors
 
-Add generated gradient sources with indexed RGB stops.
+Add color specifications for strings that currently mean
+`red/green/blue`. Accept an optional color-space prefix that defaults to
+`rgb:`.
 
 Schema work:
 
@@ -1613,11 +1638,28 @@ Schema work:
 
 Unit tests:
 
-- two stops fill all 256 entries.
-- three stops interpolate each interval.
-- RGB components outside 0 through 255 are rejected.
+- unprefixed `red/green/blue` matches explicit `rgb:red/green/blue`.
+- HSV color specifications convert to expected RGB channel values.
+- HSL color specifications convert to expected RGB channel values.
+- unknown color-space prefixes are rejected.
+- out-of-range RGB, HSV, and HSL components are rejected.
 
-### 2. Add One Color Adjustment Effect
+### 2. Add Gradient Map Sources
+
+Add generated gradient sources with indexed color stops.
+
+Schema work:
+
+- create or update JSON schemas for fields or metadata JSON files added by
+  this slice.
+
+Unit tests:
+
+- two or more stops are accepted.
+- adjacent stop pairs interpolate each interval.
+- invalid color specifications are rejected.
+
+### 3. Add One Color Adjustment Effect
 
 Add brightness as the first color adjustment effect.
 
@@ -1632,7 +1674,7 @@ Unit tests:
 - values clamp to Id's 0 through 255 range.
 - amount 1 leaves the map unchanged.
 
-### 3. Add More Color Adjustment Effects
+### 4. Add More Color Adjustment Effects
 
 Add gamma, contrast, saturation, and hue-shift one at a time in one
 reviewable change if the implementation is still small.
@@ -1648,7 +1690,7 @@ Unit tests:
 - each effect has one non-identity test.
 - each effect clamps output to Id's valid RGB range.
 
-### 4. Add Masked Colormap Effects
+### 5. Add Masked Colormap Effects
 
 Add pulse, mask-blend, remap, and seeded sparkle one at a time in one
 reviewable change if the implementation is still small.
@@ -1664,7 +1706,7 @@ Unit tests:
 - mask-blend affects only selected ranges.
 - sparkle requires a seed and is repeatable.
 
-### 5. Add Constant And Line Paths
+### 6. Add Constant And Line Paths
 
 Add constant and line path generators for scalar and complex tracks.
 
@@ -1679,7 +1721,7 @@ Unit tests:
 - line matches an equivalent keyed linear track.
 - complex line paths preserve slash-pair formatting.
 
-### 6. Add Circle And Ellipse Paths
+### 7. Add Circle And Ellipse Paths
 
 Add circle and ellipse paths for complex and point tracks.
 
@@ -1694,7 +1736,7 @@ Unit tests:
 - ellipse uses independent x and y radii.
 - phase changes the starting point.
 
-### 7. Add Lissajous And Spiral Paths
+### 8. Add Lissajous And Spiral Paths
 
 Add lissajous and spiral path generators.
 
@@ -1709,7 +1751,7 @@ Unit tests:
 - spiral radius changes over time.
 - invalid frequency or radius values are rejected.
 
-### 8. Add Bezier Paths
+### 9. Add Bezier Paths
 
 Add bezier path generation.
 
@@ -1724,7 +1766,7 @@ Unit tests:
 - too few control points are rejected.
 - tuple-valued paths preserve arity.
 
-### 9. Add Catmull-Rom Paths
+### 10. Add Catmull-Rom Paths
 
 Add catmull-rom path generation. This is the first point where
 Boost.Math should be considered. Do not add it earlier. Keep it hidden
@@ -1743,7 +1785,7 @@ Unit tests:
 - too few control points are rejected.
 - tuple-valued paths preserve arity.
 
-### 10. Add Camera2D Corners Output
+### 11. Add Camera2D Corners Output
 
 Add camera2d with look-at, view-up, and height curves targeting corners.
 
@@ -1758,7 +1800,7 @@ Unit tests:
 - rotated camera writes expected third corner.
 - view-up is normalized before output.
 
-### 11. Add Camera2D Center-Mag Output
+### 12. Add Camera2D Center-Mag Output
 
 Add camera2d output to center-mag for axis-aligned cameras.
 
@@ -1773,7 +1815,7 @@ Unit tests:
 - rotated camera targeting center-mag is rejected.
 - aspect handling matches the source image shape.
 
-### 12. Add Basic Id 3D View Adapter
+### 13. Add Basic Id 3D View Adapter
 
 Add id-3d-view output for rotation, perspective, and xyshift.
 
@@ -1788,7 +1830,7 @@ Unit tests:
 - perspective writes an integer value.
 - xyshift writes a 2-value slash tuple.
 
-### 13. Add More Id 3D View Outputs
+### 14. Add More Id 3D View Outputs
 
 Add scalexyz, roughness, sphere, longitude, latitude, radius, stereo,
 interocular, and converge outputs.
@@ -1804,7 +1846,7 @@ Unit tests:
 - stereo controls write legal values.
 - unsupported target outputs are rejected.
 
-### 14. Add Julibrot View Adapter
+### 15. Add Julibrot View Adapter
 
 Add julibrot-view output for 3dmode, julibrot3d, julibroteyes, and
 julibrotfromto.
@@ -1820,7 +1862,7 @@ Unit tests:
 - julibrot3d writes six components.
 - arbitrary look-at or view-up requests are rejected.
 
-### 15. Add Single-Layer Stack
+### 16. Add Single-Layer Stack
 
 Allow animations to define one layer. It should behave like the existing
 single-source animation but use the layer schema.
@@ -1836,7 +1878,7 @@ Unit tests:
 - layer tracks apply to that layer.
 - duplicate layer ids are rejected.
 
-### 16. Add Multi-Layer Rendering
+### 17. Add Multi-Layer Rendering
 
 Allow multiple layers to render separate Id images before composition.
 
@@ -1851,7 +1893,7 @@ Unit tests:
 - each layer applies only its own tracks.
 - generated layer entry names include layer id and frame number.
 
-### 17. Add Layer Opacity
+### 18. Add Layer Opacity
 
 Add layer opacity evaluation and hidden-layer skipping.
 
@@ -1866,7 +1908,7 @@ Unit tests:
 - write-when-hidden renders opacity 0 layers.
 - opacity values outside 0 through 100 are rejected.
 
-### 18. Add source-over Composition
+### 19. Add source-over Composition
 
 Generate ImageMagick commands for the neutral `source-over` operator.
 
@@ -1881,7 +1923,7 @@ Unit tests:
 - opacity is applied before composition.
 - output.background adds a flatten step when configured.
 
-### 19. Add More Neutral Compose Operators
+### 20. Add More Neutral Compose Operators
 
 Allow configured neutral compose operators and validate them. Map those
 operators to ImageMagick names only inside the ImageMagick adapter.
@@ -1902,7 +1944,7 @@ Unit tests:
 - unsupported operators are rejected.
 - ImageMagick-specific operator spellings are rejected in animation JSON.
 
-### 20. Add Core Catalog Files
+### 21. Add Core Catalog Files
 
 Add default catalogs for core Id parameters and coloring.
 
@@ -1917,7 +1959,7 @@ Unit tests:
 - coloring catalog declares colors as color-map.
 - catalog inclusion fails clearly for missing files.
 
-### 21. Add 3D And Formula Catalog Files
+### 22. Add 3D And Formula Catalog Files
 
 Add default catalogs for Id 3D viewing and selected formula families.
 
