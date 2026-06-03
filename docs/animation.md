@@ -1130,8 +1130,8 @@ Example generated map:
         "kind": "gradient",
         "stops": [
           { "index": 0,   "color": "0/0/0" },
-          { "index": 128, "color": "63/10/0" },
-          { "index": 255, "color": "63/63/63" }
+          { "index": 128, "color": "255/40/0" },
+          { "index": 255, "color": "255/255/255" }
         ]
       },
       "effects": [
@@ -1615,7 +1615,7 @@ Unit tests:
 
 - two stops fill all 256 entries.
 - three stops interpolate each interval.
-- RGB components outside 0 through 63 are rejected.
+- RGB components outside 0 through 255 are rejected.
 
 ### 2. Add One Color Adjustment Effect
 
@@ -1629,7 +1629,7 @@ Schema work:
 Unit tests:
 
 - brightness scales each RGB component.
-- values clamp to Id's 0 through 63 range.
+- values clamp to Id's 0 through 255 range.
 - amount 1 leaves the map unchanged.
 
 ### 3. Add More Color Adjustment Effects
