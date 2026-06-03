@@ -890,7 +890,7 @@ Example:
               { "frame": 0, "value": 100 }
             ]
           },
-          "compose": "Over",
+          "compose": "source-over",
           "tracks": [
             {
               "parameter": "center-mag",
@@ -915,7 +915,7 @@ Example:
               { "frame": 900, "value": 20 }
             ]
           },
-          "compose": "Screen",
+          "compose": "screen",
           "tracks": [
             {
               "parameter": "maxiter",
@@ -937,34 +937,61 @@ Layer field meanings:
 | `source` | Base parameter set for this layer. |
 | `tracks` | Parameter timelines evaluated only for this layer. |
 | `opacity` | Percent opacity; animate to 0 instead of inserting or deleting layers over time. |
-| `compose` | ImageMagick compose operator placed over the current frame image. |
+| `compose` | Backend-neutral layer operator applied over the current frame image. |
 | `write_when_hidden` | Whether to render the layer even when evaluated opacity is 0. |
 | `output.background` | Optional flatten color for final frame formats that do not keep alpha. |
 
 If `output.background` is omitted, keep the composed frame alpha channel.
 
-The compose value is an ImageMagick compositing operator name, such as:
+The compose value is a ParAnimator operator name, not an ImageMagick
+operator name. Backends map these names to their native command syntax.
+Operator enum strings are lower-case ASCII. Multiword names use hyphens.
 
-- `Over`
-- `Multiply`
-- `Screen`
-- `Overlay`
-- `HardLight`
-- `SoftLight`
-- `Darken`
-- `Lighten`
-- `Difference`
-- `Plus`
-- `Minus`
+Porter-Duff operators:
 
-Do not invent ParAnimator-specific blend aliases. Validate compose
-operators against the ImageMagick operators supported by the installed
-toolchain.
+| Name | Meaning |
+| --- | --- |
+| `clear` | Output transparent black. |
+| `copy` | Replace destination with source. |
+| `destination` | Keep destination unchanged. |
+| `source-over` | Source over destination. |
+| `destination-over` | Destination over source. |
+| `source-in` | Source kept only where destination alpha exists. |
+| `destination-in` | Destination kept only where source alpha exists. |
+| `source-out` | Source kept only where destination alpha is absent. |
+| `destination-out` | Destination kept only where source alpha is absent. |
+| `source-atop` | Source atop destination, keeping destination alpha. |
+| `destination-atop` | Destination atop source, keeping source alpha. |
+| `xor` | Source and destination outside their overlap. |
+
+Math binary operators:
+
+| Name | Meaning |
+| --- | --- |
+| `add` | Add source and destination channels. |
+| `subtract` | Subtract source from destination channels. |
+| `multiply` | Multiply normalized source and destination channels. |
+| `divide` | Divide destination channels by source channels. |
+| `min` | Keep the smaller channel value. |
+| `max` | Keep the larger channel value. |
+
+Other useful neutral operators:
+
+| Name | Meaning |
+| --- | --- |
+| `difference` | Absolute channel difference. |
+| `average` | Average source and destination channels. |
+| `screen` | Inverse multiply; useful for glow and light layers. |
+| `overlay` | Multiply dark areas and screen light areas. |
+
+Validate operator names against the ParAnimator enum. ImageMagick support
+is checked by the ImageMagick adapter that maps these names to native
+operators.
 
 The layer stack has no separate post-render geometry stage. A layer may
 animate normal ID parameters, including viewport and virtual camera
-tracks, but the composition step only controls opacity and ImageMagick
-compose.
+tracks, but the composition step only controls opacity and the neutral
+compose operator.
 
 The layer system does not read external animation files or emulate their
 blending vocabulary. The goal is similar layered rendering behavior using
@@ -1504,7 +1531,7 @@ ImageMagick composition:
 
         for each rendered layer from bottom to top:
             apply evaluated opacity to layer alpha
-            composite layer with its ImageMagick compose operator
+            composite layer with its neutral compose operator
 
         optionally flatten to output.background
         write final frame image
@@ -2063,9 +2090,9 @@ Unit tests:
 - write_when_hidden renders opacity 0 layers.
 - opacity values outside 0 through 100 are rejected.
 
-### 35. Add ImageMagick Over Composition
+### 35. Add source-over Composition
 
-Generate ImageMagick commands for Over composition.
+Generate ImageMagick commands for the neutral `source-over` operator.
 
 Schema work:
 
@@ -2078,9 +2105,10 @@ Unit tests:
 - opacity is applied before composition.
 - output.background adds a flatten step when configured.
 
-### 36. Add More ImageMagick Compose Operators
+### 36. Add More Neutral Compose Operators
 
-Allow configured ImageMagick compose operators and validate them.
+Allow configured neutral compose operators and validate them. Map those
+operators to ImageMagick names only inside the ImageMagick adapter.
 
 Schema work:
 
@@ -2089,9 +2117,14 @@ Schema work:
 
 Unit tests:
 
-- Screen and Multiply are accepted.
+- Porter-Duff operators such as `source-over` and `destination-over` are
+  accepted.
+- math operators such as `add`, `subtract`, `multiply`, `divide`, `min`,
+  and `max` are accepted.
+- useful blend operators such as `difference`, `average`, `screen`, and
+  `overlay` are accepted.
 - unsupported operators are rejected.
-- no ParAnimator-specific blend aliases are accepted.
+- ImageMagick-specific operator spellings are rejected in animation JSON.
 
 ### 37. Add Core Catalog Files
 
@@ -2153,7 +2186,7 @@ Do not hard-code:
 - enum values used by PWM tracks
 - generated colormap filenames
 - source map filenames
-- ParAnimator-specific blend aliases
+- backend-specific compose operator names
 - dependency-specific curve or track names
 
 ## Summary
@@ -2170,7 +2203,7 @@ The final design is:
 - colormap tracks can apply effects, write per-frame ID map files, and
   emit `colors=@file`
 - optional layer stacks render ID layer images and compose them with
-  ImageMagick operators
+  backend-neutral operators
 - enum parameters are discrete by default
 - enum PWM is an optional temporal dithering mode
 - PWM tracks explicitly choose their `a` and `b` enum values
