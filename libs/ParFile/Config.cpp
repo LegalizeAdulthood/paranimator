@@ -203,9 +203,25 @@ static ColorMapEffectKind load_color_map_effect_kind(const Object &json)
     {
         return ColorMapEffectKind::BRIGHTNESS;
     }
+    if (kind == "contrast")
+    {
+        return ColorMapEffectKind::CONTRAST;
+    }
+    if (kind == "gamma")
+    {
+        return ColorMapEffectKind::GAMMA;
+    }
+    if (kind == "hue-shift")
+    {
+        return ColorMapEffectKind::HUE_SHIFT;
+    }
     if (kind == "reverse")
     {
         return ColorMapEffectKind::REVERSE;
+    }
+    if (kind == "saturation")
+    {
+        return ColorMapEffectKind::SATURATION;
     }
     if (kind == "ping-pong")
     {
@@ -327,13 +343,20 @@ static ColorMapEffectConfig load_color_map_effect_config(const Object &json)
     ColorMapEffectConfig result;
     result.kind = load_color_map_effect_kind(json);
     result.range = load_color_map_range(json);
-    if (result.kind == ColorMapEffectKind::BRIGHTNESS)
+    switch (result.kind)
     {
+    case ColorMapEffectKind::BRIGHTNESS:
+    case ColorMapEffectKind::CONTRAST:
+    case ColorMapEffectKind::GAMMA:
+    case ColorMapEffectKind::HUE_SHIFT:
+    case ColorMapEffectKind::SATURATION:
         result.amount = load_number_track_config(json, "amount");
-    }
-    else if (result.kind == ColorMapEffectKind::PING_PONG)
-    {
+        break;
+    case ColorMapEffectKind::PING_PONG:
         result.offset = load_number_track_config(json, "offset");
+        break;
+    case ColorMapEffectKind::REVERSE:
+        break;
     }
     return result;
 }

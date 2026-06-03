@@ -337,6 +337,49 @@ TEST(TestConfig, jsonDeserializesColorMapBrightnessEffect)
     EXPECT_EQ(2.0, effect.amount->keys[1].value);
 }
 
+TEST(TestConfig, jsonDeserializesColorMapAdjustmentEffects)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"parameter", "colors"},
+        {"type", "color-map"},
+        {"format", "at-file"},
+        {"output", "colors-%04d.map"},
+        {"source", "base.map"},
+        {"effects",
+            Object::array({Object{{"kind", "gamma"},
+                              {"amount",
+                                  Object{{"keys",
+                                      Object::array({Object{{"frame", 0}, {"value", 1.0}},
+                                          Object{{"frame", 4}, {"value", 2.0}}})}}}},
+                Object{{"kind", "contrast"},
+                    {"amount",
+                        Object{{"keys",
+                            Object::array({Object{{"frame", 0}, {"value", 1.0}},
+                                Object{{"frame", 4}, {"value", 0.5}}})}}}},
+                Object{{"kind", "saturation"},
+                    {"amount",
+                        Object{{"keys",
+                            Object::array({Object{{"frame", 0}, {"value", 1.0}},
+                                Object{{"frame", 4}, {"value", 0.0}}})}}}},
+                Object{{"kind", "hue-shift"},
+                    {"amount",
+                        Object{{"keys",
+                            Object::array({Object{{"frame", 0}, {"value", 0.0}},
+                                Object{{"frame", 4}, {"value", 120.0}}})}}}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_TRUE(config.tracks[0].color_map);
+    ASSERT_EQ(4U, config.tracks[0].color_map->effects.size());
+    EXPECT_EQ(ParFile::ColorMapEffectKind::GAMMA, config.tracks[0].color_map->effects[0].kind);
+    EXPECT_EQ(ParFile::ColorMapEffectKind::CONTRAST, config.tracks[0].color_map->effects[1].kind);
+    EXPECT_EQ(ParFile::ColorMapEffectKind::SATURATION, config.tracks[0].color_map->effects[2].kind);
+    EXPECT_EQ(ParFile::ColorMapEffectKind::HUE_SHIFT, config.tracks[0].color_map->effects[3].kind);
+    ASSERT_TRUE(config.tracks[0].color_map->effects[3].amount);
+    EXPECT_EQ(120.0, config.tracks[0].color_map->effects[3].amount->keys[1].value);
+}
+
 TEST(TestConfig, jsonDeserializesColorMapGradientSourceTrack)
 {
     Object json = valid_json();

@@ -19,6 +19,13 @@ namespace ParFile
 namespace
 {
 
+struct HslColor
+{
+    double hue{};
+    double saturation{};
+    double lightness{};
+};
+
 bool is_blank(const std::string &line)
 {
     return std::all_of(line.begin(), line.end(), [](unsigned char c) { return std::isspace(c) != 0; });
@@ -75,6 +82,120 @@ int interpolate_component(int from, int to, double blend)
 int scale_component(int value, double amount)
 {
     return std::clamp(static_cast<int>(std::lround(value * amount)), 0, 255);
+}
+
+int component_from_unit(double value)
+{
+    return std::clamp(static_cast<int>(std::lround(value * 255.0)), 0, 255);
+}
+
+double component_to_unit(int value)
+{
+    return value / 255.0;
+}
+
+void require_finite_amount(const std::string &effect, double amount)
+{
+    if (!std::isfinite(amount))
+    {
+        throw std::runtime_error("Color map " + effect + " amount must be finite");
+    }
+}
+
+int gamma_component(int value, double amount)
+{
+    return component_from_unit(std::pow(component_to_unit(value), amount));
+}
+
+int contrast_component(int value, double amount)
+{
+    return std::clamp(static_cast<int>(std::lround((value - 128.0) * amount + 128.0)), 0, 255);
+}
+
+double wrap_degrees(double value)
+{
+    double result{std::fmod(value, 360.0)};
+    if (result < 0.0)
+    {
+        result += 360.0;
+    }
+    return result;
+}
+
+RgbColor rgb_from_hsl(double hue, double saturation, double lightness)
+{
+    const double bounded_saturation{std::clamp(saturation, 0.0, 1.0)};
+    const double bounded_lightness{std::clamp(lightness, 0.0, 1.0)};
+    const double chroma{(1.0 - std::fabs(2.0 * bounded_lightness - 1.0)) * bounded_saturation};
+    const double hue_sector{wrap_degrees(hue) / 60.0};
+    const double x{chroma * (1.0 - std::fabs(std::fmod(hue_sector, 2.0) - 1.0))};
+    double red{};
+    double green{};
+    double blue{};
+    if (hue_sector < 1.0)
+    {
+        red = chroma;
+        green = x;
+    }
+    else if (hue_sector < 2.0)
+    {
+        red = x;
+        green = chroma;
+    }
+    else if (hue_sector < 3.0)
+    {
+        green = chroma;
+        blue = x;
+    }
+    else if (hue_sector < 4.0)
+    {
+        green = x;
+        blue = chroma;
+    }
+    else if (hue_sector < 5.0)
+    {
+        red = x;
+        blue = chroma;
+    }
+    else
+    {
+        red = chroma;
+        blue = x;
+    }
+    const double match{bounded_lightness - chroma / 2.0};
+    return {component_from_unit(red + match), component_from_unit(green + match),
+        component_from_unit(blue + match)};
+}
+
+HslColor hsl_from_rgb(const RgbColor &color)
+{
+    const double red{component_to_unit(color.red)};
+    const double green{component_to_unit(color.green)};
+    const double blue{component_to_unit(color.blue)};
+    const double maximum{std::max(red, std::max(green, blue))};
+    const double minimum{std::min(red, std::min(green, blue))};
+    const double delta{maximum - minimum};
+    const double lightness{(maximum + minimum) / 2.0};
+    if (delta == 0.0)
+    {
+        return {0.0, 0.0, lightness};
+    }
+
+    double hue{};
+    if (maximum == red)
+    {
+        hue = 60.0 * std::fmod((green - blue) / delta, 6.0);
+    }
+    else if (maximum == green)
+    {
+        hue = 60.0 * ((blue - red) / delta + 2.0);
+    }
+    else
+    {
+        hue = 60.0 * ((red - green) / delta + 4.0);
+    }
+    const double saturation{delta / (1.0 - std::fabs(2.0 * lightness - 1.0))};
+    return {wrap_degrees(hue), saturation, lightness};
 }
 
 std::size_t wrap_index(int index, int size)
@@ -216,16 +337,56 @@ ColorMap interpolate_color_map(const ColorMap &from, const ColorMap &to, double 
 
 ColorMap brightness_color_map(const ColorMap &map, double amount)
 {
-    if (!std::isfinite(amount))
-    {
-        throw std::runtime_error("Color map brightness amount must be finite");
-    }
+    require_finite_amount("brightness", amount);
 
     ColorMap result;
     for (std::size_t i = 0; i < result.size(); ++i)
     {
         result[i] = {scale_component(map[i].red, amount), scale_component(map[i].green, amount),
             scale_component(map[i].blue, amount)};
+    }
+    return result;
+}
+
+ColorMap contrast_color_map(const ColorMap &map, double amount)
+{
+    require_finite_amount("contrast", amount);
+
+    ColorMap result;
+    for (std::size_t i = 0; i < result.size(); ++i)
+    {
+        result[i] = {contrast_component(map[i].red, amount), contrast_component(map[i].green, amount),
+            contrast_component(map[i].blue, amount)};
+    }
+    return result;
+}
+
+ColorMap gamma_color_map(const ColorMap &map, double amount)
+{
+    require_finite_amount("gamma", amount);
+    if (amount <= 0.0)
+    {
+        throw std::runtime_error("Color map gamma amount must be positive");
+    }
+
+    ColorMap result;
+    for (std::size_t i = 0; i < result.size(); ++i)
+    {
+        result[i] = {gamma_component(map[i].red, amount), gamma_component(map[i].green, amount),
+            gamma_component(map[i].blue, amount)};
+    }
+    return result;
+}
+
+ColorMap hue_shift_color_map(const ColorMap &map, double amount)
+{
+    require_finite_amount("hue-shift", amount);
+
+    ColorMap result;
+    for (std::size_t i = 0; i < result.size(); ++i)
+    {
+        const HslColor hsl{hsl_from_rgb(map[i])};
+        result[i] = rgb_from_hsl(hsl.hue + amount, hsl.saturation, hsl.lightness);
     }
     return result;
 }
@@ -256,6 +417,19 @@ ColorMap gradient_color_map(const std::vector<ColorMapGradientStop> &stops)
         result[i] = {interpolate_component(from.color.red, to.color.red, blend),
             interpolate_component(from.color.green, to.color.green, blend),
             interpolate_component(from.color.blue, to.color.blue, blend)};
+    }
+    return result;
+}
+
+ColorMap saturation_color_map(const ColorMap &map, double amount)
+{
+    require_finite_amount("saturation", amount);
+
+    ColorMap result;
+    for (std::size_t i = 0; i < result.size(); ++i)
+    {
+        const HslColor hsl{hsl_from_rgb(map[i])};
+        result[i] = rgb_from_hsl(hsl.hue, hsl.saturation * amount, hsl.lightness);
     }
     return result;
 }

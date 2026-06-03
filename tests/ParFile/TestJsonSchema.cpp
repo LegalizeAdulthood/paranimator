@@ -89,6 +89,34 @@ std::string config_with_gradient_stop_color(std::string_view color)
 })";
 }
 
+std::string config_with_color_map_effect(std::string_view effect)
+{
+    return R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 3,
+  "tracks": [
+    {
+      "parameter": "colors",
+      "type": "color-map",
+      "format": "at-file",
+      "output": "colors-%04d.map",
+      "source": "base.map",
+      "effects": [
+        )" + std::string{effect} + R"(
+      ]
+    }
+  ]
+})";
+}
+
 } // namespace
 
 TEST(TestJsonSchema, schemaPathStable)
@@ -470,6 +498,30 @@ TEST(TestJsonSchema, colorMapBrightnessEffectRequiresAmount)
     }
   ]
 })"));
+}
+
+TEST(TestJsonSchema, colorMapAdjustmentEffectsAccepted)
+{
+    const std::string amount{R"("amount":{"keys":[{"frame":0,"value":1.0},{"frame":2,"value":2.0}]})"};
+
+    EXPECT_TRUE(validates_config_text(config_with_color_map_effect(R"({"kind":"gamma",)" + amount + "}")));
+    EXPECT_TRUE(validates_config_text(config_with_color_map_effect(R"({"kind":"contrast",)" + amount + "}")));
+    EXPECT_TRUE(validates_config_text(config_with_color_map_effect(R"({"kind":"saturation",)" + amount + "}")));
+    EXPECT_TRUE(validates_config_text(config_with_color_map_effect(R"({"kind":"hue-shift",)" + amount + "}")));
+}
+
+TEST(TestJsonSchema, colorMapAdjustmentEffectsRequireAmount)
+{
+    EXPECT_FALSE(validates_config_text(config_with_color_map_effect(R"({"kind":"gamma"})")));
+    EXPECT_FALSE(validates_config_text(config_with_color_map_effect(R"({"kind":"contrast"})")));
+    EXPECT_FALSE(validates_config_text(config_with_color_map_effect(R"({"kind":"saturation"})")));
+    EXPECT_FALSE(validates_config_text(config_with_color_map_effect(R"({"kind":"hue-shift"})")));
+}
+
+TEST(TestJsonSchema, colorMapGammaEffectRequiresPositiveAmount)
+{
+    EXPECT_FALSE(validates_config_text(config_with_color_map_effect(
+        R"({"kind":"gamma","amount":{"keys":[{"frame":0,"value":0.0},{"frame":2,"value":1.0}]}})")));
 }
 
 TEST(TestJsonSchema, colorMapGradientSourceAccepted)

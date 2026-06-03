@@ -89,6 +89,55 @@ double number_track_value_at_frame(const NumberTrackConfig &track, int frame)
     return from.value + fraction * (to.value - from.value);
 }
 
+bool color_map_effect_uses_amount(ColorMapEffectKind kind)
+{
+    return kind == ColorMapEffectKind::BRIGHTNESS || kind == ColorMapEffectKind::CONTRAST ||
+        kind == ColorMapEffectKind::GAMMA || kind == ColorMapEffectKind::HUE_SHIFT ||
+        kind == ColorMapEffectKind::SATURATION;
+}
+
+std::string color_map_effect_name(ColorMapEffectKind kind)
+{
+    switch (kind)
+    {
+    case ColorMapEffectKind::BRIGHTNESS:
+        return "brightness";
+    case ColorMapEffectKind::CONTRAST:
+        return "contrast";
+    case ColorMapEffectKind::GAMMA:
+        return "gamma";
+    case ColorMapEffectKind::HUE_SHIFT:
+        return "hue-shift";
+    case ColorMapEffectKind::SATURATION:
+        return "saturation";
+    case ColorMapEffectKind::REVERSE:
+        return "reverse";
+    case ColorMapEffectKind::PING_PONG:
+        return "ping-pong";
+    }
+    return "unknown";
+}
+
+void validate_gamma_amounts(const NumberTrackConfig &track)
+{
+    for (const NumberKeyframeConfig &key : track.keys)
+    {
+        if (key.value <= 0.0)
+        {
+            throw std::runtime_error("Color map gamma amount must be positive");
+        }
+    }
+}
+
+double color_map_effect_amount_at_frame(const ColorMapEffectConfig &effect, int frame)
+{
+    if (!effect.amount)
+    {
+        throw std::runtime_error("Color map " + color_map_effect_name(effect.kind) + " effect is missing amount");
+    }
+    return number_track_value_at_frame(*effect.amount, frame);
+}
+
 class ColorMapInterpolant : public Interpolant
 {
 public:
@@ -164,13 +213,19 @@ ColorMapInterpolant::ColorMapInterpolant(
     }
     for (const ColorMapEffectConfig &effect : m_effects)
     {
-        if (effect.kind == ColorMapEffectKind::BRIGHTNESS)
+        if (color_map_effect_uses_amount(effect.kind))
         {
             if (!effect.amount)
             {
-                throw std::runtime_error("Color map brightness effect is missing amount");
+                throw std::runtime_error(
+                    "Color map " + color_map_effect_name(effect.kind) + " effect is missing amount");
             }
-            validate_number_track_keyframes("color map brightness amount", effect.amount->keys, num_frames);
+            validate_number_track_keyframes(
+                "color map " + color_map_effect_name(effect.kind) + " amount", effect.amount->keys, num_frames);
+            if (effect.kind == ColorMapEffectKind::GAMMA)
+            {
+                validate_gamma_amounts(*effect.amount);
+            }
         }
         else if (effect.kind == ColorMapEffectKind::PING_PONG)
         {
@@ -230,13 +285,15 @@ ColorMap ColorMapInterpolant::apply_effect(const ColorMap &map, const ColorMapEf
     switch (effect.kind)
     {
     case ColorMapEffectKind::BRIGHTNESS:
-    {
-        if (!effect.amount)
-        {
-            throw std::runtime_error("Color map brightness effect is missing amount");
-        }
-        return brightness_color_map(map, number_track_value_at_frame(*effect.amount, frame));
-    }
+        return brightness_color_map(map, color_map_effect_amount_at_frame(effect, frame));
+    case ColorMapEffectKind::CONTRAST:
+        return contrast_color_map(map, color_map_effect_amount_at_frame(effect, frame));
+    case ColorMapEffectKind::GAMMA:
+        return gamma_color_map(map, color_map_effect_amount_at_frame(effect, frame));
+    case ColorMapEffectKind::HUE_SHIFT:
+        return hue_shift_color_map(map, color_map_effect_amount_at_frame(effect, frame));
+    case ColorMapEffectKind::SATURATION:
+        return saturation_color_map(map, color_map_effect_amount_at_frame(effect, frame));
     case ColorMapEffectKind::REVERSE:
         if (effect.range)
         {

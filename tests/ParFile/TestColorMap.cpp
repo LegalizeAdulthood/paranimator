@@ -44,6 +44,23 @@ ParFile::ColorMap indexed_map()
     return result;
 }
 
+void expect_color(const ParFile::RgbColor &color, int red, int green, int blue)
+{
+    EXPECT_EQ(red, color.red);
+    EXPECT_EQ(green, color.green);
+    EXPECT_EQ(blue, color.blue);
+}
+
+void expect_valid_color(const ParFile::RgbColor &color)
+{
+    EXPECT_GE(color.red, 0);
+    EXPECT_LE(color.red, 255);
+    EXPECT_GE(color.green, 0);
+    EXPECT_LE(color.green, 255);
+    EXPECT_GE(color.blue, 0);
+    EXPECT_LE(color.blue, 255);
+}
+
 } // namespace
 
 TEST(TestColorMap, reads256Entries)
@@ -196,6 +213,121 @@ TEST(TestColorMap, brightnessAmountOneLeavesMapUnchanged)
         EXPECT_EQ(map[i].green, result[i].green);
         EXPECT_EQ(map[i].blue, result[i].blue);
     }
+}
+
+TEST(TestColorMap, contrastAmountOneLeavesMapUnchanged)
+{
+    const ParFile::ColorMap map{solid_map(64, 128, 192)};
+
+    const ParFile::ColorMap result{ParFile::contrast_color_map(map, 1.0)};
+
+    expect_color(result[0], 64, 128, 192);
+}
+
+TEST(TestColorMap, contrastScalesDistanceFromMidgray)
+{
+    const ParFile::ColorMap map{solid_map(64, 128, 192)};
+
+    const ParFile::ColorMap result{ParFile::contrast_color_map(map, 0.5)};
+
+    expect_color(result[0], 96, 128, 160);
+}
+
+TEST(TestColorMap, contrastClampsToValidRgbRange)
+{
+    const ParFile::ColorMap map{solid_map(0, 128, 255)};
+
+    const ParFile::ColorMap result{ParFile::contrast_color_map(map, 3.0)};
+
+    expect_color(result[0], 0, 128, 255);
+}
+
+TEST(TestColorMap, gammaAmountOneLeavesMapUnchanged)
+{
+    const ParFile::ColorMap map{solid_map(64, 128, 255)};
+
+    const ParFile::ColorMap result{ParFile::gamma_color_map(map, 1.0)};
+
+    expect_color(result[0], 64, 128, 255);
+}
+
+TEST(TestColorMap, gammaAppliesNonlinearIntensity)
+{
+    const ParFile::ColorMap map{solid_map(64, 128, 255)};
+
+    const ParFile::ColorMap result{ParFile::gamma_color_map(map, 2.0)};
+
+    expect_color(result[0], 16, 64, 255);
+}
+
+TEST(TestColorMap, gammaClampsToValidRgbRange)
+{
+    const ParFile::ColorMap map{solid_map(0, 128, 255)};
+
+    const ParFile::ColorMap result{ParFile::gamma_color_map(map, 0.01)};
+
+    expect_valid_color(result[0]);
+}
+
+TEST(TestColorMap, gammaRejectsNonPositiveAmount)
+{
+    const ParFile::ColorMap map{solid_map(64, 128, 255)};
+
+    EXPECT_THROW(static_cast<void>(ParFile::gamma_color_map(map, 0.0)), std::runtime_error);
+}
+
+TEST(TestColorMap, hueShiftAmountZeroLeavesMapUnchanged)
+{
+    const ParFile::ColorMap map{solid_map(255, 0, 0)};
+
+    const ParFile::ColorMap result{ParFile::hue_shift_color_map(map, 0.0)};
+
+    expect_color(result[0], 255, 0, 0);
+}
+
+TEST(TestColorMap, hueShiftRotatesHue)
+{
+    const ParFile::ColorMap map{solid_map(255, 0, 0)};
+
+    const ParFile::ColorMap result{ParFile::hue_shift_color_map(map, 120.0)};
+
+    expect_color(result[0], 0, 255, 0);
+}
+
+TEST(TestColorMap, hueShiftClampsToValidRgbRange)
+{
+    const ParFile::ColorMap map{solid_map(255, 0, 0)};
+
+    const ParFile::ColorMap result{ParFile::hue_shift_color_map(map, 765.0)};
+
+    expect_valid_color(result[0]);
+}
+
+TEST(TestColorMap, saturationAmountOneLeavesMapUnchanged)
+{
+    const ParFile::ColorMap map{solid_map(255, 0, 0)};
+
+    const ParFile::ColorMap result{ParFile::saturation_color_map(map, 1.0)};
+
+    expect_color(result[0], 255, 0, 0);
+}
+
+TEST(TestColorMap, saturationScalesColorSaturation)
+{
+    const ParFile::ColorMap map{solid_map(255, 0, 0)};
+
+    const ParFile::ColorMap result{ParFile::saturation_color_map(map, 0.0)};
+
+    expect_color(result[0], 128, 128, 128);
+}
+
+TEST(TestColorMap, saturationClampsToValidRgbRange)
+{
+    const ParFile::ColorMap map{solid_map(255, 0, 0)};
+
+    const ParFile::ColorMap result{ParFile::saturation_color_map(map, 100.0)};
+
+    expect_valid_color(result[0]);
 }
 
 TEST(TestColorMap, gradientTwoStopsAccepted)

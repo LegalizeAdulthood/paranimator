@@ -350,7 +350,11 @@
       "description": "One transformation applied to a color map.",
       "oneOf": [
         { "$ref": "#/$defs/brightness-color-map-effect" },
+        { "$ref": "#/$defs/contrast-color-map-effect" },
+        { "$ref": "#/$defs/gamma-color-map-effect" },
+        { "$ref": "#/$defs/hue-shift-color-map-effect" },
         { "$ref": "#/$defs/reverse-color-map-effect" },
+        { "$ref": "#/$defs/saturation-color-map-effect" },
         { "$ref": "#/$defs/ping-pong-color-map-effect" }
       ]
     },
@@ -370,6 +374,54 @@
         }
       }
     },
+    "contrast-color-map-effect": {
+      "description": "Effect that scales RGB component distance from midgray.",
+      "type": "object",
+      "required": [ "kind", "amount" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "contrast",
+          "description": "Scale RGB component distance from midgray."
+        },
+        "amount": {
+          "description": "Keyed contrast multiplier.",
+          "$ref": "#/$defs/number-track"
+        }
+      }
+    },
+    "gamma-color-map-effect": {
+      "description": "Effect that applies nonlinear intensity shaping.",
+      "type": "object",
+      "required": [ "kind", "amount" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "gamma",
+          "description": "Apply nonlinear intensity shaping."
+        },
+        "amount": {
+          "description": "Keyed positive gamma exponent.",
+          "$ref": "#/$defs/positive-number-track"
+        }
+      }
+    },
+    "hue-shift-color-map-effect": {
+      "description": "Effect that rotates color hue in HSL space.",
+      "type": "object",
+      "required": [ "kind", "amount" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "hue-shift",
+          "description": "Rotate color hue by keyed degrees."
+        },
+        "amount": {
+          "description": "Keyed hue rotation in degrees.",
+          "$ref": "#/$defs/number-track"
+        }
+      }
+    },
     "reverse-color-map-effect": {
       "description": "Effect that reverses a full color map or one inclusive range.",
       "type": "object",
@@ -383,6 +435,22 @@
         "range": {
           "description": "Optional inclusive palette index range to reverse.",
           "$ref": "#/$defs/color-map-range"
+        }
+      }
+    },
+    "saturation-color-map-effect": {
+      "description": "Effect that scales color saturation in HSL space.",
+      "type": "object",
+      "required": [ "kind", "amount" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "saturation",
+          "description": "Scale color saturation by a keyed amount."
+        },
+        "amount": {
+          "description": "Keyed saturation multiplier.",
+          "$ref": "#/$defs/number-track"
         }
       }
     },
@@ -416,6 +484,44 @@
         "type": "integer",
         "minimum": 0,
         "maximum": 255
+      }
+    },
+    "positive-number-track": {
+      "description": "Keyed positive numeric effect parameter.",
+      "type": "object",
+      "required": [ "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "keys": {
+          "description": "Exactly two keyed positive numeric values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/positive-number-keyframe"
+          }
+        }
+      }
+    },
+    "positive-number-keyframe": {
+      "description": "One keyed positive numeric value at an animation frame.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this positive numeric key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Positive numeric value sampled at this keyframe.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this positive numeric key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
       }
     },
     "number-track": {

@@ -36,7 +36,11 @@ struct ColorMapGradientStop
 ColorMap read_color_map(std::istream &contents);
 void write_color_map(std::ostream &contents, const ColorMap &map);
 ColorMap brightness_color_map(const ColorMap &map, double amount);
+ColorMap contrast_color_map(const ColorMap &map, double amount);
+ColorMap gamma_color_map(const ColorMap &map, double amount);
+ColorMap hue_shift_color_map(const ColorMap &map, double amount);
 ColorMap interpolate_color_map(const ColorMap &from, const ColorMap &to, double blend);
+ColorMap saturation_color_map(const ColorMap &map, double amount);
 ColorMap gradient_color_map(const std::vector<ColorMapGradientStop> &stops);
 ColorMap rotate_color_map(const ColorMap &map, int offset);
 ColorMap rotate_color_map_range(const ColorMap &map, int first, int last, int offset);

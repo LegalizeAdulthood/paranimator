@@ -44,6 +44,10 @@ struct PwmConfig
 enum class ColorMapEffectKind
 {
     BRIGHTNESS,
+    CONTRAST,
+    GAMMA,
+    HUE_SHIFT,
+    SATURATION,
     REVERSE,
     PING_PONG
 };
