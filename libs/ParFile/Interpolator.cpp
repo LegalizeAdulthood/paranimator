@@ -2,8 +2,10 @@
 //
 #include <ParFile/Interpolator.h>
 
+#include <ParFile/ColorMap.h>
 #include <ParFile/Config.h>
 #include <ParFile/Interpolant.h>
+#include <ParFile/OutputLayout.h>
 #include <ParFile/ParFile.h>
 #include <ParFile/ParameterCatalog.h>
 #include <ParFile/ResolvedAnimation.h>
@@ -15,6 +17,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -22,6 +25,125 @@
 
 namespace ParFile
 {
+
+namespace
+{
+
+void validate_track_keyframes(const std::string &name, const std::vector<KeyframeConfig> &keys, int num_frames)
+{
+    if (keys.size() != 2U)
+    {
+        throw std::runtime_error("Track '" + name + "' requires exactly two keyframes");
+    }
+    if (keys[0].frame < 0 || keys[1].frame < 0 || keys[0].frame >= num_frames || keys[1].frame >= num_frames)
+    {
+        throw std::runtime_error("Track '" + name + "' has keyframes outside the frame range");
+    }
+    if (keys[0].frame >= keys[1].frame)
+    {
+        throw std::runtime_error("Track '" + name + "' keyframes must be in increasing order");
+    }
+}
+
+class ColorMapInterpolant : public Interpolant
+{
+public:
+    ColorMapInterpolant(const TrackConfig &track, const std::filesystem::path &map_directory, int num_frames);
+    ~ColorMapInterpolant() override = default;
+
+    const std::string &name() const override
+    {
+        return m_parameter;
+    }
+    const std::vector<int> &output_slots() const override
+    {
+        return m_slots;
+    }
+    bool has_value() const override
+    {
+        return true;
+    }
+    std::string step() override;
+
+private:
+    std::string source_map(int frame) const;
+    std::string output_filename(int frame) const;
+    ColorMap read_source_map(const std::string &filename) const;
+    void write_generated_map(const std::filesystem::path &filename, const ColorMap &map) const;
+
+    std::string m_parameter;
+    std::vector<KeyframeConfig> m_keys;
+    std::filesystem::path m_map_directory;
+    std::string m_output;
+    std::vector<int> m_slots;
+    int m_frame{};
+};
+
+ColorMapInterpolant::ColorMapInterpolant(
+    const TrackConfig &track, const std::filesystem::path &map_directory, int num_frames) :
+    m_parameter(track.parameter),
+    m_keys(track.keys),
+    m_map_directory(map_directory)
+{
+    if (!track.color_map)
+    {
+        throw std::runtime_error("Color map track '" + track.parameter + "' is missing color map settings");
+    }
+    if (track.color_map->format != TrackFormat::AT_FILE)
+    {
+        throw std::runtime_error("Color map track '" + track.parameter + "' requires at-file format");
+    }
+    m_output = track.color_map->output;
+    validate_track_keyframes(track.parameter, track.keys, num_frames);
+}
+
+std::string ColorMapInterpolant::source_map(int frame) const
+{
+    return frame >= m_keys[1].frame ? m_keys[1].value : m_keys[0].value;
+}
+
+std::string ColorMapInterpolant::output_filename(int frame) const
+{
+    const std::string formatted{(boost::format(m_output) % (frame + 1)).str()};
+    const std::filesystem::path filename{formatted};
+    if (filename.has_parent_path())
+    {
+        throw std::runtime_error("Color map output must be a filename, not a path");
+    }
+    return filename.string();
+}
+
+ColorMap ColorMapInterpolant::read_source_map(const std::string &filename) const
+{
+    std::ifstream in{filename};
+    if (!in)
+    {
+        throw std::runtime_error("Unable to read color map '" + filename + "'");
+    }
+    return read_color_map(in);
+}
+
+void ColorMapInterpolant::write_generated_map(const std::filesystem::path &filename, const ColorMap &map) const
+{
+    std::filesystem::create_directories(filename.parent_path());
+    std::ofstream out{filename.string().c_str()};
+    if (!out)
+    {
+        throw std::runtime_error("Unable to write color map '" + filename.string() + "'");
+    }
+    write_color_map(out, map);
+}
+
+std::string ColorMapInterpolant::step()
+{
+    const int frame{m_frame};
+    ++m_frame;
+    const std::string filename{output_filename(frame)};
+    write_generated_map(m_map_directory / filename, read_source_map(source_map(frame)));
+    return '@' + filename;
+}
+
+} // namespace
 
 static ParSet load_par_set(const NamedFileParSet &par_entry)
 {
@@ -120,6 +242,15 @@ std::vector<InterpolantPtr> Interpolator::load_interpolants(const ResolvedAnimat
 Interpolator::Interpolator(const Config &config) :
     Interpolator(load_animation(config))
 {
+    const OutputLayout output{config};
+    for (const TrackConfig &track : config.tracks)
+    {
+        if (track.kind == TrackKind::COLOR_MAP)
+        {
+            m_interpolants.emplace_back(
+                std::make_shared<ColorMapInterpolant>(track, output.map_directory(), config.num_frames));
+        }
+    }
 }
 
 Interpolator::Interpolator(const ResolvedAnimation &animation) :

@@ -146,6 +146,28 @@ TrackMode parse_track_mode(std::string_view text)
     throw std::runtime_error("Unknown track mode '" + std::string{text} + "'");
 }
 
+TrackKind parse_track_kind(std::string_view text)
+{
+    if (text == "parameter")
+    {
+        return TrackKind::PARAMETER;
+    }
+    if (text == "color-map")
+    {
+        return TrackKind::COLOR_MAP;
+    }
+    throw std::runtime_error("Unknown track kind '" + std::string{text} + "'");
+}
+
+TrackFormat parse_track_format(std::string_view text)
+{
+    if (text == "at-file")
+    {
+        return TrackFormat::AT_FILE;
+    }
+    throw std::runtime_error("Unknown track format '" + std::string{text} + "'");
+}
+
 std::string_view to_string(ParameterType value)
 {
     switch (value)
@@ -238,6 +260,28 @@ std::string_view to_string(TrackMode value)
         return "keyframes";
     case TrackMode::PWM:
         return "pwm";
+    }
+    return {};
+}
+
+std::string_view to_string(TrackKind value)
+{
+    switch (value)
+    {
+    case TrackKind::PARAMETER:
+        return "parameter";
+    case TrackKind::COLOR_MAP:
+        return "color-map";
+    }
+    return {};
+}
+
+std::string_view to_string(TrackFormat value)
+{
+    switch (value)
+    {
+    case TrackFormat::AT_FILE:
+        return "at-file";
     }
     return {};
 }

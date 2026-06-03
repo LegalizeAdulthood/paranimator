@@ -257,7 +257,10 @@ ResolvedAnimation resolve_animation(const Config &config, const ParameterCatalog
 
     for (const TrackConfig &track : config.tracks)
     {
-        result.tracks.push_back(resolve_track(track, catalog, source));
+        if (track.kind != TrackKind::COLOR_MAP)
+        {
+            result.tracks.push_back(resolve_track(track, catalog, source));
+        }
     }
     validate_slotted_track_overlaps(result.tracks);
 

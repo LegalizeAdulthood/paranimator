@@ -148,6 +148,16 @@ static TrackMode load_track_mode(const Object &json)
     return parse_track_mode(*mode);
 }
 
+static TrackKind load_track_kind(const Object &json)
+{
+    const std::optional<std::string> kind{load_optional_string(json, "type")};
+    if (!kind)
+    {
+        return TrackKind::PARAMETER;
+    }
+    return parse_track_kind(*kind);
+}
+
 static KeyframeConfig load_keyframe_config(const Object &json, TrackMode mode)
 {
     KeyframeConfig result;
@@ -199,11 +209,24 @@ static PwmConfig load_pwm_config(const Object &json)
     return result;
 }
 
+static ColorMapConfig load_color_map_config(const Object &json)
+{
+    ColorMapConfig result;
+    result.format = parse_track_format(load_string(json, "format"));
+    result.output = load_string(json, "output");
+    return result;
+}
+
 static TrackConfig load_track_config(const Object &json)
 {
     TrackConfig result;
     result.parameter = load_string(json, "parameter");
+    result.kind = load_track_kind(json);
     result.mode = load_track_mode(json);
+    if (result.kind == TrackKind::COLOR_MAP)
+    {
+        result.color_map = load_color_map_config(json);
+    }
     if (result.mode == TrackMode::PWM)
     {
         result.pwm = load_pwm_config(json);

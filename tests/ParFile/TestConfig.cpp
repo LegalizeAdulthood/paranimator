@@ -252,6 +252,28 @@ TEST(TestConfig, jsonDeserializesPwmTrack)
     EXPECT_DOUBLE_EQ(1.0, *config.tracks[0].keys[1].mix);
 }
 
+TEST(TestConfig, jsonDeserializesColorMapTrack)
+{
+    Object json{valid_json()};
+    json["tracks"] = Object::array(
+        {Object{{"parameter", "colors"}, {"type", "color-map"}, {"format", "at-file"}, {"output", "colors-%04d.map"},
+            {"keys",
+                Object::array(
+                    {Object{{"frame", 0}, {"value", "fire.map"}}, Object{{"frame", 59}, {"value", "ice.map"}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    EXPECT_EQ("colors", config.tracks[0].parameter);
+    EXPECT_EQ(ParFile::TrackKind::COLOR_MAP, config.tracks[0].kind);
+    ASSERT_TRUE(config.tracks[0].color_map);
+    EXPECT_EQ(ParFile::TrackFormat::AT_FILE, config.tracks[0].color_map->format);
+    EXPECT_EQ("colors-%04d.map", config.tracks[0].color_map->output);
+    ASSERT_EQ(2U, config.tracks[0].keys.size());
+    EXPECT_EQ("fire.map", config.tracks[0].keys[0].value);
+    EXPECT_EQ("ice.map", config.tracks[0].keys[1].value);
+}
+
 TEST(TestConfig, pwmWindowBelowTwoRejected)
 {
     Object json{valid_json()};

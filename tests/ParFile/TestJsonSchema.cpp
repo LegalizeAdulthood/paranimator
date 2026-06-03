@@ -311,6 +311,90 @@ TEST(TestJsonSchema, pwmWindowBelowTwoRejected)
 })"));
 }
 
+TEST(TestJsonSchema, colorMapTrackAccepted)
+{
+    EXPECT_TRUE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 2,
+  "tracks": [
+    {
+      "parameter": "colors",
+      "type": "color-map",
+      "format": "at-file",
+      "output": "colors-%04d.map",
+      "keys": [
+        { "frame": 0, "value": "fire.map" },
+        { "frame": 1, "value": "ice.map" }
+      ]
+    }
+  ]
+})"));
+}
+
+TEST(TestJsonSchema, unknownTrackTypeRejected)
+{
+    EXPECT_FALSE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 2,
+  "tracks": [
+    {
+      "parameter": "colors",
+      "type": "unknown",
+      "format": "at-file",
+      "output": "colors-%04d.map",
+      "keys": [
+        { "frame": 0, "value": "fire.map" },
+        { "frame": 1, "value": "ice.map" }
+      ]
+    }
+  ]
+})"));
+}
+
+TEST(TestJsonSchema, unknownColorMapFormatRejected)
+{
+    EXPECT_FALSE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 2,
+  "tracks": [
+    {
+      "parameter": "colors",
+      "type": "color-map",
+      "format": "unknown",
+      "output": "colors-%04d.map",
+      "keys": [
+        { "frame": 0, "value": "fire.map" },
+        { "frame": 1, "value": "ice.map" }
+      ]
+    }
+  ]
+})"));
+}
+
 TEST(TestJsonSchema, unknownKeyCurveRejected)
 {
     EXPECT_FALSE(validates_config_text(R"({

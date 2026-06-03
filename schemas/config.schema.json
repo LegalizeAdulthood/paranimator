@@ -76,12 +76,33 @@
         "description": "One animated parameter target and its keyframes.",
         "oneOf": [
           { "$ref": "#/$defs/value-track" },
-          { "$ref": "#/$defs/pwm-track" }
+          { "$ref": "#/$defs/pwm-track" },
+          { "$ref": "#/$defs/color-map-track" }
         ]
       }
     }
   },
   "$defs": {
+    "track-kind": {
+      "description": "Application-level kind of animation track.",
+      "type": "string",
+      "oneOf": [
+        {
+          "const": "color-map",
+          "description": "Track that writes generated Id map files and emits colors=@filename."
+        }
+      ]
+    },
+    "track-format": {
+      "description": "Output value format used by a virtual track.",
+      "type": "string",
+      "oneOf": [
+        {
+          "const": "at-file",
+          "description": "Emit an Id at-file reference such as @colors-0001.map."
+        }
+      ]
+    },
     "track-mode": {
       "description": "Alternate evaluation mode for a track.",
       "type": "string",
@@ -186,6 +207,39 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        }
+      }
+    },
+    "color-map-track": {
+      "description": "Track that copies selected source map files to generated frame map files.",
+      "type": "object",
+      "required": [ "parameter", "type", "format", "output", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "parameter": {
+          "description": "Id parameter to receive the generated at-file map reference.",
+          "type": "string"
+        },
+        "type": {
+          "description": "Selects color-map side-file generation for this track.",
+          "$ref": "#/$defs/track-kind"
+        },
+        "format": {
+          "description": "Format for the generated Id parameter value.",
+          "$ref": "#/$defs/track-format"
+        },
+        "output": {
+          "description": "Generated map filename pattern written under the output map directory.",
+          "type": "string"
+        },
+        "keys": {
+          "description": "Exactly two keyframes selecting source map files.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/value-keyframe"
+          }
         }
       }
     },

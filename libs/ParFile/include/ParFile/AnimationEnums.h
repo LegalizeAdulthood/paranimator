@@ -55,16 +55,31 @@ enum class TrackMode
     PWM
 };
 
+enum class TrackKind
+{
+    PARAMETER,
+    COLOR_MAP
+};
+
+enum class TrackFormat
+{
+    AT_FILE
+};
+
 ParameterType parse_parameter_type(std::string_view text);
 ParameterFormat parse_parameter_format(std::string_view text);
 Curve parse_curve(std::string_view text);
 ExtrapolateMode parse_extrapolate_mode(std::string_view text);
 TrackMode parse_track_mode(std::string_view text);
+TrackKind parse_track_kind(std::string_view text);
+TrackFormat parse_track_format(std::string_view text);
 
 std::string_view to_string(ParameterType value);
 std::string_view to_string(ParameterFormat value);
 std::string_view to_string(Curve value);
 std::string_view to_string(ExtrapolateMode value);
 std::string_view to_string(TrackMode value);
+std::string_view to_string(TrackKind value);
+std::string_view to_string(TrackFormat value);
 
 } // namespace ParFile

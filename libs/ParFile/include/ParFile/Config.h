@@ -41,12 +41,20 @@ struct PwmConfig
     int window{};
 };
 
+struct ColorMapConfig
+{
+    TrackFormat format{TrackFormat::AT_FILE};
+    std::string output;
+};
+
 struct TrackConfig
 {
     std::string parameter;
     std::vector<KeyframeConfig> keys;
     TrackMode mode{TrackMode::KEYFRAMES};
     std::optional<PwmConfig> pwm;
+    TrackKind kind{TrackKind::PARAMETER};
+    std::optional<ColorMapConfig> color_map;
 };
 
 struct Config
