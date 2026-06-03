@@ -56,12 +56,12 @@ std::string load_required_string(const Object &json, std::string_view parameter,
     return json.at(key).get<std::string>();
 }
 
-std::string load_optional_string(const Object &json, std::string_view field)
+std::optional<std::string> load_optional_string(const Object &json, std::string_view field)
 {
     const std::string key{field};
     if (!json.contains(key))
     {
-        return {};
+        return std::nullopt;
     }
     if (!json.at(key).is_string())
     {
@@ -93,10 +93,19 @@ ParameterMetadata load_metadata(std::string_view name, const Object &json)
 
     ParameterMetadata result;
     result.name = std::string{name};
-    result.type = load_required_string(json, name, "type");
-    result.format = load_optional_string(json, "format");
-    result.default_curve = load_optional_string(json, "default-curve");
-    result.extrapolate = load_optional_string(json, "extrapolate");
+    result.type = parse_parameter_type(load_required_string(json, name, "type"));
+    if (const std::optional<std::string> format{load_optional_string(json, "format")})
+    {
+        result.format = parse_parameter_format(*format);
+    }
+    if (const std::optional<std::string> curve{load_optional_string(json, "default-curve")})
+    {
+        result.default_curve = parse_curve(*curve);
+    }
+    if (const std::optional<std::string> extrapolate{load_optional_string(json, "extrapolate")})
+    {
+        result.extrapolate = parse_extrapolate_mode(*extrapolate);
+    }
     result.min = load_optional_number(json, "min");
     result.max = load_optional_number(json, "max");
     return result;

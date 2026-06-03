@@ -191,7 +191,7 @@ TEST(TestConfig, missingTracks)
 TEST(TestConfig, oneTrackValid)
 {
     ParFile::Config data{valid_config()};
-    data.tracks = {{"center-mag", {{0, "-0.5/0/1"}, {2, "-0.5/0/10", "hold"}}}};
+    data.tracks = {{"center-mag", {{0, "-0.5/0/1"}, {2, "-0.5/0/10", ParFile::Curve::HOLD}}}};
 
     ParFile::Config config{data};
 
@@ -200,10 +200,11 @@ TEST(TestConfig, oneTrackValid)
     ASSERT_EQ(2U, config.tracks[0].keys.size());
     EXPECT_EQ(0, config.tracks[0].keys[0].frame);
     EXPECT_EQ("-0.5/0/1", config.tracks[0].keys[0].value);
-    EXPECT_TRUE(config.tracks[0].keys[0].curve.empty());
+    EXPECT_FALSE(config.tracks[0].keys[0].curve);
     EXPECT_EQ(2, config.tracks[0].keys[1].frame);
     EXPECT_EQ("-0.5/0/10", config.tracks[0].keys[1].value);
-    EXPECT_EQ("hold", config.tracks[0].keys[1].curve);
+    ASSERT_TRUE(config.tracks[0].keys[1].curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *config.tracks[0].keys[1].curve);
 }
 
 TEST(TestConfig, jsonDeserializesOneTrack)
@@ -221,8 +222,20 @@ TEST(TestConfig, jsonDeserializesOneTrack)
     ASSERT_EQ(2U, config.tracks[0].keys.size());
     EXPECT_EQ(0, config.tracks[0].keys[0].frame);
     EXPECT_EQ("-0.5/0/1", config.tracks[0].keys[0].value);
-    EXPECT_TRUE(config.tracks[0].keys[0].curve.empty());
+    EXPECT_FALSE(config.tracks[0].keys[0].curve);
     EXPECT_EQ(2, config.tracks[0].keys[1].frame);
     EXPECT_EQ("-0.5/0/10", config.tracks[0].keys[1].value);
-    EXPECT_EQ("hold", config.tracks[0].keys[1].curve);
+    ASSERT_TRUE(config.tracks[0].keys[1].curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *config.tracks[0].keys[1].curve);
+}
+
+TEST(TestConfig, unknownKeyCurveRejected)
+{
+    Object json{valid_json()};
+    json["tracks"] = Object::array({Object{{"parameter", "center-mag"},
+        {"keys",
+            Object::array({Object{{"frame", 0}, {"value", "-0.5/0/1"}},
+                Object{{"frame", 2}, {"value", "-0.5/0/10"}, {"curve", "unknown"}}})}}});
+
+    expect_invalid(json);
 }

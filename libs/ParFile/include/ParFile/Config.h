@@ -2,6 +2,9 @@
 //
 #pragma once
 
+#include <ParFile/AnimationEnums.h>
+
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -27,7 +30,7 @@ struct KeyframeConfig
 {
     int frame{};
     std::string value;
-    std::string curve;
+    std::optional<Curve> curve;
 };
 
 struct TrackConfig

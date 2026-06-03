@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -62,12 +63,12 @@ static std::string load_string(const Object &json, std::string_view field)
     return load_string(json, {}, field);
 }
 
-static std::string load_optional_string(const Object &json, std::string_view field)
+static std::optional<std::string> load_optional_string(const Object &json, std::string_view field)
 {
     const std::string key{field};
     if (!json.contains(key))
     {
-        return {};
+        return std::nullopt;
     }
     if (!json.at(key).is_string())
     {
@@ -132,7 +133,10 @@ static KeyframeConfig load_keyframe_config(const Object &json)
     KeyframeConfig result;
     result.frame = load_int(json, "frame");
     result.value = load_string(json, "value");
-    result.curve = load_optional_string(json, "curve");
+    if (const std::optional<std::string> curve{load_optional_string(json, "curve")})
+    {
+        result.curve = parse_curve(*curve);
+    }
     return result;
 }
 

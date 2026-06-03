@@ -169,11 +169,11 @@ void validate_bounds(const ParameterMetadata &metadata, double value)
     }
 }
 
-void validate_scalar_curve(std::string_view type, const std::string &curve)
+void validate_scalar_curve(std::string_view type, Curve curve)
 {
-    if (curve != "linear" && curve != "hold" && curve != "step")
+    if (curve != Curve::LINEAR && curve != Curve::HOLD && curve != Curve::STEP)
     {
-        throw std::runtime_error("Unsupported " + std::string{type} + " curve '" + curve + "'");
+        throw std::runtime_error("Unsupported " + std::string{type} + " curve '" + std::string{to_string(curve)} + "'");
     }
 }
 
@@ -187,14 +187,14 @@ int positive_mod(int value, int modulus)
     return result;
 }
 
-int extrapolated_frame(int frame, int from_frame, int to_frame, const std::string &extrapolate)
+int extrapolated_frame(int frame, int from_frame, int to_frame, ExtrapolateMode extrapolate)
 {
-    if (extrapolate == "cycle")
+    if (extrapolate == ExtrapolateMode::CYCLE)
     {
         const int range_length{to_frame - from_frame + 1};
         return from_frame + positive_mod(frame - from_frame, range_length);
     }
-    if (extrapolate == "ping-pong")
+    if (extrapolate == ExtrapolateMode::PING_PONG)
     {
         const int span{to_frame - from_frame};
         if (span <= 0)
@@ -212,19 +212,18 @@ int extrapolated_frame(int frame, int from_frame, int to_frame, const std::strin
     return frame;
 }
 
-std::string extrapolate_mode(const ParameterMetadata &metadata)
+ExtrapolateMode extrapolate_mode(const ParameterMetadata &metadata)
 {
-    if (metadata.extrapolate.empty())
+    return metadata.extrapolate.value_or(ExtrapolateMode::CLAMP);
+}
+
+Curve default_curve(const ParameterMetadata &metadata)
+{
+    if (!metadata.default_curve)
     {
-        return "clamp";
+        throw std::runtime_error("Missing default curve for parameter '" + metadata.name + "'");
     }
-    if (metadata.extrapolate != "base" && metadata.extrapolate != "clamp" && metadata.extrapolate != "cycle" &&
-        metadata.extrapolate != "omit" && metadata.extrapolate != "ping-pong")
-    {
-        throw std::runtime_error(
-            "Unsupported extrapolate mode '" + metadata.extrapolate + "' for parameter '" + metadata.name + "'");
-    }
-    return metadata.extrapolate;
+    return *metadata.default_curve;
 }
 
 struct CenterMag
@@ -367,8 +366,8 @@ std::string CornersInterpolant::step()
 class IntegerInterpolant : public Base
 {
 public:
-    IntegerInterpolant(const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys,
-        std::string_view curve, std::string_view base_value, int num_steps);
+    IntegerInterpolant(const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve,
+        std::string_view base_value, int num_steps);
     ~IntegerInterpolant() override = default;
 
     std::string step() override;
@@ -379,12 +378,12 @@ private:
     int m_from{};
     int m_to{};
     std::string m_base;
-    std::string m_curve;
-    std::string m_extrapolate;
+    Curve m_curve{};
+    ExtrapolateMode m_extrapolate{};
 };
 
 IntegerInterpolant::IntegerInterpolant(const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys,
-    std::string_view curve, std::string_view base_value, int num_steps) :
+    Curve curve, std::string_view base_value, int num_steps) :
     Base(metadata.name, num_steps),
     m_from_frame(keys[0].frame),
     m_to_frame(keys[1].frame),
@@ -404,11 +403,11 @@ std::string IntegerInterpolant::step()
     m_has_value = true;
     if (frame < m_from_frame || frame > m_to_frame)
     {
-        if (m_extrapolate == "base")
+        if (m_extrapolate == ExtrapolateMode::BASE)
         {
             return m_base;
         }
-        if (m_extrapolate == "omit")
+        if (m_extrapolate == ExtrapolateMode::OMIT)
         {
             m_has_value = false;
             return {};
@@ -423,7 +422,7 @@ std::string IntegerInterpolant::step()
     {
         return std::to_string(m_to);
     }
-    if (m_curve == "hold" || m_curve == "step")
+    if (m_curve == Curve::HOLD || m_curve == Curve::STEP)
     {
         return std::to_string(m_from);
     }
@@ -435,8 +434,8 @@ std::string IntegerInterpolant::step()
 class DoubleInterpolant : public Base
 {
 public:
-    DoubleInterpolant(const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys,
-        std::string_view curve, std::string_view base_value, int num_steps);
+    DoubleInterpolant(const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve,
+        std::string_view base_value, int num_steps);
     ~DoubleInterpolant() override = default;
 
     std::string step() override;
@@ -447,12 +446,12 @@ private:
     double m_from{};
     double m_to{};
     std::string m_base;
-    std::string m_curve;
-    std::string m_extrapolate;
+    Curve m_curve{};
+    ExtrapolateMode m_extrapolate{};
 };
 
 DoubleInterpolant::DoubleInterpolant(const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys,
-    std::string_view curve, std::string_view base_value, int num_steps) :
+    Curve curve, std::string_view base_value, int num_steps) :
     Base(metadata.name, num_steps),
     m_from_frame(keys[0].frame),
     m_to_frame(keys[1].frame),
@@ -474,11 +473,11 @@ std::string DoubleInterpolant::step()
     m_has_value = true;
     if (frame < m_from_frame || frame > m_to_frame)
     {
-        if (m_extrapolate == "base")
+        if (m_extrapolate == ExtrapolateMode::BASE)
         {
             return m_base;
         }
-        if (m_extrapolate == "omit")
+        if (m_extrapolate == ExtrapolateMode::OMIT)
         {
             m_has_value = false;
             return {};
@@ -490,7 +489,7 @@ std::string DoubleInterpolant::step()
     {
         value = m_to;
     }
-    else if (sample_frame > m_from_frame && m_curve != "hold" && m_curve != "step")
+    else if (sample_frame > m_from_frame && m_curve != Curve::HOLD && m_curve != Curve::STEP)
     {
         const double fraction{(sample_frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
         value = m_from + fraction * (m_to - m_from);
@@ -504,36 +503,36 @@ InterpolantPtr create_interpolant(const ParameterMetadata &metadata, const std::
     int num_steps, std::string_view base_value)
 {
     validate_keyframes(metadata.name, keys, num_steps);
-    if (metadata.type == "center-mag")
+    switch (metadata.type)
     {
+    case ParameterType::CENTER_MAG:
         validate_full_range(metadata.name, keys, num_steps);
         return std::make_shared<CenterMagInterpolant>(metadata.name, keys[0].value, keys[1].value, num_steps);
-    }
-    if (metadata.type == "corners")
-    {
+    case ParameterType::CORNERS:
         validate_full_range(metadata.name, keys, num_steps);
         return std::make_shared<CornersInterpolant>(metadata.name, keys[0].value, keys[1].value, num_steps);
-    }
-    if (metadata.type == "integer")
+    case ParameterType::INTEGER:
     {
-        std::string curve{metadata.default_curve};
-        if (!keys[1].curve.empty())
+        Curve curve{default_curve(metadata)};
+        if (keys[1].curve)
         {
-            curve = keys[1].curve;
+            curve = *keys[1].curve;
         }
         return std::make_shared<IntegerInterpolant>(metadata, keys, curve, base_value, num_steps);
     }
-    if (metadata.type == "double")
+    case ParameterType::DOUBLE:
     {
-        std::string curve{metadata.default_curve};
-        if (!keys[1].curve.empty())
+        Curve curve{default_curve(metadata)};
+        if (keys[1].curve)
         {
-            curve = keys[1].curve;
+            curve = *keys[1].curve;
         }
         return std::make_shared<DoubleInterpolant>(metadata, keys, curve, base_value, num_steps);
     }
+    }
 
-    throw std::runtime_error("Unknown track type '" + metadata.type + "' for parameter '" + metadata.name + "'");
+    throw std::runtime_error(
+        "Unknown track type '" + std::string{to_string(metadata.type)} + "' for parameter '" + metadata.name + "'");
 }
 
 } // namespace ParFile

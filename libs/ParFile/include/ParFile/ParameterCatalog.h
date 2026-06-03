@@ -2,6 +2,8 @@
 //
 #pragma once
 
+#include <ParFile/AnimationEnums.h>
+
 #include <optional>
 #include <string>
 #include <string_view>
@@ -13,10 +15,10 @@ namespace ParFile
 struct ParameterMetadata
 {
     std::string name;
-    std::string type;
-    std::string format;
-    std::string default_curve;
-    std::string extrapolate;
+    ParameterType type{};
+    std::optional<ParameterFormat> format;
+    std::optional<Curve> default_curve;
+    std::optional<ExtrapolateMode> extrapolate;
     std::optional<double> min;
     std::optional<double> max;
 };
