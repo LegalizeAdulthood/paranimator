@@ -128,19 +128,46 @@ static int load_int(const Object &json, std::string_view name)
     return json.at(key).get<int>();
 }
 
-static KeyframeConfig load_keyframe_config(const Object &json)
+static double load_double(const Object &json, std::string_view name)
+{
+    const std::string key{name};
+    if (!json.contains(key) || !json.at(key).is_number())
+    {
+        throw std::runtime_error("Invalid config, missing number '" + std::string{name} + "'");
+    }
+    return json.at(key).get<double>();
+}
+
+static TrackMode load_track_mode(const Object &json)
+{
+    const std::optional<std::string> mode{load_optional_string(json, "mode")};
+    if (!mode)
+    {
+        return TrackMode::KEYFRAMES;
+    }
+    return parse_track_mode(*mode);
+}
+
+static KeyframeConfig load_keyframe_config(const Object &json, TrackMode mode)
 {
     KeyframeConfig result;
     result.frame = load_int(json, "frame");
-    result.value = load_string(json, "value");
-    if (const std::optional<std::string> curve{load_optional_string(json, "curve")})
+    if (mode == TrackMode::PWM)
     {
-        result.curve = parse_curve(*curve);
+        result.mix = load_double(json, "mix");
+    }
+    else
+    {
+        result.value = load_string(json, "value");
+        if (const std::optional<std::string> curve{load_optional_string(json, "curve")})
+        {
+            result.curve = parse_curve(*curve);
+        }
     }
     return result;
 }
 
-static std::vector<KeyframeConfig> load_keyframes(const Object &json)
+static std::vector<KeyframeConfig> load_keyframes(const Object &json, TrackMode mode)
 {
     const std::string key{"keys"};
     if (!json.contains(key) || !json.at(key).is_array())
@@ -154,7 +181,20 @@ static std::vector<KeyframeConfig> load_keyframes(const Object &json)
         {
             throw std::runtime_error("Invalid config, array 'keys' contains non-object value");
         }
-        result.emplace_back(load_keyframe_config(item));
+        result.emplace_back(load_keyframe_config(item, mode));
+    }
+    return result;
+}
+
+static PwmConfig load_pwm_config(const Object &json)
+{
+    PwmConfig result;
+    result.a = load_string(json, "a");
+    result.b = load_string(json, "b");
+    result.window = load_int(json, "window");
+    if (result.window < 2)
+    {
+        throw std::runtime_error("Invalid config, pwm window must be at least 2");
     }
     return result;
 }
@@ -163,7 +203,12 @@ static TrackConfig load_track_config(const Object &json)
 {
     TrackConfig result;
     result.parameter = load_string(json, "parameter");
-    result.keys = load_keyframes(json);
+    result.mode = load_track_mode(json);
+    if (result.mode == TrackMode::PWM)
+    {
+        result.pwm = load_pwm_config(json);
+    }
+    result.keys = load_keyframes(json, result.mode);
     return result;
 }
 

@@ -31,12 +31,22 @@ struct KeyframeConfig
     int frame{};
     std::string value;
     std::optional<Curve> curve;
+    std::optional<double> mix;
+};
+
+struct PwmConfig
+{
+    std::string a;
+    std::string b;
+    int window{};
 };
 
 struct TrackConfig
 {
     std::string parameter;
     std::vector<KeyframeConfig> keys;
+    TrackMode mode{TrackMode::KEYFRAMES};
+    std::optional<PwmConfig> pwm;
 };
 
 struct Config

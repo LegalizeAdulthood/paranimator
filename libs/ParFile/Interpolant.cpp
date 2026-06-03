@@ -286,6 +286,24 @@ void validate_discrete_value(const ParameterMetadata &metadata, const std::strin
     validate_enum_value(metadata, value);
 }
 
+bool is_pwm_type(ParameterType type)
+{
+    return type == ParameterType::ENUM || type == ParameterType::INSIDE || type == ParameterType::OUTSIDE;
+}
+
+double validate_mix(const std::string &name, const KeyframeConfig &key)
+{
+    if (!key.mix)
+    {
+        throw std::runtime_error("PWM track '" + name + "' keyframe is missing mix");
+    }
+    if (*key.mix < 0.0 || *key.mix > 1.0)
+    {
+        throw std::runtime_error("PWM track '" + name + "' mix must be in the range 0 through 1");
+    }
+    return *key.mix;
+}
+
 void validate_scalar_curve(std::string_view type, Curve curve)
 {
     if (curve != Curve::LINEAR && curve != Curve::HOLD && curve != Curve::STEP)
@@ -967,6 +985,79 @@ std::string DiscreteInterpolant::step()
     return frame >= m_to_frame ? m_to : m_from;
 }
 
+class DiscretePwmInterpolant : public Base
+{
+public:
+    DiscretePwmInterpolant(const ResolvedTrack &track, int num_steps);
+    ~DiscretePwmInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    int m_from_frame{};
+    int m_to_frame{};
+    std::string m_a;
+    std::string m_b;
+    int m_window{};
+    double m_from_mix{};
+    double m_to_mix{};
+};
+
+DiscretePwmInterpolant::DiscretePwmInterpolant(const ResolvedTrack &track, int num_steps) :
+    Base(track.output_parameter, num_steps, track.slots),
+    m_from_frame(track.keys[0].frame),
+    m_to_frame(track.keys[1].frame)
+{
+    if (!track.pwm)
+    {
+        throw std::runtime_error("PWM track '" + track.parameter + "' is missing pwm settings");
+    }
+    if (!track.slots.empty())
+    {
+        throw std::runtime_error("PWM track '" + track.parameter + "' cannot target slotted output");
+    }
+    if (track.pwm->window < 2)
+    {
+        throw std::runtime_error("PWM track '" + track.parameter + "' window must be at least 2");
+    }
+
+    m_a = track.pwm->a;
+    m_b = track.pwm->b;
+    m_window = track.pwm->window;
+    m_from_mix = validate_mix(track.parameter, track.keys[0]);
+    m_to_mix = validate_mix(track.parameter, track.keys[1]);
+    validate_discrete_value(track.metadata, m_a);
+    validate_discrete_value(track.metadata, m_b);
+}
+
+std::string DiscretePwmInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+
+    double mix{m_from_mix};
+    if (frame >= m_to_frame)
+    {
+        mix = m_to_mix;
+    }
+    else if (frame > m_from_frame)
+    {
+        const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        mix = m_from_mix + fraction * (m_to_mix - m_from_mix);
+    }
+
+    const int b_count{static_cast<int>(std::lround(mix * m_window))};
+    if (b_count <= 0)
+    {
+        return m_a;
+    }
+    if (b_count >= m_window)
+    {
+        return m_b;
+    }
+    return positive_mod(frame - m_from_frame, m_window) < b_count ? m_b : m_a;
+}
+
 class FunctionEnumInterpolant : public Base
 {
 public:
@@ -1029,6 +1120,15 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
     const ParameterMetadata &metadata{track.metadata};
     const std::vector<KeyframeConfig> &keys{track.keys};
     validate_keyframes(metadata.name, keys, num_steps);
+    if (track.mode == TrackMode::PWM)
+    {
+        if (!is_pwm_type(metadata.type))
+        {
+            throw std::runtime_error("PWM track '" + track.parameter + "' requires an enum, inside, or outside target");
+        }
+        validate_full_range(metadata.name, keys, num_steps);
+        return std::make_shared<DiscretePwmInterpolant>(track, num_steps);
+    }
     switch (metadata.type)
     {
     case ParameterType::CENTER_MAG:

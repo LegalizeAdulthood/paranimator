@@ -49,14 +49,22 @@ enum class ExtrapolateMode
     PING_PONG
 };
 
+enum class TrackMode
+{
+    KEYFRAMES,
+    PWM
+};
+
 ParameterType parse_parameter_type(std::string_view text);
 ParameterFormat parse_parameter_format(std::string_view text);
 Curve parse_curve(std::string_view text);
 ExtrapolateMode parse_extrapolate_mode(std::string_view text);
+TrackMode parse_track_mode(std::string_view text);
 
 std::string_view to_string(ParameterType value);
 std::string_view to_string(ParameterFormat value);
 std::string_view to_string(Curve value);
 std::string_view to_string(ExtrapolateMode value);
+std::string_view to_string(TrackMode value);
 
 } // namespace ParFile

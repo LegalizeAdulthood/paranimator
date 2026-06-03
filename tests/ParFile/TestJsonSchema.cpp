@@ -224,6 +224,93 @@ TEST(TestJsonSchema, invalidOutputDirectoryTypeRejected)
     EXPECT_FALSE(validates_config_file(TestParFile::INVALID_OUTPUT_DIRECTORY_CONFIG_JSON));
 }
 
+TEST(TestJsonSchema, pwmTrackAccepted)
+{
+    EXPECT_TRUE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 2,
+  "tracks": [
+    {
+      "parameter": "inside",
+      "mode": "pwm",
+      "a": "bof60",
+      "b": "zmag",
+      "window": 2,
+      "keys": [
+        { "frame": 0, "mix": 0.0 },
+        { "frame": 1, "mix": 1.0 }
+      ]
+    }
+  ]
+})"));
+}
+
+TEST(TestJsonSchema, unknownTrackModeRejected)
+{
+    EXPECT_FALSE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 2,
+  "tracks": [
+    {
+      "parameter": "inside",
+      "mode": "unknown",
+      "a": "bof60",
+      "b": "zmag",
+      "window": 2,
+      "keys": [
+        { "frame": 0, "mix": 0.0 },
+        { "frame": 1, "mix": 1.0 }
+      ]
+    }
+  ]
+})"));
+}
+
+TEST(TestJsonSchema, pwmWindowBelowTwoRejected)
+{
+    EXPECT_FALSE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 2,
+  "tracks": [
+    {
+      "parameter": "inside",
+      "mode": "pwm",
+      "a": "bof60",
+      "b": "zmag",
+      "window": 1,
+      "keys": [
+        { "frame": 0, "mix": 0.0 },
+        { "frame": 1, "mix": 1.0 }
+      ]
+    }
+  ]
+})"));
+}
+
 TEST(TestJsonSchema, unknownKeyCurveRejected)
 {
     EXPECT_FALSE(validates_config_text(R"({

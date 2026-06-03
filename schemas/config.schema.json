@@ -74,45 +74,121 @@
       "type": "array",
       "items": {
         "description": "One animated parameter target and its keyframes.",
-        "type": "object",
-        "required": [ "parameter", "keys" ],
-        "additionalProperties": false,
-        "properties": {
-          "parameter": {
-            "description": "Catalog parameter key, fractal params key, or formula metadata key to animate.",
-            "type": "string"
-          },
-          "keys": {
-            "description": "Exactly two keyframes defining the animated value segment.",
-            "type": "array",
-            "minItems": 2,
-            "maxItems": 2,
-            "items": {
-              "description": "One keyed value at an animation frame.",
-              "type": "object",
-              "required": [ "frame", "value" ],
-              "additionalProperties": false,
-              "properties": {
-                "frame": {
-                  "description": "Zero-based frame index for this key.",
-                  "type": "integer"
-                },
-                "value": {
-                  "description": "Parameter value text in the format required by the target metadata.",
-                  "type": "string"
-                },
-                "curve": {
-                  "description": "Optional interpolation curve override ending at this key.",
-                  "$ref": "#/$defs/curve"
-                }
-              }
-            }
-          }
-        }
+        "oneOf": [
+          { "$ref": "#/$defs/value-track" },
+          { "$ref": "#/$defs/pwm-track" }
+        ]
       }
     }
   },
   "$defs": {
+    "track-mode": {
+      "description": "Alternate evaluation mode for a track.",
+      "type": "string",
+      "oneOf": [
+        {
+          "const": "pwm",
+          "description": "Pulse-width modulation between two explicit discrete values."
+        }
+      ]
+    },
+    "value-track": {
+      "description": "Parameter track defined by keyed parameter values.",
+      "type": "object",
+      "required": [ "parameter", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "parameter": {
+          "description": "Catalog parameter key, fractal params key, or formula metadata key to animate.",
+          "type": "string"
+        },
+        "keys": {
+          "description": "Exactly two keyframes defining the animated value segment.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/value-keyframe"
+          }
+        }
+      }
+    },
+    "value-keyframe": {
+      "description": "One keyed parameter value at an animation frame.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Parameter value text in the format required by the target metadata.",
+          "type": "string"
+        },
+        "curve": {
+          "description": "Optional interpolation curve override ending at this key.",
+          "$ref": "#/$defs/curve"
+        }
+      }
+    },
+    "pwm-track": {
+      "description": "Discrete track that temporally dithers between two explicit values.",
+      "type": "object",
+      "required": [ "parameter", "mode", "a", "b", "window", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "parameter": {
+          "description": "Catalog parameter key, fractal params key, or formula metadata key to animate.",
+          "type": "string"
+        },
+        "mode": {
+          "description": "Selects pulse-width modulation for this track.",
+          "$ref": "#/$defs/track-mode"
+        },
+        "a": {
+          "description": "Discrete value emitted when the evaluated mix selects the first endpoint.",
+          "type": "string"
+        },
+        "b": {
+          "description": "Discrete value emitted when the evaluated mix selects the second endpoint.",
+          "type": "string"
+        },
+        "window": {
+          "description": "Number of frames in each PWM decision window.",
+          "type": "integer",
+          "minimum": 2
+        },
+        "keys": {
+          "description": "Exactly two keyframes defining the animated mix segment.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/pwm-keyframe"
+          }
+        }
+      }
+    },
+    "pwm-keyframe": {
+      "description": "One keyed PWM mix value at an animation frame.",
+      "type": "object",
+      "required": [ "frame", "mix" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this key.",
+          "type": "integer"
+        },
+        "mix": {
+          "description": "Fraction of the PWM window assigned to value b.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
     "curve": {
       "description": "Interpolation curve used between two keyframes.",
       "type": "string",

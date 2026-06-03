@@ -33,6 +33,19 @@ std::vector<ParFile::KeyframeConfig> keyframes(
     return {{0, from}, {num_steps - 1, to, curve}};
 }
 
+ParFile::KeyframeConfig pwm_keyframe(int frame, double mix)
+{
+    ParFile::KeyframeConfig result;
+    result.frame = frame;
+    result.mix = mix;
+    return result;
+}
+
+std::vector<ParFile::KeyframeConfig> pwm_keyframes(double from, double to, int num_steps)
+{
+    return {pwm_keyframe(0, from), pwm_keyframe(num_steps - 1, to)};
+}
+
 ParFile::ResolvedTrack resolved_track(const std::string &name, ParFile::ParameterType type,
     const std::vector<ParFile::KeyframeConfig> &keys, const std::string &base_value)
 {
@@ -49,6 +62,15 @@ ParFile::ResolvedTrack resolved_params_track(const std::string &name, ParFile::P
     const std::vector<ParFile::KeyframeConfig> &keys, const std::string &base_value, std::vector<int> slots)
 {
     return {name, metadata(name, type), base_value, keys, "params", std::move(slots)};
+}
+
+ParFile::ResolvedTrack resolved_pwm_track(const ParFile::ParameterMetadata &parameter_metadata, const std::string &a,
+    const std::string &b, int window, double from, double to, int num_steps)
+{
+    ParFile::ResolvedTrack result{resolved_track(parameter_metadata, pwm_keyframes(from, to, num_steps), a)};
+    result.mode = ParFile::TrackMode::PWM;
+    result.pwm = ParFile::PwmConfig{a, b, window};
+    return result;
 }
 
 ParFile::ParameterMetadata tuple_metadata(const std::string &name, int arity)
@@ -602,6 +624,18 @@ TEST(TestInterpolant, enumLinearCurveRejected)
         std::runtime_error);
 }
 
+TEST(TestInterpolant, enumPwmMixZeroEmitsA)
+{
+    const int num_steps{4};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_pwm_track(enum_metadata("inside"), "bof60", "zmag", 2, 0.0, 0.0, num_steps), num_steps)};
+
+    EXPECT_EQ("bof60", interpolant->step());
+    EXPECT_EQ("bof60", interpolant->step());
+    EXPECT_EQ("bof60", interpolant->step());
+    EXPECT_EQ("bof60", interpolant->step());
+}
+
 TEST(TestInterpolant, insideMethodHold)
 {
     const int num_steps{3};
@@ -644,6 +678,28 @@ TEST(TestInterpolant, outsideMethodStep)
     EXPECT_EQ("real", interpolant->step());
     EXPECT_EQ("real", interpolant->step());
     EXPECT_EQ("tdis", interpolant->step());
+}
+
+TEST(TestInterpolant, insidePwmMixOneEmitsB)
+{
+    const int num_steps{4};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_pwm_track(inside_metadata("inside"), "bof60", "zmag", 2, 1.0, 1.0, num_steps), num_steps)};
+
+    EXPECT_EQ("zmag", interpolant->step());
+    EXPECT_EQ("zmag", interpolant->step());
+    EXPECT_EQ("zmag", interpolant->step());
+    EXPECT_EQ("zmag", interpolant->step());
+}
+
+TEST(TestInterpolant, outsidePwmWindowBelowTwoRejected)
+{
+    const int num_steps{4};
+
+    EXPECT_THROW(
+        ParFile::create_interpolant(
+            resolved_pwm_track(outside_metadata("outside"), "real", "tdis", 1, 0.0, 1.0, num_steps), num_steps),
+        std::runtime_error);
 }
 
 TEST(TestInterpolant, insideColorIndexHold)

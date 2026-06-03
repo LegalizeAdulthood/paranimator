@@ -6,6 +6,7 @@
 #include <ParFile/ParFile.h>
 #include <ParFile/ParameterCatalog.h>
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -20,6 +21,8 @@ struct ResolvedTrack
     std::vector<KeyframeConfig> keys;
     std::string output_parameter;
     std::vector<int> slots;
+    TrackMode mode{TrackMode::KEYFRAMES};
+    std::optional<PwmConfig> pwm;
 };
 
 struct ResolvedAnimation

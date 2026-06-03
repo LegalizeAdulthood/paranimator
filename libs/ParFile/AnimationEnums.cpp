@@ -133,6 +133,19 @@ ExtrapolateMode parse_extrapolate_mode(std::string_view text)
     throw std::runtime_error("Unknown extrapolate mode '" + std::string{text} + "'");
 }
 
+TrackMode parse_track_mode(std::string_view text)
+{
+    if (text == "keyframes")
+    {
+        return TrackMode::KEYFRAMES;
+    }
+    if (text == "pwm")
+    {
+        return TrackMode::PWM;
+    }
+    throw std::runtime_error("Unknown track mode '" + std::string{text} + "'");
+}
+
 std::string_view to_string(ParameterType value)
 {
     switch (value)
@@ -213,6 +226,18 @@ std::string_view to_string(ExtrapolateMode value)
         return "omit";
     case ExtrapolateMode::PING_PONG:
         return "ping-pong";
+    }
+    return {};
+}
+
+std::string_view to_string(TrackMode value)
+{
+    switch (value)
+    {
+    case TrackMode::KEYFRAMES:
+        return "keyframes";
+    case TrackMode::PWM:
+        return "pwm";
     }
     return {};
 }

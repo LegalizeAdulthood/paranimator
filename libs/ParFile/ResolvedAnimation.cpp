@@ -143,7 +143,7 @@ ResolvedTrack resolve_params_slot(
     const int slot{parse_params_slot(track.parameter)};
     const ParamsSlotMetadata &slot_metadata{catalog.params_slot(fractal_type, slot)};
     const Parameter &params{source_parameter(source, "params")};
-    return {track.parameter, slot_metadata.metadata, params.value, track.keys, "params", {slot}};
+    return {track.parameter, slot_metadata.metadata, params.value, track.keys, "params", {slot}, track.mode, track.pwm};
 }
 
 ResolvedTrack resolve_params_group(
@@ -156,7 +156,8 @@ ResolvedTrack resolve_params_group(
     }
     const ParamsGroupMetadata &group_metadata{catalog.params_group(fractal_type, group)};
     const Parameter &params{source_parameter(source, "params")};
-    return {track.parameter, group_metadata.metadata, params.value, track.keys, "params", group_metadata.slots};
+    return {track.parameter, group_metadata.metadata, params.value, track.keys, "params", group_metadata.slots,
+        track.mode, track.pwm};
 }
 
 ResolvedTrack resolve_formula_params_knob(
@@ -169,7 +170,8 @@ ResolvedTrack resolve_formula_params_knob(
     }
     const FormulaParamsKnobMetadata &knob_metadata{catalog.formula_params_knob(formula_name, *knob)};
     const Parameter &params{source_parameter(source, "params")};
-    return {track.parameter, knob_metadata.metadata, params.value, track.keys, "params", knob_metadata.slots};
+    return {track.parameter, knob_metadata.metadata, params.value, track.keys, "params", knob_metadata.slots,
+        track.mode, track.pwm};
 }
 
 ResolvedTrack resolve_formula_function(
@@ -184,14 +186,15 @@ ResolvedTrack resolve_formula_function(
     const Parameter *function{find_source_parameter(source, "function")};
     const std::string base_value{
         function == nullptr ? default_function_value(function_metadata.slot) : function->value};
-    return {track.parameter, function_metadata.metadata, base_value, track.keys, "function", {function_metadata.slot}};
+    return {track.parameter, function_metadata.metadata, base_value, track.keys, "function", {function_metadata.slot},
+        track.mode, track.pwm};
 }
 
 ResolvedTrack resolve_regular_track(const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source)
 {
     const ParameterMetadata &metadata{catalog.metadata(track.parameter)};
     const Parameter &parameter{source_parameter(source, track.parameter)};
-    return {track.parameter, metadata, parameter.value, track.keys, track.parameter, {}};
+    return {track.parameter, metadata, parameter.value, track.keys, track.parameter, {}, track.mode, track.pwm};
 }
 
 ResolvedTrack resolve_track(const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source)

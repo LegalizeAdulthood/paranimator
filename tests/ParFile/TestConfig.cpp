@@ -229,6 +229,39 @@ TEST(TestConfig, jsonDeserializesOneTrack)
     EXPECT_EQ(ParFile::Curve::HOLD, *config.tracks[0].keys[1].curve);
 }
 
+TEST(TestConfig, jsonDeserializesPwmTrack)
+{
+    Object json{valid_json()};
+    json["tracks"] =
+        Object::array({Object{{"parameter", "inside"}, {"mode", "pwm"}, {"a", "bof60"}, {"b", "zmag"}, {"window", 8},
+            {"keys", Object::array({Object{{"frame", 0}, {"mix", 0.0}}, Object{{"frame", 59}, {"mix", 1.0}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    EXPECT_EQ("inside", config.tracks[0].parameter);
+    EXPECT_EQ(ParFile::TrackMode::PWM, config.tracks[0].mode);
+    ASSERT_TRUE(config.tracks[0].pwm);
+    EXPECT_EQ("bof60", config.tracks[0].pwm->a);
+    EXPECT_EQ("zmag", config.tracks[0].pwm->b);
+    EXPECT_EQ(8, config.tracks[0].pwm->window);
+    ASSERT_EQ(2U, config.tracks[0].keys.size());
+    ASSERT_TRUE(config.tracks[0].keys[0].mix);
+    ASSERT_TRUE(config.tracks[0].keys[1].mix);
+    EXPECT_DOUBLE_EQ(0.0, *config.tracks[0].keys[0].mix);
+    EXPECT_DOUBLE_EQ(1.0, *config.tracks[0].keys[1].mix);
+}
+
+TEST(TestConfig, pwmWindowBelowTwoRejected)
+{
+    Object json{valid_json()};
+    json["tracks"] =
+        Object::array({Object{{"parameter", "inside"}, {"mode", "pwm"}, {"a", "bof60"}, {"b", "zmag"}, {"window", 1},
+            {"keys", Object::array({Object{{"frame", 0}, {"mix", 0.0}}, Object{{"frame", 59}, {"mix", 1.0}}})}}});
+
+    expect_invalid(json);
+}
+
 TEST(TestConfig, unknownKeyCurveRejected)
 {
     Object json{valid_json()};
