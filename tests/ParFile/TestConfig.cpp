@@ -363,6 +363,21 @@ TEST(TestConfig, jsonDeserializesSpiralPathTrack)
     EXPECT_TRUE(config.tracks[0].keys.empty());
 }
 
+TEST(TestConfig, jsonDeserializesBezierPathTrack)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"parameter", "params.c"},
+        {"path", Object{{"kind", "bezier"}, {"control-points", Object::array({"0/1", "2/3", "4/5"})}}}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_TRUE(config.tracks[0].path);
+    EXPECT_EQ(ParFile::PathKind::BEZIER, config.tracks[0].path->kind);
+    EXPECT_EQ((std::vector<std::string>{"0/1", "2/3", "4/5"}), config.tracks[0].path->control_points);
+    EXPECT_TRUE(config.tracks[0].keys.empty());
+}
+
 TEST(TestConfig, jsonRejectsTrackWithKeysAndPath)
 {
     Object json = valid_json();
@@ -397,6 +412,10 @@ TEST(TestConfig, jsonRejectsInvalidPathFrequencyOrRadius)
 
     json["tracks"] = Object::array({Object{{"parameter", "params.c"},
         {"path", Object{{"kind", "spiral"}, {"center", "0/0"}, {"from-radius", 1.0}, {"to-radius", -1.0}}}}});
+    expect_invalid(json);
+
+    json["tracks"] = Object::array({Object{{"parameter", "params.c"},
+        {"path", Object{{"kind", "bezier"}, {"control-points", Object::array({"0/1"})}}}}});
     expect_invalid(json);
 }
 

@@ -115,6 +115,14 @@ ParFile::PathConfig spiral_path(
     return result;
 }
 
+ParFile::PathConfig bezier_path(std::vector<std::string> control_points)
+{
+    ParFile::PathConfig result;
+    result.kind = ParFile::PathKind::BEZIER;
+    result.control_points = std::move(control_points);
+    return result;
+}
+
 ParFile::ResolvedTrack resolved_path_track(
     const ParFile::ParameterMetadata &parameter_metadata, const ParFile::PathConfig &path)
 {
@@ -908,6 +916,63 @@ TEST(TestInterpolant, invalidPathFrequencyOrRadiusRejected)
     EXPECT_THROW(
         ParFile::create_interpolant(
             resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2), spiral_path("0/0", 1.0, -1.0)),
+            num_steps),
+        std::runtime_error);
+}
+
+TEST(TestInterpolant, bezierPathHitsFirstAndLastControlPoints)
+{
+    const int num_steps{5};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_path_track(
+            metadata("look-at", ParFile::ParameterType::POINT2), bezier_path({"0/0", "2/4", "4/0"})),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("0/0", interpolant->step());
+    EXPECT_EQ("1/1.5", interpolant->step());
+    EXPECT_EQ("2/2", interpolant->step());
+    EXPECT_EQ("3/1.5", interpolant->step());
+    EXPECT_EQ("4/0", interpolant->step());
+}
+
+TEST(TestInterpolant, bezierParamsPathPreservesOtherSlots)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_params_path_track("params.c", bezier_path({"0/1", "2/3", "4/5"}), "0/1/52", {0, 1}), num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("params", interpolant->name());
+    EXPECT_EQ("0/1/52", interpolant->step());
+    EXPECT_EQ("2/3/52", interpolant->step());
+    EXPECT_EQ("4/5/52", interpolant->step());
+}
+
+TEST(TestInterpolant, bezierTuplePathPreservesArity)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_path_track(tuple_metadata("position", 3), bezier_path({"0/1/2", "2/3/4", "4/5/6"})), num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("0/1/2", interpolant->step());
+    EXPECT_EQ("2/3/4", interpolant->step());
+    EXPECT_EQ("4/5/6", interpolant->step());
+}
+
+TEST(TestInterpolant, invalidBezierPathRejected)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(
+        ParFile::create_interpolant(
+            resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2), bezier_path({"0/0"})), num_steps),
+        std::runtime_error);
+    EXPECT_THROW(
+        ParFile::create_interpolant(
+            resolved_path_track(
+                metadata("look-at", ParFile::ParameterType::POINT2), bezier_path({"0/0", "1/1/1"})),
             num_steps),
         std::runtime_error);
 }

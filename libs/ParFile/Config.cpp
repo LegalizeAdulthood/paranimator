@@ -237,6 +237,10 @@ static PathKind load_path_kind(const Object &json)
     {
         return PathKind::SPIRAL;
     }
+    if (kind == "bezier")
+    {
+        return PathKind::BEZIER;
+    }
     throw std::runtime_error("Invalid config, unknown path kind '" + kind + "'");
 }
 
@@ -311,6 +315,13 @@ static PathConfig load_path_config(const Object &json)
         result.turns = load_optional_double(json, "turns", 1.0);
         result.phase = load_optional_double(json, "phase", 0.0);
         break;
+    case PathKind::BEZIER:
+        result.control_points = load_string_array(json, "control-points");
+        if (result.control_points.size() < 2U)
+        {
+            throw std::runtime_error("Invalid config, bezier path requires at least two control points");
+        }
+        break;
     }
     return result;
 }
@@ -332,6 +343,7 @@ static std::vector<KeyframeConfig> load_path_keyframes(const PathConfig &path, i
     case PathKind::ELLIPSE:
     case PathKind::LISSAJOUS:
     case PathKind::SPIRAL:
+    case PathKind::BEZIER:
         return {};
     }
     throw std::runtime_error("Invalid config, unknown path kind");

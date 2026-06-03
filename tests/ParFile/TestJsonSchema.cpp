@@ -378,6 +378,13 @@ TEST(TestJsonSchema, pathTrackAccepted)
         "turns": 1
       }
     })")));
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "parameter": "params.c",
+      "path": {
+        "kind": "bezier",
+        "control-points": [ "0/1", "2/3", "4/5" ]
+      }
+    })")));
 }
 
 TEST(TestJsonSchema, pathTrackRejectsKeysAndPath)
@@ -417,6 +424,8 @@ TEST(TestJsonSchema, pathTrackRejectsInvalidRadius)
     })")));
     EXPECT_FALSE(validates_config_text(config_with_track(
         R"({"parameter":"params.c","path":{"kind":"spiral","center":"0/0","from-radius":1,"to-radius":-1}})")));
+    EXPECT_FALSE(validates_config_text(config_with_track(
+        R"({"parameter":"params.c","path":{"kind":"bezier","control-points":["0/1"]}})")));
 }
 
 TEST(TestJsonSchema, unknownTrackModeRejected)

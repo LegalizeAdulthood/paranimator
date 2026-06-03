@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace ParFile
@@ -445,9 +446,28 @@ bool is_planar_path(PathKind kind)
         kind == PathKind::SPIRAL;
 }
 
+bool is_bezier_path(PathKind kind)
+{
+    return kind == PathKind::BEZIER;
+}
+
+bool is_explicit_path(PathKind kind)
+{
+    return is_planar_path(kind) || is_bezier_path(kind);
+}
+
 double clean_path_component(double value)
 {
     return std::abs(value) < 1.0e-12 ? 0.0 : value;
+}
+
+std::vector<double> clean_path_components(std::vector<double> values)
+{
+    for (double &value : values)
+    {
+        value = clean_path_component(value);
+    }
+    return values;
 }
 
 std::string format_slash_pair(const std::complex<double> &value)
@@ -591,6 +611,85 @@ std::complex<double> PlanarPathEvaluator::value_at(int frame) const
     return ellipse_value_at(fraction);
 }
 
+int path_arity(const ParameterMetadata &metadata)
+{
+    if (metadata.type == ParameterType::COMPLEX)
+    {
+        return 2;
+    }
+    if (metadata.type == ParameterType::NUMERIC_TUPLE || tuple_alias_arity(metadata.type) != 0)
+    {
+        return tuple_arity(metadata);
+    }
+    throw std::runtime_error("Path track '" + metadata.name + "' requires a complex or tuple target");
+}
+
+class BezierPathEvaluator
+{
+public:
+    BezierPathEvaluator(const PathConfig &path, int num_steps, int arity);
+
+    std::vector<double> value_at(int frame) const;
+
+private:
+    double fraction_at(int frame) const;
+
+    std::vector<std::vector<double>> m_control_points;
+    int m_num_steps{};
+};
+
+BezierPathEvaluator::BezierPathEvaluator(const PathConfig &path, int num_steps, int arity) :
+    m_num_steps(num_steps)
+{
+    if (num_steps < 2)
+    {
+        throw std::runtime_error("Bezier path requires at least two frames");
+    }
+    if (arity <= 0)
+    {
+        throw std::runtime_error("Bezier path requires a positive arity");
+    }
+    if (path.control_points.size() < 2U)
+    {
+        throw std::runtime_error("Bezier path requires at least two control points");
+    }
+
+    m_control_points.reserve(path.control_points.size());
+    for (const std::string &control_point : path.control_points)
+    {
+        std::vector<double> values{parse_slash_doubles(control_point)};
+        if (values.size() != static_cast<std::size_t>(arity))
+        {
+            throw std::runtime_error("Bezier control point '" + control_point + "' has arity " +
+                std::to_string(values.size()) + ", expected " + std::to_string(arity));
+        }
+        m_control_points.emplace_back(std::move(values));
+    }
+}
+
+double BezierPathEvaluator::fraction_at(int frame) const
+{
+    return frame / static_cast<double>(m_num_steps - 1);
+}
+
+std::vector<double> BezierPathEvaluator::value_at(int frame) const
+{
+    const double fraction{fraction_at(frame)};
+    std::vector<std::vector<double>> values{m_control_points};
+    for (std::size_t order{values.size() - 1U}; order > 0U; --order)
+    {
+        for (std::size_t point{}; point < order; ++point)
+        {
+            for (std::size_t component{}; component < values[point].size(); ++component)
+            {
+                values[point][component] =
+                    values[point][component] + fraction * (values[point + 1U][component] - values[point][component]);
+            }
+        }
+    }
+    return clean_path_components(values[0]);
+}
+
 class ComplexPathInterpolant : public Base
 {
 public:
@@ -676,6 +775,80 @@ std::string Point2PathInterpolant::step()
     const std::complex<double> value{m_path.value_at(m_step)};
     ++m_step;
     return format_slash_pair(value);
+}
+
+class TuplePathInterpolant : public Base
+{
+public:
+    TuplePathInterpolant(const ResolvedTrack &track, int num_steps);
+    ~TuplePathInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    ParameterMetadata m_metadata;
+    BezierPathEvaluator m_path;
+};
+
+TuplePathInterpolant::TuplePathInterpolant(const ResolvedTrack &track, int num_steps) :
+    Base(track.output_parameter, num_steps),
+    m_metadata(track.metadata),
+    m_path(*track.path, num_steps, path_arity(track.metadata))
+{
+}
+
+std::string TuplePathInterpolant::step()
+{
+    std::vector<double> values{m_path.value_at(m_step)};
+    ++m_step;
+    normalize_vector(m_metadata, values);
+    return format_slash_doubles(clean_path_components(values));
+}
+
+class ParamsTuplePathInterpolant : public Base
+{
+public:
+    ParamsTuplePathInterpolant(const ResolvedTrack &track, int num_steps);
+    ~ParamsTuplePathInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    ParameterMetadata m_metadata;
+    BezierPathEvaluator m_path;
+    std::vector<double> m_base_values;
+};
+
+ParamsTuplePathInterpolant::ParamsTuplePathInterpolant(const ResolvedTrack &track, int num_steps) :
+    Base(track.output_parameter, num_steps, track.slots),
+    m_metadata(track.metadata),
+    m_path(*track.path, num_steps, path_arity(track.metadata)),
+    m_base_values(parse_slash_doubles(track.base_value))
+{
+    const int arity{path_arity(track.metadata)};
+    if (track.slots.size() != static_cast<std::size_t>(arity))
+    {
+        throw std::runtime_error("Track '" + track.parameter + "' requires " + std::to_string(arity) +
+            " params slots");
+    }
+    for (const int slot : track.slots)
+    {
+        validate_params_slot(track.parameter, m_base_values, slot);
+    }
+}
+
+std::string ParamsTuplePathInterpolant::step()
+{
+    std::vector<double> path_values{m_path.value_at(m_step)};
+    ++m_step;
+    normalize_vector(m_metadata, path_values);
+
+    std::vector<double> values{m_base_values};
+    for (std::size_t i{}; i < m_output_slots.size(); ++i)
+    {
+        values[static_cast<std::size_t>(m_output_slots[i])] = clean_path_component(path_values[i]);
+    }
+    return format_slash_doubles(values);
 }
 
 struct CenterMag
@@ -1356,9 +1529,30 @@ std::string FunctionEnumInterpolant::step()
 
 static InterpolantPtr create_path_interpolant(const ResolvedTrack &track, int num_steps)
 {
-    if (!track.path || !is_planar_path(track.path->kind))
+    if (!track.path || !is_explicit_path(track.path->kind))
     {
         throw std::runtime_error("Track '" + track.parameter + "' has no supported path generator");
+    }
+
+    if (is_bezier_path(track.path->kind))
+    {
+        switch (track.metadata.type)
+        {
+        case ParameterType::COMPLEX:
+        case ParameterType::NUMERIC_TUPLE:
+        case ParameterType::POINT2:
+        case ParameterType::POINT3:
+        case ParameterType::VECTOR2:
+        case ParameterType::VECTOR3:
+            if (track.output_parameter == "params")
+            {
+                return std::make_shared<ParamsTuplePathInterpolant>(track, num_steps);
+            }
+            return std::make_shared<TuplePathInterpolant>(track, num_steps);
+        default:
+            break;
+        }
+        throw std::runtime_error("Bezier path track '" + track.parameter + "' requires a complex or tuple target");
     }
 
     switch (track.metadata.type)
@@ -1381,7 +1575,7 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
 {
     const ParameterMetadata &metadata{track.metadata};
     const std::vector<KeyframeConfig> &keys{track.keys};
-    if (track.path && is_planar_path(track.path->kind))
+    if (track.path && keys.empty() && is_explicit_path(track.path->kind))
     {
         return create_path_interpolant(track, num_steps);
     }

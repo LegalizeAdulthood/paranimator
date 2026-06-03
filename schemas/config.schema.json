@@ -158,7 +158,8 @@
         { "$ref": "#/$defs/circle-path-generator" },
         { "$ref": "#/$defs/ellipse-path-generator" },
         { "$ref": "#/$defs/lissajous-path-generator" },
-        { "$ref": "#/$defs/spiral-path-generator" }
+        { "$ref": "#/$defs/spiral-path-generator" },
+        { "$ref": "#/$defs/bezier-path-generator" }
       ]
     },
     "constant-path-generator": {
@@ -331,6 +332,27 @@
         "phase": {
           "description": "Starting phase angle in degrees.",
           "type": "number"
+        }
+      }
+    },
+    "bezier-path-generator": {
+      "description": "Path generator that samples a Bezier curve over the full frame range.",
+      "type": "object",
+      "required": [ "kind", "control-points" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "bezier",
+          "description": "Generate values on a Bezier curve."
+        },
+        "control-points": {
+          "description": "Slash-delimited numeric control points for the Bezier curve.",
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "description": "One slash-delimited numeric Bezier control point.",
+            "type": "string"
+          }
         }
       }
     },

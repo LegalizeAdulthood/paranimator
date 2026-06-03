@@ -41,7 +41,8 @@ enum class PathKind
     CIRCLE,
     ELLIPSE,
     LISSAJOUS,
-    SPIRAL
+    SPIRAL,
+    BEZIER
 };
 
 struct PathConfig
@@ -60,6 +61,7 @@ struct PathConfig
     double y_frequency{};
     double turns{1.0};
     double phase{};
+    std::vector<std::string> control_points;
 };
 
 struct PwmConfig
