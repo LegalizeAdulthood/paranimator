@@ -228,6 +228,73 @@ TEST(TestColorMap, rotateRangeInvalidRangesAreRejected)
     EXPECT_THROW(ParFile::rotate_color_map_range(map, 0, 256, 1), std::runtime_error);
 }
 
+TEST(TestColorMap, reverseFullMapFlipsAllEntries)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    const ParFile::ColorMap result{ParFile::reverse_color_map(map)};
+
+    EXPECT_EQ(255, result[0].red);
+    EXPECT_EQ(254, result[1].red);
+    EXPECT_EQ(0, result[255].red);
+}
+
+TEST(TestColorMap, reverseRangeFlipsOnlySelectedRange)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    const ParFile::ColorMap result{ParFile::reverse_color_map_range(map, 2, 5)};
+
+    EXPECT_EQ(1, result[1].red);
+    EXPECT_EQ(5, result[2].red);
+    EXPECT_EQ(4, result[3].red);
+    EXPECT_EQ(3, result[4].red);
+    EXPECT_EQ(2, result[5].red);
+    EXPECT_EQ(6, result[6].red);
+}
+
+TEST(TestColorMap, reverseRangeInvalidRangesAreRejected)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    EXPECT_THROW(ParFile::reverse_color_map_range(map, 5, 4), std::runtime_error);
+    EXPECT_THROW(ParFile::reverse_color_map_range(map, -1, 4), std::runtime_error);
+    EXPECT_THROW(ParFile::reverse_color_map_range(map, 0, 256), std::runtime_error);
+}
+
+TEST(TestColorMap, pingPongRangeAlternatesForwardAndBackwardOffsets)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    const ParFile::ColorMap forward{ParFile::ping_pong_color_map_range(map, 2, 5, 1)};
+    const ParFile::ColorMap backward{ParFile::ping_pong_color_map_range(map, 2, 5, 5)};
+
+    EXPECT_EQ(5, forward[2].red);
+    EXPECT_EQ(2, forward[3].red);
+    EXPECT_EQ(5, backward[2].red);
+    EXPECT_EQ(2, backward[3].red);
+}
+
+TEST(TestColorMap, pingPongFullMapReturnsToStartAfterFullCycle)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    const ParFile::ColorMap result{ParFile::ping_pong_color_map(map, 510)};
+
+    EXPECT_EQ(0, result[0].red);
+    EXPECT_EQ(1, result[1].red);
+    EXPECT_EQ(255, result[255].red);
+}
+
+TEST(TestColorMap, pingPongRangeInvalidRangesAreRejected)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    EXPECT_THROW(ParFile::ping_pong_color_map_range(map, 5, 4, 1), std::runtime_error);
+    EXPECT_THROW(ParFile::ping_pong_color_map_range(map, -1, 4, 1), std::runtime_error);
+    EXPECT_THROW(ParFile::ping_pong_color_map_range(map, 0, 256, 1), std::runtime_error);
+}
+
 TEST(TestColorMap, sequenceSelectedMapChangesAtExpectedFrame)
 {
     const std::vector<ParFile::ColorMapSequenceEntry> sequence{{0, solid_map(1, 2, 3)}, {3, solid_map(4, 5, 6)}};

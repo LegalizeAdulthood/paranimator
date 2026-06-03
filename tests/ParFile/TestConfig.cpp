@@ -274,6 +274,42 @@ TEST(TestConfig, jsonDeserializesColorMapTrack)
     EXPECT_EQ("ice.map", config.tracks[0].keys[1].value);
 }
 
+TEST(TestConfig, jsonDeserializesColorMapEffectTrack)
+{
+    Object json = valid_json();
+    json["tracks"] =
+        Object::array({Object{{"parameter", "colors"},
+            {"type", "color-map"},
+            {"format", "at-file"},
+            {"output", "colors-%04d.map"},
+            {"source", "base.map"},
+            {"effects",
+                Object::array({Object{{"kind", "reverse"}, {"range", Object::array({2, 5})}},
+                    Object{{"kind", "ping-pong"},
+                        {"range", Object::array({2, 5})},
+                        {"offset",
+                            Object{{"keys",
+                                Object::array({Object{{"frame", 0}, {"value", 0.0}},
+                                    Object{{"frame", 4}, {"value", 4.0}}})}}}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    EXPECT_EQ(ParFile::TrackKind::COLOR_MAP, config.tracks[0].kind);
+    ASSERT_TRUE(config.tracks[0].color_map);
+    ASSERT_TRUE(config.tracks[0].color_map->source);
+    EXPECT_EQ("base.map", *config.tracks[0].color_map->source);
+    ASSERT_EQ(2U, config.tracks[0].color_map->effects.size());
+    EXPECT_EQ(ParFile::ColorMapEffectKind::REVERSE, config.tracks[0].color_map->effects[0].kind);
+    ASSERT_TRUE(config.tracks[0].color_map->effects[0].range);
+    EXPECT_EQ(2, config.tracks[0].color_map->effects[0].range->first);
+    EXPECT_EQ(5, config.tracks[0].color_map->effects[0].range->last);
+    EXPECT_EQ(ParFile::ColorMapEffectKind::PING_PONG, config.tracks[0].color_map->effects[1].kind);
+    ASSERT_TRUE(config.tracks[0].color_map->effects[1].offset);
+    ASSERT_EQ(2U, config.tracks[0].color_map->effects[1].offset->keys.size());
+    EXPECT_EQ(4.0, config.tracks[0].color_map->effects[1].offset->keys[1].value);
+}
+
 TEST(TestConfig, pwmWindowBelowTwoRejected)
 {
     Object json = valid_json();

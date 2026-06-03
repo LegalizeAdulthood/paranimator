@@ -196,6 +196,108 @@ static std::vector<KeyframeConfig> load_keyframes(const Object &json, TrackMode 
     return result;
 }
 
+static ColorMapEffectKind load_color_map_effect_kind(const Object &json)
+{
+    const std::string kind{load_string(json, "kind")};
+    if (kind == "reverse")
+    {
+        return ColorMapEffectKind::REVERSE;
+    }
+    if (kind == "ping-pong")
+    {
+        return ColorMapEffectKind::PING_PONG;
+    }
+    throw std::runtime_error("Invalid config, unknown color map effect kind '" + kind + "'");
+}
+
+static std::optional<ColorMapRangeConfig> load_color_map_range(const Object &json)
+{
+    const std::string key{"range"};
+    if (!json.contains(key))
+    {
+        return std::nullopt;
+    }
+    if (!json.at(key).is_array() || json.at(key).size() != 2U)
+    {
+        throw std::runtime_error("Invalid config, color map range must have two entries");
+    }
+    const Object &range{json.at(key)};
+    if (!range.at(0).is_number_integer() || !range.at(1).is_number_integer())
+    {
+        throw std::runtime_error("Invalid config, color map range entries must be integers");
+    }
+    return ColorMapRangeConfig{range.at(0).get<int>(), range.at(1).get<int>()};
+}
+
+static NumberKeyframeConfig load_number_keyframe_config(const Object &json)
+{
+    NumberKeyframeConfig result;
+    result.frame = load_int(json, "frame");
+    result.value = load_double(json, "value");
+    if (const std::optional<std::string> curve{load_optional_string(json, "curve")})
+    {
+        result.curve = parse_curve(*curve);
+    }
+    return result;
+}
+
+static NumberTrackConfig load_number_track_config(const Object &json, std::string_view name)
+{
+    const Object &track{load_object(json, name)};
+    const std::string key{"keys"};
+    if (!track.contains(key) || !track.at(key).is_array())
+    {
+        throw std::runtime_error("Invalid config, missing array '" + std::string{name} + ".keys'");
+    }
+
+    NumberTrackConfig result;
+    for (const Object &item : track.at(key))
+    {
+        if (!item.is_object())
+        {
+            throw std::runtime_error("Invalid config, array '" + std::string{name} + ".keys' contains non-object value");
+        }
+        result.keys.emplace_back(load_number_keyframe_config(item));
+    }
+    return result;
+}
+
+static ColorMapEffectConfig load_color_map_effect_config(const Object &json)
+{
+    ColorMapEffectConfig result;
+    result.kind = load_color_map_effect_kind(json);
+    result.range = load_color_map_range(json);
+    if (result.kind == ColorMapEffectKind::PING_PONG)
+    {
+        result.offset = load_number_track_config(json, "offset");
+    }
+    return result;
+}
+
+static std::vector<ColorMapEffectConfig> load_color_map_effects(const Object &json)
+{
+    const std::string key{"effects"};
+    if (!json.contains(key))
+    {
+        return {};
+    }
+    if (!json.at(key).is_array())
+    {
+        throw std::runtime_error("Invalid config, missing array 'effects'");
+    }
+
+    std::vector<ColorMapEffectConfig> result;
+    for (const Object &item : json.at(key))
+    {
+        if (!item.is_object())
+        {
+            throw std::runtime_error("Invalid config, array 'effects' contains non-object value");
+        }
+        result.emplace_back(load_color_map_effect_config(item));
+    }
+    return result;
+}
+
 static PwmConfig load_pwm_config(const Object &json)
 {
     PwmConfig result;
@@ -214,6 +316,8 @@ static ColorMapConfig load_color_map_config(const Object &json)
     ColorMapConfig result;
     result.format = parse_track_format(load_string(json, "format"));
     result.output = load_string(json, "output");
+    result.source = load_optional_string(json, "source");
+    result.effects = load_color_map_effects(json);
     return result;
 }
 
@@ -231,7 +335,14 @@ static TrackConfig load_track_config(const Object &json)
     {
         result.pwm = load_pwm_config(json);
     }
-    result.keys = load_keyframes(json, result.mode);
+    if (json.contains("keys"))
+    {
+        result.keys = load_keyframes(json, result.mode);
+    }
+    else if (result.kind != TrackKind::COLOR_MAP)
+    {
+        throw std::runtime_error("Invalid config, missing array 'keys'");
+    }
     return result;
 }
 

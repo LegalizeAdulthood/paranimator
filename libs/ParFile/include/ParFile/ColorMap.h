@@ -32,6 +32,10 @@ void write_color_map(std::ostream &contents, const ColorMap &map);
 ColorMap interpolate_color_map(const ColorMap &from, const ColorMap &to, double blend);
 ColorMap rotate_color_map(const ColorMap &map, int offset);
 ColorMap rotate_color_map_range(const ColorMap &map, int first, int last, int offset);
+ColorMap reverse_color_map(const ColorMap &map);
+ColorMap reverse_color_map_range(const ColorMap &map, int first, int last);
+ColorMap ping_pong_color_map(const ColorMap &map, int offset);
+ColorMap ping_pong_color_map_range(const ColorMap &map, int first, int last, int offset);
 ColorMap sequence_color_map(const std::vector<ColorMapSequenceEntry> &sequence, int frame, int crossfade);
 
 } // namespace ParFile

@@ -6,6 +6,7 @@
 #include <cctype>
 #include <cmath>
 #include <istream>
+#include <iterator>
 #include <ostream>
 #include <sstream>
 #include <stdexcept>
@@ -113,6 +114,23 @@ void validate_sequence(const std::vector<ColorMapSequenceEntry> &sequence, int c
     }
 }
 
+int ping_pong_offset(int offset, int length)
+{
+    if (length <= 1)
+    {
+        return 0;
+    }
+
+    const int span{length - 1};
+    const int period{span * 2};
+    int phase{static_cast<int>(wrap_index(offset, period))};
+    if (phase > span)
+    {
+        phase = period - phase;
+    }
+    return phase;
+}
+
 } // namespace
 
 ColorMap read_color_map(std::istream &contents)
@@ -190,6 +208,33 @@ ColorMap rotate_color_map_range(const ColorMap &map, int first, int last, int of
         result[static_cast<std::size_t>(i)] = map[source];
     }
     return result;
+}
+
+ColorMap reverse_color_map(const ColorMap &map)
+{
+    ColorMap result;
+    std::reverse_copy(map.begin(), map.end(), result.begin());
+    return result;
+}
+
+ColorMap reverse_color_map_range(const ColorMap &map, int first, int last)
+{
+    validate_range(first, last);
+    ColorMap result{map};
+    std::reverse_copy(std::next(map.begin(), first), std::next(map.begin(), last + 1),
+        std::next(result.begin(), first));
+    return result;
+}
+
+ColorMap ping_pong_color_map(const ColorMap &map, int offset)
+{
+    return rotate_color_map(map, ping_pong_offset(offset, static_cast<int>(COLOR_MAP_SIZE)));
+}
+
+ColorMap ping_pong_color_map_range(const ColorMap &map, int first, int last, int offset)
+{
+    validate_range(first, last);
+    return rotate_color_map_range(map, first, last, ping_pong_offset(offset, last - first + 1));
 }
 
 ColorMap sequence_color_map(const std::vector<ColorMapSequenceEntry> &sequence, int frame, int crossfade)

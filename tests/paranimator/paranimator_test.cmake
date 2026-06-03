@@ -22,6 +22,15 @@ foreach(input_file
         "${input_directory}/${input_file}")
 endforeach()
 file(COPY_FILE "${CORE_CATALOG}" "${input_directory}/core-catalog.json")
+if(DEFINED INDEXED_MAP AND NOT INDEXED_MAP STREQUAL "")
+    set(indexed_map "${input_directory}/${INDEXED_MAP}")
+    file(WRITE "${indexed_map}" "")
+    foreach(index RANGE 0 255)
+        math(EXPR green "255 - ${index}")
+        math(EXPR blue "${index} % 64")
+        file(APPEND "${indexed_map}" "${index} ${green} ${blue}\n")
+    endforeach()
+endif()
 
 execute_process(
     COMMAND "${PARANIMATOR}" "${valid_config}"

@@ -339,6 +339,72 @@ TEST(TestJsonSchema, colorMapTrackAccepted)
 })"));
 }
 
+TEST(TestJsonSchema, colorMapEffectTrackAccepted)
+{
+    EXPECT_TRUE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 5,
+  "tracks": [
+    {
+      "parameter": "colors",
+      "type": "color-map",
+      "format": "at-file",
+      "output": "colors-%04d.map",
+      "source": "base.map",
+      "effects": [
+        { "kind": "reverse", "range": [ 2, 5 ] },
+        {
+          "kind": "ping-pong",
+          "range": [ 2, 5 ],
+          "offset": {
+            "keys": [
+              { "frame": 0, "value": 0 },
+              { "frame": 4, "value": 4 }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+})"));
+}
+
+TEST(TestJsonSchema, invalidColorMapEffectRangeRejected)
+{
+    EXPECT_FALSE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 2,
+  "tracks": [
+    {
+      "parameter": "colors",
+      "type": "color-map",
+      "format": "at-file",
+      "output": "colors-%04d.map",
+      "source": "base.map",
+      "effects": [
+        { "kind": "reverse", "range": [ 0, 256 ] }
+      ]
+    }
+  ]
+})"));
+}
+
 TEST(TestJsonSchema, unknownTrackTypeRejected)
 {
     EXPECT_FALSE(validates_config_text(R"({

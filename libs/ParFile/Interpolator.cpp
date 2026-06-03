@@ -13,11 +13,13 @@
 #include <algorithm>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/format.hpp>
+#include <cmath>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -45,6 +47,47 @@ void validate_track_keyframes(const std::string &name, const std::vector<Keyfram
     }
 }
 
+void validate_number_track_keyframes(const std::string &name, const std::vector<NumberKeyframeConfig> &keys,
+    int num_frames)
+{
+    if (keys.size() != 2U)
+    {
+        throw std::runtime_error("Number track '" + name + "' requires exactly two keyframes");
+    }
+    if (keys[0].frame < 0 || keys[1].frame < 0 || keys[0].frame >= num_frames || keys[1].frame >= num_frames)
+    {
+        throw std::runtime_error("Number track '" + name + "' has keyframes outside the frame range");
+    }
+    if (keys[0].frame >= keys[1].frame)
+    {
+        throw std::runtime_error("Number track '" + name + "' keyframes must be in increasing order");
+    }
+    if (keys[1].curve == Curve::GEOMETRIC)
+    {
+        throw std::runtime_error("Number track '" + name + "' does not support geometric curves");
+    }
+}
+
+double number_track_value_at_frame(const NumberTrackConfig &track, int frame)
+{
+    const NumberKeyframeConfig &from{track.keys[0]};
+    const NumberKeyframeConfig &to{track.keys[1]};
+    if (frame <= from.frame)
+    {
+        return from.value;
+    }
+    if (frame >= to.frame)
+    {
+        return to.value;
+    }
+    if (to.curve == Curve::HOLD || to.curve == Curve::STEP)
+    {
+        return from.value;
+    }
+    const double fraction{(frame - from.frame) / static_cast<double>(to.frame - from.frame)};
+    return from.value + fraction * (to.value - from.value);
+}
+
 class ColorMapInterpolant : public Interpolant
 {
 public:
@@ -68,12 +111,15 @@ public:
 private:
     double blend_at_frame(int frame) const;
     ColorMap map_at_frame(int frame) const;
+    ColorMap apply_effect(const ColorMap &map, const ColorMapEffectConfig &effect, int frame) const;
     std::string output_filename(int frame) const;
     ColorMap read_source_map(const std::string &filename) const;
     void write_generated_map(const std::filesystem::path &filename, const ColorMap &map) const;
 
     std::string m_parameter;
     std::vector<KeyframeConfig> m_keys;
+    std::optional<std::string> m_source;
+    std::vector<ColorMapEffectConfig> m_effects;
     std::filesystem::path m_map_directory;
     std::string m_output;
     std::vector<int> m_slots;
@@ -95,10 +141,26 @@ ColorMapInterpolant::ColorMapInterpolant(
         throw std::runtime_error("Color map track '" + track.parameter + "' requires at-file format");
     }
     m_output = track.color_map->output;
-    validate_track_keyframes(track.parameter, track.keys, num_frames);
-    if (track.keys[1].curve == Curve::GEOMETRIC)
+    m_source = track.color_map->source;
+    m_effects = track.color_map->effects;
+    if (!m_source)
     {
-        throw std::runtime_error("Color map track '" + track.parameter + "' does not support geometric curves");
+        validate_track_keyframes(track.parameter, track.keys, num_frames);
+        if (track.keys[1].curve == Curve::GEOMETRIC)
+        {
+            throw std::runtime_error("Color map track '" + track.parameter + "' does not support geometric curves");
+        }
+    }
+    for (const ColorMapEffectConfig &effect : m_effects)
+    {
+        if (effect.kind == ColorMapEffectKind::PING_PONG)
+        {
+            if (!effect.offset)
+            {
+                throw std::runtime_error("Color map ping-pong effect is missing offset");
+            }
+            validate_number_track_keyframes("color map ping-pong offset", effect.offset->keys, num_frames);
+        }
     }
 }
 
@@ -121,9 +183,45 @@ double ColorMapInterpolant::blend_at_frame(int frame) const
 
 ColorMap ColorMapInterpolant::map_at_frame(int frame) const
 {
+    if (m_source)
+    {
+        ColorMap result{read_source_map(*m_source)};
+        for (const ColorMapEffectConfig &effect : m_effects)
+        {
+            result = apply_effect(result, effect, frame);
+        }
+        return result;
+    }
     const ColorMap from{read_source_map(m_keys[0].value)};
     const ColorMap to{read_source_map(m_keys[1].value)};
     return interpolate_color_map(from, to, blend_at_frame(frame));
+}
+
+ColorMap ColorMapInterpolant::apply_effect(const ColorMap &map, const ColorMapEffectConfig &effect, int frame) const
+{
+    switch (effect.kind)
+    {
+    case ColorMapEffectKind::REVERSE:
+        if (effect.range)
+        {
+            return reverse_color_map_range(map, effect.range->first, effect.range->last);
+        }
+        return reverse_color_map(map);
+    case ColorMapEffectKind::PING_PONG:
+    {
+        if (!effect.offset)
+        {
+            throw std::runtime_error("Color map ping-pong effect is missing offset");
+        }
+        const int offset{static_cast<int>(std::lround(number_track_value_at_frame(*effect.offset, frame)))};
+        if (effect.range)
+        {
+            return ping_pong_color_map_range(map, effect.range->first, effect.range->last, offset);
+        }
+        return ping_pong_color_map(map, offset);
+    }
+    }
+    return map;
 }
 
 std::string ColorMapInterpolant::output_filename(int frame) const

@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
@@ -71,6 +72,16 @@ ParFile::ColorMap solid_color(int red, int green, int blue)
     for (ParFile::RgbColor &color : result)
     {
         color = {red, green, blue};
+    }
+    return result;
+}
+
+ParFile::ColorMap indexed_color()
+{
+    ParFile::ColorMap result;
+    for (std::size_t i = 0; i < result.size(); ++i)
+    {
+        result[i] = {static_cast<int>(i), 255 - static_cast<int>(i), static_cast<int>(i % 64U)};
     }
     return result;
 }
@@ -256,6 +267,58 @@ TEST_F(TestInterpolator, colorMapTrackWritesGeneratedMapsAndAtFileValues)
     EXPECT_EQ("@colors-0001.map", colors_value(first_frame));
     EXPECT_EQ("@colors-0002.map", colors_value(middle_frame));
     EXPECT_EQ("@colors-0003.map", colors_value(last_frame));
+}
+
+TEST_F(TestInterpolator, colorMapEffectTrackWritesGeneratedMapsAndAtFileValues)
+{
+    const std::filesystem::path root{std::filesystem::path{TestParFile::TEST_OUTPUT_DIRECTORY} / "color-map-effects"};
+    const std::filesystem::path output{root / "output"};
+    const std::filesystem::path base_map{root / "input" / "base.map"};
+    std::filesystem::remove_all(root);
+    write_map_file(base_map, indexed_color());
+    ParFile::ColorMapEffectConfig reverse;
+    reverse.kind = ParFile::ColorMapEffectKind::REVERSE;
+    reverse.range = ParFile::ColorMapRangeConfig{2, 5};
+    ParFile::ColorMapEffectConfig ping_pong;
+    ping_pong.kind = ParFile::ColorMapEffectKind::PING_PONG;
+    ping_pong.range = ParFile::ColorMapRangeConfig{2, 5};
+    ping_pong.offset = ParFile::NumberTrackConfig{{{0, 0.0}, {4, 4.0}}};
+    ParFile::ColorMapConfig color_map;
+    color_map.format = ParFile::TrackFormat::AT_FILE;
+    color_map.output = "colors-%04d.map";
+    color_map.source = base_map.string();
+    color_map.effects = {reverse, ping_pong};
+    m_config_data.output.directory = output.string();
+    m_config_data.num_frames = 5;
+    m_config_data.tracks = {{"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP,
+        color_map}};
+    m_config = m_config_data;
+    m_lerper = ParFile::Interpolator{m_config};
+
+    const ParFile::ParSet first_frame{m_lerper()};
+    static_cast<void>(m_lerper());
+    const ParFile::ParSet middle_frame{m_lerper()};
+    static_cast<void>(m_lerper());
+    const ParFile::ParSet last_frame{m_lerper()};
+
+    const ParFile::ColorMap first{read_map_file(output / "map" / "colors-0001.map")};
+    const ParFile::ColorMap middle{read_map_file(output / "map" / "colors-0003.map")};
+    const ParFile::ColorMap last{read_map_file(output / "map" / "colors-0005.map")};
+    EXPECT_EQ(5, first[2].red);
+    EXPECT_EQ(4, first[3].red);
+    EXPECT_EQ(3, middle[2].red);
+    EXPECT_EQ(2, middle[3].red);
+    EXPECT_EQ(3, last[2].red);
+    EXPECT_EQ(2, last[3].red);
+    const auto colors_value = [](const ParFile::ParSet &frame)
+    {
+        const auto it{std::find_if(frame.params.begin(), frame.params.end(),
+            [](const ParFile::Parameter &param) { return param.name == "colors"; })};
+        return it == frame.params.end() ? std::string{} : it->value;
+    };
+    EXPECT_EQ("@colors-0001.map", colors_value(first_frame));
+    EXPECT_EQ("@colors-0003.map", colors_value(middle_frame));
+    EXPECT_EQ("@colors-0005.map", colors_value(last_frame));
 }
 
 TEST_F(TestInterpolator, unknownAnimatedParameterRejected)

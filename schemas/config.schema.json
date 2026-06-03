@@ -211,10 +211,27 @@
       }
     },
     "color-map-track": {
-      "description": "Track that copies selected source map files to generated frame map files.",
+      "description": "Track that writes generated frame map files using keyed maps or a source map plus effects.",
       "type": "object",
-      "required": [ "parameter", "type", "format", "output", "keys" ],
+      "required": [ "parameter", "type", "format", "output" ],
       "additionalProperties": false,
+      "oneOf": [
+        {
+          "description": "Color-map shorthand that interpolates between keyed source map files.",
+          "required": [ "keys" ],
+          "not": {
+            "anyOf": [
+              { "required": [ "source" ] },
+              { "required": [ "effects" ] }
+            ]
+          }
+        },
+        {
+          "description": "Color-map effect track that starts from one source map file.",
+          "required": [ "source", "effects" ],
+          "not": { "required": [ "keys" ] }
+        }
+      ],
       "properties": {
         "parameter": {
           "description": "Id parameter to receive the generated at-file map reference.",
@@ -240,8 +257,130 @@
           "items": {
             "$ref": "#/$defs/value-keyframe"
           }
+        },
+        "source": {
+          "description": "Source Id map file read before applying ordered effects.",
+          "type": "string"
+        },
+        "effects": {
+          "description": "Ordered color-map effects applied to the source map.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/color-map-effect"
+          }
         }
       }
+    },
+    "color-map-effect": {
+      "description": "One transformation applied to a color map.",
+      "oneOf": [
+        { "$ref": "#/$defs/reverse-color-map-effect" },
+        { "$ref": "#/$defs/ping-pong-color-map-effect" }
+      ]
+    },
+    "reverse-color-map-effect": {
+      "description": "Effect that reverses a full color map or one inclusive range.",
+      "type": "object",
+      "required": [ "kind" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "reverse",
+          "description": "Reverse the selected color-map entries."
+        },
+        "range": {
+          "description": "Optional inclusive palette index range to reverse.",
+          "$ref": "#/$defs/color-map-range"
+        }
+      }
+    },
+    "ping-pong-color-map-effect": {
+      "description": "Effect that rotates entries forward, then backward, over a ping-pong cycle.",
+      "type": "object",
+      "required": [ "kind", "offset" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "ping-pong",
+          "description": "Apply a ping-pong palette offset."
+        },
+        "range": {
+          "description": "Optional inclusive palette index range to ping-pong.",
+          "$ref": "#/$defs/color-map-range"
+        },
+        "offset": {
+          "description": "Keyed numeric offset sampled before ping-pong wrapping.",
+          "$ref": "#/$defs/number-track"
+        }
+      }
+    },
+    "color-map-range": {
+      "description": "Inclusive color-map palette index range.",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "description": "Selected palette index.",
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "number-track": {
+      "description": "Keyed numeric effect parameter.",
+      "type": "object",
+      "required": [ "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "keys": {
+          "description": "Exactly two keyed numeric values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/number-keyframe"
+          }
+        }
+      }
+    },
+    "number-keyframe": {
+      "description": "One keyed numeric value at an animation frame.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this numeric key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Numeric value sampled at this keyframe.",
+          "type": "number"
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this numeric key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
+      }
+    },
+    "scalar-curve": {
+      "description": "Interpolation curve used for keyed scalar effect parameters.",
+      "type": "string",
+      "oneOf": [
+        {
+          "const": "hold",
+          "description": "Hold the source value until the destination key."
+        },
+        {
+          "const": "linear",
+          "description": "Linearly interpolate numeric values."
+        },
+        {
+          "const": "step",
+          "description": "Step from the source value to the destination value at the destination key."
+        }
+      ]
     },
     "curve": {
       "description": "Interpolation curve used between two keyframes.",

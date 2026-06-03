@@ -41,10 +41,43 @@ struct PwmConfig
     int window{};
 };
 
+enum class ColorMapEffectKind
+{
+    REVERSE,
+    PING_PONG
+};
+
+struct ColorMapRangeConfig
+{
+    int first{};
+    int last{};
+};
+
+struct NumberKeyframeConfig
+{
+    int frame{};
+    double value{};
+    std::optional<Curve> curve;
+};
+
+struct NumberTrackConfig
+{
+    std::vector<NumberKeyframeConfig> keys;
+};
+
+struct ColorMapEffectConfig
+{
+    ColorMapEffectKind kind{ColorMapEffectKind::REVERSE};
+    std::optional<ColorMapRangeConfig> range;
+    std::optional<NumberTrackConfig> offset;
+};
+
 struct ColorMapConfig
 {
     TrackFormat format{TrackFormat::AT_FILE};
     std::string output;
+    std::optional<std::string> source;
+    std::vector<ColorMapEffectConfig> effects;
 };
 
 struct TrackConfig
