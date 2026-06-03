@@ -2,7 +2,7 @@
 //
 #pragma once
 
-#include <ParFile/Config.h>
+#include <ParFile/ResolvedAnimation.h>
 
 #include <memory>
 #include <string>
@@ -12,7 +12,6 @@
 namespace ParFile
 {
 
-struct ParameterMetadata;
 struct Parameter;
 
 class Interpolant
@@ -27,7 +26,6 @@ public:
 
 using InterpolantPtr = std::shared_ptr<Interpolant>;
 
-InterpolantPtr create_interpolant(const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys,
-    int num_steps, std::string_view base_value);
+InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps);
 
 } // namespace ParFile

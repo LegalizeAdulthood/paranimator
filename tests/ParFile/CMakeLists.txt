@@ -40,6 +40,7 @@ add_executable(test-par-file
     TestParameterCatalog.cpp
     TestParFile.cpp
     TestParSet.cpp
+    TestResolvedAnimation.cpp
     TestScript.cpp
 
     from.par.in

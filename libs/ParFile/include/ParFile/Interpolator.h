@@ -14,6 +14,7 @@ namespace ParFile
 struct Config;
 class Interpolant;
 struct NamedFileParSet;
+struct ResolvedAnimation;
 using InterpolantPtr = std::shared_ptr<Interpolant>;
 
 class Interpolator
@@ -34,7 +35,9 @@ public:
     ParSet operator()();
 
 private:
-    static std::vector<InterpolantPtr> load_interpolants(const Config &config, const ParSet &source);
+    Interpolator(const ResolvedAnimation &animation);
+
+    static std::vector<InterpolantPtr> load_interpolants(const ResolvedAnimation &animation);
     std::string m_frame_name;
     std::string m_video;
     ParSet m_source;

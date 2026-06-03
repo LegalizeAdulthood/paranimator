@@ -499,9 +499,10 @@ std::string DoubleInterpolant::step()
 
 } // namespace
 
-InterpolantPtr create_interpolant(const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys,
-    int num_steps, std::string_view base_value)
+InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
 {
+    const ParameterMetadata &metadata{track.metadata};
+    const std::vector<KeyframeConfig> &keys{track.keys};
     validate_keyframes(metadata.name, keys, num_steps);
     switch (metadata.type)
     {
@@ -518,7 +519,7 @@ InterpolantPtr create_interpolant(const ParameterMetadata &metadata, const std::
         {
             curve = *keys[1].curve;
         }
-        return std::make_shared<IntegerInterpolant>(metadata, keys, curve, base_value, num_steps);
+        return std::make_shared<IntegerInterpolant>(metadata, keys, curve, track.base_value, num_steps);
     }
     case ParameterType::DOUBLE:
     {
@@ -527,7 +528,7 @@ InterpolantPtr create_interpolant(const ParameterMetadata &metadata, const std::
         {
             curve = *keys[1].curve;
         }
-        return std::make_shared<DoubleInterpolant>(metadata, keys, curve, base_value, num_steps);
+        return std::make_shared<DoubleInterpolant>(metadata, keys, curve, track.base_value, num_steps);
     }
     }
 

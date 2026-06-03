@@ -6,6 +6,7 @@
 #include <ParFile/Interpolant.h>
 #include <ParFile/ParFile.h>
 #include <ParFile/ParameterCatalog.h>
+#include <ParFile/ResolvedAnimation.h>
 
 #include <algorithm>
 #include <boost/format.hpp>
@@ -53,29 +54,33 @@ static ParameterCatalog load_parameter_catalog(const Config &config)
     return read_parameter_catalog(read_text(config.parameter_catalogs[0]));
 }
 
-std::vector<InterpolantPtr> Interpolator::load_interpolants(const Config &config, const ParSet &source)
+static ResolvedAnimation load_animation(const Config &config)
 {
+    const ParSet source{load_par_set(config.source)};
     const ParameterCatalog catalog{load_parameter_catalog(config)};
+    return resolve_animation(config, catalog, source);
+}
+
+std::vector<InterpolantPtr> Interpolator::load_interpolants(const ResolvedAnimation &animation)
+{
     std::vector<InterpolantPtr> result;
-    for (const TrackConfig &track : config.tracks)
+    for (const ResolvedTrack &track : animation.tracks)
     {
-        const ParameterMetadata &metadata{catalog.metadata(track.parameter)};
-        const auto is_name{[&](const Parameter &param) { return param.name == track.parameter; }};
-        const auto it{std::find_if(source.params.begin(), source.params.end(), is_name)};
-        if (it == source.params.end())
-        {
-            throw std::runtime_error("Parameter set '" + source.name + "' has no parameter '" + track.parameter + "'");
-        }
-        result.emplace_back(create_interpolant(metadata, track.keys, config.num_frames, it->value));
+        result.emplace_back(create_interpolant(track, animation.num_frames));
     }
     return result;
 }
 
 Interpolator::Interpolator(const Config &config) :
-    m_frame_name(config.output.entry),
-    m_video(config.video),
-    m_source(load_par_set(config.source)),
-    m_interpolants(load_interpolants(config, m_source))
+    Interpolator(load_animation(config))
+{
+}
+
+Interpolator::Interpolator(const ResolvedAnimation &animation) :
+    m_frame_name(animation.frame_name),
+    m_video(animation.video),
+    m_source(animation.source),
+    m_interpolants(load_interpolants(animation))
 {
 }
 

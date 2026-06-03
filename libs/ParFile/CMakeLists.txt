@@ -14,6 +14,7 @@ add_library(ParFile
     include/ParFile/OutputLayout.h
     include/ParFile/ParameterCatalog.h
     include/ParFile/ParFile.h
+    include/ParFile/ResolvedAnimation.h
     include/ParFile/Script.h
     AnimationEnums.cpp
     Config.cpp
@@ -23,6 +24,7 @@ add_library(ParFile
     OutputLayout.cpp
     ParameterCatalog.cpp
     ParFile.cpp
+    ResolvedAnimation.cpp
     Script.cpp
 )
 target_include_directories(ParFile PUBLIC include)

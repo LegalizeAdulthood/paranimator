@@ -31,22 +31,35 @@ std::vector<ParFile::KeyframeConfig> keyframes(
     return {{0, from}, {num_steps - 1, to, curve}};
 }
 
+ParFile::ResolvedTrack resolved_track(const std::string &name, ParFile::ParameterType type,
+    const std::vector<ParFile::KeyframeConfig> &keys, const std::string &base_value)
+{
+    return {name, metadata(name, type), base_value, keys};
+}
+
+ParFile::ResolvedTrack resolved_track(const ParFile::ParameterMetadata &parameter_metadata,
+    const std::vector<ParFile::KeyframeConfig> &keys, const std::string &base_value)
+{
+    return {parameter_metadata.name, parameter_metadata, base_value, keys};
+}
+
 ParFile::InterpolantPtr create_interpolant(
     const std::string &name, ParFile::ParameterType type, const std::string &from, const std::string &to, int num_steps)
 {
-    return ParFile::create_interpolant(metadata(name, type), keyframes(from, to, num_steps), num_steps, from);
+    return ParFile::create_interpolant(resolved_track(name, type, keyframes(from, to, num_steps), from), num_steps);
 }
 
 ParFile::InterpolantPtr create_interpolant(const std::string &name, ParFile::ParameterType type,
     const std::vector<ParFile::KeyframeConfig> &keys, int num_steps)
 {
-    return ParFile::create_interpolant(metadata(name, type), keys, num_steps, keys[0].value);
+    return ParFile::create_interpolant(resolved_track(name, type, keys, keys[0].value), num_steps);
 }
 
 ParFile::InterpolantPtr create_interpolant(
     const ParFile::ParameterMetadata &parameter_metadata, const std::string &from, const std::string &to, int num_steps)
 {
-    return ParFile::create_interpolant(parameter_metadata, keyframes(from, to, num_steps), num_steps, from);
+    const std::vector<ParFile::KeyframeConfig> keys{keyframes(from, to, num_steps)};
+    return ParFile::create_interpolant(resolved_track(parameter_metadata, keys, from), num_steps);
 }
 
 } // namespace
@@ -275,8 +288,9 @@ TEST(TestInterpolant, integerBaseExtrapolation)
     const int num_steps{4};
     const std::vector<ParFile::KeyframeConfig> keys{{1, "100"}, {2, "200"}};
     ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
-        metadata("maxiter", ParFile::ParameterType::INTEGER, {}, {}, ParFile::ExtrapolateMode::BASE), keys, num_steps,
-        "678")};
+        resolved_track(
+            metadata("maxiter", ParFile::ParameterType::INTEGER, {}, {}, ParFile::ExtrapolateMode::BASE), keys, "678"),
+        num_steps)};
 
     EXPECT_EQ("678", interpolant->step());
     EXPECT_TRUE(interpolant->has_value());
@@ -293,8 +307,9 @@ TEST(TestInterpolant, integerCycleExtrapolation)
     const int num_steps{5};
     const std::vector<ParFile::KeyframeConfig> keys{{1, "100"}, {3, "300"}};
     ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
-        metadata("maxiter", ParFile::ParameterType::INTEGER, {}, {}, ParFile::ExtrapolateMode::CYCLE), keys, num_steps,
-        "678")};
+        resolved_track(
+            metadata("maxiter", ParFile::ParameterType::INTEGER, {}, {}, ParFile::ExtrapolateMode::CYCLE), keys, "678"),
+        num_steps)};
 
     EXPECT_EQ("300", interpolant->step());
     EXPECT_EQ("100", interpolant->step());
@@ -381,8 +396,9 @@ TEST(TestInterpolant, doubleOmitExtrapolation)
     const int num_steps{4};
     const std::vector<ParFile::KeyframeConfig> keys{{1, "1.5"}, {2, "2.5"}};
     ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
-        metadata("bailout", ParFile::ParameterType::DOUBLE, {}, {}, ParFile::ExtrapolateMode::OMIT), keys, num_steps,
-        "1.25")};
+        resolved_track(
+            metadata("bailout", ParFile::ParameterType::DOUBLE, {}, {}, ParFile::ExtrapolateMode::OMIT), keys, "1.25"),
+        num_steps)};
 
     static_cast<void>(interpolant->step());
     EXPECT_FALSE(interpolant->has_value());
@@ -399,8 +415,9 @@ TEST(TestInterpolant, doublePingPongExtrapolation)
     const int num_steps{5};
     const std::vector<ParFile::KeyframeConfig> keys{{1, "1"}, {3, "3"}};
     ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
-        metadata("bailout", ParFile::ParameterType::DOUBLE, {}, {}, ParFile::ExtrapolateMode::PING_PONG), keys,
-        num_steps, "1.25")};
+        resolved_track(metadata("bailout", ParFile::ParameterType::DOUBLE, {}, {}, ParFile::ExtrapolateMode::PING_PONG),
+            keys, "1.25"),
+        num_steps)};
 
     EXPECT_EQ("2", interpolant->step());
     EXPECT_EQ("1", interpolant->step());
