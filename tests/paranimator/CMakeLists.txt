@@ -68,4 +68,5 @@ add_paranimator_test(color-map-reverse-ping-pong FRAMES 5 INDEXED_MAP indexed.ma
 add_paranimator_test(color-map-gradient FRAMES 1 OUTPUT_MAP gradient-0001.map)
 add_paranimator_test(color-map-brightness FRAMES 3 OUTPUT_MAP brightness-0002.map)
 add_paranimator_test(color-map-adjustments FRAMES 3 OUTPUT_MAP adjustments-0002.map)
+add_paranimator_test(color-map-masked-effects FRAMES 3 INDEXED_MAP indexed.map OUTPUT_MAP masked-0002.map)
 add_paranimator_schema_test(invalid-schema)

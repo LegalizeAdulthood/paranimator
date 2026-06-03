@@ -93,7 +93,8 @@ bool color_map_effect_uses_amount(ColorMapEffectKind kind)
 {
     return kind == ColorMapEffectKind::BRIGHTNESS || kind == ColorMapEffectKind::CONTRAST ||
         kind == ColorMapEffectKind::GAMMA || kind == ColorMapEffectKind::HUE_SHIFT ||
-        kind == ColorMapEffectKind::SATURATION;
+        kind == ColorMapEffectKind::MASK_BLEND || kind == ColorMapEffectKind::PULSE ||
+        kind == ColorMapEffectKind::SATURATION || kind == ColorMapEffectKind::SPARKLE;
 }
 
 std::string color_map_effect_name(ColorMapEffectKind kind)
@@ -108,8 +109,16 @@ std::string color_map_effect_name(ColorMapEffectKind kind)
         return "gamma";
     case ColorMapEffectKind::HUE_SHIFT:
         return "hue-shift";
+    case ColorMapEffectKind::MASK_BLEND:
+        return "mask-blend";
+    case ColorMapEffectKind::PULSE:
+        return "pulse";
+    case ColorMapEffectKind::REMAP:
+        return "remap";
     case ColorMapEffectKind::SATURATION:
         return "saturation";
+    case ColorMapEffectKind::SPARKLE:
+        return "sparkle";
     case ColorMapEffectKind::REVERSE:
         return "reverse";
     case ColorMapEffectKind::PING_PONG:
@@ -129,6 +138,17 @@ void validate_gamma_amounts(const NumberTrackConfig &track)
     }
 }
 
+void validate_amount_range(const std::string &name, const NumberTrackConfig &track, double min, double max)
+{
+    for (const NumberKeyframeConfig &key : track.keys)
+    {
+        if (key.value < min || key.value > max)
+        {
+            throw std::runtime_error("Color map " + name + " amount is outside the valid range");
+        }
+    }
+}
+
 double color_map_effect_amount_at_frame(const ColorMapEffectConfig &effect, int frame)
 {
     if (!effect.amount)
@@ -136,6 +156,45 @@ double color_map_effect_amount_at_frame(const ColorMapEffectConfig &effect, int 
         throw std::runtime_error("Color map " + color_map_effect_name(effect.kind) + " effect is missing amount");
     }
     return number_track_value_at_frame(*effect.amount, frame);
+}
+
+void require_range(const ColorMapEffectConfig &effect)
+{
+    if (!effect.range)
+    {
+        throw std::runtime_error("Color map " + color_map_effect_name(effect.kind) + " effect is missing range");
+    }
+}
+
+void validate_remap_indices(const std::vector<int> &indices)
+{
+    if (indices.size() != COLOR_MAP_SIZE)
+    {
+        throw std::runtime_error("Color map remap effect requires 256 indices");
+    }
+    for (int index : indices)
+    {
+        if (index < 0 || index >= static_cast<int>(COLOR_MAP_SIZE))
+        {
+            throw std::runtime_error("Color map remap index is outside the range 0 through 255");
+        }
+    }
+}
+
+ColorMapRange to_color_map_range(const ColorMapRangeConfig &range)
+{
+    return {range.first, range.last};
+}
+
+std::vector<ColorMapRange> to_color_map_ranges(const std::vector<ColorMapRangeConfig> &ranges)
+{
+    std::vector<ColorMapRange> result;
+    result.reserve(ranges.size());
+    for (const ColorMapRangeConfig &range : ranges)
+    {
+        result.push_back(to_color_map_range(range));
+    }
+    return result;
 }
 
 class ColorMapInterpolant : public Interpolant
@@ -226,6 +285,14 @@ ColorMapInterpolant::ColorMapInterpolant(
             {
                 validate_gamma_amounts(*effect.amount);
             }
+            if (effect.kind == ColorMapEffectKind::MASK_BLEND || effect.kind == ColorMapEffectKind::PULSE)
+            {
+                validate_amount_range(color_map_effect_name(effect.kind), *effect.amount, 0.0, 1.0);
+            }
+            if (effect.kind == ColorMapEffectKind::SPARKLE)
+            {
+                validate_amount_range(color_map_effect_name(effect.kind), *effect.amount, 0.0, 255.0);
+            }
         }
         else if (effect.kind == ColorMapEffectKind::PING_PONG)
         {
@@ -234,6 +301,45 @@ ColorMapInterpolant::ColorMapInterpolant(
                 throw std::runtime_error("Color map ping-pong effect is missing offset");
             }
             validate_number_track_keyframes("color map ping-pong offset", effect.offset->keys, num_frames);
+        }
+        switch (effect.kind)
+        {
+        case ColorMapEffectKind::MASK_BLEND:
+            if (effect.ranges.empty())
+            {
+                throw std::runtime_error("Color map mask-blend effect is missing ranges");
+            }
+            if (!effect.source)
+            {
+                throw std::runtime_error("Color map mask-blend effect is missing source");
+            }
+            break;
+        case ColorMapEffectKind::PULSE:
+            require_range(effect);
+            if (!effect.color)
+            {
+                throw std::runtime_error("Color map pulse effect is missing color");
+            }
+            static_cast<void>(parse_color_spec(*effect.color));
+            break;
+        case ColorMapEffectKind::REMAP:
+            validate_remap_indices(effect.indices);
+            break;
+        case ColorMapEffectKind::SPARKLE:
+            require_range(effect);
+            if (!effect.seed)
+            {
+                throw std::runtime_error("Color map sparkle effect is missing seed");
+            }
+            break;
+        case ColorMapEffectKind::BRIGHTNESS:
+        case ColorMapEffectKind::CONTRAST:
+        case ColorMapEffectKind::GAMMA:
+        case ColorMapEffectKind::HUE_SHIFT:
+        case ColorMapEffectKind::SATURATION:
+        case ColorMapEffectKind::REVERSE:
+        case ColorMapEffectKind::PING_PONG:
+            break;
         }
     }
 }
@@ -292,8 +398,31 @@ ColorMap ColorMapInterpolant::apply_effect(const ColorMap &map, const ColorMapEf
         return gamma_color_map(map, color_map_effect_amount_at_frame(effect, frame));
     case ColorMapEffectKind::HUE_SHIFT:
         return hue_shift_color_map(map, color_map_effect_amount_at_frame(effect, frame));
+    case ColorMapEffectKind::MASK_BLEND:
+        if (!effect.source)
+        {
+            throw std::runtime_error("Color map mask-blend effect is missing source");
+        }
+        return mask_blend_color_map(map, read_source_map(*effect.source), to_color_map_ranges(effect.ranges),
+            color_map_effect_amount_at_frame(effect, frame));
+    case ColorMapEffectKind::PULSE:
+        if (!effect.range || !effect.color)
+        {
+            throw std::runtime_error("Color map pulse effect is missing range or color");
+        }
+        return pulse_color_map(map, to_color_map_range(*effect.range), parse_color_spec(*effect.color),
+            color_map_effect_amount_at_frame(effect, frame));
+    case ColorMapEffectKind::REMAP:
+        return remap_color_map(map, effect.indices);
     case ColorMapEffectKind::SATURATION:
         return saturation_color_map(map, color_map_effect_amount_at_frame(effect, frame));
+    case ColorMapEffectKind::SPARKLE:
+        if (!effect.range || !effect.seed)
+        {
+            throw std::runtime_error("Color map sparkle effect is missing range or seed");
+        }
+        return sparkle_color_map(map, to_color_map_range(*effect.range), *effect.seed,
+            color_map_effect_amount_at_frame(effect, frame));
     case ColorMapEffectKind::REVERSE:
         if (effect.range)
         {

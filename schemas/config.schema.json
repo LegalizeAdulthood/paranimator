@@ -353,8 +353,12 @@
         { "$ref": "#/$defs/contrast-color-map-effect" },
         { "$ref": "#/$defs/gamma-color-map-effect" },
         { "$ref": "#/$defs/hue-shift-color-map-effect" },
+        { "$ref": "#/$defs/mask-blend-color-map-effect" },
+        { "$ref": "#/$defs/pulse-color-map-effect" },
+        { "$ref": "#/$defs/remap-color-map-effect" },
         { "$ref": "#/$defs/reverse-color-map-effect" },
         { "$ref": "#/$defs/saturation-color-map-effect" },
+        { "$ref": "#/$defs/sparkle-color-map-effect" },
         { "$ref": "#/$defs/ping-pong-color-map-effect" }
       ]
     },
@@ -422,6 +426,70 @@
         }
       }
     },
+    "mask-blend-color-map-effect": {
+      "description": "Effect that blends selected ranges with another Id map file.",
+      "type": "object",
+      "required": [ "kind", "ranges", "source", "amount" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "mask-blend",
+          "description": "Blend selected ranges with another Id map file."
+        },
+        "ranges": {
+          "description": "Inclusive palette index ranges to blend.",
+          "$ref": "#/$defs/color-map-ranges"
+        },
+        "source": {
+          "description": "Source Id map file used for blended entries.",
+          "type": "string"
+        },
+        "amount": {
+          "description": "Keyed blend amount from 0 through 1.",
+          "$ref": "#/$defs/unit-number-track"
+        }
+      }
+    },
+    "pulse-color-map-effect": {
+      "description": "Effect that blends one range toward a concrete color.",
+      "type": "object",
+      "required": [ "kind", "range", "color", "amount" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "pulse",
+          "description": "Blend one range toward a concrete color."
+        },
+        "range": {
+          "description": "Inclusive palette index range to pulse.",
+          "$ref": "#/$defs/color-map-range"
+        },
+        "color": {
+          "description": "Concrete pulse color.",
+          "$ref": "#/$defs/color-specification"
+        },
+        "amount": {
+          "description": "Keyed pulse amount from 0 through 1.",
+          "$ref": "#/$defs/unit-number-track"
+        }
+      }
+    },
+    "remap-color-map-effect": {
+      "description": "Effect that reindexes the map with a 256-entry lookup table.",
+      "type": "object",
+      "required": [ "kind", "indices" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "remap",
+          "description": "Reindex the map with a 256-entry lookup table."
+        },
+        "indices": {
+          "description": "Destination-indexed source palette index table.",
+          "$ref": "#/$defs/color-map-remap-indices"
+        }
+      }
+    },
     "reverse-color-map-effect": {
       "description": "Effect that reverses a full color map or one inclusive range.",
       "type": "object",
@@ -451,6 +519,32 @@
         "amount": {
           "description": "Keyed saturation multiplier.",
           "$ref": "#/$defs/number-track"
+        }
+      }
+    },
+    "sparkle-color-map-effect": {
+      "description": "Effect that applies seeded random color perturbation in one range.",
+      "type": "object",
+      "required": [ "kind", "range", "seed", "amount" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "sparkle",
+          "description": "Apply seeded random color perturbation in one range."
+        },
+        "range": {
+          "description": "Inclusive palette index range to perturb.",
+          "$ref": "#/$defs/color-map-range"
+        },
+        "seed": {
+          "description": "Integer seed for repeatable random perturbation.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "amount": {
+          "description": "Keyed maximum component delta from 0 through 255.",
+          "$ref": "#/$defs/byte-number-track"
         }
       }
     },
@@ -484,6 +578,105 @@
         "type": "integer",
         "minimum": 0,
         "maximum": 255
+      }
+    },
+    "color-map-ranges": {
+      "description": "One or more inclusive color-map palette index ranges.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "description": "Inclusive color-map palette index range.",
+        "$ref": "#/$defs/color-map-range"
+      }
+    },
+    "color-map-remap-indices": {
+      "description": "Destination-indexed table of source palette indices.",
+      "type": "array",
+      "minItems": 256,
+      "maxItems": 256,
+      "items": {
+        "description": "Source palette index.",
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "unit-number-track": {
+      "description": "Keyed numeric effect parameter from 0 through 1.",
+      "type": "object",
+      "required": [ "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "keys": {
+          "description": "Exactly two keyed numeric values from 0 through 1.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/unit-number-keyframe"
+          }
+        }
+      }
+    },
+    "unit-number-keyframe": {
+      "description": "One keyed numeric value from 0 through 1.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this unit numeric key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Numeric value sampled at this keyframe.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this unit numeric key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
+      }
+    },
+    "byte-number-track": {
+      "description": "Keyed numeric effect parameter from 0 through 255.",
+      "type": "object",
+      "required": [ "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "keys": {
+          "description": "Exactly two keyed numeric values from 0 through 255.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/byte-number-keyframe"
+          }
+        }
+      }
+    },
+    "byte-number-keyframe": {
+      "description": "One keyed numeric value from 0 through 255.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this byte numeric key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Numeric value sampled at this keyframe.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this byte numeric key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
       }
     },
     "positive-number-track": {

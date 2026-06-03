@@ -215,6 +215,18 @@ static ColorMapEffectKind load_color_map_effect_kind(const Object &json)
     {
         return ColorMapEffectKind::HUE_SHIFT;
     }
+    if (kind == "mask-blend")
+    {
+        return ColorMapEffectKind::MASK_BLEND;
+    }
+    if (kind == "pulse")
+    {
+        return ColorMapEffectKind::PULSE;
+    }
+    if (kind == "remap")
+    {
+        return ColorMapEffectKind::REMAP;
+    }
     if (kind == "reverse")
     {
         return ColorMapEffectKind::REVERSE;
@@ -223,11 +235,28 @@ static ColorMapEffectKind load_color_map_effect_kind(const Object &json)
     {
         return ColorMapEffectKind::SATURATION;
     }
+    if (kind == "sparkle")
+    {
+        return ColorMapEffectKind::SPARKLE;
+    }
     if (kind == "ping-pong")
     {
         return ColorMapEffectKind::PING_PONG;
     }
     throw std::runtime_error("Invalid config, unknown color map effect kind '" + kind + "'");
+}
+
+static ColorMapRangeConfig load_color_map_range_value(const Object &range)
+{
+    if (!range.is_array() || range.size() != 2U)
+    {
+        throw std::runtime_error("Invalid config, color map range must have two entries");
+    }
+    if (!range.at(0).is_number_integer() || !range.at(1).is_number_integer())
+    {
+        throw std::runtime_error("Invalid config, color map range entries must be integers");
+    }
+    return ColorMapRangeConfig{range.at(0).get<int>(), range.at(1).get<int>()};
 }
 
 static std::optional<ColorMapRangeConfig> load_color_map_range(const Object &json)
@@ -237,16 +266,41 @@ static std::optional<ColorMapRangeConfig> load_color_map_range(const Object &jso
     {
         return std::nullopt;
     }
-    if (!json.at(key).is_array() || json.at(key).size() != 2U)
+    return load_color_map_range_value(json.at(key));
+}
+
+static std::vector<ColorMapRangeConfig> load_color_map_ranges(const Object &json)
+{
+    const std::string key{"ranges"};
+    if (!json.contains(key) || !json.at(key).is_array())
     {
-        throw std::runtime_error("Invalid config, color map range must have two entries");
+        throw std::runtime_error("Invalid config, missing array 'ranges'");
     }
-    const Object &range{json.at(key)};
-    if (!range.at(0).is_number_integer() || !range.at(1).is_number_integer())
+    std::vector<ColorMapRangeConfig> result;
+    for (const Object &range : json.at(key))
     {
-        throw std::runtime_error("Invalid config, color map range entries must be integers");
+        result.emplace_back(load_color_map_range_value(range));
     }
-    return ColorMapRangeConfig{range.at(0).get<int>(), range.at(1).get<int>()};
+    return result;
+}
+
+static std::vector<int> load_int_array(const Object &json, std::string_view name)
+{
+    const std::string key{name};
+    if (!json.contains(key) || !json.at(key).is_array())
+    {
+        throw std::runtime_error("Invalid config, missing array '" + std::string{name} + "'");
+    }
+    std::vector<int> result;
+    for (const Object &item : json.at(key))
+    {
+        if (!item.is_number_integer())
+        {
+            throw std::runtime_error("Invalid config, array '" + std::string{name} + "' contains non-integer value");
+        }
+        result.emplace_back(item.get<int>());
+    }
+    return result;
 }
 
 static NumberKeyframeConfig load_number_keyframe_config(const Object &json)
@@ -352,10 +406,26 @@ static ColorMapEffectConfig load_color_map_effect_config(const Object &json)
     case ColorMapEffectKind::SATURATION:
         result.amount = load_number_track_config(json, "amount");
         break;
+    case ColorMapEffectKind::MASK_BLEND:
+        result.ranges = load_color_map_ranges(json);
+        result.source = load_string(json, "source");
+        result.amount = load_number_track_config(json, "amount");
+        break;
     case ColorMapEffectKind::PING_PONG:
         result.offset = load_number_track_config(json, "offset");
         break;
+    case ColorMapEffectKind::PULSE:
+        result.color = load_string(json, "color");
+        result.amount = load_number_track_config(json, "amount");
+        break;
+    case ColorMapEffectKind::REMAP:
+        result.indices = load_int_array(json, "indices");
+        break;
     case ColorMapEffectKind::REVERSE:
+        break;
+    case ColorMapEffectKind::SPARKLE:
+        result.seed = load_int(json, "seed");
+        result.amount = load_number_track_config(json, "amount");
         break;
     }
     return result;

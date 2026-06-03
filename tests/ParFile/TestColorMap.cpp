@@ -61,6 +61,16 @@ void expect_valid_color(const ParFile::RgbColor &color)
     EXPECT_LE(color.blue, 255);
 }
 
+void expect_equal_maps(const ParFile::ColorMap &left, const ParFile::ColorMap &right)
+{
+    for (std::size_t i = 0; i < left.size(); ++i)
+    {
+        EXPECT_EQ(left[i].red, right[i].red);
+        EXPECT_EQ(left[i].green, right[i].green);
+        EXPECT_EQ(left[i].blue, right[i].blue);
+    }
+}
+
 } // namespace
 
 TEST(TestColorMap, reads256Entries)
@@ -328,6 +338,62 @@ TEST(TestColorMap, saturationClampsToValidRgbRange)
     const ParFile::ColorMap result{ParFile::saturation_color_map(map, 100.0)};
 
     expect_valid_color(result[0]);
+}
+
+TEST(TestColorMap, pulseAffectsOnlySelectedRange)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    const ParFile::ColorMap result{ParFile::pulse_color_map(map, {2, 3}, {255, 255, 255}, 1.0)};
+
+    expect_color(result[1], 1, 254, 1);
+    expect_color(result[2], 255, 255, 255);
+    expect_color(result[3], 255, 255, 255);
+    expect_color(result[4], 4, 251, 4);
+}
+
+TEST(TestColorMap, maskBlendAffectsOnlySelectedRanges)
+{
+    const ParFile::ColorMap map{indexed_map()};
+    const ParFile::ColorMap mask{solid_map(100, 120, 140)};
+
+    const ParFile::ColorMap result{ParFile::mask_blend_color_map(map, mask, {{2, 3}, {6, 6}}, 1.0)};
+
+    expect_color(result[1], 1, 254, 1);
+    expect_color(result[2], 100, 120, 140);
+    expect_color(result[3], 100, 120, 140);
+    expect_color(result[4], 4, 251, 4);
+    expect_color(result[6], 100, 120, 140);
+}
+
+TEST(TestColorMap, remapUsesIndexTable)
+{
+    const ParFile::ColorMap map{indexed_map()};
+    std::vector<int> indices(ParFile::COLOR_MAP_SIZE);
+    for (std::size_t i = 0; i < indices.size(); ++i)
+    {
+        indices[i] = static_cast<int>(i);
+    }
+    indices[0] = 2;
+    indices[1] = 3;
+
+    const ParFile::ColorMap result{ParFile::remap_color_map(map, indices)};
+
+    expect_color(result[0], 2, 253, 2);
+    expect_color(result[1], 3, 252, 3);
+    expect_color(result[2], 2, 253, 2);
+}
+
+TEST(TestColorMap, sparkleIsSeededAndRepeatable)
+{
+    const ParFile::ColorMap map{solid_map(128, 128, 128)};
+
+    const ParFile::ColorMap first{ParFile::sparkle_color_map(map, {2, 5}, 8675309, 32.0)};
+    const ParFile::ColorMap second{ParFile::sparkle_color_map(map, {2, 5}, 8675309, 32.0)};
+
+    expect_equal_maps(first, second);
+    expect_color(first[1], 128, 128, 128);
+    expect_color(first[6], 128, 128, 128);
 }
 
 TEST(TestColorMap, gradientTwoStopsAccepted)

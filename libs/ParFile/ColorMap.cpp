@@ -8,6 +8,7 @@
 #include <istream>
 #include <iterator>
 #include <ostream>
+#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -217,6 +218,48 @@ void validate_range(int first, int last)
     }
 }
 
+void validate_range(ColorMapRange range)
+{
+    validate_range(range.first, range.last);
+}
+
+void validate_ranges(const std::vector<ColorMapRange> &ranges)
+{
+    if (ranges.empty())
+    {
+        throw std::runtime_error("Color map ranges must not be empty");
+    }
+    for (const ColorMapRange &range : ranges)
+    {
+        validate_range(range);
+    }
+}
+
+void validate_blend_amount(const std::string &effect, double amount)
+{
+    if (!std::isfinite(amount) || amount < 0.0 || amount > 1.0)
+    {
+        throw std::runtime_error("Color map " + effect + " amount must be between 0 and 1");
+    }
+}
+
+int blend_component(int from, int to, double amount)
+{
+    return std::clamp(interpolate_component(from, to, amount), 0, 255);
+}
+
+RgbColor blend_color(const RgbColor &from, const RgbColor &to, double amount)
+{
+    return {blend_component(from.red, to.red, amount), blend_component(from.green, to.green, amount),
+        blend_component(from.blue, to.blue, amount)};
+}
+
+int sparkle_component(int value, int amount, std::mt19937 &engine)
+{
+    std::uniform_int_distribution<int> distribution{-amount, amount};
+    return std::clamp(value + distribution(engine), 0, 255);
+}
+
 void validate_sequence(const std::vector<ColorMapSequenceEntry> &sequence, int crossfade)
 {
     if (sequence.empty())
@@ -258,6 +301,21 @@ void validate_gradient_stops(const std::vector<ColorMapGradientStop> &stops)
         if (i != 0U && stops[i - 1U].index >= stops[i].index)
         {
             throw std::runtime_error("Gradient color map stop indexes must be increasing");
+        }
+    }
+}
+
+void validate_remap_indices(const std::vector<int> &indices)
+{
+    if (indices.size() != COLOR_MAP_SIZE)
+    {
+        throw std::runtime_error("Color map remap requires 256 indices");
+    }
+    for (int index : indices)
+    {
+        if (index < 0 || index >= static_cast<int>(COLOR_MAP_SIZE))
+        {
+            throw std::runtime_error("Color map remap index is outside the range 0 through 255");
         }
     }
 }
@@ -421,6 +479,53 @@ ColorMap gradient_color_map(const std::vector<ColorMapGradientStop> &stops)
     return result;
 }
 
+ColorMap mask_blend_color_map(
+    const ColorMap &map, const ColorMap &mask, const std::vector<ColorMapRange> &ranges, double amount)
+{
+    validate_ranges(ranges);
+    validate_blend_amount("mask-blend", amount);
+
+    ColorMap result{map};
+    for (const ColorMapRange &range : ranges)
+    {
+        for (int i = range.first; i <= range.last; ++i)
+        {
+            const std::size_t index{static_cast<std::size_t>(i)};
+            result[index] = blend_color(map[index], mask[index], amount);
+        }
+    }
+    return result;
+}
+
+ColorMap pulse_color_map(const ColorMap &map, ColorMapRange range, RgbColor color, double amount)
+{
+    validate_range(range);
+    validate_component(color.red);
+    validate_component(color.green);
+    validate_component(color.blue);
+    validate_blend_amount("pulse", amount);
+
+    ColorMap result{map};
+    for (int i = range.first; i <= range.last; ++i)
+    {
+        const std::size_t index{static_cast<std::size_t>(i)};
+        result[index] = blend_color(map[index], color, amount);
+    }
+    return result;
+}
+
+ColorMap remap_color_map(const ColorMap &map, const std::vector<int> &indices)
+{
+    validate_remap_indices(indices);
+
+    ColorMap result;
+    for (std::size_t i = 0; i < result.size(); ++i)
+    {
+        result[i] = map[static_cast<std::size_t>(indices[i])];
+    }
+    return result;
+}
+
 ColorMap saturation_color_map(const ColorMap &map, double amount)
 {
     require_finite_amount("saturation", amount);
@@ -430,6 +535,27 @@ ColorMap saturation_color_map(const ColorMap &map, double amount)
     {
         const HslColor hsl{hsl_from_rgb(map[i])};
         result[i] = rgb_from_hsl(hsl.hue, hsl.saturation * amount, hsl.lightness);
+    }
+    return result;
+}
+
+ColorMap sparkle_color_map(const ColorMap &map, ColorMapRange range, int seed, double amount)
+{
+    validate_range(range);
+    if (!std::isfinite(amount) || amount < 0.0 || amount > 255.0)
+    {
+        throw std::runtime_error("Color map sparkle amount must be between 0 and 255");
+    }
+
+    const int rounded_amount{static_cast<int>(std::lround(amount))};
+    std::mt19937 engine{static_cast<std::mt19937::result_type>(seed)};
+    ColorMap result{map};
+    for (int i = range.first; i <= range.last; ++i)
+    {
+        const std::size_t index{static_cast<std::size_t>(i)};
+        result[index] = {sparkle_component(map[index].red, rounded_amount, engine),
+            sparkle_component(map[index].green, rounded_amount, engine),
+            sparkle_component(map[index].blue, rounded_amount, engine)};
     }
     return result;
 }

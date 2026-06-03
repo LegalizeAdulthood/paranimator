@@ -39,6 +39,16 @@ ParFile::Config valid_config()
         {}};                                               //
 }
 
+Object identity_indices()
+{
+    Object result = Object::array();
+    for (int i = 0; i < 256; ++i)
+    {
+        result.push_back(i);
+    }
+    return result;
+}
+
 void expect_invalid(const Object &json)
 {
     EXPECT_THROW(static_cast<void>(ParFile::read_config(json.dump())), std::runtime_error);
@@ -378,6 +388,56 @@ TEST(TestConfig, jsonDeserializesColorMapAdjustmentEffects)
     EXPECT_EQ(ParFile::ColorMapEffectKind::HUE_SHIFT, config.tracks[0].color_map->effects[3].kind);
     ASSERT_TRUE(config.tracks[0].color_map->effects[3].amount);
     EXPECT_EQ(120.0, config.tracks[0].color_map->effects[3].amount->keys[1].value);
+}
+
+TEST(TestConfig, jsonDeserializesMaskedColorMapEffects)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"parameter", "colors"},
+        {"type", "color-map"},
+        {"format", "at-file"},
+        {"output", "colors-%04d.map"},
+        {"source", "base.map"},
+        {"effects",
+            Object::array({Object{{"kind", "pulse"},
+                              {"range", Object::array({2, 5})},
+                              {"color", "white"},
+                              {"amount",
+                                  Object{{"keys",
+                                      Object::array({Object{{"frame", 0}, {"value", 0.0}},
+                                          Object{{"frame", 4}, {"value", 1.0}}})}}}},
+                Object{{"kind", "mask-blend"},
+                    {"ranges", Object::array({Object::array({0, 1}), Object::array({4, 5})})},
+                    {"source", "mask.map"},
+                    {"amount",
+                        Object{{"keys",
+                            Object::array({Object{{"frame", 0}, {"value", 0.0}},
+                                Object{{"frame", 4}, {"value", 1.0}}})}}}},
+                Object{{"kind", "remap"}, {"indices", identity_indices()}},
+                Object{{"kind", "sparkle"},
+                    {"range", Object::array({6, 7})},
+                    {"seed", 1234},
+                    {"amount",
+                        Object{{"keys",
+                            Object::array({Object{{"frame", 0}, {"value", 0.0}},
+                                Object{{"frame", 4}, {"value", 32.0}}})}}}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_TRUE(config.tracks[0].color_map);
+    ASSERT_EQ(4U, config.tracks[0].color_map->effects.size());
+    EXPECT_EQ(ParFile::ColorMapEffectKind::PULSE, config.tracks[0].color_map->effects[0].kind);
+    ASSERT_TRUE(config.tracks[0].color_map->effects[0].range);
+    EXPECT_EQ("white", *config.tracks[0].color_map->effects[0].color);
+    EXPECT_EQ(ParFile::ColorMapEffectKind::MASK_BLEND, config.tracks[0].color_map->effects[1].kind);
+    ASSERT_EQ(2U, config.tracks[0].color_map->effects[1].ranges.size());
+    EXPECT_EQ("mask.map", *config.tracks[0].color_map->effects[1].source);
+    EXPECT_EQ(ParFile::ColorMapEffectKind::REMAP, config.tracks[0].color_map->effects[2].kind);
+    ASSERT_EQ(256U, config.tracks[0].color_map->effects[2].indices.size());
+    EXPECT_EQ(ParFile::ColorMapEffectKind::SPARKLE, config.tracks[0].color_map->effects[3].kind);
+    ASSERT_TRUE(config.tracks[0].color_map->effects[3].seed);
+    EXPECT_EQ(1234, *config.tracks[0].color_map->effects[3].seed);
 }
 
 TEST(TestConfig, jsonDeserializesColorMapGradientSourceTrack)

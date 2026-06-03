@@ -47,7 +47,11 @@ enum class ColorMapEffectKind
     CONTRAST,
     GAMMA,
     HUE_SHIFT,
+    MASK_BLEND,
+    PULSE,
+    REMAP,
     SATURATION,
+    SPARKLE,
     REVERSE,
     PING_PONG
 };
@@ -85,8 +89,13 @@ struct ColorMapEffectConfig
 {
     ColorMapEffectKind kind{ColorMapEffectKind::REVERSE};
     std::optional<ColorMapRangeConfig> range;
+    std::vector<ColorMapRangeConfig> ranges;
     std::optional<NumberTrackConfig> amount;
     std::optional<NumberTrackConfig> offset;
+    std::optional<std::string> color;
+    std::optional<std::string> source;
+    std::vector<int> indices;
+    std::optional<int> seed;
 };
 
 struct ColorMapConfig

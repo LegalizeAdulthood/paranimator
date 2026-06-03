@@ -430,6 +430,70 @@ TEST_F(TestInterpolator, colorMapAdjustmentEffectsWriteGeneratedMap)
     EXPECT_EQ("@colors-0002.map", it->value);
 }
 
+TEST_F(TestInterpolator, colorMapMaskedEffectsWriteGeneratedMap)
+{
+    const std::filesystem::path root{std::filesystem::path{TestParFile::TEST_OUTPUT_DIRECTORY} / "color-map-masked"};
+    const std::filesystem::path output{root / "output"};
+    const std::filesystem::path base_map{root / "input" / "base.map"};
+    const std::filesystem::path mask_map{root / "input" / "mask.map"};
+    std::filesystem::remove_all(root);
+    write_map_file(base_map, indexed_color());
+    write_map_file(mask_map, solid_color(100, 120, 140));
+    std::vector<int> indices(ParFile::COLOR_MAP_SIZE);
+    for (std::size_t i = 0; i < indices.size(); ++i)
+    {
+        indices[i] = static_cast<int>(i);
+    }
+    indices[2] = 5;
+    ParFile::ColorMapEffectConfig remap;
+    remap.kind = ParFile::ColorMapEffectKind::REMAP;
+    remap.indices = indices;
+    ParFile::ColorMapEffectConfig pulse;
+    pulse.kind = ParFile::ColorMapEffectKind::PULSE;
+    pulse.range = ParFile::ColorMapRangeConfig{2, 2};
+    pulse.color = "white";
+    pulse.amount = ParFile::NumberTrackConfig{{{0, 1.0}, {2, 1.0}}};
+    ParFile::ColorMapEffectConfig mask_blend;
+    mask_blend.kind = ParFile::ColorMapEffectKind::MASK_BLEND;
+    mask_blend.ranges = {ParFile::ColorMapRangeConfig{3, 3}};
+    mask_blend.source = mask_map.string();
+    mask_blend.amount = ParFile::NumberTrackConfig{{{0, 1.0}, {2, 1.0}}};
+    ParFile::ColorMapEffectConfig sparkle;
+    sparkle.kind = ParFile::ColorMapEffectKind::SPARKLE;
+    sparkle.range = ParFile::ColorMapRangeConfig{4, 4};
+    sparkle.seed = 1234;
+    sparkle.amount = ParFile::NumberTrackConfig{{{0, 0.0}, {2, 0.0}}};
+    ParFile::ColorMapConfig color_map;
+    color_map.format = ParFile::TrackFormat::AT_FILE;
+    color_map.output = "colors-%04d.map";
+    color_map.source = base_map.string();
+    color_map.effects = {remap, pulse, mask_blend, sparkle};
+    m_config_data.output.directory = output.string();
+    m_config_data.num_frames = 3;
+    m_config_data.tracks = {{"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP,
+        color_map}};
+    m_config = m_config_data;
+    m_lerper = ParFile::Interpolator{m_config};
+
+    static_cast<void>(m_lerper());
+    const ParFile::ParSet middle_frame{m_lerper()};
+
+    const ParFile::ColorMap middle{read_map_file(output / "map" / "colors-0002.map")};
+    EXPECT_EQ(255, middle[2].red);
+    EXPECT_EQ(255, middle[2].green);
+    EXPECT_EQ(255, middle[2].blue);
+    EXPECT_EQ(100, middle[3].red);
+    EXPECT_EQ(120, middle[3].green);
+    EXPECT_EQ(140, middle[3].blue);
+    EXPECT_EQ(4, middle[4].red);
+    EXPECT_EQ(251, middle[4].green);
+    EXPECT_EQ(4, middle[4].blue);
+    const auto it{std::find_if(middle_frame.params.begin(), middle_frame.params.end(),
+        [](const ParFile::Parameter &param) { return param.name == "colors"; })};
+    ASSERT_NE(middle_frame.params.end(), it);
+    EXPECT_EQ("@colors-0002.map", it->value);
+}
+
 TEST_F(TestInterpolator, colorMapGradientSourceRejectsInvalidColorSpec)
 {
     ParFile::ColorMapConfig color_map;

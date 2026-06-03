@@ -117,6 +117,21 @@ std::string config_with_color_map_effect(std::string_view effect)
 })";
 }
 
+std::string remap_indices_json()
+{
+    std::string result{"["};
+    for (int i = 0; i < 256; ++i)
+    {
+        if (i != 0)
+        {
+            result += ",";
+        }
+        result += std::to_string(i);
+    }
+    result += "]";
+    return result;
+}
+
 } // namespace
 
 TEST(TestJsonSchema, schemaPathStable)
@@ -522,6 +537,43 @@ TEST(TestJsonSchema, colorMapGammaEffectRequiresPositiveAmount)
 {
     EXPECT_FALSE(validates_config_text(config_with_color_map_effect(
         R"({"kind":"gamma","amount":{"keys":[{"frame":0,"value":0.0},{"frame":2,"value":1.0}]}})")));
+}
+
+TEST(TestJsonSchema, colorMapMaskedEffectsAccepted)
+{
+    const std::string unit_amount{R"("amount":{"keys":[{"frame":0,"value":0.0},{"frame":2,"value":1.0}]})"};
+    const std::string byte_amount{R"("amount":{"keys":[{"frame":0,"value":0.0},{"frame":2,"value":32.0}]})"};
+
+    EXPECT_TRUE(validates_config_text(
+        config_with_color_map_effect(R"({"kind":"pulse","range":[0,1],"color":"white",)" + unit_amount + "}")));
+    EXPECT_TRUE(validates_config_text(config_with_color_map_effect(
+        R"({"kind":"mask-blend","ranges":[[0,1]],"source":"mask.map",)" + unit_amount + "}")));
+    EXPECT_TRUE(validates_config_text(
+        config_with_color_map_effect(R"({"kind":"remap","indices":)" + remap_indices_json() + "}")));
+    EXPECT_TRUE(validates_config_text(
+        config_with_color_map_effect(R"({"kind":"sparkle","range":[0,1],"seed":1234,)" + byte_amount + "}")));
+}
+
+TEST(TestJsonSchema, colorMapMaskedEffectsRejectInvalidRequiredFields)
+{
+    const std::string unit_amount{R"("amount":{"keys":[{"frame":0,"value":0.0},{"frame":2,"value":1.0}]})"};
+    const std::string byte_amount{R"("amount":{"keys":[{"frame":0,"value":0.0},{"frame":2,"value":32.0}]})"};
+
+    EXPECT_FALSE(validates_config_text(
+        config_with_color_map_effect(R"({"kind":"pulse","color":"white",)" + unit_amount + "}")));
+    EXPECT_FALSE(validates_config_text(config_with_color_map_effect(
+        R"({"kind":"mask-blend","ranges":[],"source":"mask.map",)" + unit_amount + "}")));
+    EXPECT_FALSE(validates_config_text(config_with_color_map_effect(R"({"kind":"remap","indices":[0,1]})")));
+    EXPECT_FALSE(validates_config_text(
+        config_with_color_map_effect(R"({"kind":"sparkle","range":[0,1],)" + byte_amount + "}")));
+}
+
+TEST(TestJsonSchema, colorMapMaskedEffectAmountsRejectOutOfRangeValues)
+{
+    EXPECT_FALSE(validates_config_text(config_with_color_map_effect(
+        R"({"kind":"pulse","range":[0,1],"color":"white","amount":{"keys":[{"frame":0,"value":0.0},{"frame":2,"value":1.1}]}})")));
+    EXPECT_FALSE(validates_config_text(config_with_color_map_effect(
+        R"({"kind":"sparkle","range":[0,1],"seed":1234,"amount":{"keys":[{"frame":0,"value":0.0},{"frame":2,"value":256.0}]}})")));
 }
 
 TEST(TestJsonSchema, colorMapGradientSourceAccepted)
