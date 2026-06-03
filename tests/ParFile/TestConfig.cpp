@@ -84,7 +84,7 @@ TEST(TestConfig, jsonDeserializesMinimumValid)
 
 TEST(TestConfig, optionalParallelValid)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json["parallel"] = 20;
 
     const ParFile::Config config{ParFile::read_config(json.dump())};
@@ -94,7 +94,7 @@ TEST(TestConfig, optionalParallelValid)
 
 TEST(TestConfig, missingParameterCatalogs)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json.erase("parameter-catalogs");
 
     expect_invalid(json);
@@ -102,7 +102,7 @@ TEST(TestConfig, missingParameterCatalogs)
 
 TEST(TestConfig, missingSource)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json.erase("source");
 
     expect_invalid(json);
@@ -110,7 +110,7 @@ TEST(TestConfig, missingSource)
 
 TEST(TestConfig, sourceMissingFile)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json.at("source").erase("file");
 
     expect_invalid(json);
@@ -118,7 +118,7 @@ TEST(TestConfig, sourceMissingFile)
 
 TEST(TestConfig, sourceMissingName)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json.at("source").erase("name");
 
     expect_invalid(json);
@@ -126,7 +126,7 @@ TEST(TestConfig, sourceMissingName)
 
 TEST(TestConfig, missingOutput)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json.erase("output");
 
     expect_invalid(json);
@@ -134,7 +134,7 @@ TEST(TestConfig, missingOutput)
 
 TEST(TestConfig, outputMissingDirectory)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json.at("output").erase("directory");
 
     expect_invalid(json);
@@ -142,7 +142,7 @@ TEST(TestConfig, outputMissingDirectory)
 
 TEST(TestConfig, outputMissingPar)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json.at("output").erase("par");
 
     expect_invalid(json);
@@ -150,7 +150,7 @@ TEST(TestConfig, outputMissingPar)
 
 TEST(TestConfig, outputMissingEntry)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json.at("output").erase("entry");
 
     expect_invalid(json);
@@ -158,7 +158,7 @@ TEST(TestConfig, outputMissingEntry)
 
 TEST(TestConfig, outputMissingScript)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json.at("output").erase("script");
 
     expect_invalid(json);
@@ -166,7 +166,7 @@ TEST(TestConfig, outputMissingScript)
 
 TEST(TestConfig, missingVideo)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json.erase("video");
 
     expect_invalid(json);
@@ -174,7 +174,7 @@ TEST(TestConfig, missingVideo)
 
 TEST(TestConfig, missingNumFrames)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json.erase("num-frames");
 
     expect_invalid(json);
@@ -182,7 +182,7 @@ TEST(TestConfig, missingNumFrames)
 
 TEST(TestConfig, missingTracks)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json.erase("tracks");
 
     expect_invalid(json);
@@ -209,7 +209,7 @@ TEST(TestConfig, oneTrackValid)
 
 TEST(TestConfig, jsonDeserializesOneTrack)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json["tracks"] = Object::array({Object{{"parameter", "center-mag"},
         {"keys",
             Object::array({Object{{"frame", 0}, {"value", "-0.5/0/1"}},
@@ -231,7 +231,7 @@ TEST(TestConfig, jsonDeserializesOneTrack)
 
 TEST(TestConfig, jsonDeserializesPwmTrack)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json["tracks"] =
         Object::array({Object{{"parameter", "inside"}, {"mode", "pwm"}, {"a", "bof60"}, {"b", "zmag"}, {"window", 8},
             {"keys", Object::array({Object{{"frame", 0}, {"mix", 0.0}}, Object{{"frame", 59}, {"mix", 1.0}}})}}});
@@ -254,7 +254,7 @@ TEST(TestConfig, jsonDeserializesPwmTrack)
 
 TEST(TestConfig, jsonDeserializesColorMapTrack)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json["tracks"] = Object::array(
         {Object{{"parameter", "colors"}, {"type", "color-map"}, {"format", "at-file"}, {"output", "colors-%04d.map"},
             {"keys",
@@ -276,7 +276,7 @@ TEST(TestConfig, jsonDeserializesColorMapTrack)
 
 TEST(TestConfig, pwmWindowBelowTwoRejected)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json["tracks"] =
         Object::array({Object{{"parameter", "inside"}, {"mode", "pwm"}, {"a", "bof60"}, {"b", "zmag"}, {"window", 1},
             {"keys", Object::array({Object{{"frame", 0}, {"mix", 0.0}}, Object{{"frame", 59}, {"mix", 1.0}}})}}});
@@ -286,7 +286,7 @@ TEST(TestConfig, pwmWindowBelowTwoRejected)
 
 TEST(TestConfig, unknownKeyCurveRejected)
 {
-    Object json{valid_json()};
+    Object json = valid_json();
     json["tracks"] = Object::array({Object{{"parameter", "center-mag"},
         {"keys",
             Object::array({Object{{"frame", 0}, {"value", "-0.5/0/1"}},

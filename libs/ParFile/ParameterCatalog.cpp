@@ -28,7 +28,7 @@ Object parse_json(std::string_view json_text)
 {
     try
     {
-        Object json{Object::parse(json_text.begin(), json_text.end())};
+        Object json = Object::parse(json_text.begin(), json_text.end());
         if (!json.is_object())
         {
             throw std::runtime_error("Invalid parameter catalog, root is not an object");
@@ -611,7 +611,7 @@ void load_formula_entries(const Object &json, ParameterCatalog &result)
 
 ParameterCatalog read_parameter_catalog(std::string_view json_text)
 {
-    const Object json{parse_json(json_text)};
+    const Object json = parse_json(json_text);
     const Object &parameters{load_parameters(json)};
     ParameterCatalog result;
     for (const auto &[name, metadata] : parameters.items())

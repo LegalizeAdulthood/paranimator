@@ -20,7 +20,7 @@ static Object parse_json(std::string_view json_text)
 {
     try
     {
-        Object json{Object::parse(json_text.begin(), json_text.end())};
+        Object json = Object::parse(json_text.begin(), json_text.end());
         if (!json.is_object())
         {
             throw std::runtime_error("Invalid config, root is not an object");
@@ -256,7 +256,7 @@ static std::vector<TrackConfig> load_tracks(const Object &json, std::string_view
 
 Config read_config(std::string_view json_text)
 {
-    const Object json{parse_json(json_text)};
+    const Object json = parse_json(json_text);
     Config result;
     result.parameter_catalogs = load_string_array(json, "parameter-catalogs");
     result.source = load_named_file_par_set(json, "source");
