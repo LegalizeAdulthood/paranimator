@@ -31,6 +31,7 @@ configure_file("config.json.in" "maxiter.json" @ONLY)
 configure_file("test.h.in" "include/TestParFile/test.h" @ONLY)
 
 add_executable(test-par-file
+    TestColorMap.cpp
     TestConfig.cpp
     TestInterpolant.cpp
     TestInterpolator.cpp

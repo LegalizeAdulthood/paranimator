@@ -7,6 +7,7 @@ find_package(nlohmann_json_schema_validator REQUIRED CONFIG)
 
 add_library(ParFile
     include/ParFile/AnimationEnums.h
+    include/ParFile/ColorMap.h
     include/ParFile/Config.h
     include/ParFile/Interpolant.h
     include/ParFile/Interpolator.h
@@ -17,6 +18,7 @@ add_library(ParFile
     include/ParFile/ResolvedAnimation.h
     include/ParFile/Script.h
     AnimationEnums.cpp
+    ColorMap.cpp
     Config.cpp
     Interpolant.cpp
     Interpolator.cpp
