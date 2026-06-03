@@ -430,7 +430,11 @@ TEST(TestConfig, jsonDeserializesId3DViewTrack)
 {
     Object json = valid_json();
     json["tracks"] = Object::array({Object{{"name", "view"}, {"type", "id-3d-view"},
-        {"outputs", Object{{"rotation", "rotation"}, {"perspective", "perspective"}, {"xyshift", "xyshift"}}},
+        {"outputs",
+            Object{{"rotation", "rotation"}, {"perspective", "perspective"}, {"xyshift", "xyshift"},
+                {"scalexyz", "scalexyz"}, {"roughness", "roughness"}, {"sphere", "sphere"}, {"longitude", "longitude"},
+                {"latitude", "latitude"}, {"radius", "radius"}, {"stereo", "stereo"}, {"interocular", "interocular"},
+                {"converge", "converge"}}},
         {"rotation",
             Object{{"type", "numeric-tuple"}, {"arity", 3},
                 {"keys",
@@ -443,7 +447,43 @@ TEST(TestConfig, jsonDeserializesId3DViewTrack)
             Object{{"type", "numeric-tuple"}, {"arity", 2},
                 {"keys",
                     Object::array(
-                        {Object{{"frame", 0}, {"value", "0/0"}}, Object{{"frame", 59}, {"value", "20/-10"}}})}}}}});
+                        {Object{{"frame", 0}, {"value", "0/0"}}, Object{{"frame", 59}, {"value", "20/-10"}}})}}},
+        {"scalexyz",
+            Object{{"type", "numeric-tuple"}, {"arity", 3},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "90/90/30"}},
+                        Object{{"frame", 59}, {"value", "100/100/40"}}})}}},
+        {"roughness",
+            Object{{"type", "integer"},
+                {"keys", Object::array({Object{{"frame", 0}, {"value", 30}}, Object{{"frame", 59}, {"value", 40}}})}}},
+        {"sphere",
+            Object{{"type", "enum"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "no"}}, Object{{"frame", 59}, {"value", "yes"}}})}}},
+        {"longitude",
+            Object{{"type", "numeric-tuple"}, {"arity", 2},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "180/0"}}, Object{{"frame", 59}, {"value", "270/-90"}}})}}},
+        {"latitude",
+            Object{{"type", "numeric-tuple"}, {"arity", 2},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "-90/90"}}, Object{{"frame", 59}, {"value", "-45/45"}}})}}},
+        {"radius",
+            Object{{"type", "integer"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", 100}}, Object{{"frame", 59}, {"value", 120}}})}}},
+        {"stereo",
+            Object{{"type", "integer"},
+                {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 59}, {"value", 2}}})}}},
+        {"interocular",
+            Object{{"type", "integer"},
+                {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 59}, {"value", 8}}})}}},
+        {"converge",
+            Object{{"type", "integer"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 59}, {"value", -2}}})}}}}});
 
     const ParFile::Config config{ParFile::read_config(json.dump())};
 
@@ -456,12 +496,21 @@ TEST(TestConfig, jsonDeserializesId3DViewTrack)
     ASSERT_TRUE(view.outputs.rotation);
     ASSERT_TRUE(view.outputs.perspective);
     ASSERT_TRUE(view.outputs.xyshift);
+    ASSERT_TRUE(view.outputs.scalexyz);
+    ASSERT_TRUE(view.outputs.sphere);
+    ASSERT_TRUE(view.outputs.stereo);
     EXPECT_EQ("rotation", *view.outputs.rotation);
     EXPECT_EQ("perspective", *view.outputs.perspective);
     EXPECT_EQ("xyshift", *view.outputs.xyshift);
+    EXPECT_EQ("scalexyz", *view.outputs.scalexyz);
+    EXPECT_EQ("sphere", *view.outputs.sphere);
+    EXPECT_EQ("stereo", *view.outputs.stereo);
     ASSERT_TRUE(view.rotation);
     ASSERT_TRUE(view.perspective);
     ASSERT_TRUE(view.xyshift);
+    ASSERT_TRUE(view.scalexyz);
+    ASSERT_TRUE(view.sphere);
+    ASSERT_TRUE(view.stereo);
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, view.rotation->type);
     ASSERT_TRUE(view.rotation->arity);
     EXPECT_EQ(3, *view.rotation->arity);
@@ -470,6 +519,12 @@ TEST(TestConfig, jsonDeserializesId3DViewTrack)
     EXPECT_EQ("100", view.perspective->keys[1].value);
     ASSERT_TRUE(view.xyshift->arity);
     EXPECT_EQ(2, *view.xyshift->arity);
+    ASSERT_TRUE(view.scalexyz->arity);
+    EXPECT_EQ(3, *view.scalexyz->arity);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, view.sphere->type);
+    EXPECT_EQ("yes", view.sphere->keys[1].value);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, view.stereo->type);
+    EXPECT_EQ("2", view.stereo->keys[1].value);
 }
 
 TEST(TestConfig, jsonRejectsTrackWithKeysAndPath)

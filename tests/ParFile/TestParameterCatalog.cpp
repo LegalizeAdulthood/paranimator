@@ -63,7 +63,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
 {
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
-    EXPECT_EQ(9U, catalog.parameters.size());
+    EXPECT_EQ(18U, catalog.parameters.size());
     EXPECT_EQ(1U, catalog.fractal_types.size());
     EXPECT_EQ(1U, catalog.formula_entries.size());
 }
@@ -120,6 +120,10 @@ TEST(TestParameterCatalog, id3DViewMetadataLoads)
     const ParFile::ParameterCatalog catalog{core_catalog()};
     const ParFile::ParameterMetadata &rotation{catalog.metadata("rotation")};
     const ParFile::ParameterMetadata &perspective{catalog.metadata("perspective")};
+    const ParFile::ParameterMetadata &scalexyz{catalog.metadata("scalexyz")};
+    const ParFile::ParameterMetadata &sphere{catalog.metadata("sphere")};
+    const ParFile::ParameterMetadata &longitude{catalog.metadata("longitude")};
+    const ParFile::ParameterMetadata &stereo{catalog.metadata("stereo")};
 
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, rotation.type);
     ASSERT_TRUE(rotation.arity);
@@ -127,6 +131,20 @@ TEST(TestParameterCatalog, id3DViewMetadataLoads)
     EXPECT_EQ(ParFile::ParameterType::INTEGER, perspective.type);
     ASSERT_TRUE(perspective.format);
     EXPECT_EQ(ParFile::ParameterFormat::RAW, *perspective.format);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, scalexyz.type);
+    ASSERT_TRUE(scalexyz.arity);
+    EXPECT_EQ(3, *scalexyz.arity);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, sphere.type);
+    ASSERT_EQ(4U, sphere.values.size());
+    EXPECT_EQ("yes", sphere.values[0]);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, longitude.type);
+    ASSERT_TRUE(longitude.arity);
+    EXPECT_EQ(2, *longitude.arity);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, stereo.type);
+    ASSERT_TRUE(stereo.min);
+    ASSERT_TRUE(stereo.max);
+    EXPECT_EQ(0.0, *stereo.min);
+    EXPECT_EQ(4.0, *stereo.max);
 }
 
 TEST(TestParameterCatalog, maxiterMetadataLoads)

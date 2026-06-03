@@ -31,6 +31,24 @@ ParFile::ParameterCatalog catalog_data()
                 ParFile::ExtrapolateMode::CLAMP, {}, {}},
             {"xyshift", ParFile::ParameterType::NUMERIC_TUPLE, ParFile::ParameterFormat::SLASH, ParFile::Curve::LINEAR,
                 ParFile::ExtrapolateMode::CLAMP, {}, {}, {}, 2},
+            {"scalexyz", ParFile::ParameterType::NUMERIC_TUPLE, ParFile::ParameterFormat::SLASH, ParFile::Curve::LINEAR,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}, {}, 3},
+            {"roughness", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}},
+            {"sphere", ParFile::ParameterType::ENUM, ParFile::ParameterFormat::RAW, ParFile::Curve::HOLD,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}, {"yes", "no", "y", "n"}},
+            {"longitude", ParFile::ParameterType::NUMERIC_TUPLE, ParFile::ParameterFormat::SLASH,
+                ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}, {}, 2},
+            {"latitude", ParFile::ParameterType::NUMERIC_TUPLE, ParFile::ParameterFormat::SLASH, ParFile::Curve::LINEAR,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}, {}, 2},
+            {"radius", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                ParFile::ExtrapolateMode::CLAMP, 0.0, {}},
+            {"stereo", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                ParFile::ExtrapolateMode::CLAMP, 0.0, 4.0},
+            {"interocular", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}},
+            {"converge", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}},
             {"maxiter", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
                 ParFile::ExtrapolateMode::CLAMP, {}, {}}}};
     result.fractal_types.push_back({"julia",
@@ -134,6 +152,26 @@ ParFile::Config id_3d_view_config_data()
     view.perspective = ParFile::Id3DViewValueTrackConfig{ParFile::ParameterType::INTEGER, {}, {{0, "0"}, {2, "100"}}};
     view.xyshift =
         ParFile::Id3DViewValueTrackConfig{ParFile::ParameterType::NUMERIC_TUPLE, 2, {{0, "0/0"}, {2, "20/-10"}}};
+
+    ParFile::TrackConfig track;
+    track.parameter = "view";
+    track.kind = ParFile::TrackKind::ID_3D_VIEW;
+    track.id_3d_view = view;
+
+    ParFile::Config result{config_data()};
+    result.tracks = {track};
+    return result;
+}
+
+ParFile::Config id_3d_view_more_config_data()
+{
+    ParFile::Id3DViewConfig view;
+    view.name = "view";
+    view.outputs.scalexyz = "scalexyz";
+    view.outputs.stereo = "stereo";
+    view.scalexyz = ParFile::Id3DViewValueTrackConfig{
+        ParFile::ParameterType::NUMERIC_TUPLE, 3, {{0, "90/90/30"}, {2, "100/100/40"}}};
+    view.stereo = ParFile::Id3DViewValueTrackConfig{ParFile::ParameterType::INTEGER, {}, {{0, "0"}, {2, "2"}}};
 
     ParFile::TrackConfig track;
     track.parameter = "view";
@@ -254,6 +292,33 @@ TEST(TestResolvedAnimation, id3DViewResolvesToOutputTracks)
     EXPECT_EQ("xyshift", animation.tracks[2].output_parameter);
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, animation.tracks[2].metadata.type);
     EXPECT_EQ("0/0", animation.tracks[2].base_value);
+}
+
+TEST(TestResolvedAnimation, id3DViewResolvesAdditionalOutputTracks)
+{
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(id_3d_view_more_config_data(), catalog_data(), source_set())};
+
+    ASSERT_EQ(2U, animation.tracks.size());
+    EXPECT_EQ("view.scalexyz", animation.tracks[0].parameter);
+    EXPECT_EQ("scalexyz", animation.tracks[0].output_parameter);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, animation.tracks[0].metadata.type);
+    ASSERT_TRUE(animation.tracks[0].metadata.arity);
+    EXPECT_EQ(3, *animation.tracks[0].metadata.arity);
+    EXPECT_EQ("90/90/30", animation.tracks[0].base_value);
+    EXPECT_EQ("view.stereo", animation.tracks[1].parameter);
+    EXPECT_EQ("stereo", animation.tracks[1].output_parameter);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, animation.tracks[1].metadata.type);
+    ASSERT_TRUE(animation.tracks[1].metadata.max);
+    EXPECT_EQ(4.0, *animation.tracks[1].metadata.max);
+}
+
+TEST(TestResolvedAnimation, id3DViewRejectsWrongOutputMetadata)
+{
+    ParFile::Config config{id_3d_view_more_config_data()};
+    config.tracks[0].id_3d_view->outputs.scalexyz = "maxiter";
+
+    EXPECT_THROW(ParFile::resolve_animation(config, catalog_data(), source_set()), std::runtime_error);
 }
 
 TEST(TestResolvedAnimation, juliaParamsGroupResolvesToParamsSlots)

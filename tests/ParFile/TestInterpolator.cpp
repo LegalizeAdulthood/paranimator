@@ -166,6 +166,53 @@ TEST_F(TestInterpolator, id3DViewWritesRotationPerspectiveAndXyshift)
     EXPECT_EQ("10/-5", parameter_value(second, "xyshift"));
 }
 
+TEST_F(TestInterpolator, id3DViewWritesScaleSphereAndStereoControls)
+{
+    const Object track{{"name", "view"}, {"type", "id-3d-view"},
+        {"outputs",
+            Object{{"scalexyz", "scalexyz"}, {"sphere", "sphere"}, {"stereo", "stereo"}, {"interocular", "interocular"},
+                {"converge", "converge"}}},
+        {"scalexyz",
+            Object{{"type", "numeric-tuple"}, {"arity", 3},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "90/90/30"}},
+                        Object{{"frame", 2}, {"value", "100/100/40"}}})}}},
+        {"sphere",
+            Object{{"type", "enum"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "no"}}, Object{{"frame", 2}, {"value", "yes"}}})}}},
+        {"stereo",
+            Object{{"type", "integer"},
+                {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 2}, {"value", 2}}})}}},
+        {"interocular",
+            Object{{"type", "integer"},
+                {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 2}, {"value", 8}}})}}},
+        {"converge",
+            Object{{"type", "integer"},
+                {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 2}, {"value", -2}}})}}}};
+    const ParFile::Config config{parsed_config("Mandel_Demo", 3, track)};
+    ParFile::Interpolator lerper{config};
+
+    static_cast<void>(lerper());
+    const ParFile::ParSet second{lerper()};
+    EXPECT_EQ("95/95/35", parameter_value(second, "scalexyz"));
+    EXPECT_EQ("no", parameter_value(second, "sphere"));
+    EXPECT_EQ("1", parameter_value(second, "stereo"));
+    EXPECT_EQ("4", parameter_value(second, "interocular"));
+    EXPECT_EQ("-1", parameter_value(second, "converge"));
+}
+
+TEST_F(TestInterpolator, id3DViewRejectsIllegalStereoValue)
+{
+    const Object track{{"name", "view"}, {"type", "id-3d-view"}, {"outputs", Object{{"stereo", "stereo"}}},
+        {"stereo",
+            Object{{"type", "integer"},
+                {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 2}, {"value", 5}}})}}}};
+    const ParFile::Config config{parsed_config("Mandel_Demo", 3, track)};
+
+    EXPECT_THROW(ParFile::Interpolator{config}, std::runtime_error);
+}
+
 TEST_F(TestInterpolator, lastFrameIsTrackEndValue)
 {
     m_config_data.num_frames = 2;

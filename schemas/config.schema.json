@@ -331,6 +331,42 @@
         {
           "description": "Adapter includes an xyshift component track.",
           "required": [ "xyshift" ]
+        },
+        {
+          "description": "Adapter includes a scalexyz component track.",
+          "required": [ "scalexyz" ]
+        },
+        {
+          "description": "Adapter includes a roughness component track.",
+          "required": [ "roughness" ]
+        },
+        {
+          "description": "Adapter includes a sphere component track.",
+          "required": [ "sphere" ]
+        },
+        {
+          "description": "Adapter includes a longitude component track.",
+          "required": [ "longitude" ]
+        },
+        {
+          "description": "Adapter includes a latitude component track.",
+          "required": [ "latitude" ]
+        },
+        {
+          "description": "Adapter includes a radius component track.",
+          "required": [ "radius" ]
+        },
+        {
+          "description": "Adapter includes a stereo component track.",
+          "required": [ "stereo" ]
+        },
+        {
+          "description": "Adapter includes an interocular component track.",
+          "required": [ "interocular" ]
+        },
+        {
+          "description": "Adapter includes a converge component track.",
+          "required": [ "converge" ]
         }
       ],
       "properties": {
@@ -357,6 +393,42 @@
         "xyshift": {
           "description": "Keyed x/y image shift values.",
           "$ref": "#/$defs/id-3d-view-xyshift-track"
+        },
+        "scalexyz": {
+          "description": "Keyed x/y/z scale factors.",
+          "$ref": "#/$defs/id-3d-view-scalexyz-track"
+        },
+        "roughness": {
+          "description": "Keyed z scale factor alias values.",
+          "$ref": "#/$defs/id-3d-view-integer-track"
+        },
+        "sphere": {
+          "description": "Keyed sphere projection flag values.",
+          "$ref": "#/$defs/id-3d-view-sphere-track"
+        },
+        "longitude": {
+          "description": "Keyed longitude minimum and maximum values.",
+          "$ref": "#/$defs/id-3d-view-longitude-track"
+        },
+        "latitude": {
+          "description": "Keyed latitude minimum and maximum values.",
+          "$ref": "#/$defs/id-3d-view-latitude-track"
+        },
+        "radius": {
+          "description": "Keyed sphere radius scale values.",
+          "$ref": "#/$defs/id-3d-view-integer-track"
+        },
+        "stereo": {
+          "description": "Keyed stereo mode values.",
+          "$ref": "#/$defs/id-3d-view-stereo-track"
+        },
+        "interocular": {
+          "description": "Keyed stereo eye separation values.",
+          "$ref": "#/$defs/id-3d-view-integer-track"
+        },
+        "converge": {
+          "description": "Keyed stereo convergence values.",
+          "$ref": "#/$defs/id-3d-view-integer-track"
         }
       }
     },
@@ -376,6 +448,42 @@
         },
         "xyshift": {
           "description": "Catalog key that receives the xyshift tuple.",
+          "type": "string"
+        },
+        "scalexyz": {
+          "description": "Catalog key that receives the scalexyz tuple.",
+          "type": "string"
+        },
+        "roughness": {
+          "description": "Catalog key that receives the roughness integer.",
+          "type": "string"
+        },
+        "sphere": {
+          "description": "Catalog key that receives the sphere enum value.",
+          "type": "string"
+        },
+        "longitude": {
+          "description": "Catalog key that receives the longitude tuple.",
+          "type": "string"
+        },
+        "latitude": {
+          "description": "Catalog key that receives the latitude tuple.",
+          "type": "string"
+        },
+        "radius": {
+          "description": "Catalog key that receives the radius integer.",
+          "type": "string"
+        },
+        "stereo": {
+          "description": "Catalog key that receives the stereo integer.",
+          "type": "string"
+        },
+        "interocular": {
+          "description": "Catalog key that receives the interocular integer.",
+          "type": "string"
+        },
+        "converge": {
+          "description": "Catalog key that receives the converge integer.",
           "type": "string"
         }
       }
@@ -445,6 +553,132 @@
         }
       }
     },
+    "id-3d-view-scalexyz-track": {
+      "description": "Id 3D scalexyz component track.",
+      "type": "object",
+      "required": [ "type", "arity", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "numeric-tuple",
+          "description": "Declares a slash-delimited numeric tuple value."
+        },
+        "arity": {
+          "const": 3,
+          "description": "Scalexyz uses three components: x, y, and z."
+        },
+        "keys": {
+          "description": "Exactly two keyed scalexyz tuple values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/id-3d-view-tuple-keyframe" }
+        }
+      }
+    },
+    "id-3d-view-longitude-track": {
+      "description": "Id 3D longitude component track.",
+      "type": "object",
+      "required": [ "type", "arity", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "numeric-tuple",
+          "description": "Declares a slash-delimited numeric tuple value."
+        },
+        "arity": {
+          "const": 2,
+          "description": "Longitude uses two components: minimum and maximum."
+        },
+        "keys": {
+          "description": "Exactly two keyed longitude tuple values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/id-3d-view-tuple-keyframe" }
+        }
+      }
+    },
+    "id-3d-view-latitude-track": {
+      "description": "Id 3D latitude component track.",
+      "type": "object",
+      "required": [ "type", "arity", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "numeric-tuple",
+          "description": "Declares a slash-delimited numeric tuple value."
+        },
+        "arity": {
+          "const": 2,
+          "description": "Latitude uses two components: minimum and maximum."
+        },
+        "keys": {
+          "description": "Exactly two keyed latitude tuple values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/id-3d-view-tuple-keyframe" }
+        }
+      }
+    },
+    "id-3d-view-integer-track": {
+      "description": "Id 3D integer component track.",
+      "type": "object",
+      "required": [ "type", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "integer",
+          "description": "Declares an integer value."
+        },
+        "keys": {
+          "description": "Exactly two keyed integer values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/id-3d-view-integer-keyframe" }
+        }
+      }
+    },
+    "id-3d-view-stereo-track": {
+      "description": "Id 3D stereo mode component track.",
+      "type": "object",
+      "required": [ "type", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "integer",
+          "description": "Declares an integer stereo mode value."
+        },
+        "keys": {
+          "description": "Exactly two keyed stereo mode values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/id-3d-view-stereo-keyframe" }
+        }
+      }
+    },
+    "id-3d-view-sphere-track": {
+      "description": "Id 3D sphere projection component track.",
+      "type": "object",
+      "required": [ "type", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "enum",
+          "description": "Declares an enum value."
+        },
+        "keys": {
+          "description": "Exactly two keyed sphere flag values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/id-3d-view-sphere-keyframe" }
+        }
+      }
+    },
     "id-3d-view-tuple-keyframe": {
       "description": "One keyed Id 3D tuple value.",
       "type": "object",
@@ -481,6 +715,66 @@
         },
         "curve": {
           "description": "Optional interpolation curve ending at this integer key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
+      }
+    },
+    "id-3d-view-stereo-keyframe": {
+      "description": "One keyed Id 3D stereo mode value.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this stereo key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Stereo mode: 0 none, 1 alternate, 2 superimpose, 3 photo, or 4 stereo pair.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this stereo key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
+      }
+    },
+    "id-3d-view-sphere-keyframe": {
+      "description": "One keyed Id 3D sphere flag value.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this sphere key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Sphere projection flag value accepted by Id.",
+          "type": "string",
+          "oneOf": [
+            {
+              "const": "yes",
+              "description": "Enable sphere projection."
+            },
+            {
+              "const": "no",
+              "description": "Disable sphere projection."
+            },
+            {
+              "const": "y",
+              "description": "Short form that enables sphere projection."
+            },
+            {
+              "const": "n",
+              "description": "Short form that disables sphere projection."
+            }
+          ]
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this sphere key.",
           "$ref": "#/$defs/scalar-curve"
         }
       }

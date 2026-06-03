@@ -1302,6 +1302,8 @@ IntegerInterpolant::IntegerInterpolant(const ParameterMetadata &metadata, const 
     m_extrapolate(extrapolate_mode(metadata))
 {
     validate_scalar_curve("integer", m_curve);
+    validate_bounds(metadata, m_from);
+    validate_bounds(metadata, m_to);
 }
 
 std::string IntegerInterpolant::step()
@@ -1438,6 +1440,8 @@ ParamsIntegerInterpolant::ParamsIntegerInterpolant(const ResolvedTrack &track, C
     }
     m_slot = track.slots[0];
     validate_scalar_curve("integer", m_curve);
+    validate_bounds(track.metadata, m_from);
+    validate_bounds(track.metadata, m_to);
     validate_params_slot(track.parameter, m_base_values, m_slot);
 }
 

@@ -167,6 +167,15 @@ struct Id3DViewOutputsConfig
     std::optional<std::string> rotation;
     std::optional<std::string> perspective;
     std::optional<std::string> xyshift;
+    std::optional<std::string> scalexyz;
+    std::optional<std::string> roughness;
+    std::optional<std::string> sphere;
+    std::optional<std::string> longitude;
+    std::optional<std::string> latitude;
+    std::optional<std::string> radius;
+    std::optional<std::string> stereo;
+    std::optional<std::string> interocular;
+    std::optional<std::string> converge;
 };
 
 struct Id3DViewConfig
@@ -176,6 +185,15 @@ struct Id3DViewConfig
     std::optional<Id3DViewValueTrackConfig> rotation;
     std::optional<Id3DViewValueTrackConfig> perspective;
     std::optional<Id3DViewValueTrackConfig> xyshift;
+    std::optional<Id3DViewValueTrackConfig> scalexyz;
+    std::optional<Id3DViewValueTrackConfig> roughness;
+    std::optional<Id3DViewValueTrackConfig> sphere;
+    std::optional<Id3DViewValueTrackConfig> longitude;
+    std::optional<Id3DViewValueTrackConfig> latitude;
+    std::optional<Id3DViewValueTrackConfig> radius;
+    std::optional<Id3DViewValueTrackConfig> stereo;
+    std::optional<Id3DViewValueTrackConfig> interocular;
+    std::optional<Id3DViewValueTrackConfig> converge;
 };
 
 struct TrackConfig

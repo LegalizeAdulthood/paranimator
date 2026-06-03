@@ -417,6 +417,24 @@ std::vector<ResolvedTrack> resolve_id_3d_view_track(
         ParameterType::INTEGER, 0);
     add_id_3d_view_member(
         result, view, "xyshift", view.outputs.xyshift, view.xyshift, catalog, source, ParameterType::NUMERIC_TUPLE, 2);
+    add_id_3d_view_member(result, view, "scalexyz", view.outputs.scalexyz, view.scalexyz, catalog, source,
+        ParameterType::NUMERIC_TUPLE, 3);
+    add_id_3d_view_member(
+        result, view, "roughness", view.outputs.roughness, view.roughness, catalog, source, ParameterType::INTEGER, 0);
+    add_id_3d_view_member(
+        result, view, "sphere", view.outputs.sphere, view.sphere, catalog, source, ParameterType::ENUM, 0);
+    add_id_3d_view_member(result, view, "longitude", view.outputs.longitude, view.longitude, catalog, source,
+        ParameterType::NUMERIC_TUPLE, 2);
+    add_id_3d_view_member(result, view, "latitude", view.outputs.latitude, view.latitude, catalog, source,
+        ParameterType::NUMERIC_TUPLE, 2);
+    add_id_3d_view_member(
+        result, view, "radius", view.outputs.radius, view.radius, catalog, source, ParameterType::INTEGER, 0);
+    add_id_3d_view_member(
+        result, view, "stereo", view.outputs.stereo, view.stereo, catalog, source, ParameterType::INTEGER, 0);
+    add_id_3d_view_member(result, view, "interocular", view.outputs.interocular, view.interocular, catalog, source,
+        ParameterType::INTEGER, 0);
+    add_id_3d_view_member(
+        result, view, "converge", view.outputs.converge, view.converge, catalog, source, ParameterType::INTEGER, 0);
     return result;
 }
 

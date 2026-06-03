@@ -497,6 +497,101 @@ TEST(TestJsonSchema, id3DViewTrackAccepted)
     })")));
 }
 
+TEST(TestJsonSchema, id3DViewMoreOutputsAccepted)
+{
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "name": "view",
+      "type": "id-3d-view",
+      "outputs": {
+        "scalexyz": "scalexyz",
+        "sphere": "sphere",
+        "longitude": "longitude",
+        "latitude": "latitude",
+        "radius": "radius",
+        "stereo": "stereo",
+        "interocular": "interocular",
+        "converge": "converge"
+      },
+      "scalexyz": {
+        "type": "numeric-tuple",
+        "arity": 3,
+        "keys": [
+          { "frame": 0, "value": "90/90/30" },
+          { "frame": 2, "value": "100/100/40" }
+        ]
+      },
+      "sphere": {
+        "type": "enum",
+        "keys": [
+          { "frame": 0, "value": "no" },
+          { "frame": 2, "value": "yes" }
+        ]
+      },
+      "longitude": {
+        "type": "numeric-tuple",
+        "arity": 2,
+        "keys": [
+          { "frame": 0, "value": "180/0" },
+          { "frame": 2, "value": "270/-90" }
+        ]
+      },
+      "latitude": {
+        "type": "numeric-tuple",
+        "arity": 2,
+        "keys": [
+          { "frame": 0, "value": "-90/90" },
+          { "frame": 2, "value": "-45/45" }
+        ]
+      },
+      "radius": {
+        "type": "integer",
+        "keys": [
+          { "frame": 0, "value": 100 },
+          { "frame": 2, "value": 120 }
+        ]
+      },
+      "stereo": {
+        "type": "integer",
+        "keys": [
+          { "frame": 0, "value": 0 },
+          { "frame": 2, "value": 4 }
+        ]
+      },
+      "interocular": {
+        "type": "integer",
+        "keys": [
+          { "frame": 0, "value": 0 },
+          { "frame": 2, "value": 8 }
+        ]
+      },
+      "converge": {
+        "type": "integer",
+        "keys": [
+          { "frame": 0, "value": 0 },
+          { "frame": 2, "value": -2 }
+        ]
+      }
+    })")));
+}
+
+TEST(TestJsonSchema, id3DViewStereoRejectsInvalidValue)
+{
+    EXPECT_FALSE(validates_config_text(config_with_track(R"({
+      "name": "view",
+      "type": "id-3d-view",
+      "outputs": {
+        "stereo": "stereo"
+      },
+      "stereo": {
+        "type": "integer",
+        "keys": [
+          { "frame": 0, "value": 0 },
+          { "frame": 2, "value": 5 }
+        ]
+      }
+    })")));
+}
+
 TEST(TestJsonSchema, camera2dTrackRejectsInvalidShape)
 {
     EXPECT_FALSE(validates_config_text(config_with_track(R"({

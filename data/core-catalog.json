@@ -32,6 +32,67 @@
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
+    "scalexyz": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 3,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "roughness": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "sphere": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "yes", "no", "y", "n" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "longitude": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 2,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "latitude": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 2,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "radius": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 0
+    },
+    "stereo": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 0,
+      "max": 4
+    },
+    "interocular": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "converge": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
     "maxiter": {
       "type": "integer",
       "format": "raw",

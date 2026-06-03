@@ -403,7 +403,18 @@ static Id3DViewOutputsConfig load_id_3d_view_outputs_config(const Object &json)
     result.rotation = load_optional_string(outputs, "rotation");
     result.perspective = load_optional_string(outputs, "perspective");
     result.xyshift = load_optional_string(outputs, "xyshift");
-    if (!result.rotation && !result.perspective && !result.xyshift)
+    result.scalexyz = load_optional_string(outputs, "scalexyz");
+    result.roughness = load_optional_string(outputs, "roughness");
+    result.sphere = load_optional_string(outputs, "sphere");
+    result.longitude = load_optional_string(outputs, "longitude");
+    result.latitude = load_optional_string(outputs, "latitude");
+    result.radius = load_optional_string(outputs, "radius");
+    result.stereo = load_optional_string(outputs, "stereo");
+    result.interocular = load_optional_string(outputs, "interocular");
+    result.converge = load_optional_string(outputs, "converge");
+    if (!result.rotation && !result.perspective && !result.xyshift && !result.scalexyz && !result.roughness &&
+        !result.sphere && !result.longitude && !result.latitude && !result.radius && !result.stereo &&
+        !result.interocular && !result.converge)
     {
         throw std::runtime_error("Invalid config, id-3d-view outputs must name at least one output");
     }
@@ -431,9 +442,27 @@ static Id3DViewConfig load_id_3d_view_config(const Object &json)
     result.rotation = load_optional_id_3d_view_value_track_config(json, "rotation", ParameterType::NUMERIC_TUPLE, 3);
     result.perspective = load_optional_id_3d_view_value_track_config(json, "perspective", ParameterType::INTEGER, 0);
     result.xyshift = load_optional_id_3d_view_value_track_config(json, "xyshift", ParameterType::NUMERIC_TUPLE, 2);
+    result.scalexyz = load_optional_id_3d_view_value_track_config(json, "scalexyz", ParameterType::NUMERIC_TUPLE, 3);
+    result.roughness = load_optional_id_3d_view_value_track_config(json, "roughness", ParameterType::INTEGER, 0);
+    result.sphere = load_optional_id_3d_view_value_track_config(json, "sphere", ParameterType::ENUM, 0);
+    result.longitude = load_optional_id_3d_view_value_track_config(json, "longitude", ParameterType::NUMERIC_TUPLE, 2);
+    result.latitude = load_optional_id_3d_view_value_track_config(json, "latitude", ParameterType::NUMERIC_TUPLE, 2);
+    result.radius = load_optional_id_3d_view_value_track_config(json, "radius", ParameterType::INTEGER, 0);
+    result.stereo = load_optional_id_3d_view_value_track_config(json, "stereo", ParameterType::INTEGER, 0);
+    result.interocular = load_optional_id_3d_view_value_track_config(json, "interocular", ParameterType::INTEGER, 0);
+    result.converge = load_optional_id_3d_view_value_track_config(json, "converge", ParameterType::INTEGER, 0);
     validate_id_3d_view_member("rotation", result.outputs.rotation, result.rotation);
     validate_id_3d_view_member("perspective", result.outputs.perspective, result.perspective);
     validate_id_3d_view_member("xyshift", result.outputs.xyshift, result.xyshift);
+    validate_id_3d_view_member("scalexyz", result.outputs.scalexyz, result.scalexyz);
+    validate_id_3d_view_member("roughness", result.outputs.roughness, result.roughness);
+    validate_id_3d_view_member("sphere", result.outputs.sphere, result.sphere);
+    validate_id_3d_view_member("longitude", result.outputs.longitude, result.longitude);
+    validate_id_3d_view_member("latitude", result.outputs.latitude, result.latitude);
+    validate_id_3d_view_member("radius", result.outputs.radius, result.radius);
+    validate_id_3d_view_member("stereo", result.outputs.stereo, result.stereo);
+    validate_id_3d_view_member("interocular", result.outputs.interocular, result.interocular);
+    validate_id_3d_view_member("converge", result.outputs.converge, result.converge);
     return result;
 }
 
