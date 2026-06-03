@@ -22,10 +22,23 @@ std::string read_text(const char *path)
 
 ParFile::ParameterCatalog core_catalog()
 {
-    return ParFile::ParameterCatalog{read_text(TestParFile::CORE_CATALOG_JSON)};
+    return ParFile::read_parameter_catalog(read_text(TestParFile::CORE_CATALOG_JSON));
+}
+
+ParFile::ParameterCatalog typed_catalog()
+{
+    return {{{"center-mag", "center-mag", "slash", "geometric", "clamp", {}, {}},
+        {"maxiter", "integer", "raw", "linear", "clamp", {}, {}}}};
 }
 
 } // namespace
+
+TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+
+    EXPECT_EQ(4U, catalog.parameters.size());
+}
 
 TEST(TestParameterCatalog, centerMagMetadataLoads)
 {
@@ -79,13 +92,21 @@ TEST(TestParameterCatalog, bailoutMetadataLoads)
     EXPECT_EQ(1000, *metadata.max);
 }
 
+TEST(TestParameterCatalog, typedCatalogFindsMetadataByName)
+{
+    const ParFile::ParameterCatalog catalog{typed_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("maxiter")};
+
+    EXPECT_EQ("integer", metadata.type);
+}
+
 TEST(TestParameterCatalog, unknownAnimatedParameterRejected)
 {
-    EXPECT_THROW(core_catalog().metadata("unknown"), std::runtime_error);
+    EXPECT_THROW(typed_catalog().metadata("unknown"), std::runtime_error);
 }
 
 TEST(TestParameterCatalog, missingMetadataTypeRejected)
 {
-    EXPECT_THROW(
-        ParFile::ParameterCatalog{read_text(TestParFile::INVALID_MISSING_METADATA_TYPE_JSON)}, std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(read_text(TestParFile::INVALID_MISSING_METADATA_TYPE_JSON)),
+        std::runtime_error);
 }

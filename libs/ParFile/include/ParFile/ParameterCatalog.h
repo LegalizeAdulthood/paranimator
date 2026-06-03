@@ -21,20 +21,13 @@ struct ParameterMetadata
     std::optional<double> max;
 };
 
-class ParameterCatalog
+struct ParameterCatalog
 {
-public:
-    ParameterCatalog() = default;
-    ParameterCatalog(const ParameterCatalog &rhs) = default;
-    ParameterCatalog(ParameterCatalog &&rhs) = default;
-    ParameterCatalog(std::string_view json_text);
-    ParameterCatalog &operator=(const ParameterCatalog &rhs) = default;
-    ParameterCatalog &operator=(ParameterCatalog &&rhs) = default;
-
     const ParameterMetadata &metadata(std::string_view name) const;
 
-private:
-    std::vector<ParameterMetadata> m_parameters;
+    std::vector<ParameterMetadata> parameters;
 };
+
+ParameterCatalog read_parameter_catalog(std::string_view json_text);
 
 } // namespace ParFile

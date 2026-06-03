@@ -50,7 +50,7 @@ static ParameterCatalog load_parameter_catalog(const Config &config)
     {
         throw std::runtime_error("Expected exactly one parameter catalog");
     }
-    return ParameterCatalog{read_text(config.parameter_catalogs[0])};
+    return read_parameter_catalog(read_text(config.parameter_catalogs[0]));
 }
 
 std::vector<InterpolantPtr> Interpolator::load_interpolants(const Config &config, const ParSet &source)

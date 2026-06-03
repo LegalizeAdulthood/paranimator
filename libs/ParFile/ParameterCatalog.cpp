@@ -104,21 +104,23 @@ ParameterMetadata load_metadata(std::string_view name, const Object &json)
 
 } // namespace
 
-ParameterCatalog::ParameterCatalog(std::string_view json_text)
+ParameterCatalog read_parameter_catalog(std::string_view json_text)
 {
     const Object parameters{load_parameters(parse_json(json_text))};
+    ParameterCatalog result;
     for (const auto &[name, metadata] : parameters.items())
     {
-        m_parameters.emplace_back(load_metadata(name, metadata));
+        result.parameters.emplace_back(load_metadata(name, metadata));
     }
+    return result;
 }
 
 const ParameterMetadata &ParameterCatalog::metadata(std::string_view name) const
 {
     const std::string key{name};
     const auto matches{[&](const ParameterMetadata &metadata) { return metadata.name == key; }};
-    const auto it{std::find_if(m_parameters.begin(), m_parameters.end(), matches)};
-    if (it == m_parameters.end())
+    const auto it{std::find_if(parameters.begin(), parameters.end(), matches)};
+    if (it == parameters.end())
     {
         throw std::runtime_error("Unknown animated parameter '" + std::string{name} + "'");
     }
