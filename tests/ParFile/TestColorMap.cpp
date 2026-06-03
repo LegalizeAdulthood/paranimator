@@ -33,6 +33,16 @@ ParFile::ColorMap solid_map(int red, int green, int blue)
     return result;
 }
 
+ParFile::ColorMap indexed_map()
+{
+    ParFile::ColorMap result;
+    for (std::size_t i = 0; i < result.size(); ++i)
+    {
+        result[i] = {static_cast<int>(i), 255 - static_cast<int>(i), static_cast<int>(i % 64U)};
+    }
+    return result;
+}
+
 } // namespace
 
 TEST(TestColorMap, reads256Entries)
@@ -143,4 +153,40 @@ TEST(TestColorMap, interpolateBlendOneReturnsSecondMap)
     EXPECT_EQ(4, result[0].red);
     EXPECT_EQ(5, result[0].green);
     EXPECT_EQ(6, result[0].blue);
+}
+
+TEST(TestColorMap, rotatePositiveOffsetWrapsPaletteEntries)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    const ParFile::ColorMap result{ParFile::rotate_color_map(map, 1)};
+
+    EXPECT_EQ(255, result[0].red);
+    EXPECT_EQ(0, result[1].red);
+    EXPECT_EQ(1, result[2].red);
+}
+
+TEST(TestColorMap, rotateNegativeOffsetWrapsPaletteEntries)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    const ParFile::ColorMap result{ParFile::rotate_color_map(map, -1)};
+
+    EXPECT_EQ(1, result[0].red);
+    EXPECT_EQ(2, result[1].red);
+    EXPECT_EQ(0, result[255].red);
+}
+
+TEST(TestColorMap, rotateZeroOffsetLeavesMapUnchanged)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    const ParFile::ColorMap result{ParFile::rotate_color_map(map, 0)};
+
+    for (std::size_t i = 0; i < result.size(); ++i)
+    {
+        EXPECT_EQ(map[i].red, result[i].red);
+        EXPECT_EQ(map[i].green, result[i].green);
+        EXPECT_EQ(map[i].blue, result[i].blue);
+    }
 }

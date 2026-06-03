@@ -23,5 +23,6 @@ using ColorMap = std::array<RgbColor, COLOR_MAP_SIZE>;
 ColorMap read_color_map(std::istream &contents);
 void write_color_map(std::ostream &contents, const ColorMap &map);
 ColorMap interpolate_color_map(const ColorMap &from, const ColorMap &to, double blend);
+ColorMap rotate_color_map(const ColorMap &map, int offset);
 
 } // namespace ParFile

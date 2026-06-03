@@ -70,6 +70,13 @@ int interpolate_component(int from, int to, double blend)
     return static_cast<int>(std::lround(from + blend * (to - from)));
 }
 
+std::size_t rotate_source_index(std::size_t destination, int offset)
+{
+    const int size{static_cast<int>(COLOR_MAP_SIZE)};
+    const int source{(static_cast<int>(destination) - offset) % size};
+    return static_cast<std::size_t>(source < 0 ? source + size : source);
+}
+
 } // namespace
 
 ColorMap read_color_map(std::istream &contents)
@@ -122,6 +129,16 @@ ColorMap interpolate_color_map(const ColorMap &from, const ColorMap &to, double 
         result[i] = {interpolate_component(from[i].red, to[i].red, blend),
             interpolate_component(from[i].green, to[i].green, blend),
             interpolate_component(from[i].blue, to[i].blue, blend)};
+    }
+    return result;
+}
+
+ColorMap rotate_color_map(const ColorMap &map, int offset)
+{
+    ColorMap result;
+    for (std::size_t i = 0; i < result.size(); ++i)
+    {
+        result[i] = map[rotate_source_index(i, offset)];
     }
     return result;
 }
