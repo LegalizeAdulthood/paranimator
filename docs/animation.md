@@ -134,16 +134,40 @@ Example parameter catalog:
         },
 
         "inside": {
-          "type": "enum",
-          "values": [ "bof60", "zmag", "epscross", "startrail" ],
+          "type": "inside",
+          "values": [
+            "maxiter",
+            "zmag",
+            "bof60",
+            "bof61",
+            "epsiloncross",
+            "startrail",
+            "period",
+            "atan",
+            "fmod"
+          ],
           "default-curve": "hold",
-          "extrapolate": "clamp"
+          "extrapolate": "clamp",
+          "min": 0,
+          "max": 255
         },
 
         "outside": {
-          "type": "enum",
+          "type": "outside",
+          "values": [
+            "iter",
+            "real",
+            "imag",
+            "mult",
+            "summ",
+            "atan",
+            "fmod",
+            "tdis"
+          ],
           "default-curve": "hold",
-          "extrapolate": "clamp"
+          "extrapolate": "clamp",
+          "min": 0,
+          "max": 255
         },
 
         "lightsource": {
@@ -167,7 +191,7 @@ Example parameter catalog:
 | `min` | Lower validation limit; may clamp. |
 | `max` | Upper validation limit; may clamp. |
 | `arity` | Component count for tuple-like values. |
-| `values` | Legal enum values. |
+| `values` | Legal string values for enum, inside, and outside parameters. |
 | `rounding` | Rule for producing integer-like values. |
 | `units` | Unit hint: degrees, radians, raw, percent. |
 | `normalize` | Normalize vector-like values after interpolation. |
@@ -370,10 +394,12 @@ separate layers or separate animations for those cases.
 Minimum useful interpolated track type set:
 
 - `enum`
+- `inside`
 - `integer`
 - `double`
 - `complex`
 - `numeric-tuple`
+- `outside`
 - `point2`
 - `vector2`
 - `point3`
@@ -412,6 +438,16 @@ For animation planning, the important string selectors are
 which selects Julibrot orbit context. String parameters may appear in
 keyframes, but they must use hold or step behavior. Do not interpolate
 strings.
+
+The inside and outside types are discrete Id coloring values. A value may
+be either one declared method string or an integer colormap index. Catalog
+metadata should declare the accepted method strings and set numeric bounds
+for color indexes, normally 0 through 255.
+
+Inside and outside are distinct types because they accept different method
+sets. `inside` accepts methods such as `maxiter`, `bof60`, and `zmag`.
+`outside` accepts methods such as `iter`, `real`, `imag`, and `summ`.
+Both accept numeric color-index values such as `0` and `255`.
 
 ## 3D Point And Vector Parameters
 
@@ -1248,20 +1284,23 @@ Example:
 This lets local experiments refine metadata for real Id parameters without
 modifying the default catalog.
 
-## Enum Parameters
+## Discrete Parameters
 
-Enum parameters are discrete by default.
+Enum, inside, and outside parameters are discrete by default.
 
-Default enum behavior should be hold or step, not numeric interpolation.
+Default discrete behavior should be hold or step, not numeric
+interpolation.
 
 Example metadata:
 
     {
       "parameters": {
         "inside": {
-          "type": "enum",
-          "values": [ "bof60", "zmag", "epscross", "startrail" ],
-          "default-curve": "hold"
+          "type": "inside",
+          "values": [ "bof60", "zmag", "epsiloncross", "startrail" ],
+          "default-curve": "hold",
+          "min": 0,
+          "max": 255
         }
       }
     }
@@ -1276,17 +1315,19 @@ Example track:
       ]
     }
 
-This produces one legal enum value per frame.
+This produces one legal discrete value per frame. The same track type may
+also hold numeric color-index values such as `0` or `255`.
 
-## Enum PWM
+## Discrete PWM
 
-Enum values can be temporally dithered using a PWM-like track mode.
+Discrete values can be temporally dithered using a PWM-like track mode.
 
-The enum value itself is not continuous. The choice of enum value over
+The value itself is not continuous. The choice of emitted value over
 frames becomes a discretized signal whose duty cycle approximates a
 continuous blend.
 
-Use this only when the two enum values produce visually related results.
+Use this only when the two discrete values produce visually related
+results.
 
 Example:
 
@@ -1310,8 +1351,8 @@ Semantics:
 | `1.0` | Always emit value `b`. |
 | `0.25` | Emit value `b` for about 25 percent of frames. |
 
-The user explicitly specifies which enum values are used for the PWM
-off/on pair. Do not infer the pair from enum order.
+The user explicitly specifies which discrete values are used for the PWM
+off/on pair. Do not infer the pair from catalog value order.
 
 The names a and b are preferred over off and on because these are not
 electrical signals. If the PWM analogy should be explicit, off and on are
@@ -1334,10 +1375,10 @@ Example with explicit off and on:
 
 Validation rules:
 
-- `a` must be a legal enum value.
-- `b` must be a legal enum value.
-- `off` must be a legal enum value.
-- `on` must be a legal enum value.
+- `a` must be a legal discrete value.
+- `b` must be a legal discrete value.
+- `off` must be a legal discrete value.
+- `on` must be a legal discrete value.
 - `a` and `b` may be equal, but this should warn.
 - `mix` must be in the range 0 through 1 unless clamping is enabled.
 - `duty` must be in the range 0 through 1 unless clamping is
@@ -1368,10 +1409,10 @@ Possible distribution modes:
 
 For reproducible builds, avoid unseeded randomness.
 
-## Enum PWM Limitations
+## Discrete PWM Limitations
 
 PWM approximates blending over time. A still frame is never blended. It
-contains only one enum value.
+contains only one discrete value.
 
 If true per-pixel or spatial blending is desired, that belongs in the
 renderer, not ParAnimator.
@@ -1396,8 +1437,8 @@ PWM is usually bad for:
 - rendering backend
 - algorithm switch that changes image structure completely
 
-If two enum values produce unrelated images, PWM becomes flicker rather
-than interpolation.
+If two discrete values produce unrelated images, PWM becomes flicker
+rather than interpolation.
 
 ## Validation
 
@@ -1419,9 +1460,10 @@ Examples:
 - `Did you mean 'params'?`
 - `Parameter 'maxiter' is type integer, but key at frame 120 has value
   'abc'.`
-- `Parameter 'inside' is enum, but value 'foo' is not listed.`
+- `Parameter 'inside' is inside, but value 'foo' is neither a
+  declared method nor a color index.`
 - `Parameter 'outside' uses PWM value 'atan', but 'atan' is not listed
-  as a legal enum value.`
+  as a legal discrete value.`
 
 ## JSON File Replacement
 
@@ -1455,7 +1497,7 @@ Sketch:
         std::optional<int> arity;
         bool normalize{false};
 
-        std::vector<std::string> enum_values;
+        std::vector<std::string> discrete_values;
     };
 
     struct Keyframe
@@ -1560,9 +1602,9 @@ is likely, add a shared schema file and external `$ref` loader support.
 Every new schema object, field, and enum or const value must include a
 `description` string when the schema element is added.
 
-### 1. Add Enum Step Tracks
+### 1. Add Discrete Step Tracks
 
-Add step behavior for enum tracks.
+Add step behavior for enum, inside, and outside tracks.
 
 Schema work:
 
@@ -1571,13 +1613,14 @@ Schema work:
 
 Unit tests:
 
-- inside changes at the destination key.
+- inside and outside change at the destination key.
 - hold behavior remains unchanged.
-- missing enum values still fail validation.
+- missing discrete values still fail validation.
 
-### 2. Add Enum PWM Tracks
+### 2. Add Discrete PWM Tracks
 
-Add PWM mode for enum tracks using explicit a and b values.
+Add PWM mode for enum, inside, and outside tracks using explicit a and b
+values.
 
 Schema work:
 
@@ -2049,11 +2092,11 @@ Do not hard-code:
 
 - Iterated Dynamics parameter names
 - formula-specific parameter lists
-- legal enum values
+- legal discrete values
 - which parameters are animatable
 - virtual adapter output parameter names
 - default curves for individual parameters
-- enum values used by PWM tracks
+- discrete values used by PWM tracks
 - generated colormap filenames
 - source map filenames
 - backend-specific compose operator names
@@ -2074,9 +2117,9 @@ The final design is:
   emit `colors=@file`
 - optional layer stacks render Id layer images and compose them with
   backend-neutral operators
-- enum parameters are discrete by default
-- enum PWM is an optional temporal dithering mode
-- PWM tracks explicitly choose their `a` and `b` enum values
+- enum, inside, and outside parameters are discrete by default
+- discrete PWM is an optional temporal dithering mode
+- PWM tracks explicitly choose their `a` and `b` discrete values
 
 This turns ParAnimator into a data-driven parameter animation sequencer
 rather than a viewport interpolation tool.

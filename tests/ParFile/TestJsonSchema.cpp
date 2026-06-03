@@ -109,6 +109,14 @@ TEST(TestJsonSchema, enumMetadataAccepted)
     EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"enum","values":["bof60","zmag"])")));
 }
 
+TEST(TestJsonSchema, insideAndOutsideMetadataAccepted)
+{
+    EXPECT_TRUE(validates_parameter_catalog_text(
+        catalog_with_metadata(R"("type":"inside","values":["bof60"],"min":0,"max":255)")));
+    EXPECT_TRUE(validates_parameter_catalog_text(
+        catalog_with_metadata(R"("type":"outside","values":["iter"],"min":0,"max":255)")));
+}
+
 TEST(TestJsonSchema, tupleAliasMetadataAccepted)
 {
     EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"point3")")));
@@ -177,6 +185,8 @@ TEST(TestJsonSchema, invalidMetadataNormalizeRejected)
 TEST(TestJsonSchema, invalidEnumMetadataRejected)
 {
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"enum")")));
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"inside")")));
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"outside")")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"enum","values":"id-functions")")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"enum","values":["a",1])")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","values":["a"])")));

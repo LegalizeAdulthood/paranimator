@@ -63,7 +63,25 @@ ParFile::ParameterMetadata enum_metadata(const std::string &name)
     ParFile::ParameterMetadata result{
         metadata(name, ParFile::ParameterType::ENUM, {}, {}, ParFile::ExtrapolateMode::CLAMP, ParFile::Curve::HOLD)};
     result.format = ParFile::ParameterFormat::RAW;
-    result.values = {"bof60", "zmag", "epscross", "startrail"};
+    result.values = {"bof60", "zmag", "epsiloncross", "startrail"};
+    return result;
+}
+
+ParFile::ParameterMetadata inside_metadata(const std::string &name)
+{
+    ParFile::ParameterMetadata result{metadata(
+        name, ParFile::ParameterType::INSIDE, 0.0, 255.0, ParFile::ExtrapolateMode::CLAMP, ParFile::Curve::HOLD)};
+    result.format = ParFile::ParameterFormat::RAW;
+    result.values = {"maxiter", "zmag", "bof60", "bof61", "epsiloncross", "startrail", "period", "atan", "fmod"};
+    return result;
+}
+
+ParFile::ParameterMetadata outside_metadata(const std::string &name)
+{
+    ParFile::ParameterMetadata result{metadata(
+        name, ParFile::ParameterType::OUTSIDE, 0.0, 255.0, ParFile::ExtrapolateMode::CLAMP, ParFile::Curve::HOLD)};
+    result.format = ParFile::ParameterFormat::RAW;
+    result.values = {"iter", "real", "imag", "mult", "summ", "atan", "fmod", "tdis"};
     return result;
 }
 
@@ -557,6 +575,62 @@ TEST(TestInterpolant, enumLinearCurveRejected)
 {
     const int num_steps{3};
     const ParFile::ParameterMetadata parameter_metadata{enum_metadata("inside")};
+
+    EXPECT_THROW(
+        ParFile::create_interpolant(
+            resolved_track(parameter_metadata, keyframes("bof60", "zmag", ParFile::Curve::LINEAR, num_steps), "bof60"),
+            num_steps),
+        std::runtime_error);
+}
+
+TEST(TestInterpolant, insideMethodHold)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_interpolant(inside_metadata("inside"), "bof60", "zmag", num_steps)};
+
+    EXPECT_EQ("bof60", interpolant->step());
+    EXPECT_EQ("bof60", interpolant->step());
+    EXPECT_EQ("zmag", interpolant->step());
+}
+
+TEST(TestInterpolant, outsideMethodHold)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_interpolant(outside_metadata("outside"), "real", "tdis", num_steps)};
+
+    EXPECT_EQ("real", interpolant->step());
+    EXPECT_EQ("real", interpolant->step());
+    EXPECT_EQ("tdis", interpolant->step());
+}
+
+TEST(TestInterpolant, insideColorIndexHold)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_interpolant(inside_metadata("inside"), "0", "255", num_steps)};
+
+    EXPECT_EQ("0", interpolant->step());
+    EXPECT_EQ("0", interpolant->step());
+    EXPECT_EQ("255", interpolant->step());
+}
+
+TEST(TestInterpolant, insideUnknownStringRejected)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(create_interpolant(inside_metadata("inside"), "bof60", "unknown", num_steps), std::runtime_error);
+}
+
+TEST(TestInterpolant, insideColorIndexOutOfRangeRejected)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(create_interpolant(inside_metadata("inside"), "0", "256", num_steps), std::runtime_error);
+}
+
+TEST(TestInterpolant, insideLinearCurveRejected)
+{
+    const int num_steps{3};
+    const ParFile::ParameterMetadata parameter_metadata{inside_metadata("inside")};
 
     EXPECT_THROW(
         ParFile::create_interpolant(

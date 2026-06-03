@@ -34,11 +34,41 @@
       "max": 1000
     },
     "inside": {
-      "type": "enum",
+      "type": "inside",
       "format": "raw",
-      "values": [ "bof60", "zmag", "epscross", "startrail" ],
+      "values": [
+        "maxiter",
+        "zmag",
+        "bof60",
+        "bof61",
+        "epsiloncross",
+        "startrail",
+        "period",
+        "atan",
+        "fmod"
+      ],
       "default-curve": "hold",
-      "extrapolate": "clamp"
+      "extrapolate": "clamp",
+      "min": 0,
+      "max": 255
+    },
+    "outside": {
+      "type": "outside",
+      "format": "raw",
+      "values": [
+        "iter",
+        "real",
+        "imag",
+        "mult",
+        "summ",
+        "atan",
+        "fmod",
+        "tdis"
+      ],
+      "default-curve": "hold",
+      "extrapolate": "clamp",
+      "min": 0,
+      "max": 255
     }
   },
   "fractal-types": {

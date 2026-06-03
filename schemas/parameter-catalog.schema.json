@@ -226,7 +226,7 @@
       ]
     },
     "enum-values": {
-      "description": "Declared value set for a regular enum parameter.",
+      "description": "Declared value set for a regular discrete parameter.",
       "type": "array",
       "minItems": 1,
       "items": {
@@ -236,25 +236,38 @@
       }
     },
     "enum-values-rule": {
-      "description": "Requires enum values only for regular enum metadata.",
+      "description": "Requires values only for regular discrete metadata.",
       "if": {
-        "description": "Metadata whose type is enum.",
+        "description": "Metadata whose type uses declared discrete values.",
         "properties": {
           "type": {
-            "const": "enum",
-            "description": "Regular enum metadata."
+            "description": "Regular discrete metadata type.",
+            "oneOf": [
+              {
+                "const": "enum",
+                "description": "String-only enum metadata."
+              },
+              {
+                "const": "inside",
+                "description": "Inside coloring method or color index metadata."
+              },
+              {
+                "const": "outside",
+                "description": "Outside coloring method or color index metadata."
+              }
+            ]
           }
         },
         "required": [ "type" ]
       },
       "then": {
-        "description": "Enum metadata must declare legal values.",
+        "description": "Discrete metadata must declare legal string values.",
         "required": [ "values" ]
       },
       "else": {
-        "description": "Non-enum metadata must not declare enum values.",
+        "description": "Non-discrete metadata must not declare values.",
         "not": {
-          "description": "A values field on non-enum metadata.",
+          "description": "A values field on non-discrete metadata.",
           "required": [ "values" ]
         }
       }
@@ -474,8 +487,16 @@
           "description": "Discrete string value selected from a declared value set."
         },
         {
+          "const": "inside",
+          "description": "Id inside= value: a named inside method or integer color-map index."
+        },
+        {
           "const": "integer",
           "description": "Integral numeric value."
+        },
+        {
+          "const": "outside",
+          "description": "Id outside= value: a named outside method or integer color-map index."
         },
         {
           "const": "numeric-tuple",

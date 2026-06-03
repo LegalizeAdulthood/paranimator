@@ -199,19 +199,24 @@ void apply_tuple_alias_metadata(ParameterMetadata &metadata)
     metadata.arity = arity;
 }
 
-void validate_enum_metadata(const ParameterMetadata &metadata)
+bool needs_discrete_values(ParameterType type)
 {
-    if (metadata.type == ParameterType::ENUM)
+    return type == ParameterType::ENUM || type == ParameterType::INSIDE || type == ParameterType::OUTSIDE;
+}
+
+void validate_discrete_values_metadata(const ParameterMetadata &metadata)
+{
+    if (needs_discrete_values(metadata.type))
     {
         if (metadata.values.empty())
         {
-            throw std::runtime_error("Invalid parameter metadata '" + metadata.name + "', missing enum values");
+            throw std::runtime_error("Invalid parameter metadata '" + metadata.name + "', missing discrete values");
         }
         return;
     }
     if (!metadata.values.empty())
     {
-        throw std::runtime_error("Invalid parameter metadata '" + metadata.name + "', values require enum type");
+        throw std::runtime_error("Invalid parameter metadata '" + metadata.name + "', values require discrete type");
     }
 }
 
@@ -243,7 +248,7 @@ ParameterMetadata load_metadata(std::string_view name, const Object &json)
     result.arity = load_optional_positive_int(json, "arity");
     result.normalize = load_optional_bool(json, "normalize").value_or(false);
     apply_tuple_alias_metadata(result);
-    validate_enum_metadata(result);
+    validate_discrete_values_metadata(result);
     return result;
 }
 

@@ -252,6 +252,40 @@ void validate_bounds(const ParameterMetadata &metadata, double value)
     }
 }
 
+bool is_coloring_type(ParameterType type)
+{
+    return type == ParameterType::INSIDE || type == ParameterType::OUTSIDE;
+}
+
+void validate_coloring_value(const ParameterMetadata &metadata, const std::string &value)
+{
+    const auto enum_it{std::find(metadata.values.begin(), metadata.values.end(), value)};
+    if (enum_it != metadata.values.end())
+    {
+        return;
+    }
+
+    try
+    {
+        validate_bounds(metadata, parse_integer(value));
+    }
+    catch (const std::runtime_error &)
+    {
+        throw std::runtime_error("Invalid " + std::string{to_string(metadata.type)} + " value '" + value +
+            "' for parameter '" + metadata.name + "'");
+    }
+}
+
+void validate_discrete_value(const ParameterMetadata &metadata, const std::string &value)
+{
+    if (is_coloring_type(metadata.type))
+    {
+        validate_coloring_value(metadata, value);
+        return;
+    }
+    validate_enum_value(metadata, value);
+}
+
 void validate_scalar_curve(std::string_view type, Curve curve)
 {
     if (curve != Curve::LINEAR && curve != Curve::HOLD && curve != Curve::STEP)
@@ -905,12 +939,12 @@ std::string NumericTupleInterpolant::step()
     return format_slash_doubles(values);
 }
 
-class EnumInterpolant : public Base
+class DiscreteInterpolant : public Base
 {
 public:
-    EnumInterpolant(
+    DiscreteInterpolant(
         const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve, int num_steps);
-    ~EnumInterpolant() override = default;
+    ~DiscreteInterpolant() override = default;
 
     std::string step() override;
 
@@ -921,7 +955,7 @@ private:
     Curve m_curve{};
 };
 
-EnumInterpolant::EnumInterpolant(
+DiscreteInterpolant::DiscreteInterpolant(
     const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve, int num_steps) :
     Base(metadata.name, num_steps),
     m_to_frame(keys[1].frame),
@@ -929,12 +963,12 @@ EnumInterpolant::EnumInterpolant(
     m_to(keys[1].value),
     m_curve(curve)
 {
-    validate_hold_curve("enum", m_curve);
-    validate_enum_value(metadata, m_from);
-    validate_enum_value(metadata, m_to);
+    validate_hold_curve(to_string(metadata.type), m_curve);
+    validate_discrete_value(metadata, m_from);
+    validate_discrete_value(metadata, m_to);
 }
 
-std::string EnumInterpolant::step()
+std::string DiscreteInterpolant::step()
 {
     const int frame{m_step};
     ++m_step;
@@ -1053,6 +1087,17 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
         }
         return std::make_shared<DoubleInterpolant>(metadata, keys, curve, track.base_value, num_steps);
     }
+    case ParameterType::INSIDE:
+    case ParameterType::OUTSIDE:
+    {
+        validate_full_range(metadata.name, keys, num_steps);
+        Curve curve{default_curve(metadata)};
+        if (keys[1].curve)
+        {
+            curve = *keys[1].curve;
+        }
+        return std::make_shared<DiscreteInterpolant>(metadata, keys, curve, num_steps);
+    }
     case ParameterType::NUMERIC_TUPLE:
     case ParameterType::POINT2:
     case ParameterType::POINT3:
@@ -1079,7 +1124,7 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
         {
             return std::make_shared<FunctionEnumInterpolant>(track, curve, num_steps);
         }
-        return std::make_shared<EnumInterpolant>(metadata, keys, curve, num_steps);
+        return std::make_shared<DiscreteInterpolant>(metadata, keys, curve, num_steps);
     }
     }
 

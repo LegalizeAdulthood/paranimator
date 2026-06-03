@@ -31,6 +31,10 @@ ParameterType parse_parameter_type(std::string_view text)
     {
         return ParameterType::ENUM;
     }
+    if (text == "inside")
+    {
+        return ParameterType::INSIDE;
+    }
     if (text == "integer")
     {
         return ParameterType::INTEGER;
@@ -38,6 +42,10 @@ ParameterType parse_parameter_type(std::string_view text)
     if (text == "numeric-tuple")
     {
         return ParameterType::NUMERIC_TUPLE;
+    }
+    if (text == "outside")
+    {
+        return ParameterType::OUTSIDE;
     }
     if (text == "point2")
     {
@@ -139,10 +147,14 @@ std::string_view to_string(ParameterType value)
         return "double";
     case ParameterType::ENUM:
         return "enum";
+    case ParameterType::INSIDE:
+        return "inside";
     case ParameterType::INTEGER:
         return "integer";
     case ParameterType::NUMERIC_TUPLE:
         return "numeric-tuple";
+    case ParameterType::OUTSIDE:
+        return "outside";
     case ParameterType::POINT2:
         return "point2";
     case ParameterType::POINT3:

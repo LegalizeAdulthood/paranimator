@@ -63,7 +63,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
 {
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
-    EXPECT_EQ(6U, catalog.parameters.size());
+    EXPECT_EQ(7U, catalog.parameters.size());
     EXPECT_EQ(1U, catalog.fractal_types.size());
     EXPECT_EQ(1U, catalog.formula_entries.size());
 }
@@ -155,16 +155,36 @@ TEST(TestParameterCatalog, insideMetadataLoads)
     const ParFile::ParameterMetadata &metadata{catalog.metadata("inside")};
 
     EXPECT_EQ("inside", metadata.name);
-    EXPECT_EQ(ParFile::ParameterType::ENUM, metadata.type);
+    EXPECT_EQ(ParFile::ParameterType::INSIDE, metadata.type);
     ASSERT_TRUE(metadata.format);
     EXPECT_EQ(ParFile::ParameterFormat::RAW, *metadata.format);
     ASSERT_TRUE(metadata.default_curve);
     EXPECT_EQ(ParFile::Curve::HOLD, *metadata.default_curve);
     ASSERT_TRUE(metadata.extrapolate);
     EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
-    ASSERT_EQ(4U, metadata.values.size());
-    EXPECT_EQ("bof60", metadata.values[0]);
-    EXPECT_EQ("zmag", metadata.values[1]);
+    ASSERT_TRUE(metadata.min);
+    ASSERT_TRUE(metadata.max);
+    EXPECT_EQ(0, *metadata.min);
+    EXPECT_EQ(255, *metadata.max);
+    ASSERT_EQ(9U, metadata.values.size());
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "bof60"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "epsiloncross"));
+}
+
+TEST(TestParameterCatalog, outsideMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("outside")};
+
+    EXPECT_EQ("outside", metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::OUTSIDE, metadata.type);
+    ASSERT_TRUE(metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::RAW, *metadata.format);
+    ASSERT_TRUE(metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *metadata.default_curve);
+    ASSERT_EQ(8U, metadata.values.size());
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "iter"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "tdis"));
 }
 
 TEST(TestParameterCatalog, typedCatalogFindsMetadataByName)
@@ -280,8 +300,10 @@ TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
     EXPECT_EQ(ParFile::ParameterType::CORNERS, read_metadata(R"("type":"corners")").type);
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, read_metadata(R"("type":"double")").type);
     EXPECT_EQ(ParFile::ParameterType::ENUM, read_metadata(R"("type":"enum","values":["a"])").type);
+    EXPECT_EQ(ParFile::ParameterType::INSIDE, read_metadata(R"("type":"inside","values":["maxiter"])").type);
     EXPECT_EQ(ParFile::ParameterType::INTEGER, read_metadata(R"("type":"integer")").type);
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, read_metadata(R"("type":"numeric-tuple")").type);
+    EXPECT_EQ(ParFile::ParameterType::OUTSIDE, read_metadata(R"("type":"outside","values":["iter"])").type);
     EXPECT_EQ(ParFile::ParameterType::POINT2, read_metadata(R"("type":"point2")").type);
     EXPECT_EQ(ParFile::ParameterType::POINT3, read_metadata(R"("type":"point3")").type);
     EXPECT_EQ(ParFile::ParameterType::VECTOR2, read_metadata(R"("type":"vector2")").type);
@@ -393,9 +415,11 @@ TEST(TestParameterCatalog, invalidNormalizeRejected)
 TEST(TestParameterCatalog, enumMissingValuesRejected)
 {
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"enum")")), std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"inside")")), std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"outside")")), std::runtime_error);
 }
 
-TEST(TestParameterCatalog, enumValuesRequireEnumType)
+TEST(TestParameterCatalog, valuesRequireDiscreteType)
 {
     EXPECT_THROW(
         ParFile::read_parameter_catalog(catalog_text(R"("type":"integer","values":["a"])")), std::runtime_error);
