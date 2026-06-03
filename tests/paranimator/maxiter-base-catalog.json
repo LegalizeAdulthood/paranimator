@@ -1,0 +1,10 @@
+{
+  "parameters": {
+    "maxiter": {
+      "type": "integer",
+      "format": "raw",
+      "default_curve": "linear",
+      "extrapolate": "base"
+    }
+  }
+}

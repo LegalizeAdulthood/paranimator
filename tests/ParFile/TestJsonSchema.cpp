@@ -104,6 +104,16 @@ TEST(TestJsonSchema, unknownMetadataExtrapolateRejected)
         validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","extrapolate":"unknown")")));
 }
 
+TEST(TestJsonSchema, baseMetadataExtrapolateAccepted)
+{
+    EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","extrapolate":"base")")));
+}
+
+TEST(TestJsonSchema, omitMetadataExtrapolateAccepted)
+{
+    EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","extrapolate":"omit")")));
+}
+
 TEST(TestJsonSchema, invalidMetadataMinimumTypeRejected)
 {
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"double","min":"0")")));

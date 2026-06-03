@@ -12,10 +12,10 @@
 namespace
 {
 
-ParFile::ParameterMetadata metadata(
-    const std::string &name, const std::string &type, std::optional<double> min = {}, std::optional<double> max = {})
+ParFile::ParameterMetadata metadata(const std::string &name, const std::string &type, std::optional<double> min = {},
+    std::optional<double> max = {}, const std::string &extrapolate = "clamp")
 {
-    return {name, type, "slash", "linear", "clamp", min, max};
+    return {name, type, "slash", "linear", extrapolate, min, max};
 }
 
 std::vector<ParFile::KeyframeConfig> keyframes(const std::string &from, const std::string &to, int num_steps)
@@ -32,19 +32,19 @@ std::vector<ParFile::KeyframeConfig> keyframes(
 ParFile::InterpolantPtr create_interpolant(
     const std::string &name, const std::string &type, const std::string &from, const std::string &to, int num_steps)
 {
-    return ParFile::create_interpolant(metadata(name, type), keyframes(from, to, num_steps), num_steps);
+    return ParFile::create_interpolant(metadata(name, type), keyframes(from, to, num_steps), num_steps, from);
 }
 
 ParFile::InterpolantPtr create_interpolant(
     const std::string &name, const std::string &type, const std::vector<ParFile::KeyframeConfig> &keys, int num_steps)
 {
-    return ParFile::create_interpolant(metadata(name, type), keys, num_steps);
+    return ParFile::create_interpolant(metadata(name, type), keys, num_steps, keys[0].value);
 }
 
 ParFile::InterpolantPtr create_interpolant(
     const ParFile::ParameterMetadata &parameter_metadata, const std::string &from, const std::string &to, int num_steps)
 {
-    return ParFile::create_interpolant(parameter_metadata, keyframes(from, to, num_steps), num_steps);
+    return ParFile::create_interpolant(parameter_metadata, keyframes(from, to, num_steps), num_steps, from);
 }
 
 } // namespace
@@ -251,6 +251,23 @@ TEST(TestInterpolant, integerClampExtrapolation)
     EXPECT_EQ("20", interpolant->step());
 }
 
+TEST(TestInterpolant, integerBaseExtrapolation)
+{
+    const int num_steps{4};
+    const std::vector<ParFile::KeyframeConfig> keys{{1, "100"}, {2, "200"}};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(metadata("maxiter", "integer", {}, {}, "base"), keys, num_steps, "678")};
+
+    EXPECT_EQ("678", interpolant->step());
+    EXPECT_TRUE(interpolant->has_value());
+    EXPECT_EQ("100", interpolant->step());
+    EXPECT_TRUE(interpolant->has_value());
+    EXPECT_EQ("200", interpolant->step());
+    EXPECT_TRUE(interpolant->has_value());
+    EXPECT_EQ("678", interpolant->step());
+    EXPECT_TRUE(interpolant->has_value());
+}
+
 TEST(TestInterpolant, integerHoldCurve)
 {
     const int num_steps{4};
@@ -317,4 +334,21 @@ TEST(TestInterpolant, doubleMaximumRejected)
 
     EXPECT_THROW(
         create_interpolant(metadata("bailout", "double", {}, 2.0), "1.25", "2.5", num_steps), std::runtime_error);
+}
+
+TEST(TestInterpolant, doubleOmitExtrapolation)
+{
+    const int num_steps{4};
+    const std::vector<ParFile::KeyframeConfig> keys{{1, "1.5"}, {2, "2.5"}};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(metadata("bailout", "double", {}, {}, "omit"), keys, num_steps, "1.25")};
+
+    static_cast<void>(interpolant->step());
+    EXPECT_FALSE(interpolant->has_value());
+    EXPECT_EQ("1.5", interpolant->step());
+    EXPECT_TRUE(interpolant->has_value());
+    EXPECT_EQ("2.5", interpolant->step());
+    EXPECT_TRUE(interpolant->has_value());
+    static_cast<void>(interpolant->step());
+    EXPECT_FALSE(interpolant->has_value());
 }

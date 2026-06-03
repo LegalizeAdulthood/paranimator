@@ -61,11 +61,12 @@ std::vector<InterpolantPtr> Interpolator::load_interpolants(const Config &config
     {
         const ParameterMetadata &metadata{catalog.metadata(track.parameter)};
         const auto is_name{[&](const Parameter &param) { return param.name == track.parameter; }};
-        if (std::find_if(source.params.begin(), source.params.end(), is_name) == source.params.end())
+        const auto it{std::find_if(source.params.begin(), source.params.end(), is_name)};
+        if (it == source.params.end())
         {
             throw std::runtime_error("Parameter set '" + source.name + "' has no parameter '" + track.parameter + "'");
         }
-        result.emplace_back(create_interpolant(metadata, track.keys, config.num_frames()));
+        result.emplace_back(create_interpolant(metadata, track.keys, config.num_frames(), it->value));
     }
     return result;
 }
@@ -86,7 +87,22 @@ ParSet Interpolator::operator()()
     {
         const auto it{std::find_if(par_set.params.begin(), par_set.params.end(),
             [&](const Parameter &param) { return param.name == lerper->name(); })};
-        it->value = lerper->step();
+        const std::string value{lerper->step()};
+        if (lerper->has_value())
+        {
+            if (it == par_set.params.end())
+            {
+                par_set.params.push_back({lerper->name(), value});
+            }
+            else
+            {
+                it->value = value;
+            }
+        }
+        else if (it != par_set.params.end())
+        {
+            par_set.params.erase(it);
+        }
     }
     par_set.name = (boost::format(m_frame_name) % m_frame).str();
     par_set.params.push_back({"batch", "yes"});

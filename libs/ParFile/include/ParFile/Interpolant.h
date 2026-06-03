@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace ParFile
@@ -20,12 +21,13 @@ public:
     virtual ~Interpolant() = default;
 
     virtual const std::string &name() const = 0;
+    virtual bool has_value() const = 0;
     virtual std::string step() = 0;
 };
 
 using InterpolantPtr = std::shared_ptr<Interpolant>;
 
-InterpolantPtr create_interpolant(
-    const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, int num_steps);
+InterpolantPtr create_interpolant(const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys,
+    int num_steps, std::string_view base_value);
 
 } // namespace ParFile
