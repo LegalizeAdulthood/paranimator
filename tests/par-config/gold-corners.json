@@ -1,0 +1,32 @@
+{
+  "parameter-catalogs": [
+    "core-catalog.json"
+  ],
+  "source": {
+    "file": "input/from.par",
+    "name": "Corners_Demo"
+  },
+  "output": {
+    "directory": "output",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 3,
+  "tracks": [
+    {
+      "parameter": "corners",
+      "keys": [
+        {
+          "frame": 0,
+          "value": "-3/-1/-2/2"
+        },
+        {
+          "frame": 2,
+          "value": "-2/2/-1/1"
+        }
+      ]
+    }
+  ]
+}
