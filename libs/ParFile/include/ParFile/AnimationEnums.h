@@ -14,7 +14,8 @@ enum class ParameterType
     CORNERS,
     DOUBLE,
     ENUM,
-    INTEGER
+    INTEGER,
+    NUMERIC_TUPLE
 };
 
 enum class ParameterFormat

@@ -12,6 +12,13 @@
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
+    "xyshift": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 2,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
     "maxiter": {
       "type": "integer",
       "format": "raw",

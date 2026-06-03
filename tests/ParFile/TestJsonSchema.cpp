@@ -99,6 +99,11 @@ TEST(TestJsonSchema, unknownMetadataTypeRejected)
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"unknown")")));
 }
 
+TEST(TestJsonSchema, numericTupleMetadataAccepted)
+{
+    EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"numeric-tuple","arity":3)")));
+}
+
 TEST(TestJsonSchema, unknownMetadataFormatRejected)
 {
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","format":"unknown")")));
@@ -145,6 +150,12 @@ TEST(TestJsonSchema, invalidMetadataMinimumTypeRejected)
 TEST(TestJsonSchema, invalidMetadataMaximumTypeRejected)
 {
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"double","max":"1000")")));
+}
+
+TEST(TestJsonSchema, invalidMetadataArityRejected)
+{
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"numeric-tuple","arity":0)")));
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"numeric-tuple","arity":"3")")));
 }
 
 TEST(TestJsonSchema, invalidFormulaParamsVariableRejected)

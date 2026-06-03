@@ -112,6 +112,25 @@ int load_required_int(const Object &json, std::string_view parameter, std::strin
     return json.at(key).get<int>();
 }
 
+std::optional<int> load_optional_positive_int(const Object &json, std::string_view field)
+{
+    const std::string key{field};
+    if (!json.contains(key))
+    {
+        return {};
+    }
+    if (!json.at(key).is_number_integer())
+    {
+        throw std::runtime_error("Invalid parameter metadata, field '" + std::string{field} + "' is not an integer");
+    }
+    const int value{json.at(key).get<int>()};
+    if (value < 1)
+    {
+        throw std::runtime_error("Invalid parameter metadata, field '" + std::string{field} + "' must be positive");
+    }
+    return value;
+}
+
 ParameterMetadata load_metadata(std::string_view name, const Object &json)
 {
     if (!json.is_object())
@@ -136,6 +155,7 @@ ParameterMetadata load_metadata(std::string_view name, const Object &json)
     }
     result.min = load_optional_number(json, "min");
     result.max = load_optional_number(json, "max");
+    result.arity = load_optional_positive_int(json, "arity");
     return result;
 }
 
@@ -155,6 +175,7 @@ void load_optional_metadata_fields(ParameterMetadata &metadata, const Object &js
     }
     metadata.min = load_optional_number(json, "min");
     metadata.max = load_optional_number(json, "max");
+    metadata.arity = load_optional_positive_int(json, "arity");
 }
 
 std::vector<std::string> id_function_values()

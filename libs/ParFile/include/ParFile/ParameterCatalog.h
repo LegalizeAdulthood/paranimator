@@ -22,6 +22,7 @@ struct ParameterMetadata
     std::optional<double> min;
     std::optional<double> max;
     std::vector<std::string> values;
+    std::optional<int> arity;
 };
 
 struct ParamsSlotMetadata

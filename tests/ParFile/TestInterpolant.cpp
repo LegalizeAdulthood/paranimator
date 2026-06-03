@@ -51,6 +51,13 @@ ParFile::ResolvedTrack resolved_params_track(const std::string &name, ParFile::P
     return {name, metadata(name, type), base_value, keys, "params", std::move(slots)};
 }
 
+ParFile::ParameterMetadata tuple_metadata(const std::string &name, int arity)
+{
+    ParFile::ParameterMetadata result{metadata(name, ParFile::ParameterType::NUMERIC_TUPLE)};
+    result.arity = arity;
+    return result;
+}
+
 std::vector<std::string> id_functions()
 {
     return {"sin", "cos", "tan", "cotan", "sinh", "cosh", "tanh", "cotanh", "exp", "log", "sqr", "recip", "ident",
@@ -447,6 +454,42 @@ TEST(TestInterpolant, doublePingPongExtrapolation)
     EXPECT_EQ("2", interpolant->step());
     EXPECT_EQ("3", interpolant->step());
     EXPECT_EQ("2", interpolant->step());
+}
+
+TEST(TestInterpolant, numericTupleTwoValueFraction)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_interpolant(tuple_metadata("xyshift", 2), "0/1", "10/11", num_steps)};
+
+    EXPECT_EQ("0/1", interpolant->step());
+    EXPECT_EQ("5/6", interpolant->step());
+    EXPECT_EQ("10/11", interpolant->step());
+}
+
+TEST(TestInterpolant, numericTupleThreeValueFraction)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{
+        create_interpolant(tuple_metadata("lightsource", 3), "0/10/20", "10/20/30", num_steps)};
+
+    EXPECT_EQ("0/10/20", interpolant->step());
+    EXPECT_EQ("5/15/25", interpolant->step());
+    EXPECT_EQ("10/20/30", interpolant->step());
+}
+
+TEST(TestInterpolant, numericTupleWrongArityRejected)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(create_interpolant(tuple_metadata("xyshift", 3), "0/1", "10/11", num_steps), std::runtime_error);
+}
+
+TEST(TestInterpolant, numericTupleMissingArityRejected)
+{
+    const int num_steps{3};
+    const ParFile::ParameterMetadata parameter_metadata{metadata("xyshift", ParFile::ParameterType::NUMERIC_TUPLE)};
+
+    EXPECT_THROW(create_interpolant(parameter_metadata, "0/1", "10/11", num_steps), std::runtime_error);
 }
 
 TEST(TestInterpolant, paramsComplexInterpolatesSlashPair)

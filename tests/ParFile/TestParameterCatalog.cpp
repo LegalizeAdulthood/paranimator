@@ -63,7 +63,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
 {
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
-    EXPECT_EQ(4U, catalog.parameters.size());
+    EXPECT_EQ(5U, catalog.parameters.size());
     EXPECT_EQ(1U, catalog.fractal_types.size());
     EXPECT_EQ(1U, catalog.formula_entries.size());
 }
@@ -92,6 +92,23 @@ TEST(TestParameterCatalog, cornersMetadataLoads)
     EXPECT_EQ(ParFile::ParameterType::CORNERS, metadata.type);
     ASSERT_TRUE(metadata.format);
     EXPECT_EQ(ParFile::ParameterFormat::SLASH, *metadata.format);
+    ASSERT_TRUE(metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::LINEAR, *metadata.default_curve);
+    ASSERT_TRUE(metadata.extrapolate);
+    EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
+}
+
+TEST(TestParameterCatalog, xyshiftMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("xyshift")};
+
+    EXPECT_EQ("xyshift", metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, metadata.type);
+    ASSERT_TRUE(metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::SLASH, *metadata.format);
+    ASSERT_TRUE(metadata.arity);
+    EXPECT_EQ(2, *metadata.arity);
     ASSERT_TRUE(metadata.default_curve);
     EXPECT_EQ(ParFile::Curve::LINEAR, *metadata.default_curve);
     ASSERT_TRUE(metadata.extrapolate);
@@ -246,6 +263,7 @@ TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, read_metadata(R"("type":"double")").type);
     EXPECT_EQ(ParFile::ParameterType::ENUM, read_metadata(R"("type":"enum")").type);
     EXPECT_EQ(ParFile::ParameterType::INTEGER, read_metadata(R"("type":"integer")").type);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, read_metadata(R"("type":"numeric-tuple")").type);
 }
 
 TEST(TestParameterCatalog, legalParameterFormatStringsDecode)
@@ -275,6 +293,14 @@ TEST(TestParameterCatalog, legalExtrapolateStringsDecode)
         *read_metadata(R"("type":"integer","extrapolate":"ping-pong")").extrapolate);
 }
 
+TEST(TestParameterCatalog, optionalArityDecodes)
+{
+    const ParFile::ParameterMetadata metadata{read_metadata(R"("type":"numeric-tuple","arity":3)")};
+
+    ASSERT_TRUE(metadata.arity);
+    EXPECT_EQ(3, *metadata.arity);
+}
+
 TEST(TestParameterCatalog, unknownParameterTypeStringRejected)
 {
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"unknown")")), std::runtime_error);
@@ -296,6 +322,12 @@ TEST(TestParameterCatalog, unknownExtrapolateStringRejected)
 {
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"integer","extrapolate":"unknown")")),
         std::runtime_error);
+}
+
+TEST(TestParameterCatalog, invalidArityRejected)
+{
+    EXPECT_THROW(
+        ParFile::read_parameter_catalog(catalog_text(R"("type":"numeric-tuple","arity":0)")), std::runtime_error);
 }
 
 TEST(TestParameterCatalog, unknownAnimatedParameterRejected)

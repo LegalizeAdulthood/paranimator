@@ -769,6 +769,74 @@ std::string ParamsComplexInterpolant::step()
     return format_slash_doubles(values);
 }
 
+class NumericTupleInterpolant : public Base
+{
+public:
+    NumericTupleInterpolant(
+        const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve, int num_steps);
+    ~NumericTupleInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    int m_from_frame{};
+    int m_to_frame{};
+    std::vector<double> m_from;
+    std::vector<double> m_to;
+    Curve m_curve{};
+};
+
+NumericTupleInterpolant::NumericTupleInterpolant(
+    const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve, int num_steps) :
+    Base(metadata.name, num_steps),
+    m_from_frame(keys[0].frame),
+    m_to_frame(keys[1].frame),
+    m_from(parse_slash_doubles(keys[0].value)),
+    m_to(parse_slash_doubles(keys[1].value)),
+    m_curve(curve)
+{
+    if (!metadata.arity)
+    {
+        throw std::runtime_error("Numeric tuple parameter '" + metadata.name + "' is missing arity");
+    }
+    const std::size_t arity{static_cast<std::size_t>(*metadata.arity)};
+    if (m_from.size() != arity || m_to.size() != arity)
+    {
+        throw std::runtime_error(
+            "Numeric tuple parameter '" + metadata.name + "' requires " + std::to_string(arity) + " values");
+    }
+    validate_scalar_curve("numeric-tuple", m_curve);
+    for (double value : m_from)
+    {
+        validate_bounds(metadata, value);
+    }
+    for (double value : m_to)
+    {
+        validate_bounds(metadata, value);
+    }
+}
+
+std::string NumericTupleInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+
+    std::vector<double> values{m_from};
+    if (frame >= m_to_frame)
+    {
+        values = m_to;
+    }
+    else if (frame > m_from_frame && m_curve != Curve::HOLD && m_curve != Curve::STEP)
+    {
+        const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        for (std::size_t i = 0; i < values.size(); ++i)
+        {
+            values[i] = m_from[i] + fraction * (m_to[i] - m_from[i]);
+        }
+    }
+    return format_slash_doubles(values);
+}
+
 class FunctionEnumInterpolant : public Base
 {
 public:
@@ -880,6 +948,16 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
             return std::make_shared<ParamsDoubleInterpolant>(track, curve, num_steps);
         }
         return std::make_shared<DoubleInterpolant>(metadata, keys, curve, track.base_value, num_steps);
+    }
+    case ParameterType::NUMERIC_TUPLE:
+    {
+        validate_full_range(metadata.name, keys, num_steps);
+        Curve curve{default_curve(metadata)};
+        if (keys[1].curve)
+        {
+            curve = *keys[1].curve;
+        }
+        return std::make_shared<NumericTupleInterpolant>(metadata, keys, curve, num_steps);
     }
     case ParameterType::ENUM:
     {

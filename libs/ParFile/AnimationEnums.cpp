@@ -35,6 +35,10 @@ ParameterType parse_parameter_type(std::string_view text)
     {
         return ParameterType::INTEGER;
     }
+    if (text == "numeric-tuple")
+    {
+        return ParameterType::NUMERIC_TUPLE;
+    }
     throw std::runtime_error("Unknown parameter type '" + std::string{text} + "'");
 }
 
@@ -121,6 +125,8 @@ std::string_view to_string(ParameterType value)
         return "enum";
     case ParameterType::INTEGER:
         return "integer";
+    case ParameterType::NUMERIC_TUPLE:
+        return "numeric-tuple";
     }
     return {};
 }
