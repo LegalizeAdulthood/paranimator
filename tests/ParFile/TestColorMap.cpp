@@ -7,6 +7,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace
 {
@@ -225,4 +226,33 @@ TEST(TestColorMap, rotateRangeInvalidRangesAreRejected)
     EXPECT_THROW(ParFile::rotate_color_map_range(map, 5, 4, 1), std::runtime_error);
     EXPECT_THROW(ParFile::rotate_color_map_range(map, -1, 4, 1), std::runtime_error);
     EXPECT_THROW(ParFile::rotate_color_map_range(map, 0, 256, 1), std::runtime_error);
+}
+
+TEST(TestColorMap, sequenceSelectedMapChangesAtExpectedFrame)
+{
+    const std::vector<ParFile::ColorMapSequenceEntry> sequence{{0, solid_map(1, 2, 3)}, {3, solid_map(4, 5, 6)}};
+
+    const ParFile::ColorMap before{ParFile::sequence_color_map(sequence, 2, 0)};
+    const ParFile::ColorMap after{ParFile::sequence_color_map(sequence, 3, 0)};
+
+    EXPECT_EQ(1, before[0].red);
+    EXPECT_EQ(4, after[0].red);
+}
+
+TEST(TestColorMap, sequenceCrossfadeUsesInterpolation)
+{
+    const std::vector<ParFile::ColorMapSequenceEntry> sequence{{0, solid_map(0, 10, 20)}, {4, solid_map(10, 20, 30)}};
+
+    const ParFile::ColorMap result{ParFile::sequence_color_map(sequence, 3, 2)};
+
+    EXPECT_EQ(5, result[0].red);
+    EXPECT_EQ(15, result[0].green);
+    EXPECT_EQ(25, result[0].blue);
+}
+
+TEST(TestColorMap, sequenceMissingMapsAreRejected)
+{
+    const std::vector<ParFile::ColorMapSequenceEntry> sequence;
+
+    EXPECT_THROW(ParFile::sequence_color_map(sequence, 0, 0), std::runtime_error);
 }

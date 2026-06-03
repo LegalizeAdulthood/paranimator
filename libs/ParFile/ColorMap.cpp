@@ -10,6 +10,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace ParFile
 {
@@ -86,6 +87,29 @@ void validate_range(int first, int last)
     if (first < 0 || last < 0 || first > last || last >= static_cast<int>(COLOR_MAP_SIZE))
     {
         throw std::runtime_error("Color map range is invalid");
+    }
+}
+
+void validate_sequence(const std::vector<ColorMapSequenceEntry> &sequence, int crossfade)
+{
+    if (sequence.empty())
+    {
+        throw std::runtime_error("Color map sequence requires at least one map");
+    }
+    if (crossfade < 0)
+    {
+        throw std::runtime_error("Color map sequence crossfade must not be negative");
+    }
+    for (std::size_t i = 0; i < sequence.size(); ++i)
+    {
+        if (sequence[i].frame < 0)
+        {
+            throw std::runtime_error("Color map sequence frames must not be negative");
+        }
+        if (i != 0U && sequence[i - 1U].frame >= sequence[i].frame)
+        {
+            throw std::runtime_error("Color map sequence frames must be increasing");
+        }
     }
 }
 
@@ -166,6 +190,28 @@ ColorMap rotate_color_map_range(const ColorMap &map, int first, int last, int of
         result[static_cast<std::size_t>(i)] = map[source];
     }
     return result;
+}
+
+ColorMap sequence_color_map(const std::vector<ColorMapSequenceEntry> &sequence, int frame, int crossfade)
+{
+    validate_sequence(sequence, crossfade);
+    const ColorMapSequenceEntry *current{&sequence.front()};
+    for (std::size_t i = 1; i < sequence.size(); ++i)
+    {
+        const ColorMapSequenceEntry &next{sequence[i]};
+        if (frame < next.frame)
+        {
+            const int blend_start{std::max(current->frame, next.frame - crossfade)};
+            if (crossfade != 0 && frame > blend_start)
+            {
+                const double blend{(frame - blend_start) / static_cast<double>(next.frame - blend_start)};
+                return interpolate_color_map(current->map, next.map, blend);
+            }
+            return current->map;
+        }
+        current = &next;
+    }
+    return current->map;
 }
 
 } // namespace ParFile
