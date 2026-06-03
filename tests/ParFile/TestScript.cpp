@@ -8,36 +8,40 @@
 
 #include <gtest/gtest.h>
 
-#include <fstream>
-#include <iterator>
-
 namespace
 {
 
-std::string read_text(const char *path)
+ParFile::Config config_data()
 {
-    std::ifstream in{path};
-    return {std::istreambuf_iterator<char>{in}, std::istreambuf_iterator<char>{}};
+    return {{TestParFile::CORE_CATALOG_JSON},                                 //
+        {TestParFile::FROM_PAR, "Mandel_Demo"},                               //
+        {TestParFile::TEST_OUTPUT_DIRECTORY, TestParFile::TEST_OUTPUT_PAR,    //
+            TestParFile::TEST_OUTPUT_ENTRY, TestParFile::TEST_OUTPUT_SCRIPT}, //
+        1,                                                                    //
+        TestParFile::TEST_VIDEO_MODE,                                         //
+        60,                                                                   //
+        {}};                                                                  //
 }
 
 } // namespace
 
 TEST(TestScript, construct)
 {
-    ParFile::Config config{read_text(TestParFile::CENTER_MAG_CONFIG_JSON)};
+    ParFile::Config config{config_data()};
 
     ParFile::Script script{config};
 }
 
 TEST(TestScript, commandForFrame)
 {
-    ParFile::Config config{read_text(TestParFile::CENTER_MAG_CONFIG_JSON)};
+    ParFile::Config config{config_data()};
     ParFile::Script script{config};
 
     const std::string commands{script.commands("frame-0001")};
 
-    EXPECT_EQ(std::string{"start/wait id batch=yes librarydirs="} + TestParFile::TEST_OUTPUT_DIRECTORY +
-            " @" + TestParFile::TEST_OUTPUT_PAR + "/frame-0001\n"
+    EXPECT_EQ(std::string{"start/wait id batch=yes librarydirs="} + TestParFile::TEST_OUTPUT_DIRECTORY + " @" +
+            TestParFile::TEST_OUTPUT_PAR +
+            "/frame-0001\n"
             "if errorlevel 1 exit /b 1\n",
         commands);
 }

@@ -47,19 +47,19 @@ void interpolate(const ParFile::Config &config)
     ParFile::Script script{config};
     std::ofstream out{output.par_file().string().c_str()};
     std::vector<std::ofstream> scripts;
-    if (config.parallel() == 1)
+    if (config.parallel == 1)
     {
         scripts.emplace_back(output.script_file().string().c_str());
     }
     else
     {
-        for (int i = 1; i <= config.parallel(); ++i)
+        for (int i = 1; i <= config.parallel; ++i)
         {
             scripts.emplace_back(output.script_file(i).string().c_str());
         }
     }
     auto current_script{scripts.begin()};
-    for (int i = 0; i < config.num_frames(); ++i)
+    for (int i = 0; i < config.num_frames; ++i)
     {
         const ParFile::ParSet frame{lerper()};
         if (i != 0)
@@ -84,10 +84,10 @@ ParFile::Config load_config(const std::filesystem::path &path)
     const std::string schema_json{read_text(ParAnimator::config_schema_json)};
     if (!ParFile::validate_json_schema(schema_json, config_json))
     {
-        throw std::runtime_error("Config file does not match schema '" +
-            std::string{ParAnimator::config_schema_json} + "'");
+        throw std::runtime_error(
+            "Config file does not match schema '" + std::string{ParAnimator::config_schema_json} + "'");
     }
-    return ParFile::Config{config_json};
+    return ParFile::read_config(config_json);
 }
 
 std::string read_text(const std::filesystem::path &path)

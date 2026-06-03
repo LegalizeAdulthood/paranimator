@@ -182,15 +182,16 @@ static std::vector<TrackConfig> load_tracks(const Object &json, std::string_view
     return result;
 }
 
-Config::Config(std::string_view json_text)
+Config read_config(std::string_view json_text)
 {
     const Object json{parse_json(json_text)};
-    m_parameter_catalogs = load_string_array(json, "parameter-catalogs");
-    m_source = load_named_file_par_set(json, "source");
-    m_output = load_output_config(json);
-    m_video = load_string(json, "video");
-    m_num_frames = load_int(json, "num-frames");
-    m_tracks = load_tracks(json, "tracks");
+    Config result;
+    result.parameter_catalogs = load_string_array(json, "parameter-catalogs");
+    result.source = load_named_file_par_set(json, "source");
+    result.output = load_output_config(json);
+    result.video = load_string(json, "video");
+    result.num_frames = load_int(json, "num-frames");
+    result.tracks = load_tracks(json, "tracks");
 
     if (json.contains("parallel"))
     {
@@ -198,8 +199,9 @@ Config::Config(std::string_view json_text)
         {
             throw std::runtime_error("Invalid config, 'parallel' is not a number");
         }
-        m_parallel = json.at("parallel").get<int>();
+        result.parallel = json.at("parallel").get<int>();
     }
+    return result;
 }
 
 } // namespace ParFile

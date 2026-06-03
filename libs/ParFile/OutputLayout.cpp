@@ -10,16 +10,15 @@ namespace ParFile
 {
 
 OutputLayout::OutputLayout(const Config &config) :
-    m_directory(config.output().directory),
-    m_par(config.output().par),
-    m_script(config.output().script)
+    m_directory(config.output.directory),
+    m_par(config.output.par),
+    m_script(config.output.script)
 {
 }
 
 std::filesystem::path OutputLayout::script_file(int index) const
 {
-    return m_directory /
-        (m_script.stem().string() + '-' + std::to_string(index) + m_script.extension().string());
+    return m_directory / (m_script.stem().string() + '-' + std::to_string(index) + m_script.extension().string());
 }
 
 void OutputLayout::create_directories() const

@@ -9,23 +9,27 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
-#include <fstream>
-#include <iterator>
 
 namespace
 {
 
-std::string read_text(const char *path)
+ParFile::Config config_data()
 {
-    std::ifstream in{path};
-    return {std::istreambuf_iterator<char>{in}, std::istreambuf_iterator<char>{}};
+    return {{TestParFile::CORE_CATALOG_JSON},                                 //
+        {TestParFile::FROM_PAR, "Mandel_Demo"},                               //
+        {TestParFile::TEST_OUTPUT_DIRECTORY, TestParFile::TEST_OUTPUT_PAR,    //
+            TestParFile::TEST_OUTPUT_ENTRY, TestParFile::TEST_OUTPUT_SCRIPT}, //
+        1,                                                                    //
+        TestParFile::TEST_VIDEO_MODE,                                         //
+        60,                                                                   //
+        {}};                                                                  //
 }
 
 } // namespace
 
 TEST(TestOutputLayout, createLibraryDirectories)
 {
-    ParFile::Config config{read_text(TestParFile::CENTER_MAG_CONFIG_JSON)};
+    ParFile::Config config{config_data()};
     ParFile::OutputLayout layout{config};
     std::filesystem::remove_all(layout.directory());
 
@@ -37,7 +41,7 @@ TEST(TestOutputLayout, createLibraryDirectories)
 
 TEST(TestOutputLayout, parFileIsUnderParDirectory)
 {
-    ParFile::Config config{read_text(TestParFile::CENTER_MAG_CONFIG_JSON)};
+    ParFile::Config config{config_data()};
     ParFile::OutputLayout layout{config};
 
     EXPECT_EQ(layout.par_directory() / TestParFile::TEST_OUTPUT_PAR, layout.par_file());
@@ -45,7 +49,7 @@ TEST(TestOutputLayout, parFileIsUnderParDirectory)
 
 TEST(TestOutputLayout, parallelScriptFileIsIndexed)
 {
-    ParFile::Config config{read_text(TestParFile::CENTER_MAG_CONFIG_JSON)};
+    ParFile::Config config{config_data()};
     ParFile::OutputLayout layout{config};
 
     EXPECT_EQ(layout.directory() / "frames-1.bat", layout.script_file(1));

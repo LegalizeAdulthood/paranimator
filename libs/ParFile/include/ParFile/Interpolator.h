@@ -11,7 +11,7 @@
 namespace ParFile
 {
 
-class Config;
+struct Config;
 class Interpolant;
 struct NamedFileParSet;
 using InterpolantPtr = std::shared_ptr<Interpolant>;

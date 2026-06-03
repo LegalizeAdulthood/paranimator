@@ -7,22 +7,24 @@
 #include <ParFile/Config.h>
 
 #include <gtest/gtest.h>
-#include <nlohmann/json.hpp>
 
 #include <algorithm>
-#include <fstream>
-#include <iterator>
 #include <stdexcept>
 #include <string>
 
 namespace
 {
 
-nlohmann::json read_json(const char *path)
+ParFile::Config config_data()
 {
-    std::ifstream in{path};
-    const std::string text{std::istreambuf_iterator<char>{in}, std::istreambuf_iterator<char>{}};
-    return nlohmann::json::parse(text.begin(), text.end());
+    return {{TestParFile::CORE_CATALOG_JSON},                                 //
+        {TestParFile::FROM_PAR, "Mandel_Demo"},                               //
+        {TestParFile::TEST_OUTPUT_DIRECTORY, TestParFile::TEST_OUTPUT_PAR,    //
+            TestParFile::TEST_OUTPUT_ENTRY, TestParFile::TEST_OUTPUT_SCRIPT}, //
+        1,                                                                    //
+        TestParFile::TEST_VIDEO_MODE,                                         //
+        60,                                                                   //
+        {{"center-mag", {{0, "-0.5/0/1"}, {59, "-0.5/0/10"}}}}};              //
 }
 
 struct TestInterpolator : testing::Test
@@ -32,14 +34,14 @@ struct TestInterpolator : testing::Test
 protected:
     void SetUp() override
     {
-        m_json = read_json(TestParFile::CENTER_MAG_CONFIG_JSON);
-        m_config = ParFile::Config{m_json.dump()};
+        m_config_data = config_data();
+        m_config = m_config_data;
         m_lerper = ParFile::Interpolator{m_config};
     }
 
     void add_expected_params(ParFile::ParSet &frame, const std::string &save_name);
 
-    nlohmann::json m_json;
+    ParFile::Config m_config_data;
     ParFile::Config m_config{};
     ParFile::Interpolator m_lerper{};
 };
@@ -75,9 +77,9 @@ TEST_F(TestInterpolator, firstFrameCopiesSource)
 
 TEST_F(TestInterpolator, lastFrameIsTrackEndValue)
 {
-    m_json["num-frames"] = 2;
-    m_json["tracks"][0]["keys"][1]["frame"] = 1;
-    m_config = ParFile::Config{m_json.dump()};
+    m_config_data.num_frames = 2;
+    m_config_data.tracks[0].keys[1].frame = 1;
+    m_config = m_config_data;
     m_lerper = ParFile::Interpolator{m_config};
     ParFile::ParSet expected{m_lerper.source()};
     expected.params[2].value = "-0.5/0/10";
@@ -92,9 +94,9 @@ TEST_F(TestInterpolator, lastFrameIsTrackEndValue)
 
 TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
 {
-    m_json["num-frames"] = 3;
-    m_json["tracks"][0]["keys"][1]["frame"] = 2;
-    m_config = ParFile::Config{m_json.dump()};
+    m_config_data.num_frames = 3;
+    m_config_data.tracks[0].keys[1].frame = 2;
+    m_config = m_config_data;
     m_lerper = ParFile::Interpolator{m_config};
     ParFile::ParSet expected{m_lerper.source()};
     expected.params[2].value = "-0.5/0/3.16228";
@@ -109,17 +111,10 @@ TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
 
 TEST_F(TestInterpolator, multipleTracksHaveIndependentKeys)
 {
-    m_json["num-frames"] = 3;
-    m_json["tracks"][0]["keys"][1]["frame"] = 2;
-    m_json["tracks"].push_back({
-        {"parameter", "maxiter"},
-        {"keys",
-            {
-                {{"frame", 0}, {"value", "100"}},
-                {{"frame", 1}, {"value", "200"}},
-            }},
-    });
-    m_config = ParFile::Config{m_json.dump()};
+    m_config_data.num_frames = 3;
+    m_config_data.tracks[0].keys[1].frame = 2;
+    m_config_data.tracks.push_back({"maxiter", {{0, "100"}, {1, "200"}}});
+    m_config = m_config_data;
     m_lerper = ParFile::Interpolator{m_config};
     ParFile::ParSet expected{m_lerper.source()};
     set_param(expected, "center-mag", "-0.5/0/3.16228");
@@ -135,8 +130,8 @@ TEST_F(TestInterpolator, multipleTracksHaveIndependentKeys)
 
 TEST_F(TestInterpolator, unknownAnimatedParameterRejected)
 {
-    m_json["tracks"][0]["parameter"] = "unknown";
-    m_config = ParFile::Config{m_json.dump()};
+    m_config_data.tracks[0].parameter = "unknown";
+    m_config = m_config_data;
 
     EXPECT_THROW(ParFile::Interpolator{m_config}, std::runtime_error);
 }

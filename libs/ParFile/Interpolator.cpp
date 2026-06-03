@@ -46,18 +46,18 @@ static std::string read_text(const std::filesystem::path &path)
 
 static ParameterCatalog load_parameter_catalog(const Config &config)
 {
-    if (config.parameter_catalogs().size() != 1U)
+    if (config.parameter_catalogs.size() != 1U)
     {
         throw std::runtime_error("Expected exactly one parameter catalog");
     }
-    return ParameterCatalog{read_text(config.parameter_catalogs()[0])};
+    return ParameterCatalog{read_text(config.parameter_catalogs[0])};
 }
 
 std::vector<InterpolantPtr> Interpolator::load_interpolants(const Config &config, const ParSet &source)
 {
     const ParameterCatalog catalog{load_parameter_catalog(config)};
     std::vector<InterpolantPtr> result;
-    for (const TrackConfig &track : config.tracks())
+    for (const TrackConfig &track : config.tracks)
     {
         const ParameterMetadata &metadata{catalog.metadata(track.parameter)};
         const auto is_name{[&](const Parameter &param) { return param.name == track.parameter; }};
@@ -66,15 +66,15 @@ std::vector<InterpolantPtr> Interpolator::load_interpolants(const Config &config
         {
             throw std::runtime_error("Parameter set '" + source.name + "' has no parameter '" + track.parameter + "'");
         }
-        result.emplace_back(create_interpolant(metadata, track.keys, config.num_frames(), it->value));
+        result.emplace_back(create_interpolant(metadata, track.keys, config.num_frames, it->value));
     }
     return result;
 }
 
 Interpolator::Interpolator(const Config &config) :
-    m_frame_name(config.output().entry),
-    m_video(config.video()),
-    m_source(load_par_set(config.source())),
+    m_frame_name(config.output.entry),
+    m_video(config.video),
+    m_source(load_par_set(config.source)),
     m_interpolants(load_interpolants(config, m_source))
 {
 }

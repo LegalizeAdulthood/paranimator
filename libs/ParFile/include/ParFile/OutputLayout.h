@@ -7,7 +7,7 @@
 namespace ParFile
 {
 
-class Config;
+struct Config;
 
 class OutputLayout
 {

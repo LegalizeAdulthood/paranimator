@@ -2,7 +2,6 @@
 //
 #pragma once
 
-#include <cstddef>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -37,57 +36,17 @@ struct TrackConfig
     std::vector<KeyframeConfig> keys;
 };
 
-class Config
+struct Config
 {
-public:
-    Config() = default;
-    Config(const Config &rhs) = default;
-    Config(Config &&rhs) = default;
-    Config(std::string_view json_text);
-    Config &operator=(const Config &rhs) = default;
-    Config &operator=(Config &&rhs) = default;
-
-    const NamedFileParSet &source() const
-    {
-        return m_source;
-    }
-    const std::vector<std::string> &parameter_catalogs() const
-    {
-        return m_parameter_catalogs;
-    }
-    const OutputConfig &output() const
-    {
-        return m_output;
-    }
-    int parallel() const
-    {
-        return m_parallel;
-    }
-    const std::string &video() const
-    {
-        return m_video;
-    }
-    int num_frames() const
-    {
-        return m_num_frames;
-    }
-    std::size_t num_tracks() const
-    {
-        return m_tracks.size();
-    }
-    const std::vector<TrackConfig> &tracks() const
-    {
-        return m_tracks;
-    }
-
-private:
-    std::vector<std::string> m_parameter_catalogs;
-    NamedFileParSet m_source;
-    OutputConfig m_output;
-    int m_parallel{1};
-    std::string m_video;
-    int m_num_frames{};
-    std::vector<TrackConfig> m_tracks;
+    std::vector<std::string> parameter_catalogs;
+    NamedFileParSet source;
+    OutputConfig output;
+    int parallel{1};
+    std::string video;
+    int num_frames{};
+    std::vector<TrackConfig> tracks;
 };
+
+Config read_config(std::string_view json_text);
 
 } // namespace ParFile

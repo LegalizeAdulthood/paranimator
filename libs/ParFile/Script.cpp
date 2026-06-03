@@ -8,8 +8,8 @@ namespace ParFile
 {
 
 Script::Script(const Config &config) :
-    m_directory(config.output().directory),
-    m_par(config.output().par)
+    m_directory(config.output.directory),
+    m_par(config.output.par)
 {
 }
 
