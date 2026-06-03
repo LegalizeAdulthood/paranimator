@@ -66,7 +66,8 @@ public:
     std::string step() override;
 
 private:
-    std::string source_map(int frame) const;
+    double blend_at_frame(int frame) const;
+    ColorMap map_at_frame(int frame) const;
     std::string output_filename(int frame) const;
     ColorMap read_source_map(const std::string &filename) const;
     void write_generated_map(const std::filesystem::path &filename, const ColorMap &map) const;
@@ -95,11 +96,34 @@ ColorMapInterpolant::ColorMapInterpolant(
     }
     m_output = track.color_map->output;
     validate_track_keyframes(track.parameter, track.keys, num_frames);
+    if (track.keys[1].curve == Curve::GEOMETRIC)
+    {
+        throw std::runtime_error("Color map track '" + track.parameter + "' does not support geometric curves");
+    }
 }
 
-std::string ColorMapInterpolant::source_map(int frame) const
+double ColorMapInterpolant::blend_at_frame(int frame) const
 {
-    return frame >= m_keys[1].frame ? m_keys[1].value : m_keys[0].value;
+    if (frame <= m_keys[0].frame)
+    {
+        return 0.0;
+    }
+    if (frame >= m_keys[1].frame)
+    {
+        return 1.0;
+    }
+    if (m_keys[1].curve == Curve::HOLD || m_keys[1].curve == Curve::STEP)
+    {
+        return 0.0;
+    }
+    return (frame - m_keys[0].frame) / static_cast<double>(m_keys[1].frame - m_keys[0].frame);
+}
+
+ColorMap ColorMapInterpolant::map_at_frame(int frame) const
+{
+    const ColorMap from{read_source_map(m_keys[0].value)};
+    const ColorMap to{read_source_map(m_keys[1].value)};
+    return interpolate_color_map(from, to, blend_at_frame(frame));
 }
 
 std::string ColorMapInterpolant::output_filename(int frame) const
@@ -139,7 +163,7 @@ std::string ColorMapInterpolant::step()
     const int frame{m_frame};
     ++m_frame;
     const std::string filename{output_filename(frame)};
-    write_generated_map(m_map_directory / filename, read_source_map(source_map(frame)));
+    write_generated_map(m_map_directory / filename, map_at_frame(frame));
     return '@' + filename;
 }
 

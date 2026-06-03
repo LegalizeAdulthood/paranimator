@@ -219,27 +219,34 @@ TEST_F(TestInterpolator, colorMapTrackWritesGeneratedMapsAndAtFileValues)
     write_map_file(warm_map, solid_color(1, 2, 3));
     write_map_file(cool_map, solid_color(4, 5, 6));
     m_config_data.output.directory = output.string();
-    m_config_data.num_frames = 2;
-    m_config_data.tracks = {{"colors", {{0, warm_map.string()}, {1, cool_map.string()}}, ParFile::TrackMode::KEYFRAMES,
+    m_config_data.num_frames = 3;
+    m_config_data.tracks = {{"colors", {{0, warm_map.string()}, {2, cool_map.string()}}, ParFile::TrackMode::KEYFRAMES,
         {}, ParFile::TrackKind::COLOR_MAP, ParFile::ColorMapConfig{ParFile::TrackFormat::AT_FILE, "colors-%04d.map"}}};
     m_config = m_config_data;
     m_lerper = ParFile::Interpolator{m_config};
 
     const ParFile::ParSet first_frame{m_lerper()};
-    const ParFile::ParSet second_frame{m_lerper()};
+    const ParFile::ParSet middle_frame{m_lerper()};
+    const ParFile::ParSet last_frame{m_lerper()};
 
     const std::filesystem::path first_map{output / "map" / "colors-0001.map"};
-    const std::filesystem::path second_map{output / "map" / "colors-0002.map"};
+    const std::filesystem::path middle_map{output / "map" / "colors-0002.map"};
+    const std::filesystem::path last_map{output / "map" / "colors-0003.map"};
     EXPECT_TRUE(std::filesystem::exists(first_map));
-    EXPECT_TRUE(std::filesystem::exists(second_map));
+    EXPECT_TRUE(std::filesystem::exists(middle_map));
+    EXPECT_TRUE(std::filesystem::exists(last_map));
     const ParFile::ColorMap first{read_map_file(first_map)};
-    const ParFile::ColorMap second{read_map_file(second_map)};
+    const ParFile::ColorMap middle{read_map_file(middle_map)};
+    const ParFile::ColorMap last{read_map_file(last_map)};
     EXPECT_EQ(1, first[0].red);
     EXPECT_EQ(2, first[0].green);
     EXPECT_EQ(3, first[0].blue);
-    EXPECT_EQ(4, second[0].red);
-    EXPECT_EQ(5, second[0].green);
-    EXPECT_EQ(6, second[0].blue);
+    EXPECT_EQ(3, middle[0].red);
+    EXPECT_EQ(4, middle[0].green);
+    EXPECT_EQ(5, middle[0].blue);
+    EXPECT_EQ(4, last[0].red);
+    EXPECT_EQ(5, last[0].green);
+    EXPECT_EQ(6, last[0].blue);
     const auto colors_value = [](const ParFile::ParSet &frame)
     {
         const auto it{std::find_if(frame.params.begin(), frame.params.end(),
@@ -247,7 +254,8 @@ TEST_F(TestInterpolator, colorMapTrackWritesGeneratedMapsAndAtFileValues)
         return it == frame.params.end() ? std::string{} : it->value;
     };
     EXPECT_EQ("@colors-0001.map", colors_value(first_frame));
-    EXPECT_EQ("@colors-0002.map", colors_value(second_frame));
+    EXPECT_EQ("@colors-0002.map", colors_value(middle_frame));
+    EXPECT_EQ("@colors-0003.map", colors_value(last_frame));
 }
 
 TEST_F(TestInterpolator, unknownAnimatedParameterRejected)

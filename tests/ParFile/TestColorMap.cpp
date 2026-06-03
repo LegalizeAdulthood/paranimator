@@ -26,6 +26,13 @@ std::string valid_map_text()
     return out.str();
 }
 
+ParFile::ColorMap solid_map(int red, int green, int blue)
+{
+    ParFile::ColorMap result;
+    result.fill({red, green, blue});
+    return result;
+}
+
 } // namespace
 
 TEST(TestColorMap, reads256Entries)
@@ -100,4 +107,40 @@ TEST(TestColorMap, writeRejectsOutOfRangeRgbEntry)
     std::ostringstream out;
 
     EXPECT_THROW(ParFile::write_color_map(out, map), std::runtime_error);
+}
+
+TEST(TestColorMap, interpolateBlendZeroReturnsFirstMap)
+{
+    const ParFile::ColorMap from{solid_map(1, 2, 3)};
+    const ParFile::ColorMap to{solid_map(4, 5, 6)};
+
+    const ParFile::ColorMap result{ParFile::interpolate_color_map(from, to, 0.0)};
+
+    EXPECT_EQ(1, result[0].red);
+    EXPECT_EQ(2, result[0].green);
+    EXPECT_EQ(3, result[0].blue);
+}
+
+TEST(TestColorMap, interpolateBlendHalfAveragesEntries)
+{
+    const ParFile::ColorMap from{solid_map(1, 3, 5)};
+    const ParFile::ColorMap to{solid_map(5, 7, 9)};
+
+    const ParFile::ColorMap result{ParFile::interpolate_color_map(from, to, 0.5)};
+
+    EXPECT_EQ(3, result[0].red);
+    EXPECT_EQ(5, result[0].green);
+    EXPECT_EQ(7, result[0].blue);
+}
+
+TEST(TestColorMap, interpolateBlendOneReturnsSecondMap)
+{
+    const ParFile::ColorMap from{solid_map(1, 2, 3)};
+    const ParFile::ColorMap to{solid_map(4, 5, 6)};
+
+    const ParFile::ColorMap result{ParFile::interpolate_color_map(from, to, 1.0)};
+
+    EXPECT_EQ(4, result[0].red);
+    EXPECT_EQ(5, result[0].green);
+    EXPECT_EQ(6, result[0].blue);
 }
