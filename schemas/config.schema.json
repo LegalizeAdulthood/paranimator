@@ -2,59 +2,109 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://legalize.github.io/paranimator/schemas/config.schema.json",
   "title": "ParAnimator configuration",
+  "description": "Describes one animation render using an Id source par entry, output library files, and animated parameter tracks.",
   "type": "object",
   "required": [ "parameter-catalogs", "source", "output", "video", "num-frames", "tracks" ],
   "additionalProperties": false,
   "properties": {
     "parameter-catalogs": {
+      "description": "Parameter catalog JSON files used to validate and resolve track targets.",
       "type": "array",
       "minItems": 1,
       "maxItems": 1,
-      "items": { "type": "string" }
+      "items": {
+        "description": "Catalog filename or path read by ParAnimator.",
+        "type": "string"
+      }
     },
     "source": {
+      "description": "Source Id par entry used as the base frame state.",
       "type": "object",
       "required": [ "file", "name" ],
       "additionalProperties": false,
       "properties": {
-        "file": { "type": "string" },
-        "name": { "type": "string" }
+        "file": {
+          "description": "Source par filename.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Source entry name inside the source par file.",
+          "type": "string"
+        }
       }
     },
     "output": {
+      "description": "Generated output locations and names for Id library files and batch script.",
       "type": "object",
       "required": [ "directory", "par", "entry", "script" ],
       "additionalProperties": false,
       "properties": {
-        "directory": { "type": "string" },
-        "par": { "type": "string" },
-        "entry": { "type": "string" },
-        "script": { "type": "string" }
+        "directory": {
+          "description": "Output directory containing generated par, map, image, and script files.",
+          "type": "string"
+        },
+        "par": {
+          "description": "Generated par filename written under the output par directory.",
+          "type": "string"
+        },
+        "entry": {
+          "description": "Generated frame entry name pattern.",
+          "type": "string"
+        },
+        "script": {
+          "description": "Generated batch script filename.",
+          "type": "string"
+        }
       }
     },
-    "parallel": { "type": "integer" },
-    "video": { "type": "string" },
-    "num-frames": { "type": "integer" },
+    "parallel": {
+      "description": "Optional number of Id render commands to run in parallel.",
+      "type": "integer"
+    },
+    "video": {
+      "description": "Id video mode used for generated render commands.",
+      "type": "string"
+    },
+    "num-frames": {
+      "description": "Number of animation frames to generate.",
+      "type": "integer"
+    },
     "tracks": {
+      "description": "Animated parameter tracks applied to the source par entry.",
       "type": "array",
       "items": {
+        "description": "One animated parameter target and its keyframes.",
         "type": "object",
         "required": [ "parameter", "keys" ],
         "additionalProperties": false,
         "properties": {
-          "parameter": { "type": "string" },
+          "parameter": {
+            "description": "Catalog parameter key, fractal params key, or formula metadata key to animate.",
+            "type": "string"
+          },
           "keys": {
+            "description": "Exactly two keyframes defining the animated value segment.",
             "type": "array",
             "minItems": 2,
             "maxItems": 2,
             "items": {
+              "description": "One keyed value at an animation frame.",
               "type": "object",
               "required": [ "frame", "value" ],
               "additionalProperties": false,
               "properties": {
-                "frame": { "type": "integer" },
-                "value": { "type": "string" },
-                "curve": { "$ref": "#/$defs/curve" }
+                "frame": {
+                  "description": "Zero-based frame index for this key.",
+                  "type": "integer"
+                },
+                "value": {
+                  "description": "Parameter value text in the format required by the target metadata.",
+                  "type": "string"
+                },
+                "curve": {
+                  "description": "Optional interpolation curve override ending at this key.",
+                  "$ref": "#/$defs/curve"
+                }
               }
             }
           }
@@ -64,8 +114,26 @@
   },
   "$defs": {
     "curve": {
+      "description": "Interpolation curve used between two keyframes.",
       "type": "string",
-      "enum": [ "geometric", "hold", "linear", "step" ]
+      "oneOf": [
+        {
+          "const": "geometric",
+          "description": "Geometric interpolation, currently used for magnification values."
+        },
+        {
+          "const": "hold",
+          "description": "Hold the source value until the destination key."
+        },
+        {
+          "const": "linear",
+          "description": "Linearly interpolate numeric values."
+        },
+        {
+          "const": "step",
+          "description": "Step from the source value to the destination value at the destination key."
+        }
+      ]
     }
   }
 }

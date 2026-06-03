@@ -205,23 +205,23 @@ Possible formats:
 | `angle` | `degrees` |
 | `angle` | `radians` |
 
-This lets typed interpolation stay separate from ID parameter formatting.
+This lets typed interpolation stay separate from Id parameter formatting.
 
-For ID parameter files, complex values use slash-separated real and
+For Id parameter files, complex values use slash-separated real and
 imaginary parts. The help documents examples such as
 `params=-0.480/0.626` and `initorbit=nnn/nnn`. Comma-pair notation appears
 in formula-language prose, not in parameter syntax.
 
 ## Fractal-Specific Params
 
-`params=` is a slash-delimited vector, not one semantic parameter. ID
+`params=` is a slash-delimited vector, not one semantic parameter. Id
 stores up to ten values in `g_params[]`. The active fractal type decides
 which indexes exist and what each index means.
 
-ID's `type_has_param()` checks the first four parameter names from the
+Id's `type_has_param()` checks the first four parameter names from the
 fractal-specific table, then checks extra names from
 `g_more_fractal_params`. For `type=formula`, unused formula parameters
-are suppressed. ID's `put_fractal_params()` writes one `params=` command
+are suppressed. Id's `put_fractal_params()` writes one `params=` command
 through the highest parameter index used by the active type.
 
 ParAnimator should model `params` as a context-scoped parameter vector.
@@ -257,7 +257,7 @@ Catalogs may describe slots and named groups for fractal types whose
     }
 
 For `type=formula`, the assignment of `params=` values to formula
-variables is fixed by ID and is not catalog metadata:
+variables is fixed by Id and is not catalog metadata:
 
 | Variable | Values |
 | --- | --- |
@@ -304,8 +304,8 @@ human-readable names that describe how the formula entry uses the fixed
 
 Tracks may target formula-entry knobs such as `MandelbrotMix4.bailout`,
 `MandelbrotMix4["scale factor"]`, or `MandelbrotMix4.c`. These names are
-ParAnimator metadata describing the formula entry's use of fixed ID
-variables. ID never sees them, and the formula source still refers only to
+ParAnimator metadata describing the formula entry's use of fixed Id
+variables. Id never sees them, and the formula source still refers only to
 `p1`, `p2`, `p3`, and `p4`.
 
 Each formula params knob is keyed by its human-readable name and declares:
@@ -338,17 +338,17 @@ Formula entry metadata may also expose fixed function keys backed by
 and `fn4`; formula metadata cannot rename them. Tracks target formula
 entry keys such as `MandelbrotMix4.fn1`. Each function key is an enum
 using the fixed `id-functions` value set. The writer starts from the
-source par entry or ID reset defaults, applies function key updates, and
+source par entry or Id reset defaults, applies function key updates, and
 emits one slash-delimited `function=` assignment through the highest
 required function key.
 
 The fixed `id-functions` enum contains the function names recognized by
-ID: `sin`, `cos`, `tan`, `cotan`, `sinh`, `cosh`, `tanh`, `cotanh`,
+Id: `sin`, `cos`, `tan`, `cotan`, `sinh`, `cosh`, `tanh`, `cotanh`,
 `exp`, `log`, `sqr`, `recip`, `ident`, `cosxx`, `flip`, `conj`, `zero`,
 `one`, `asin`, `asinh`, `acos`, `acosh`, `atan`, `atanh`, `sqrt`, `abs`,
 `cabs`, `floor`, `ceil`, `trunc`, and `round`.
 
-ID leaves omitted `function=` values unchanged. ParAnimator should still
+Id leaves omitted `function=` values unchanged. ParAnimator should still
 compose from known base/default values before writing, so generated
 frames do not depend on prior process state.
 
@@ -357,7 +357,7 @@ indexed slot such as `params[0]`, or a named group such as `params.c`. The
 writer starts from the source par entry's base `params`, applies all slot
 and group updates, then emits one slash-delimited `params=` assignment
 through the highest required slot. This preserves untouched values. Do not
-emit partial `params` assignments, because ID treats omitted values as
+emit partial `params` assignments, because Id treats omitted values as
 zero after a `params=` command.
 
 For the first implementation, a layer's fractal type must be stable when
@@ -392,7 +392,7 @@ a list of Iterated Dynamics parameters.
 
 String parameters are discrete keyframed values, not interpolated values.
 Use strings for held selector, entry-name, and filename parameters that
-choose ID resources or metadata context. These are arbitrary ID strings,
+choose Id resources or metadata context. These are arbitrary Id strings,
 such as entry names in formula, L-system, IFS, and orbit files.
 
 Concrete string parameters include:
@@ -507,7 +507,7 @@ The camera2d track lets the animator plan look-at, view-up, and height as
 independent curves while still writing only normal Iterated Dynamics
 parameters.
 
-## ID 3D Viewing Adapters
+## Id 3D Viewing Adapters
 
 Iterated Dynamics does not expose one general 3D camera model. It exposes
 several parameter families. Use virtual adapters that evaluate planned
@@ -515,10 +515,10 @@ curves, then write real catalog-declared parameters.
 
 The adapter type is hard-coded. The output parameter names are not.
 
-## ID Euler 3D View Adapter
+## Id Euler 3D View Adapter
 
-The id-3d-view adapter targets ID's Euler-style 3D view controls. This is
-the right adapter for ID's general 3D viewing parameters and for 3D
+The id-3d-view adapter targets Id's Euler-style 3D view controls. This is
+the right adapter for Id's general 3D viewing parameters and for 3D
 orbital types such as lorenz3d and ifs3d.
 
 It writes catalog-declared outputs such as:
@@ -576,7 +576,7 @@ Example:
     }
 
 The adapter may offer eye, look-at, and view-up as planning inputs only
-when they can be converted to ID's x/y/z rotation, perspective, and shift
+when they can be converted to Id's x/y/z rotation, perspective, and shift
 controls. If the requested camera motion needs an unsupported target,
 roll, projection, or center of interest, reject it with a clear error.
 
@@ -588,7 +588,7 @@ target.
 ## Julibrot View Adapter
 
 The julibrot-view adapter targets Julibrot's slice and stereo renderer. It
-does not use ID's general rotation parameters.
+does not use Id's general rotation parameters.
 
 It writes catalog-declared outputs such as:
 
@@ -696,7 +696,7 @@ Suggested behavior:
 
 Do not use tweeny as the new animation engine. It is shaped around
 object tweening, while ParAnimator needs frame-addressable typed tracks,
-ID parameter formatting, virtual adapters, validation, and side effects
+Id parameter formatting, virtual adapters, validation, and side effects
 such as per-frame map files.
 
 The new track engine should have a small local curve evaluator:
@@ -809,7 +809,7 @@ The track does not need to repeat the type if the catalog declares it.
 ## Output Layout
 
 The animation file specifies one output directory. ParAnimator writes
-generated ID library files under that directory:
+generated Id library files under that directory:
 
 | Path | Contents |
 | --- | --- |
@@ -818,14 +818,14 @@ generated ID library files under that directory:
 | `output-directory` | Generated batch scripts. |
 
 Rendered frame and layer images may use separate configured directories,
-but par files and map files must use ID's library layout.
+but par files and map files must use Id's library layout.
 
 output.par is the generated par filename under output-directory/par.
 output.entry is the generated par entry name pattern.
 
 Batch commands and colormap values reference par and map files by
 filename only. Do not write generated map paths into colors values, and
-do not write generated par paths into ID @ arguments.
+do not write generated par paths into Id @ arguments.
 
 Example generated colors value:
 
@@ -835,11 +835,11 @@ Example batch command shape:
 
     id batch=yes librarydirs=out/julia-pan @frames.par/frame0042
 
-This uses ID's @par/name syntax. Here par is frames.par, a generated file
+This uses Id's @par/name syntax. Here par is frames.par, a generated file
 in output-directory/par, and name is frame0042, an entry in that file.
 
 The batch file passes librarydirs pointing at the animation output
-directory. ID then locates generated par files in the par subdirectory
+directory. Id then locates generated par files in the par subdirectory
 and generated map files in the map subdirectory.
 
 Source par and map names are filenames too. ParAnimator may resolve them
@@ -989,7 +989,7 @@ is checked by the ImageMagick adapter that maps these names to native
 operators.
 
 The layer stack has no separate post-render geometry stage. A layer may
-animate normal ID parameters, including viewport and virtual camera
+animate normal Id parameters, including viewport and virtual camera
 tracks, but the composition step only controls opacity and the neutral
 compose operator.
 
@@ -999,8 +999,8 @@ Iterated Dynamics and ImageMagick.
 
 ## Colormap Tracks
 
-ID color animation may require a generated map file for each frame. Model
-that as a normal track for the real ID colors parameter, with a colormap
+Id color animation may require a generated map file for each frame. Model
+that as a normal track for the real Id colors parameter, with a colormap
 type that writes a side file and returns an at-file value.
 
 The simplest colormap track interpolates between map files:
@@ -1065,7 +1065,7 @@ Core colormap effects:
 
 | Effect | Meaning |
 | --- | --- |
-| `interpolate` | Blend two or more ID map files with keyed weights. |
+| `interpolate` | Blend two or more Id map files with keyed weights. |
 | `sequence` | Step through map files, with optional crossfade frames. |
 | `rotate` | Shift all palette indices by a keyed offset. |
 | `rotate-range` | Shift only an inclusive index range. |
@@ -1111,12 +1111,12 @@ Example generated map:
       ]
     }
 
-The colormap writer should emit an ID-compatible map file. Validation
+The colormap writer should emit an Id-compatible map file. Validation
 must reject mismatched palette sizes or malformed color entries.
 Stochastic effects such as sparkle must require an explicit seed so
 renders are repeatable.
 
-Use colors=@file for per-frame map files. The map parameter is a real ID
+Use colors=@file for per-frame map files. The map parameter is a real Id
 parameter too, but it is better suited to selecting a default map than to
 recording the frame-local palette in generated par entries.
 
@@ -1124,13 +1124,13 @@ recording the frame-local palette in generated par entries.
 
 A track has:
 
-- a `parameter` for ID tracks, or a `name` for virtual tracks
+- a `parameter` for Id tracks, or a `name` for virtual tracks
 - an optional type override
 - keyframes or a path generator
 - extrapolation behavior
 - local options
 
-Normal tracks write one ID par-file parameter named by parameter. Virtual
+Normal tracks write one Id par-file parameter named by parameter. Virtual
 tracks use name instead of parameter. Virtual tracks such as camera2d may
 write another catalog parameter named by a local output option. Virtual
 adapters such as id-3d-view and julibrot-view may write multiple catalog
@@ -1245,7 +1245,7 @@ Example:
       }
     }
 
-This lets local experiments refine metadata for real ID parameters without
+This lets local experiments refine metadata for real Id parameters without
 modifying the default catalog.
 
 ## Enum Parameters
@@ -1525,7 +1525,7 @@ ImageMagick composition:
                 append batch parameters
                 append layer savename parameter
                 write layer entry to output-directory/par/<output.par>
-                write ID command using librarydirs and @par/name
+                write Id command using librarydirs and @par/name
 
         start with a transparent canvas
 
@@ -1540,7 +1540,7 @@ ImageMagick composition:
 
 Each slice should leave the program buildable, tested, and at least as
 usable as before. The minimum viable product can now write new-format
-ID library-compatible par and batch files for center-mag and corners.
+Id library-compatible par and batch files for center-mag and corners.
 Later slices broaden one behavior at a time while preserving that working
 path.
 
@@ -1557,6 +1557,8 @@ regressions in generated par files.
 Schema enums may stay duplicated while only two schemas need them. If
 another schema needs the same enum, or if an enum grows enough that drift
 is likely, add a shared schema file and external `$ref` loader support.
+Every new schema object, field, and enum or const value must include a
+`description` string when the schema element is added.
 
 ### 1. Add Point And Vector Aliases
 
@@ -1570,7 +1572,7 @@ Schema work:
 
 Unit tests:
 
-- point3 writes a 3-value ID tuple.
+- point3 writes a 3-value Id tuple.
 - vector3 normalizes when requested.
 - point aliases do not normalize.
 
@@ -1619,9 +1621,9 @@ Unit tests:
 - mix 1 emits only b.
 - window values below 2 are rejected.
 
-### 5. Read And Write ID Map Files
+### 5. Read And Write Id Map Files
 
-Add ID map file parsing and writing. Do not add animation effects yet.
+Add Id map file parsing and writing. Do not add animation effects yet.
 
 Schema work:
 
@@ -1630,9 +1632,9 @@ Schema work:
 
 Unit tests:
 
-- a 256-entry ID map file is parsed.
+- a 256-entry Id map file is parsed.
 - malformed RGB entries are rejected.
-- written map files use ID-compatible RGB values.
+- written map files use Id-compatible RGB values.
 
 ### 6. Add Static Colormap Tracks
 
@@ -1752,7 +1754,7 @@ Schema work:
 Unit tests:
 
 - brightness scales each RGB component.
-- values clamp to ID's 0 through 63 range.
+- values clamp to Id's 0 through 63 range.
 - amount 1 leaves the map unchanged.
 
 ### 14. Add More Color Adjustment Effects
@@ -1769,7 +1771,7 @@ Unit tests:
 
 - each effect has one identity test.
 - each effect has one non-identity test.
-- each effect clamps output to ID's valid RGB range.
+- each effect clamps output to Id's valid RGB range.
 
 ### 15. Add Masked Colormap Effects
 
@@ -1896,7 +1898,7 @@ Unit tests:
 - rotated camera targeting center-mag is rejected.
 - aspect handling matches the source image shape.
 
-### 23. Add Basic ID 3D View Adapter
+### 23. Add Basic Id 3D View Adapter
 
 Add id-3d-view output for rotation, perspective, and xyshift.
 
@@ -1911,7 +1913,7 @@ Unit tests:
 - perspective writes an integer value.
 - xyshift writes a 2-value slash tuple.
 
-### 24. Add More ID 3D View Outputs
+### 24. Add More Id 3D View Outputs
 
 Add scalexyz, roughness, sphere, longitude, latitude, radius, stereo,
 interocular, and converge outputs.
@@ -1961,7 +1963,7 @@ Unit tests:
 
 ### 27. Add Multi-Layer Rendering
 
-Allow multiple layers to render separate ID images before composition.
+Allow multiple layers to render separate Id images before composition.
 
 Schema work:
 
@@ -2027,7 +2029,7 @@ Unit tests:
 
 ### 31. Add Core Catalog Files
 
-Add default catalogs for core ID parameters and coloring.
+Add default catalogs for core Id parameters and coloring.
 
 Schema work:
 
@@ -2042,7 +2044,7 @@ Unit tests:
 
 ### 32. Add 3D And Formula Catalog Files
 
-Add default catalogs for ID 3D viewing and selected formula families.
+Add default catalogs for Id 3D viewing and selected formula families.
 
 Schema work:
 
@@ -2057,7 +2059,7 @@ Unit tests:
 - animation files include only the catalogs they need.
 
 The intent is not to finish a large subsystem before anything runs. The
-intent is to get a small valid ID animation working quickly, then keep
+intent is to get a small valid Id animation working quickly, then keep
 that path working while each later feature is added.
 
 ## Design Boundary
@@ -2070,7 +2072,7 @@ Hard-code:
 - format parsers
 - validation rules
 - colormap effect algorithms
-- ID map file writer
+- Id map file writer
 - layer stack evaluation
 - ImageMagick command generation
 
@@ -2098,10 +2100,10 @@ The final design is:
 - local frame-addressable curve evaluation replaces tweeny
 - parameter names and metadata come from JSON catalogs
 - the animator knows types, not Iterated Dynamics parameter names
-- virtual adapters map planned views onto real ID parameters
-- colormap tracks can apply effects, write per-frame ID map files, and
+- virtual adapters map planned views onto real Id parameters
+- colormap tracks can apply effects, write per-frame Id map files, and
   emit `colors=@file`
-- optional layer stacks render ID layer images and compose them with
+- optional layer stacks render Id layer images and compose them with
   backend-neutral operators
 - enum parameters are discrete by default
 - enum PWM is an optional temporal dithering mode

@@ -2,32 +2,42 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://legalize.github.io/paranimator/schemas/parameter-catalog.schema.json",
   "title": "ParAnimator parameter catalog",
+  "description": "Describes Id parameters, fractal-specific params slots, and formula-specific knobs that can be animated.",
   "type": "object",
   "required": [ "parameters" ],
   "additionalProperties": false,
   "properties": {
     "parameters": {
+      "description": "Top-level animated Id parameters keyed by parameter name.",
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/parameter-metadata"
       }
     },
     "fractal-types": {
+      "description": "Fractal-type-specific metadata keyed by Id fractal type name.",
       "type": "object",
       "additionalProperties": {
+        "description": "Metadata for one Id fractal type.",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "params": {
+            "description": "Metadata for the fractal type's params= slots.",
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "format": { "$ref": "#/$defs/parameter-format" },
+              "format": {
+                "description": "Format used by the complete params= value.",
+                "$ref": "#/$defs/parameter-format"
+              },
               "slots": {
+                "description": "Individual scalar params= slots for this fractal type.",
                 "type": "array",
                 "items": { "$ref": "#/$defs/params-slot-metadata" }
               },
               "groups": {
+                "description": "Named multi-slot params= groups for this fractal type.",
                 "type": "object",
                 "additionalProperties": { "$ref": "#/$defs/params-group-metadata" }
               }
@@ -37,142 +47,431 @@
       }
     },
     "formula-entries": {
+      "description": "Formula-specific metadata keyed by formula entry name.",
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/formula-entry-metadata" }
     }
   },
   "$defs": {
     "parameter-metadata": {
+      "description": "Animation metadata for one Id parameter or derived parameter target.",
       "type": "object",
       "required": [ "type" ],
       "additionalProperties": false,
       "properties": {
-        "type": { "$ref": "#/$defs/parameter-type" },
-        "format": { "$ref": "#/$defs/parameter-format" },
-        "default-curve": { "$ref": "#/$defs/curve" },
-        "extrapolate": { "$ref": "#/$defs/extrapolate" },
-        "min": { "type": "number" },
-        "max": { "type": "number" },
-        "arity": { "type": "integer", "minimum": 1 }
+        "type": {
+          "description": "Application data type used to validate and interpolate the parameter.",
+          "$ref": "#/$defs/parameter-type"
+        },
+        "format": {
+          "description": "Text format used when writing the value to an Id par file.",
+          "$ref": "#/$defs/parameter-format"
+        },
+        "default-curve": {
+          "description": "Default interpolation curve for tracks targeting this parameter.",
+          "$ref": "#/$defs/curve"
+        },
+        "extrapolate": {
+          "description": "Behavior outside the explicit keyframe range.",
+          "$ref": "#/$defs/extrapolate"
+        },
+        "min": {
+          "description": "Optional inclusive minimum numeric component value.",
+          "type": "number"
+        },
+        "max": {
+          "description": "Optional inclusive maximum numeric component value.",
+          "type": "number"
+        },
+        "arity": {
+          "description": "Required component count for tuple-like values.",
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "params-slot-metadata": {
+      "description": "Metadata for one scalar slot in an Id params= value.",
       "type": "object",
       "required": [ "index", "name", "type" ],
       "additionalProperties": false,
       "properties": {
-        "index": { "type": "integer", "minimum": 0 },
-        "name": { "type": "string" },
-        "type": { "$ref": "#/$defs/parameter-type" },
-        "format": { "$ref": "#/$defs/parameter-format" },
-        "default-curve": { "$ref": "#/$defs/curve" },
-        "extrapolate": { "$ref": "#/$defs/extrapolate" },
-        "min": { "type": "number" },
-        "max": { "type": "number" },
-        "arity": { "type": "integer", "minimum": 1 }
+        "index": {
+          "description": "Zero-based slot index within params=.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "description": "Human-readable slot name used in track keys.",
+          "type": "string"
+        },
+        "type": {
+          "description": "Application data type for this params= slot.",
+          "$ref": "#/$defs/parameter-type"
+        },
+        "format": {
+          "description": "Text format used by this slot track value.",
+          "$ref": "#/$defs/parameter-format"
+        },
+        "default-curve": {
+          "description": "Default interpolation curve for this slot.",
+          "$ref": "#/$defs/curve"
+        },
+        "extrapolate": {
+          "description": "Behavior outside this slot's keyframe range.",
+          "$ref": "#/$defs/extrapolate"
+        },
+        "min": {
+          "description": "Optional inclusive minimum numeric slot value.",
+          "type": "number"
+        },
+        "max": {
+          "description": "Optional inclusive maximum numeric slot value.",
+          "type": "number"
+        },
+        "arity": {
+          "description": "Required component count for tuple-like slot values.",
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "params-group-metadata": {
+      "description": "Metadata for a named group of slots in an Id params= value.",
       "type": "object",
       "required": [ "type", "slots" ],
       "additionalProperties": false,
       "properties": {
-        "type": { "$ref": "#/$defs/parameter-type" },
-        "format": { "$ref": "#/$defs/parameter-format" },
-        "default-curve": { "$ref": "#/$defs/curve" },
-        "extrapolate": { "$ref": "#/$defs/extrapolate" },
-        "min": { "type": "number" },
-        "max": { "type": "number" },
-        "arity": { "type": "integer", "minimum": 1 },
+        "type": {
+          "description": "Application data type for the grouped params= value.",
+          "$ref": "#/$defs/parameter-type"
+        },
+        "format": {
+          "description": "Text format used by the grouped params= value.",
+          "$ref": "#/$defs/parameter-format"
+        },
+        "default-curve": {
+          "description": "Default interpolation curve for this params= group.",
+          "$ref": "#/$defs/curve"
+        },
+        "extrapolate": {
+          "description": "Behavior outside this group's keyframe range.",
+          "$ref": "#/$defs/extrapolate"
+        },
+        "min": {
+          "description": "Optional inclusive minimum numeric component value.",
+          "type": "number"
+        },
+        "max": {
+          "description": "Optional inclusive maximum numeric component value.",
+          "type": "number"
+        },
+        "arity": {
+          "description": "Required component count for tuple-like group values.",
+          "type": "integer",
+          "minimum": 1
+        },
         "slots": {
+          "description": "Zero-based params= slots occupied by this group.",
           "type": "array",
           "minItems": 1,
-          "items": { "type": "integer", "minimum": 0 }
+          "items": {
+            "description": "One zero-based params= slot index.",
+            "type": "integer",
+            "minimum": 0
+          }
         }
       }
     },
     "formula-entry-metadata": {
+      "description": "Metadata for one formula entry name.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "params": {
+          "description": "Human-readable knobs mapped to the formula p1 through p4 variables.",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "knobs": {
+              "description": "Formula parameter knobs keyed by human-readable knob name.",
               "type": "object",
               "additionalProperties": { "$ref": "#/$defs/formula-params-knob-metadata" }
             }
           }
         },
         "functions": {
+          "description": "Formula function slots mapped to the Id function= parameter.",
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "fn1": { "$ref": "#/$defs/formula-function-metadata" },
-            "fn2": { "$ref": "#/$defs/formula-function-metadata" },
-            "fn3": { "$ref": "#/$defs/formula-function-metadata" },
-            "fn4": { "$ref": "#/$defs/formula-function-metadata" }
+            "fn1": {
+              "description": "First function= slot exposed as formula variable fn1.",
+              "$ref": "#/$defs/formula-function-metadata"
+            },
+            "fn2": {
+              "description": "Second function= slot exposed as formula variable fn2.",
+              "$ref": "#/$defs/formula-function-metadata"
+            },
+            "fn3": {
+              "description": "Third function= slot exposed as formula variable fn3.",
+              "$ref": "#/$defs/formula-function-metadata"
+            },
+            "fn4": {
+              "description": "Fourth function= slot exposed as formula variable fn4.",
+              "$ref": "#/$defs/formula-function-metadata"
+            }
           }
         }
       }
     },
     "formula-params-knob-metadata": {
+      "description": "Metadata for one human-readable formula params knob.",
       "type": "object",
       "required": [ "type", "variable" ],
       "additionalProperties": false,
       "properties": {
-        "type": { "$ref": "#/$defs/formula-knob-type" },
-        "variable": { "type": "string" },
-        "format": { "$ref": "#/$defs/parameter-format" },
-        "default-curve": { "$ref": "#/$defs/curve" },
-        "extrapolate": { "$ref": "#/$defs/extrapolate" },
-        "min": { "type": "number" },
-        "max": { "type": "number" },
-        "arity": { "type": "integer", "minimum": 1 }
+        "type": {
+          "description": "Formula knob data type.",
+          "$ref": "#/$defs/formula-knob-type"
+        },
+        "variable": {
+          "description": "Fixed formula variable component used by this knob, such as p1.real or p2.",
+          "type": "string"
+        },
+        "format": {
+          "description": "Text format used by this formula knob value.",
+          "$ref": "#/$defs/parameter-format"
+        },
+        "default-curve": {
+          "description": "Default interpolation curve for this formula knob.",
+          "$ref": "#/$defs/curve"
+        },
+        "extrapolate": {
+          "description": "Behavior outside this formula knob's keyframe range.",
+          "$ref": "#/$defs/extrapolate"
+        },
+        "min": {
+          "description": "Optional inclusive minimum numeric knob value.",
+          "type": "number"
+        },
+        "max": {
+          "description": "Optional inclusive maximum numeric knob value.",
+          "type": "number"
+        },
+        "arity": {
+          "description": "Required component count for tuple-like knob values.",
+          "type": "integer",
+          "minimum": 1
+        }
       },
       "allOf": [
         {
-          "if": { "properties": { "type": { "const": "complex" } } },
-          "then": { "properties": { "variable": { "pattern": "^p[1-4]$" } } }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "complex",
+                "description": "Complex formula knob."
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "variable": {
+                "description": "Complete p1 through p4 variable used by a complex knob.",
+                "pattern": "^p[1-4]$"
+              }
+            }
+          }
         },
         {
-          "if": { "properties": { "type": { "enum": [ "integer", "real" ] } } },
-          "then": { "properties": { "variable": { "pattern": "^p[1-4]\\.(real|imag)$" } } }
+          "if": {
+            "properties": {
+              "type": {
+                "description": "Scalar formula knob.",
+                "oneOf": [
+                  {
+                    "const": "integer",
+                    "description": "Integer formula knob."
+                  },
+                  {
+                    "const": "real",
+                    "description": "Real formula knob."
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "variable": {
+                "description": "Real or imaginary p1 through p4 component used by a scalar knob.",
+                "pattern": "^p[1-4]\\.(real|imag)$"
+              }
+            }
+          }
         }
       ]
     },
     "formula-knob-type": {
+      "description": "Formula parameter knob type.",
       "type": "string",
-      "enum": [ "complex", "integer", "real" ]
+      "oneOf": [
+        {
+          "const": "complex",
+          "description": "Complex knob mapped to a complete p1 through p4 variable."
+        },
+        {
+          "const": "integer",
+          "description": "Integer knob mapped to one real or imaginary p1 through p4 component."
+        },
+        {
+          "const": "real",
+          "description": "Real knob mapped to one real or imaginary p1 through p4 component."
+        }
+      ]
     },
     "formula-function-metadata": {
+      "description": "Metadata for one formula function slot.",
       "type": "object",
       "required": [ "type", "values" ],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "enum" },
-        "values": { "const": "id-functions" },
-        "format": { "$ref": "#/$defs/parameter-format" },
-        "default-curve": { "$ref": "#/$defs/curve" },
-        "extrapolate": { "$ref": "#/$defs/extrapolate" }
+        "type": {
+          "description": "Declares this formula function slot as an enum.",
+          "oneOf": [
+            {
+              "const": "enum",
+              "description": "Value must be one of Id's recognized formula functions."
+            }
+          ]
+        },
+        "values": {
+          "description": "Named value set used for the enum.",
+          "oneOf": [
+            {
+              "const": "id-functions",
+              "description": "Use the fixed function names recognized by Id."
+            }
+          ]
+        },
+        "format": {
+          "description": "Text format used by this function enum value.",
+          "$ref": "#/$defs/parameter-format"
+        },
+        "default-curve": {
+          "description": "Default interpolation curve for this function slot.",
+          "$ref": "#/$defs/curve"
+        },
+        "extrapolate": {
+          "description": "Behavior outside this function slot's keyframe range.",
+          "$ref": "#/$defs/extrapolate"
+        }
       }
     },
     "parameter-type": {
+      "description": "Application data type used for validation and interpolation.",
       "type": "string",
-      "enum": [ "center-mag", "complex", "corners", "double", "enum", "integer", "numeric-tuple" ]
+      "oneOf": [
+        {
+          "const": "center-mag",
+          "description": "Id center-mag value containing center real, center imaginary, and magnification."
+        },
+        {
+          "const": "complex",
+          "description": "Complex value represented by two numeric components."
+        },
+        {
+          "const": "corners",
+          "description": "Id corners value represented by four or six numeric components."
+        },
+        {
+          "const": "double",
+          "description": "Floating-point numeric value."
+        },
+        {
+          "const": "enum",
+          "description": "Discrete string value selected from a declared value set."
+        },
+        {
+          "const": "integer",
+          "description": "Integral numeric value."
+        },
+        {
+          "const": "numeric-tuple",
+          "description": "Fixed-arity tuple of floating-point numeric components."
+        }
+      ]
     },
     "parameter-format": {
+      "description": "Text format used for parameter values in JSON and par output.",
       "type": "string",
-      "enum": [ "raw", "slash", "slash-list", "slash-pair" ]
+      "oneOf": [
+        {
+          "const": "raw",
+          "description": "Value is written as a single raw token."
+        },
+        {
+          "const": "slash",
+          "description": "Value components are written as slash-delimited tokens."
+        },
+        {
+          "const": "slash-list",
+          "description": "Value is a slash-delimited list with type-specific length."
+        },
+        {
+          "const": "slash-pair",
+          "description": "Value is exactly two slash-delimited tokens."
+        }
+      ]
     },
     "curve": {
+      "description": "Interpolation curve used between two keyframes.",
       "type": "string",
-      "enum": [ "geometric", "hold", "linear", "step" ]
+      "oneOf": [
+        {
+          "const": "geometric",
+          "description": "Geometric interpolation, currently used for magnification values."
+        },
+        {
+          "const": "hold",
+          "description": "Hold the source value until the destination key."
+        },
+        {
+          "const": "linear",
+          "description": "Linearly interpolate numeric values."
+        },
+        {
+          "const": "step",
+          "description": "Step from the source value to the destination value at the destination key."
+        }
+      ]
     },
     "extrapolate": {
+      "description": "Behavior for frames outside a track's explicit keyframe range.",
       "type": "string",
-      "enum": [ "base", "clamp", "cycle", "omit", "ping-pong" ]
+      "oneOf": [
+        {
+          "const": "base",
+          "description": "Use the source par value outside the keyframe range."
+        },
+        {
+          "const": "clamp",
+          "description": "Use the nearest keyframe value outside the keyframe range."
+        },
+        {
+          "const": "cycle",
+          "description": "Repeat the keyframe range cyclically outside the range."
+        },
+        {
+          "const": "omit",
+          "description": "Omit the parameter assignment outside the keyframe range."
+        },
+        {
+          "const": "ping-pong",
+          "description": "Repeat the keyframe range forward then backward outside the range."
+        }
+      ]
     }
   }
 }
