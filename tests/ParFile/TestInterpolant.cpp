@@ -88,6 +88,33 @@ ParFile::PathConfig ellipse_path(
     return result;
 }
 
+ParFile::PathConfig lissajous_path(
+    const std::string &center, double x_frequency, double y_frequency, double phase = 0.0)
+{
+    ParFile::PathConfig result;
+    result.kind = ParFile::PathKind::LISSAJOUS;
+    result.center = center;
+    result.x_radius = 2.0;
+    result.y_radius = 1.0;
+    result.x_frequency = x_frequency;
+    result.y_frequency = y_frequency;
+    result.phase = phase;
+    return result;
+}
+
+ParFile::PathConfig spiral_path(
+    const std::string &center, double from_radius, double to_radius, double turns = 1.0, double phase = 0.0)
+{
+    ParFile::PathConfig result;
+    result.kind = ParFile::PathKind::SPIRAL;
+    result.center = center;
+    result.from_radius = from_radius;
+    result.to_radius = to_radius;
+    result.turns = turns;
+    result.phase = phase;
+    return result;
+}
+
 ParFile::ResolvedTrack resolved_path_track(
     const ParFile::ParameterMetadata &parameter_metadata, const ParFile::PathConfig &path)
 {
@@ -834,6 +861,55 @@ TEST(TestInterpolant, circlePathPhaseChangesStartingPoint)
 
     ASSERT_TRUE(interpolant);
     EXPECT_EQ("0/1", interpolant->step());
+}
+
+TEST(TestInterpolant, lissajousPathIsDeterministicForSamePhaseAndFrequency)
+{
+    const int num_steps{6};
+    ParFile::InterpolantPtr left{ParFile::create_interpolant(
+        resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2), lissajous_path("0/0", 3.0, 2.0, 45.0)),
+        num_steps)};
+    ParFile::InterpolantPtr right{ParFile::create_interpolant(
+        resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2), lissajous_path("0/0", 3.0, 2.0, 45.0)),
+        num_steps)};
+
+    ASSERT_TRUE(left);
+    ASSERT_TRUE(right);
+    for (int i = 0; i < num_steps; ++i)
+    {
+        EXPECT_EQ(left->step(), right->step());
+    }
+}
+
+TEST(TestInterpolant, spiralPathRadiusChangesOverTime)
+{
+    const int num_steps{5};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2), spiral_path("0/0", 1.0, 3.0)),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("1/0", interpolant->step());
+    EXPECT_EQ("0/1.5", interpolant->step());
+    EXPECT_EQ("-2/0", interpolant->step());
+    EXPECT_EQ("0/-2.5", interpolant->step());
+    EXPECT_EQ("3/0", interpolant->step());
+}
+
+TEST(TestInterpolant, invalidPathFrequencyOrRadiusRejected)
+{
+    const int num_steps{5};
+
+    EXPECT_THROW(
+        ParFile::create_interpolant(
+            resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2), lissajous_path("0/0", 0.0, 1.0)),
+            num_steps),
+        std::runtime_error);
+    EXPECT_THROW(
+        ParFile::create_interpolant(
+            resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2), spiral_path("0/0", 1.0, -1.0)),
+            num_steps),
+        std::runtime_error);
 }
 
 TEST(TestInterpolant, paramsSlotPreservesOtherSlots)

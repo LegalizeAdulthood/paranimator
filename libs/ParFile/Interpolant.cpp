@@ -441,7 +441,8 @@ void normalize_vector(const ParameterMetadata &metadata, std::vector<double> &va
 
 bool is_planar_path(PathKind kind)
 {
-    return kind == PathKind::CIRCLE || kind == PathKind::ELLIPSE;
+    return kind == PathKind::CIRCLE || kind == PathKind::ELLIPSE || kind == PathKind::LISSAJOUS ||
+        kind == PathKind::SPIRAL;
 }
 
 double clean_path_component(double value)
@@ -454,6 +455,28 @@ std::string format_slash_pair(const std::complex<double> &value)
     return format_slash_doubles({clean_path_component(value.real()), clean_path_component(value.imag())});
 }
 
+double degrees_to_radians(double degrees)
+{
+    constexpr double PI{3.141592653589793238462643383279502884};
+    return degrees * PI / 180.0;
+}
+
+void validate_path_radius(double value, std::string_view name)
+{
+    if (value < 0.0)
+    {
+        throw std::runtime_error("Path field '" + std::string{name} + "' must be nonnegative");
+    }
+}
+
+void validate_path_frequency(double value, std::string_view name)
+{
+    if (value <= 0.0)
+    {
+        throw std::runtime_error("Path field '" + std::string{name} + "' must be positive");
+    }
+}
+
 class PlanarPathEvaluator
 {
 public:
@@ -462,15 +485,26 @@ public:
     std::complex<double> value_at(int frame) const;
 
 private:
+    double fraction_at(int frame) const;
+    std::complex<double> ellipse_value_at(double fraction) const;
+    std::complex<double> lissajous_value_at(double fraction) const;
+    std::complex<double> spiral_value_at(double fraction) const;
+
+    PathKind m_kind{PathKind::CIRCLE};
     std::complex<double> m_center;
     double m_x_radius{};
     double m_y_radius{};
+    double m_from_radius{};
+    double m_to_radius{};
+    double m_x_frequency{};
+    double m_y_frequency{};
     double m_turns{};
     double m_phase{};
     int m_num_steps{};
 };
 
 PlanarPathEvaluator::PlanarPathEvaluator(const PathConfig &path, int num_steps) :
+    m_kind(path.kind),
     m_center(parse_slash_pair(path.center)),
     m_turns(path.turns),
     m_phase(path.phase),
@@ -484,24 +518,77 @@ PlanarPathEvaluator::PlanarPathEvaluator(const PathConfig &path, int num_steps) 
     {
         m_x_radius = path.radius;
         m_y_radius = path.radius;
+        validate_path_radius(m_x_radius, "radius");
     }
     else if (path.kind == PathKind::ELLIPSE)
     {
         m_x_radius = path.x_radius;
         m_y_radius = path.y_radius;
+        validate_path_radius(m_x_radius, "x-radius");
+        validate_path_radius(m_y_radius, "y-radius");
+    }
+    else if (path.kind == PathKind::LISSAJOUS)
+    {
+        m_x_radius = path.x_radius;
+        m_y_radius = path.y_radius;
+        m_x_frequency = path.x_frequency;
+        m_y_frequency = path.y_frequency;
+        validate_path_radius(m_x_radius, "x-radius");
+        validate_path_radius(m_y_radius, "y-radius");
+        validate_path_frequency(m_x_frequency, "x-frequency");
+        validate_path_frequency(m_y_frequency, "y-frequency");
+    }
+    else if (path.kind == PathKind::SPIRAL)
+    {
+        m_from_radius = path.from_radius;
+        m_to_radius = path.to_radius;
+        validate_path_radius(m_from_radius, "from-radius");
+        validate_path_radius(m_to_radius, "to-radius");
     }
     else
     {
-        throw std::runtime_error("Planar path requires a circle or ellipse path");
+        throw std::runtime_error("Planar path requires a circle, ellipse, lissajous, or spiral path");
     }
+}
+
+double PlanarPathEvaluator::fraction_at(int frame) const
+{
+    return frame / static_cast<double>(m_num_steps - 1);
+}
+
+std::complex<double> PlanarPathEvaluator::ellipse_value_at(double fraction) const
+{
+    const double radians{degrees_to_radians(m_phase + 360.0 * m_turns * fraction)};
+    return {m_center.real() + std::cos(radians) * m_x_radius, m_center.imag() + std::sin(radians) * m_y_radius};
+}
+
+std::complex<double> PlanarPathEvaluator::lissajous_value_at(double fraction) const
+{
+    const double x_radians{degrees_to_radians(m_phase + 360.0 * m_x_frequency * fraction)};
+    const double y_radians{degrees_to_radians(360.0 * m_y_frequency * fraction)};
+    return {
+        m_center.real() + std::cos(x_radians) * m_x_radius, m_center.imag() + std::sin(y_radians) * m_y_radius};
+}
+
+std::complex<double> PlanarPathEvaluator::spiral_value_at(double fraction) const
+{
+    const double radians{degrees_to_radians(m_phase + 360.0 * m_turns * fraction)};
+    const double radius{m_from_radius + fraction * (m_to_radius - m_from_radius)};
+    return {m_center.real() + std::cos(radians) * radius, m_center.imag() + std::sin(radians) * radius};
 }
 
 std::complex<double> PlanarPathEvaluator::value_at(int frame) const
 {
-    constexpr double PI{3.141592653589793238462643383279502884};
-    const double fraction{frame / static_cast<double>(m_num_steps - 1)};
-    const double radians{(m_phase + 360.0 * m_turns * fraction) * PI / 180.0};
-    return {m_center.real() + std::cos(radians) * m_x_radius, m_center.imag() + std::sin(radians) * m_y_radius};
+    const double fraction{fraction_at(frame)};
+    if (m_kind == PathKind::LISSAJOUS)
+    {
+        return lissajous_value_at(fraction);
+    }
+    if (m_kind == PathKind::SPIRAL)
+    {
+        return spiral_value_at(fraction);
+    }
+    return ellipse_value_at(fraction);
 }
 
 class ComplexPathInterpolant : public Base

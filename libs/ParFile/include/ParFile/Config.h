@@ -39,7 +39,9 @@ enum class PathKind
     CONSTANT,
     LINE,
     CIRCLE,
-    ELLIPSE
+    ELLIPSE,
+    LISSAJOUS,
+    SPIRAL
 };
 
 struct PathConfig
@@ -52,6 +54,10 @@ struct PathConfig
     double radius{};
     double x_radius{};
     double y_radius{};
+    double from_radius{};
+    double to_radius{};
+    double x_frequency{};
+    double y_frequency{};
     double turns{1.0};
     double phase{};
 };

@@ -229,6 +229,14 @@ static PathKind load_path_kind(const Object &json)
     {
         return PathKind::ELLIPSE;
     }
+    if (kind == "lissajous")
+    {
+        return PathKind::LISSAJOUS;
+    }
+    if (kind == "spiral")
+    {
+        return PathKind::SPIRAL;
+    }
     throw std::runtime_error("Invalid config, unknown path kind '" + kind + "'");
 }
 
@@ -237,6 +245,14 @@ static void validate_nonnegative(double value, std::string_view name)
     if (value < 0.0)
     {
         throw std::runtime_error("Invalid config, path field '" + std::string{name} + "' must be nonnegative");
+    }
+}
+
+static void validate_positive(double value, std::string_view name)
+{
+    if (value <= 0.0)
+    {
+        throw std::runtime_error("Invalid config, path field '" + std::string{name} + "' must be positive");
     }
 }
 
@@ -274,6 +290,27 @@ static PathConfig load_path_config(const Object &json)
         result.turns = load_optional_double(json, "turns", 1.0);
         result.phase = load_optional_double(json, "phase", 0.0);
         break;
+    case PathKind::LISSAJOUS:
+        result.center = load_string(json, "center");
+        result.x_radius = load_double(json, "x-radius");
+        result.y_radius = load_double(json, "y-radius");
+        result.x_frequency = load_double(json, "x-frequency");
+        result.y_frequency = load_double(json, "y-frequency");
+        validate_nonnegative(result.x_radius, "x-radius");
+        validate_nonnegative(result.y_radius, "y-radius");
+        validate_positive(result.x_frequency, "x-frequency");
+        validate_positive(result.y_frequency, "y-frequency");
+        result.phase = load_optional_double(json, "phase", 0.0);
+        break;
+    case PathKind::SPIRAL:
+        result.center = load_string(json, "center");
+        result.from_radius = load_double(json, "from-radius");
+        result.to_radius = load_double(json, "to-radius");
+        validate_nonnegative(result.from_radius, "from-radius");
+        validate_nonnegative(result.to_radius, "to-radius");
+        result.turns = load_optional_double(json, "turns", 1.0);
+        result.phase = load_optional_double(json, "phase", 0.0);
+        break;
     }
     return result;
 }
@@ -293,6 +330,8 @@ static std::vector<KeyframeConfig> load_path_keyframes(const PathConfig &path, i
         return {{0, path.from}, {num_frames - 1, path.to, Curve::LINEAR}};
     case PathKind::CIRCLE:
     case PathKind::ELLIPSE:
+    case PathKind::LISSAJOUS:
+    case PathKind::SPIRAL:
         return {};
     }
     throw std::runtime_error("Invalid config, unknown path kind");

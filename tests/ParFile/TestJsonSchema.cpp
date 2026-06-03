@@ -356,6 +356,28 @@ TEST(TestJsonSchema, pathTrackAccepted)
         R"({"parameter":"params.c","path":{"kind":"circle","center":"0/0","radius":1,"turns":1,"phase":90}})")));
     EXPECT_TRUE(validates_config_text(config_with_track(
         R"({"parameter":"look-at","path":{"kind":"ellipse","center":"0/0","x-radius":2,"y-radius":1}})")));
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "parameter": "params.c",
+      "path": {
+        "kind": "lissajous",
+        "center": "0/0",
+        "x-radius": 2,
+        "y-radius": 1,
+        "x-frequency": 3,
+        "y-frequency": 2,
+        "phase": 45
+      }
+    })")));
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "parameter": "params.c",
+      "path": {
+        "kind": "spiral",
+        "center": "0/0",
+        "from-radius": 1,
+        "to-radius": 3,
+        "turns": 1
+      }
+    })")));
 }
 
 TEST(TestJsonSchema, pathTrackRejectsKeysAndPath)
@@ -382,6 +404,19 @@ TEST(TestJsonSchema, pathTrackRejectsInvalidRadius)
         config_with_track(R"({"parameter":"params.c","path":{"kind":"circle","center":"0/0","radius":-1}})")));
     EXPECT_FALSE(validates_config_text(config_with_track(
         R"({"parameter":"look-at","path":{"kind":"ellipse","center":"0/0","x-radius":1,"y-radius":-1}})")));
+    EXPECT_FALSE(validates_config_text(config_with_track(R"({
+      "parameter": "params.c",
+      "path": {
+        "kind": "lissajous",
+        "center": "0/0",
+        "x-radius": 1,
+        "y-radius": 1,
+        "x-frequency": 0,
+        "y-frequency": 1
+      }
+    })")));
+    EXPECT_FALSE(validates_config_text(config_with_track(
+        R"({"parameter":"params.c","path":{"kind":"spiral","center":"0/0","from-radius":1,"to-radius":-1}})")));
 }
 
 TEST(TestJsonSchema, unknownTrackModeRejected)

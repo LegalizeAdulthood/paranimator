@@ -156,7 +156,9 @@
         { "$ref": "#/$defs/constant-path-generator" },
         { "$ref": "#/$defs/line-path-generator" },
         { "$ref": "#/$defs/circle-path-generator" },
-        { "$ref": "#/$defs/ellipse-path-generator" }
+        { "$ref": "#/$defs/ellipse-path-generator" },
+        { "$ref": "#/$defs/lissajous-path-generator" },
+        { "$ref": "#/$defs/spiral-path-generator" }
       ]
     },
     "constant-path-generator": {
@@ -245,6 +247,80 @@
         },
         "y-radius": {
           "description": "Ellipse radius along the second output component.",
+          "type": "number",
+          "minimum": 0
+        },
+        "turns": {
+          "description": "Number of complete turns sampled over the full frame range.",
+          "type": "number"
+        },
+        "phase": {
+          "description": "Starting phase angle in degrees.",
+          "type": "number"
+        }
+      }
+    },
+    "lissajous-path-generator": {
+      "description": "Path generator that samples a Lissajous curve over the full frame range.",
+      "type": "object",
+      "required": [ "kind", "center", "x-radius", "y-radius", "x-frequency", "y-frequency" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "lissajous",
+          "description": "Generate values on a Lissajous curve."
+        },
+        "center": {
+          "description": "Path center as a slash-pair value.",
+          "type": "string"
+        },
+        "x-radius": {
+          "description": "Lissajous radius along the first output component.",
+          "type": "number",
+          "minimum": 0
+        },
+        "y-radius": {
+          "description": "Lissajous radius along the second output component.",
+          "type": "number",
+          "minimum": 0
+        },
+        "x-frequency": {
+          "description": "Positive frequency multiplier for the first output component.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "y-frequency": {
+          "description": "Positive frequency multiplier for the second output component.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "phase": {
+          "description": "Starting phase angle in degrees for the first output component.",
+          "type": "number"
+        }
+      }
+    },
+    "spiral-path-generator": {
+      "description": "Path generator that samples a radial spiral over the full frame range.",
+      "type": "object",
+      "required": [ "kind", "center", "from-radius", "to-radius" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "spiral",
+          "description": "Generate values on a spiral path."
+        },
+        "center": {
+          "description": "Path center as a slash-pair value.",
+          "type": "string"
+        },
+        "from-radius": {
+          "description": "Spiral radius at frame zero.",
+          "type": "number",
+          "minimum": 0
+        },
+        "to-radius": {
+          "description": "Spiral radius at the final frame.",
           "type": "number",
           "minimum": 0
         },
