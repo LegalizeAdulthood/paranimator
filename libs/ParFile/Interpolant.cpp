@@ -302,14 +302,6 @@ void validate_discrete_curve(std::string_view type, Curve curve)
     }
 }
 
-void validate_hold_curve(std::string_view type, Curve curve)
-{
-    if (curve != Curve::HOLD)
-    {
-        throw std::runtime_error("Unsupported " + std::string{type} + " curve '" + std::string{to_string(curve)} + "'");
-    }
-}
-
 int positive_mod(int value, int modulus)
 {
     const int result{value % modulus};
@@ -963,7 +955,7 @@ DiscreteInterpolant::DiscreteInterpolant(
     m_to(keys[1].value),
     m_curve(curve)
 {
-    validate_hold_curve(to_string(metadata.type), m_curve);
+    validate_discrete_curve(to_string(metadata.type), m_curve);
     validate_discrete_value(metadata, m_from);
     validate_discrete_value(metadata, m_to);
 }

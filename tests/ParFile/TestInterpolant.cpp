@@ -119,6 +119,13 @@ ParFile::InterpolantPtr create_interpolant(
     return ParFile::create_interpolant(resolved_track(parameter_metadata, keys, from), num_steps);
 }
 
+ParFile::InterpolantPtr create_interpolant(const ParFile::ParameterMetadata &parameter_metadata,
+    const std::string &from, const std::string &to, ParFile::Curve curve, int num_steps)
+{
+    const std::vector<ParFile::KeyframeConfig> keys{keyframes(from, to, curve, num_steps)};
+    return ParFile::create_interpolant(resolved_track(parameter_metadata, keys, from), num_steps);
+}
+
 } // namespace
 
 TEST(TestInterpolant, centerMag)
@@ -564,6 +571,18 @@ TEST(TestInterpolant, enumHold)
     EXPECT_EQ("zmag", interpolant->step());
 }
 
+TEST(TestInterpolant, enumStep)
+{
+    const int num_steps{4};
+    ParFile::InterpolantPtr interpolant{
+        create_interpolant(enum_metadata("inside"), "bof60", "zmag", ParFile::Curve::STEP, num_steps)};
+
+    EXPECT_EQ("bof60", interpolant->step());
+    EXPECT_EQ("bof60", interpolant->step());
+    EXPECT_EQ("bof60", interpolant->step());
+    EXPECT_EQ("zmag", interpolant->step());
+}
+
 TEST(TestInterpolant, enumUnknownValueRejected)
 {
     const int num_steps{3};
@@ -593,11 +612,35 @@ TEST(TestInterpolant, insideMethodHold)
     EXPECT_EQ("zmag", interpolant->step());
 }
 
+TEST(TestInterpolant, insideMethodStep)
+{
+    const int num_steps{4};
+    ParFile::InterpolantPtr interpolant{
+        create_interpolant(inside_metadata("inside"), "bof60", "zmag", ParFile::Curve::STEP, num_steps)};
+
+    EXPECT_EQ("bof60", interpolant->step());
+    EXPECT_EQ("bof60", interpolant->step());
+    EXPECT_EQ("bof60", interpolant->step());
+    EXPECT_EQ("zmag", interpolant->step());
+}
+
 TEST(TestInterpolant, outsideMethodHold)
 {
     const int num_steps{3};
     ParFile::InterpolantPtr interpolant{create_interpolant(outside_metadata("outside"), "real", "tdis", num_steps)};
 
+    EXPECT_EQ("real", interpolant->step());
+    EXPECT_EQ("real", interpolant->step());
+    EXPECT_EQ("tdis", interpolant->step());
+}
+
+TEST(TestInterpolant, outsideMethodStep)
+{
+    const int num_steps{4};
+    ParFile::InterpolantPtr interpolant{
+        create_interpolant(outside_metadata("outside"), "real", "tdis", ParFile::Curve::STEP, num_steps)};
+
+    EXPECT_EQ("real", interpolant->step());
     EXPECT_EQ("real", interpolant->step());
     EXPECT_EQ("real", interpolant->step());
     EXPECT_EQ("tdis", interpolant->step());
