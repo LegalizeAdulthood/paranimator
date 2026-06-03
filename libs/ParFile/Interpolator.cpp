@@ -164,7 +164,15 @@ ColorMapInterpolant::ColorMapInterpolant(
     }
     for (const ColorMapEffectConfig &effect : m_effects)
     {
-        if (effect.kind == ColorMapEffectKind::PING_PONG)
+        if (effect.kind == ColorMapEffectKind::BRIGHTNESS)
+        {
+            if (!effect.amount)
+            {
+                throw std::runtime_error("Color map brightness effect is missing amount");
+            }
+            validate_number_track_keyframes("color map brightness amount", effect.amount->keys, num_frames);
+        }
+        else if (effect.kind == ColorMapEffectKind::PING_PONG)
         {
             if (!effect.offset)
             {
@@ -221,6 +229,14 @@ ColorMap ColorMapInterpolant::apply_effect(const ColorMap &map, const ColorMapEf
 {
     switch (effect.kind)
     {
+    case ColorMapEffectKind::BRIGHTNESS:
+    {
+        if (!effect.amount)
+        {
+            throw std::runtime_error("Color map brightness effect is missing amount");
+        }
+        return brightness_color_map(map, number_track_value_at_frame(*effect.amount, frame));
+    }
     case ColorMapEffectKind::REVERSE:
         if (effect.range)
         {

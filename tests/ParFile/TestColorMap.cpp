@@ -156,6 +156,48 @@ TEST(TestColorMap, interpolateBlendOneReturnsSecondMap)
     EXPECT_EQ(6, result[0].blue);
 }
 
+TEST(TestColorMap, brightnessScalesEachRgbComponent)
+{
+    const ParFile::ColorMap map{solid_map(10, 20, 30)};
+
+    const ParFile::ColorMap result{ParFile::brightness_color_map(map, 1.5)};
+
+    EXPECT_EQ(15, result[0].red);
+    EXPECT_EQ(30, result[0].green);
+    EXPECT_EQ(45, result[0].blue);
+}
+
+TEST(TestColorMap, brightnessClampsToValidRgbRange)
+{
+    const ParFile::ColorMap map{solid_map(200, 220, 240)};
+
+    const ParFile::ColorMap result{ParFile::brightness_color_map(map, 2.0)};
+
+    EXPECT_EQ(255, result[0].red);
+    EXPECT_EQ(255, result[0].green);
+    EXPECT_EQ(255, result[0].blue);
+
+    const ParFile::ColorMap dark_result{ParFile::brightness_color_map(map, -1.0)};
+
+    EXPECT_EQ(0, dark_result[0].red);
+    EXPECT_EQ(0, dark_result[0].green);
+    EXPECT_EQ(0, dark_result[0].blue);
+}
+
+TEST(TestColorMap, brightnessAmountOneLeavesMapUnchanged)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    const ParFile::ColorMap result{ParFile::brightness_color_map(map, 1.0)};
+
+    for (std::size_t i = 0; i < result.size(); ++i)
+    {
+        EXPECT_EQ(map[i].red, result[i].red);
+        EXPECT_EQ(map[i].green, result[i].green);
+        EXPECT_EQ(map[i].blue, result[i].blue);
+    }
+}
+
 TEST(TestColorMap, gradientTwoStopsAccepted)
 {
     const ParFile::ColorMap map{

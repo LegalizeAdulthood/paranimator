@@ -310,6 +310,33 @@ TEST(TestConfig, jsonDeserializesColorMapEffectTrack)
     EXPECT_EQ(4.0, config.tracks[0].color_map->effects[1].offset->keys[1].value);
 }
 
+TEST(TestConfig, jsonDeserializesColorMapBrightnessEffect)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"parameter", "colors"},
+        {"type", "color-map"},
+        {"format", "at-file"},
+        {"output", "colors-%04d.map"},
+        {"source", "base.map"},
+        {"effects",
+            Object::array({Object{{"kind", "brightness"},
+                {"amount",
+                    Object{{"keys",
+                        Object::array({Object{{"frame", 0}, {"value", 1.0}},
+                            Object{{"frame", 4}, {"value", 2.0}}})}}}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_TRUE(config.tracks[0].color_map);
+    ASSERT_EQ(1U, config.tracks[0].color_map->effects.size());
+    const ParFile::ColorMapEffectConfig &effect{config.tracks[0].color_map->effects[0]};
+    EXPECT_EQ(ParFile::ColorMapEffectKind::BRIGHTNESS, effect.kind);
+    ASSERT_TRUE(effect.amount);
+    ASSERT_EQ(2U, effect.amount->keys.size());
+    EXPECT_EQ(2.0, effect.amount->keys[1].value);
+}
+
 TEST(TestConfig, jsonDeserializesColorMapGradientSourceTrack)
 {
     Object json = valid_json();

@@ -199,6 +199,10 @@ static std::vector<KeyframeConfig> load_keyframes(const Object &json, TrackMode 
 static ColorMapEffectKind load_color_map_effect_kind(const Object &json)
 {
     const std::string kind{load_string(json, "kind")};
+    if (kind == "brightness")
+    {
+        return ColorMapEffectKind::BRIGHTNESS;
+    }
     if (kind == "reverse")
     {
         return ColorMapEffectKind::REVERSE;
@@ -323,7 +327,11 @@ static ColorMapEffectConfig load_color_map_effect_config(const Object &json)
     ColorMapEffectConfig result;
     result.kind = load_color_map_effect_kind(json);
     result.range = load_color_map_range(json);
-    if (result.kind == ColorMapEffectKind::PING_PONG)
+    if (result.kind == ColorMapEffectKind::BRIGHTNESS)
+    {
+        result.amount = load_number_track_config(json, "amount");
+    }
+    else if (result.kind == ColorMapEffectKind::PING_PONG)
     {
         result.offset = load_number_track_config(json, "offset");
     }

@@ -408,6 +408,70 @@ TEST(TestJsonSchema, colorMapEffectTrackAccepted)
 })"));
 }
 
+TEST(TestJsonSchema, colorMapBrightnessEffectAccepted)
+{
+    EXPECT_TRUE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 3,
+  "tracks": [
+    {
+      "parameter": "colors",
+      "type": "color-map",
+      "format": "at-file",
+      "output": "colors-%04d.map",
+      "source": "base.map",
+      "effects": [
+        {
+          "kind": "brightness",
+          "amount": {
+            "keys": [
+              { "frame": 0, "value": 1.0 },
+              { "frame": 2, "value": 2.0 }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+})"));
+}
+
+TEST(TestJsonSchema, colorMapBrightnessEffectRequiresAmount)
+{
+    EXPECT_FALSE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 3,
+  "tracks": [
+    {
+      "parameter": "colors",
+      "type": "color-map",
+      "format": "at-file",
+      "output": "colors-%04d.map",
+      "source": "base.map",
+      "effects": [
+        { "kind": "brightness" }
+      ]
+    }
+  ]
+})"));
+}
+
 TEST(TestJsonSchema, colorMapGradientSourceAccepted)
 {
     EXPECT_TRUE(validates_config_text(R"({

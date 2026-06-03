@@ -349,9 +349,26 @@
     "color-map-effect": {
       "description": "One transformation applied to a color map.",
       "oneOf": [
+        { "$ref": "#/$defs/brightness-color-map-effect" },
         { "$ref": "#/$defs/reverse-color-map-effect" },
         { "$ref": "#/$defs/ping-pong-color-map-effect" }
       ]
+    },
+    "brightness-color-map-effect": {
+      "description": "Effect that scales every RGB component by a keyed amount.",
+      "type": "object",
+      "required": [ "kind", "amount" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "brightness",
+          "description": "Scale RGB components by a keyed amount."
+        },
+        "amount": {
+          "description": "Keyed brightness multiplier.",
+          "$ref": "#/$defs/number-track"
+        }
+      }
     },
     "reverse-color-map-effect": {
       "description": "Effect that reverses a full color map or one inclusive range.",

@@ -43,6 +43,7 @@ struct PwmConfig
 
 enum class ColorMapEffectKind
 {
+    BRIGHTNESS,
     REVERSE,
     PING_PONG
 };
@@ -80,6 +81,7 @@ struct ColorMapEffectConfig
 {
     ColorMapEffectKind kind{ColorMapEffectKind::REVERSE};
     std::optional<ColorMapRangeConfig> range;
+    std::optional<NumberTrackConfig> amount;
     std::optional<NumberTrackConfig> offset;
 };
 

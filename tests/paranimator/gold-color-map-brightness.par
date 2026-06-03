@@ -1,0 +1,44 @@
+frame-0001 {
+    reset
+    type=mandel
+    center-mag=-0.5/0/1
+    params=0/0
+    inside=0
+    sound=no
+    maxiter=678
+    colors=@brightness-0001.map
+    batch=yes
+    savename=frame-0001.gif
+    overwrite=yes
+    video=F6
+}
+
+frame-0002 {
+    reset
+    type=mandel
+    center-mag=-0.5/0/1
+    params=0/0
+    inside=0
+    sound=no
+    maxiter=678
+    colors=@brightness-0002.map
+    batch=yes
+    savename=frame-0002.gif
+    overwrite=yes
+    video=F6
+}
+
+frame-0003 {
+    reset
+    type=mandel
+    center-mag=-0.5/0/1
+    params=0/0
+    inside=0
+    sound=no
+    maxiter=678
+    colors=@brightness-0003.map
+    batch=yes
+    savename=frame-0003.gif
+    overwrite=yes
+    video=F6
+}

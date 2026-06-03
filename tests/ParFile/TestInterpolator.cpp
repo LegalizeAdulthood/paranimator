@@ -350,6 +350,41 @@ TEST_F(TestInterpolator, colorMapGradientSourceWritesGeneratedMap)
     EXPECT_EQ("@colors-0001.map", it->value);
 }
 
+TEST_F(TestInterpolator, colorMapBrightnessEffectWritesGeneratedMap)
+{
+    const std::filesystem::path root{std::filesystem::path{TestParFile::TEST_OUTPUT_DIRECTORY} / "color-map-brightness"};
+    const std::filesystem::path output{root / "output"};
+    const std::filesystem::path base_map{root / "input" / "base.map"};
+    std::filesystem::remove_all(root);
+    write_map_file(base_map, solid_color(100, 120, 200));
+    ParFile::ColorMapEffectConfig brightness;
+    brightness.kind = ParFile::ColorMapEffectKind::BRIGHTNESS;
+    brightness.amount = ParFile::NumberTrackConfig{{{0, 1.0}, {2, 2.0}}};
+    ParFile::ColorMapConfig color_map;
+    color_map.format = ParFile::TrackFormat::AT_FILE;
+    color_map.output = "colors-%04d.map";
+    color_map.source = base_map.string();
+    color_map.effects = {brightness};
+    m_config_data.output.directory = output.string();
+    m_config_data.num_frames = 3;
+    m_config_data.tracks = {{"colors", {}, ParFile::TrackMode::KEYFRAMES, {}, ParFile::TrackKind::COLOR_MAP,
+        color_map}};
+    m_config = m_config_data;
+    m_lerper = ParFile::Interpolator{m_config};
+
+    static_cast<void>(m_lerper());
+    const ParFile::ParSet middle_frame{m_lerper()};
+
+    const ParFile::ColorMap middle{read_map_file(output / "map" / "colors-0002.map")};
+    EXPECT_EQ(150, middle[0].red);
+    EXPECT_EQ(180, middle[0].green);
+    EXPECT_EQ(255, middle[0].blue);
+    const auto it{std::find_if(middle_frame.params.begin(), middle_frame.params.end(),
+        [](const ParFile::Parameter &param) { return param.name == "colors"; })};
+    ASSERT_NE(middle_frame.params.end(), it);
+    EXPECT_EQ("@colors-0002.map", it->value);
+}
+
 TEST_F(TestInterpolator, colorMapGradientSourceRejectsInvalidColorSpec)
 {
     ParFile::ColorMapConfig color_map;
