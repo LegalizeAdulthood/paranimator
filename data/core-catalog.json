@@ -32,6 +32,13 @@
       "extrapolate": "clamp",
       "min": 0,
       "max": 1000
+    },
+    "inside": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "bof60", "zmag", "epscross", "startrail" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
     }
   },
   "fractal-types": {

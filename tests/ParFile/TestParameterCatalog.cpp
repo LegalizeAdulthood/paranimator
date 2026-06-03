@@ -63,7 +63,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
 {
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
-    EXPECT_EQ(5U, catalog.parameters.size());
+    EXPECT_EQ(6U, catalog.parameters.size());
     EXPECT_EQ(1U, catalog.fractal_types.size());
     EXPECT_EQ(1U, catalog.formula_entries.size());
 }
@@ -147,6 +147,24 @@ TEST(TestParameterCatalog, bailoutMetadataLoads)
     ASSERT_TRUE(metadata.max);
     EXPECT_EQ(0, *metadata.min);
     EXPECT_EQ(1000, *metadata.max);
+}
+
+TEST(TestParameterCatalog, insideMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("inside")};
+
+    EXPECT_EQ("inside", metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, metadata.type);
+    ASSERT_TRUE(metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::RAW, *metadata.format);
+    ASSERT_TRUE(metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *metadata.default_curve);
+    ASSERT_TRUE(metadata.extrapolate);
+    EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
+    ASSERT_EQ(4U, metadata.values.size());
+    EXPECT_EQ("bof60", metadata.values[0]);
+    EXPECT_EQ("zmag", metadata.values[1]);
 }
 
 TEST(TestParameterCatalog, typedCatalogFindsMetadataByName)
@@ -261,7 +279,7 @@ TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
     EXPECT_EQ(ParFile::ParameterType::COMPLEX, read_metadata(R"("type":"complex")").type);
     EXPECT_EQ(ParFile::ParameterType::CORNERS, read_metadata(R"("type":"corners")").type);
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, read_metadata(R"("type":"double")").type);
-    EXPECT_EQ(ParFile::ParameterType::ENUM, read_metadata(R"("type":"enum")").type);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, read_metadata(R"("type":"enum","values":["a"])").type);
     EXPECT_EQ(ParFile::ParameterType::INTEGER, read_metadata(R"("type":"integer")").type);
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, read_metadata(R"("type":"numeric-tuple")").type);
     EXPECT_EQ(ParFile::ParameterType::POINT2, read_metadata(R"("type":"point2")").type);
@@ -323,6 +341,15 @@ TEST(TestParameterCatalog, optionalNormalizeDecodes)
     EXPECT_TRUE(metadata.normalize);
 }
 
+TEST(TestParameterCatalog, enumValuesDecode)
+{
+    const ParFile::ParameterMetadata metadata{read_metadata(R"("type":"enum","values":["a","b"])")};
+
+    ASSERT_EQ(2U, metadata.values.size());
+    EXPECT_EQ("a", metadata.values[0]);
+    EXPECT_EQ("b", metadata.values[1]);
+}
+
 TEST(TestParameterCatalog, unknownParameterTypeStringRejected)
 {
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"unknown")")), std::runtime_error);
@@ -361,6 +388,24 @@ TEST(TestParameterCatalog, invalidNormalizeRejected)
 {
     EXPECT_THROW(
         ParFile::read_parameter_catalog(catalog_text(R"("type":"vector3","normalize":"true")")), std::runtime_error);
+}
+
+TEST(TestParameterCatalog, enumMissingValuesRejected)
+{
+    EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"enum")")), std::runtime_error);
+}
+
+TEST(TestParameterCatalog, enumValuesRequireEnumType)
+{
+    EXPECT_THROW(
+        ParFile::read_parameter_catalog(catalog_text(R"("type":"integer","values":["a"])")), std::runtime_error);
+}
+
+TEST(TestParameterCatalog, invalidEnumValuesRejected)
+{
+    EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"enum","values":"a")")), std::runtime_error);
+    EXPECT_THROW(
+        ParFile::read_parameter_catalog(catalog_text(R"("type":"enum","values":["a", 1])")), std::runtime_error);
 }
 
 TEST(TestParameterCatalog, unknownAnimatedParameterRejected)

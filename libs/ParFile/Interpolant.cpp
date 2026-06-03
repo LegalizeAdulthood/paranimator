@@ -268,6 +268,14 @@ void validate_discrete_curve(std::string_view type, Curve curve)
     }
 }
 
+void validate_hold_curve(std::string_view type, Curve curve)
+{
+    if (curve != Curve::HOLD)
+    {
+        throw std::runtime_error("Unsupported " + std::string{type} + " curve '" + std::string{to_string(curve)} + "'");
+    }
+}
+
 int positive_mod(int value, int modulus)
 {
     const int result{value % modulus};
@@ -897,6 +905,42 @@ std::string NumericTupleInterpolant::step()
     return format_slash_doubles(values);
 }
 
+class EnumInterpolant : public Base
+{
+public:
+    EnumInterpolant(
+        const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve, int num_steps);
+    ~EnumInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    int m_to_frame{};
+    std::string m_from;
+    std::string m_to;
+    Curve m_curve{};
+};
+
+EnumInterpolant::EnumInterpolant(
+    const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve, int num_steps) :
+    Base(metadata.name, num_steps),
+    m_to_frame(keys[1].frame),
+    m_from(keys[0].value),
+    m_to(keys[1].value),
+    m_curve(curve)
+{
+    validate_hold_curve("enum", m_curve);
+    validate_enum_value(metadata, m_from);
+    validate_enum_value(metadata, m_to);
+}
+
+std::string EnumInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+    return frame >= m_to_frame ? m_to : m_from;
+}
+
 class FunctionEnumInterpolant : public Base
 {
 public:
@@ -1035,7 +1079,7 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
         {
             return std::make_shared<FunctionEnumInterpolant>(track, curve, num_steps);
         }
-        break;
+        return std::make_shared<EnumInterpolant>(metadata, keys, curve, num_steps);
     }
     }
 

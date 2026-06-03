@@ -145,6 +145,31 @@ std::optional<bool> load_optional_bool(const Object &json, std::string_view fiel
     return json.at(key).get<bool>();
 }
 
+std::vector<std::string> load_optional_string_array(const Object &json, std::string_view field)
+{
+    const std::string key{field};
+    if (!json.contains(key))
+    {
+        return {};
+    }
+    if (!json.at(key).is_array())
+    {
+        throw std::runtime_error("Invalid parameter metadata, field '" + std::string{field} + "' is not an array");
+    }
+
+    std::vector<std::string> result;
+    for (const Object &value : json.at(key))
+    {
+        if (!value.is_string())
+        {
+            throw std::runtime_error(
+                "Invalid parameter metadata, field '" + std::string{field} + "' contains a non-string value");
+        }
+        result.emplace_back(value.get<std::string>());
+    }
+    return result;
+}
+
 std::optional<int> tuple_alias_arity(ParameterType type)
 {
     switch (type)
@@ -174,6 +199,22 @@ void apply_tuple_alias_metadata(ParameterMetadata &metadata)
     metadata.arity = arity;
 }
 
+void validate_enum_metadata(const ParameterMetadata &metadata)
+{
+    if (metadata.type == ParameterType::ENUM)
+    {
+        if (metadata.values.empty())
+        {
+            throw std::runtime_error("Invalid parameter metadata '" + metadata.name + "', missing enum values");
+        }
+        return;
+    }
+    if (!metadata.values.empty())
+    {
+        throw std::runtime_error("Invalid parameter metadata '" + metadata.name + "', values require enum type");
+    }
+}
+
 ParameterMetadata load_metadata(std::string_view name, const Object &json)
 {
     if (!json.is_object())
@@ -198,9 +239,11 @@ ParameterMetadata load_metadata(std::string_view name, const Object &json)
     }
     result.min = load_optional_number(json, "min");
     result.max = load_optional_number(json, "max");
+    result.values = load_optional_string_array(json, "values");
     result.arity = load_optional_positive_int(json, "arity");
     result.normalize = load_optional_bool(json, "normalize").value_or(false);
     apply_tuple_alias_metadata(result);
+    validate_enum_metadata(result);
     return result;
 }
 

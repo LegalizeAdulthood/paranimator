@@ -83,6 +83,10 @@
           "description": "Optional inclusive maximum numeric component value.",
           "type": "number"
         },
+        "values": {
+          "description": "Legal values for enum parameters.",
+          "$ref": "#/$defs/enum-values"
+        },
         "arity": {
           "description": "Required component count for tuple-like values.",
           "type": "integer",
@@ -92,7 +96,13 @@
           "description": "Normalize vector alias values after interpolation.",
           "type": "boolean"
         }
-      }
+      },
+      "allOf": [
+        {
+          "description": "Enum value requirements for top-level parameter metadata.",
+          "$ref": "#/$defs/enum-values-rule"
+        }
+      ]
     },
     "params-slot-metadata": {
       "description": "Metadata for one scalar slot in an Id params= value.",
@@ -133,6 +143,10 @@
           "description": "Optional inclusive maximum numeric slot value.",
           "type": "number"
         },
+        "values": {
+          "description": "Legal values for enum params= slot values.",
+          "$ref": "#/$defs/enum-values"
+        },
         "arity": {
           "description": "Required component count for tuple-like slot values.",
           "type": "integer",
@@ -142,7 +156,13 @@
           "description": "Normalize vector alias slot values after interpolation.",
           "type": "boolean"
         }
-      }
+      },
+      "allOf": [
+        {
+          "description": "Enum value requirements for params= slot metadata.",
+          "$ref": "#/$defs/enum-values-rule"
+        }
+      ]
     },
     "params-group-metadata": {
       "description": "Metadata for a named group of slots in an Id params= value.",
@@ -174,6 +194,10 @@
           "description": "Optional inclusive maximum numeric component value.",
           "type": "number"
         },
+        "values": {
+          "description": "Legal values for enum params= group values.",
+          "$ref": "#/$defs/enum-values"
+        },
         "arity": {
           "description": "Required component count for tuple-like group values.",
           "type": "integer",
@@ -192,6 +216,46 @@
             "type": "integer",
             "minimum": 0
           }
+        }
+      },
+      "allOf": [
+        {
+          "description": "Enum value requirements for params= group metadata.",
+          "$ref": "#/$defs/enum-values-rule"
+        }
+      ]
+    },
+    "enum-values": {
+      "description": "Declared value set for a regular enum parameter.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "description": "One legal enum string.",
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "enum-values-rule": {
+      "description": "Requires enum values only for regular enum metadata.",
+      "if": {
+        "description": "Metadata whose type is enum.",
+        "properties": {
+          "type": {
+            "const": "enum",
+            "description": "Regular enum metadata."
+          }
+        },
+        "required": [ "type" ]
+      },
+      "then": {
+        "description": "Enum metadata must declare legal values.",
+        "required": [ "values" ]
+      },
+      "else": {
+        "description": "Non-enum metadata must not declare enum values.",
+        "not": {
+          "description": "A values field on non-enum metadata.",
+          "required": [ "values" ]
         }
       }
     },
