@@ -73,7 +73,7 @@
       "description": "Animated parameter tracks applied to the source par entry.",
       "type": "array",
       "items": {
-        "description": "One animated parameter target and its keyframes.",
+        "description": "One animated parameter target and its value source.",
         "oneOf": [
           { "$ref": "#/$defs/value-track" },
           { "$ref": "#/$defs/pwm-track" },
@@ -114,10 +114,22 @@
       ]
     },
     "value-track": {
-      "description": "Parameter track defined by keyed parameter values.",
+      "description": "Parameter track defined by keyed values or a path generator.",
       "type": "object",
-      "required": [ "parameter", "keys" ],
+      "required": [ "parameter" ],
       "additionalProperties": false,
+      "oneOf": [
+        {
+          "description": "Value track defined by explicit keyframes.",
+          "required": [ "keys" ],
+          "not": { "required": [ "path" ] }
+        },
+        {
+          "description": "Value track defined by a path generator.",
+          "required": [ "path" ],
+          "not": { "required": [ "keys" ] }
+        }
+      ],
       "properties": {
         "parameter": {
           "description": "Catalog parameter key, fractal params key, or formula metadata key to animate.",
@@ -131,6 +143,53 @@
           "items": {
             "$ref": "#/$defs/value-keyframe"
           }
+        },
+        "path": {
+          "description": "Path generator that produces full-range keyframes for this track.",
+          "$ref": "#/$defs/path-generator"
+        }
+      }
+    },
+    "path-generator": {
+      "description": "Full-range value generator used instead of explicit keyframes.",
+      "oneOf": [
+        { "$ref": "#/$defs/constant-path-generator" },
+        { "$ref": "#/$defs/line-path-generator" }
+      ]
+    },
+    "constant-path-generator": {
+      "description": "Path generator that emits one fixed value for every frame.",
+      "type": "object",
+      "required": [ "kind", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "constant",
+          "description": "Generate a full-range constant value path."
+        },
+        "value": {
+          "description": "Parameter value text emitted for every frame.",
+          "type": "string"
+        }
+      }
+    },
+    "line-path-generator": {
+      "description": "Path generator that linearly interpolates from one value to another.",
+      "type": "object",
+      "required": [ "kind", "from", "to" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "line",
+          "description": "Generate a full-range linear value path."
+        },
+        "from": {
+          "description": "Parameter value text at frame zero.",
+          "type": "string"
+        },
+        "to": {
+          "description": "Parameter value text at the final frame.",
+          "type": "string"
         }
       }
     },

@@ -196,6 +196,74 @@ static std::vector<KeyframeConfig> load_keyframes(const Object &json, TrackMode 
     return result;
 }
 
+enum class PathKind
+{
+    CONSTANT,
+    LINE
+};
+
+struct PathConfig
+{
+    PathKind kind{PathKind::CONSTANT};
+    std::string value;
+    std::string from;
+    std::string to;
+};
+
+static PathKind load_path_kind(const Object &json)
+{
+    const std::string kind{load_string(json, "kind")};
+    if (kind == "constant")
+    {
+        return PathKind::CONSTANT;
+    }
+    if (kind == "line")
+    {
+        return PathKind::LINE;
+    }
+    throw std::runtime_error("Invalid config, unknown path kind '" + kind + "'");
+}
+
+static PathConfig load_path_config(const Object &json)
+{
+    if (!json.is_object())
+    {
+        throw std::runtime_error("Invalid config, field 'path' is not an object");
+    }
+
+    PathConfig result;
+    result.kind = load_path_kind(json);
+    switch (result.kind)
+    {
+    case PathKind::CONSTANT:
+        result.value = load_string(json, "value");
+        break;
+    case PathKind::LINE:
+        result.from = load_string(json, "from");
+        result.to = load_string(json, "to");
+        break;
+    }
+    return result;
+}
+
+static std::vector<KeyframeConfig> load_path_keyframes(const Object &json, int num_frames)
+{
+    if (num_frames < 2)
+    {
+        throw std::runtime_error("Invalid config, path tracks require at least two frames");
+    }
+
+    const PathConfig path{load_path_config(json)};
+    switch (path.kind)
+    {
+    case PathKind::CONSTANT:
+        return {{0, path.value}, {num_frames - 1, path.value, Curve::HOLD}};
+    case PathKind::LINE:
+        return {{0, path.from}, {num_frames - 1, path.to, Curve::LINEAR}};
+    }
+    throw std::runtime_error("Invalid config, unknown path kind");
+}
+
 static ColorMapEffectKind load_color_map_effect_kind(const Object &json)
 {
     const std::string kind{load_string(json, "kind")};
@@ -478,7 +546,7 @@ static ColorMapConfig load_color_map_config(const Object &json)
     return result;
 }
 
-static TrackConfig load_track_config(const Object &json)
+static TrackConfig load_track_config(const Object &json, int num_frames)
 {
     TrackConfig result;
     result.parameter = load_string(json, "parameter");
@@ -492,9 +560,21 @@ static TrackConfig load_track_config(const Object &json)
     {
         result.pwm = load_pwm_config(json);
     }
+    if (json.contains("keys") && json.contains("path"))
+    {
+        throw std::runtime_error("Invalid config, track cannot contain both 'keys' and 'path'");
+    }
     if (json.contains("keys"))
     {
         result.keys = load_keyframes(json, result.mode);
+    }
+    else if (json.contains("path"))
+    {
+        if (result.kind != TrackKind::PARAMETER || result.mode != TrackMode::KEYFRAMES)
+        {
+            throw std::runtime_error("Invalid config, path is only valid for parameter tracks");
+        }
+        result.keys = load_path_keyframes(json.at("path"), num_frames);
     }
     else if (result.kind != TrackKind::COLOR_MAP)
     {
@@ -503,7 +583,7 @@ static TrackConfig load_track_config(const Object &json)
     return result;
 }
 
-static std::vector<TrackConfig> load_tracks(const Object &json, std::string_view name)
+static std::vector<TrackConfig> load_tracks(const Object &json, std::string_view name, int num_frames)
 {
     const std::string key{name};
     if (!json.contains(key) || !json.at(key).is_array())
@@ -517,7 +597,7 @@ static std::vector<TrackConfig> load_tracks(const Object &json, std::string_view
         {
             throw std::runtime_error("Invalid config, array '" + std::string{name} + "' contains non-object value");
         }
-        result.emplace_back(load_track_config(item));
+        result.emplace_back(load_track_config(item, num_frames));
     }
     return result;
 }
@@ -531,7 +611,7 @@ Config read_config(std::string_view json_text)
     result.output = load_output_config(json);
     result.video = load_string(json, "video");
     result.num_frames = load_int(json, "num-frames");
-    result.tracks = load_tracks(json, "tracks");
+    result.tracks = load_tracks(json, "tracks", result.num_frames);
 
     if (json.contains("parallel"))
     {

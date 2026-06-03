@@ -8,6 +8,7 @@
 #include <ParFile/Config.h>
 
 #include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -15,9 +16,12 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace
 {
+
+using Object = nlohmann::json;
 
 ParFile::Config config_data()
 {
@@ -29,6 +33,21 @@ ParFile::Config config_data()
         TestParFile::TEST_VIDEO_MODE,                                         //
         60,                                                                   //
         {{"center-mag", {{0, "-0.5/0/1"}, {59, "-0.5/0/10"}}}}};              //
+}
+
+ParFile::Config parsed_config(std::string_view source_name, int num_frames, const Object &track)
+{
+    const Object json{{"parameter-catalogs", Object::array({TestParFile::CORE_CATALOG_JSON})},
+        {"source", Object{{"file", TestParFile::FROM_PAR}, {"name", std::string{source_name}}}},
+        {"output",
+            Object{{"directory", TestParFile::TEST_OUTPUT_DIRECTORY},
+                {"par", TestParFile::TEST_OUTPUT_PAR},
+                {"entry", TestParFile::TEST_OUTPUT_ENTRY},
+                {"script", TestParFile::TEST_OUTPUT_SCRIPT}}},
+        {"video", TestParFile::TEST_VIDEO_MODE},
+        {"num-frames", num_frames},
+        {"tracks", Object::array({track})}};
+    return ParFile::read_config(json.dump());
 }
 
 struct TestInterpolator : testing::Test
@@ -64,6 +83,14 @@ void set_param(ParFile::ParSet &par_set, const std::string &name, const std::str
         [&](const ParFile::Parameter &param) { return param.name == name; })};
     ASSERT_NE(par_set.params.end(), it);
     it->value = value;
+}
+
+std::string parameter_value(const ParFile::ParSet &par_set, std::string_view name)
+{
+    const std::string key{name};
+    const auto it{std::find_if(par_set.params.begin(), par_set.params.end(),
+        [&](const ParFile::Parameter &param) { return param.name == key; })};
+    return it == par_set.params.end() ? std::string{} : it->value;
 }
 
 ParFile::ColorMap solid_color(int red, int green, int blue)
@@ -144,6 +171,44 @@ TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
     frame = m_lerper();
 
     ASSERT_EQ(expected, frame);
+}
+
+TEST_F(TestInterpolator, constantPathReturnsSameValueEveryFrame)
+{
+    m_config = parsed_config(
+        "Mandel_Demo", 3, Object{{"parameter", "maxiter"}, {"path", Object{{"kind", "constant"}, {"value", "321"}}}});
+    m_lerper = ParFile::Interpolator{m_config};
+
+    EXPECT_EQ("321", parameter_value(m_lerper(), "maxiter"));
+    EXPECT_EQ("321", parameter_value(m_lerper(), "maxiter"));
+    EXPECT_EQ("321", parameter_value(m_lerper(), "maxiter"));
+}
+
+TEST_F(TestInterpolator, linePathMatchesEquivalentKeyedLinearTrack)
+{
+    const Object path_track{
+        {"parameter", "maxiter"}, {"path", Object{{"kind", "line"}, {"from", "100"}, {"to", "200"}}}};
+    const Object keyed_track{{"parameter", "maxiter"},
+        {"keys",
+            Object::array({Object{{"frame", 0}, {"value", "100"}},
+                Object{{"frame", 2}, {"value", "200"}, {"curve", "linear"}}})}};
+    ParFile::Interpolator path_lerper{parsed_config("Mandel_Demo", 3, path_track)};
+    ParFile::Interpolator keyed_lerper{parsed_config("Mandel_Demo", 3, keyed_track)};
+
+    EXPECT_EQ(keyed_lerper(), path_lerper());
+    EXPECT_EQ(keyed_lerper(), path_lerper());
+    EXPECT_EQ(keyed_lerper(), path_lerper());
+}
+
+TEST_F(TestInterpolator, complexLinePathPreservesSlashPairFormatting)
+{
+    m_config = parsed_config(
+        "Julia_Demo", 3, Object{{"parameter", "params.c"}, {"path", Object{{"kind", "line"}, {"from", "0/1"}, {"to", "2/3"}}}});
+    m_lerper = ParFile::Interpolator{m_config};
+
+    EXPECT_EQ("0/1", parameter_value(m_lerper(), "params"));
+    EXPECT_EQ("1/2", parameter_value(m_lerper(), "params"));
+    EXPECT_EQ("2/3", parameter_value(m_lerper(), "params"));
 }
 
 TEST_F(TestInterpolator, paramsTrackWritesOneParamsAssignment)

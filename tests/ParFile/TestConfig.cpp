@@ -239,6 +239,65 @@ TEST(TestConfig, jsonDeserializesOneTrack)
     EXPECT_EQ(ParFile::Curve::HOLD, *config.tracks[0].keys[1].curve);
 }
 
+TEST(TestConfig, jsonDeserializesConstantPathTrack)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array(
+        {Object{{"parameter", "maxiter"}, {"path", Object{{"kind", "constant"}, {"value", "321"}}}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    EXPECT_EQ("maxiter", config.tracks[0].parameter);
+    ASSERT_EQ(2U, config.tracks[0].keys.size());
+    EXPECT_EQ(0, config.tracks[0].keys[0].frame);
+    EXPECT_EQ("321", config.tracks[0].keys[0].value);
+    EXPECT_FALSE(config.tracks[0].keys[0].curve);
+    EXPECT_EQ(59, config.tracks[0].keys[1].frame);
+    EXPECT_EQ("321", config.tracks[0].keys[1].value);
+    ASSERT_TRUE(config.tracks[0].keys[1].curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *config.tracks[0].keys[1].curve);
+}
+
+TEST(TestConfig, jsonDeserializesLinePathTrack)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array(
+        {Object{{"parameter", "params.c"}, {"path", Object{{"kind", "line"}, {"from", "0/1"}, {"to", "2/3"}}}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    EXPECT_EQ("params.c", config.tracks[0].parameter);
+    ASSERT_EQ(2U, config.tracks[0].keys.size());
+    EXPECT_EQ(0, config.tracks[0].keys[0].frame);
+    EXPECT_EQ("0/1", config.tracks[0].keys[0].value);
+    EXPECT_FALSE(config.tracks[0].keys[0].curve);
+    EXPECT_EQ(59, config.tracks[0].keys[1].frame);
+    EXPECT_EQ("2/3", config.tracks[0].keys[1].value);
+    ASSERT_TRUE(config.tracks[0].keys[1].curve);
+    EXPECT_EQ(ParFile::Curve::LINEAR, *config.tracks[0].keys[1].curve);
+}
+
+TEST(TestConfig, jsonRejectsTrackWithKeysAndPath)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"parameter", "maxiter"},
+        {"path", Object{{"kind", "constant"}, {"value", "321"}}},
+        {"keys", Object::array({Object{{"frame", 0}, {"value", "100"}}, Object{{"frame", 59}, {"value", "200"}}})}}});
+
+    expect_invalid(json);
+}
+
+TEST(TestConfig, jsonRejectsUnknownPathKind)
+{
+    Object json = valid_json();
+    json["tracks"] =
+        Object::array({Object{{"parameter", "maxiter"}, {"path", Object{{"kind", "unknown"}, {"value", "321"}}}}});
+
+    expect_invalid(json);
+}
+
 TEST(TestConfig, jsonDeserializesPwmTrack)
 {
     Object json = valid_json();

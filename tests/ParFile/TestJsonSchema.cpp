@@ -117,6 +117,25 @@ std::string config_with_color_map_effect(std::string_view effect)
 })";
 }
 
+std::string config_with_track(std::string_view track)
+{
+    return R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "source": { "file": "from.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 3,
+  "tracks": [
+    )" + std::string{track} + R"(
+  ]
+})";
+}
+
 std::string remap_indices_json()
 {
     std::string result{"["};
@@ -325,6 +344,32 @@ TEST(TestJsonSchema, pwmTrackAccepted)
     }
   ]
 })"));
+}
+
+TEST(TestJsonSchema, pathTrackAccepted)
+{
+    EXPECT_TRUE(validates_config_text(
+        config_with_track(R"({"parameter":"maxiter","path":{"kind":"constant","value":"321"}})")));
+    EXPECT_TRUE(validates_config_text(
+        config_with_track(R"({"parameter":"maxiter","path":{"kind":"line","from":"100","to":"200"}})")));
+}
+
+TEST(TestJsonSchema, pathTrackRejectsKeysAndPath)
+{
+    EXPECT_FALSE(validates_config_text(config_with_track(R"({
+      "parameter": "maxiter",
+      "path": { "kind": "constant", "value": "321" },
+      "keys": [
+        { "frame": 0, "value": "100" },
+        { "frame": 2, "value": "200" }
+      ]
+    })")));
+}
+
+TEST(TestJsonSchema, unknownPathKindRejected)
+{
+    EXPECT_FALSE(validates_config_text(
+        config_with_track(R"({"parameter":"maxiter","path":{"kind":"unknown","value":"321"}})")));
 }
 
 TEST(TestJsonSchema, unknownTrackModeRejected)
