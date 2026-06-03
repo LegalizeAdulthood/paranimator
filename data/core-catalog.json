@@ -60,5 +60,41 @@
         }
       }
     }
+  },
+  "formula-entries": {
+    "MandelbrotMix4": {
+      "params": {
+        "knobs": {
+          "bailout": {
+            "type": "real",
+            "variable": "p1.real",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          },
+          "scale factor": {
+            "type": "real",
+            "variable": "p1.imag",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          },
+          "c": {
+            "type": "complex",
+            "variable": "p2",
+            "format": "slash-pair",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          },
+          "iterations": {
+            "type": "integer",
+            "variable": "p3.real",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          }
+        }
+      }
+    }
   }
 }

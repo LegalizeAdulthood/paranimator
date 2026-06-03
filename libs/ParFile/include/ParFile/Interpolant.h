@@ -20,6 +20,7 @@ public:
     virtual ~Interpolant() = default;
 
     virtual const std::string &name() const = 0;
+    virtual const std::vector<int> &output_slots() const = 0;
     virtual bool has_value() const = 0;
     virtual std::string step() = 0;
 };

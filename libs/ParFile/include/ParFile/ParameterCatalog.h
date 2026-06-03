@@ -49,14 +49,34 @@ struct FractalTypeMetadata
     FractalParamsMetadata params;
 };
 
+struct FormulaParamsKnobMetadata
+{
+    std::string name;
+    ParameterMetadata metadata;
+    std::vector<int> slots;
+};
+
+struct FormulaParamsMetadata
+{
+    std::vector<FormulaParamsKnobMetadata> knobs;
+};
+
+struct FormulaEntryMetadata
+{
+    std::string name;
+    FormulaParamsMetadata params;
+};
+
 struct ParameterCatalog
 {
     const ParameterMetadata &metadata(std::string_view name) const;
     const ParamsSlotMetadata &params_slot(std::string_view fractal_type, int slot) const;
     const ParamsGroupMetadata &params_group(std::string_view fractal_type, std::string_view group) const;
+    const FormulaParamsKnobMetadata &formula_params_knob(std::string_view formula_name, std::string_view knob) const;
 
     std::vector<ParameterMetadata> parameters;
     std::vector<FractalTypeMetadata> fractal_types;
+    std::vector<FormulaEntryMetadata> formula_entries;
 };
 
 ParameterCatalog read_parameter_catalog(std::string_view json_text);

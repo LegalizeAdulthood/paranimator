@@ -127,6 +127,25 @@ TEST_F(TestInterpolator, paramsTrackWritesOneParamsAssignment)
     ASSERT_EQ(expected, frame);
 }
 
+TEST_F(TestInterpolator, formulaParamsTracksMergeOneParamsAssignment)
+{
+    m_config_data.source.name = "Formula_Demo";
+    m_config_data.num_frames = 3;
+    m_config_data.tracks = {
+        {"MandelbrotMix4.bailout", {{0, "10"}, {2, "20"}}}, {"MandelbrotMix4.c", {{0, "-1/-2"}, {2, "-3/-4"}}}};
+    m_config = m_config_data;
+    m_lerper = ParFile::Interpolator{m_config};
+    ParFile::ParSet expected{m_lerper.source()};
+    set_param(expected, "params", "15/3/-2/-3/0/0");
+    expected.name = "frame-0002";
+    add_expected_params(expected, expected.name + ".gif");
+    ParFile::ParSet frame{m_lerper()};
+
+    frame = m_lerper();
+
+    ASSERT_EQ(expected, frame);
+}
+
 TEST_F(TestInterpolator, multipleTracksHaveIndependentKeys)
 {
     m_config_data.num_frames = 3;

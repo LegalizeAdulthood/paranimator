@@ -9,12 +9,14 @@
 #include <ParFile/ResolvedAnimation.h>
 
 #include <algorithm>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/format.hpp>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace ParFile
@@ -61,6 +63,46 @@ static ResolvedAnimation load_animation(const Config &config)
     return resolve_animation(config, catalog, source);
 }
 
+static std::vector<std::string> split_slash_values(std::string_view value)
+{
+    std::vector<std::string> result;
+    boost::algorithm::split(result, value, [](char c) { return c == '/'; });
+    return result;
+}
+
+static std::string join_slash_values(const std::vector<std::string> &values)
+{
+    std::string result;
+    for (const std::string &value : values)
+    {
+        if (!result.empty())
+        {
+            result += '/';
+        }
+        result += value;
+    }
+    return result;
+}
+
+static void merge_slotted_value(Parameter &param, const std::string &value, const std::vector<int> &slots)
+{
+    std::vector<std::string> current{split_slash_values(param.value)};
+    const std::vector<std::string> update{split_slash_values(value)};
+    if (current.size() < update.size())
+    {
+        current.resize(update.size(), "0");
+    }
+    for (const int slot : slots)
+    {
+        if (slot < 0 || static_cast<std::size_t>(slot) >= update.size())
+        {
+            throw std::runtime_error("Slotted value for '" + param.name + "' is missing slot " + std::to_string(slot));
+        }
+        current[static_cast<std::size_t>(slot)] = update[static_cast<std::size_t>(slot)];
+    }
+    param.value = join_slash_values(current);
+}
+
 std::vector<InterpolantPtr> Interpolator::load_interpolants(const ResolvedAnimation &animation)
 {
     std::vector<InterpolantPtr> result;
@@ -98,6 +140,10 @@ ParSet Interpolator::operator()()
             if (it == par_set.params.end())
             {
                 par_set.params.push_back({lerper->name(), value});
+            }
+            else if (!lerper->output_slots().empty())
+            {
+                merge_slotted_value(*it, value, lerper->output_slots());
             }
             else
             {

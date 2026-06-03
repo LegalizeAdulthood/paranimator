@@ -123,6 +123,92 @@ ParameterMetadata load_metadata(std::string_view name, const Object &json)
     return result;
 }
 
+void load_optional_metadata_fields(ParameterMetadata &metadata, const Object &json)
+{
+    if (const std::optional<std::string> format{load_optional_string(json, "format")})
+    {
+        metadata.format = parse_parameter_format(*format);
+    }
+    if (const std::optional<std::string> curve{load_optional_string(json, "default-curve")})
+    {
+        metadata.default_curve = parse_curve(*curve);
+    }
+    if (const std::optional<std::string> extrapolate{load_optional_string(json, "extrapolate")})
+    {
+        metadata.extrapolate = parse_extrapolate_mode(*extrapolate);
+    }
+    metadata.min = load_optional_number(json, "min");
+    metadata.max = load_optional_number(json, "max");
+}
+
+ParameterType load_formula_knob_type(std::string_view name, const Object &json)
+{
+    const std::string type{load_required_string(json, name, "type")};
+    if (type == "integer")
+    {
+        return ParameterType::INTEGER;
+    }
+    if (type == "real")
+    {
+        return ParameterType::DOUBLE;
+    }
+    if (type == "complex")
+    {
+        return ParameterType::COMPLEX;
+    }
+    throw std::runtime_error("Unknown formula params knob type '" + type + "' for '" + std::string{name} + "'");
+}
+
+ParameterFormat default_formula_knob_format(ParameterType type)
+{
+    if (type == ParameterType::COMPLEX)
+    {
+        return ParameterFormat::SLASH_PAIR;
+    }
+    return ParameterFormat::RAW;
+}
+
+int formula_variable_index(std::string_view variable)
+{
+    if (variable.size() < 2U || variable[0] != 'p' || variable[1] < '1' || variable[1] > '4')
+    {
+        return -1;
+    }
+    return variable[1] - '1';
+}
+
+std::vector<int> load_formula_variable_slots(std::string_view name, ParameterType type, const std::string &variable)
+{
+    const int variable_index{formula_variable_index(variable)};
+    const int base_slot{variable_index * 2};
+    if (type == ParameterType::COMPLEX)
+    {
+        if (variable_index < 0 || variable.size() != 2U)
+        {
+            throw std::runtime_error(
+                "Invalid complex formula params variable '" + variable + "' for '" + std::string{name} + "'");
+        }
+        return {base_slot, base_slot + 1};
+    }
+
+    if (variable_index < 0 || variable.size() <= 3U || variable.substr(2, 1) != ".")
+    {
+        throw std::runtime_error(
+            "Invalid scalar formula params variable '" + variable + "' for '" + std::string{name} + "'");
+    }
+    const std::string component{variable.substr(3)};
+    if (component == "real")
+    {
+        return {base_slot};
+    }
+    if (component == "imag")
+    {
+        return {base_slot + 1};
+    }
+    throw std::runtime_error(
+        "Invalid scalar formula params variable '" + variable + "' for '" + std::string{name} + "'");
+}
+
 std::vector<int> load_slots(std::string_view name, const Object &json)
 {
     const std::string key{"slots"};
@@ -226,6 +312,66 @@ FractalTypeMetadata load_fractal_type(std::string_view name, const Object &json)
     return result;
 }
 
+FormulaParamsKnobMetadata load_formula_params_knob(
+    std::string_view formula_name, std::string_view knob_name, const Object &json)
+{
+    if (!json.is_object())
+    {
+        throw std::runtime_error(
+            "Invalid formula params knob metadata '" + std::string{knob_name} + "', value is not an object");
+    }
+
+    FormulaParamsKnobMetadata result;
+    result.name = std::string{knob_name};
+    result.metadata.name = std::string{formula_name} + "." + std::string{knob_name};
+    result.metadata.type = load_formula_knob_type(knob_name, json);
+    result.metadata.format = default_formula_knob_format(result.metadata.type);
+    load_optional_metadata_fields(result.metadata, json);
+    const std::string variable{load_required_string(json, knob_name, "variable")};
+    result.slots = load_formula_variable_slots(knob_name, result.metadata.type, variable);
+    return result;
+}
+
+FormulaParamsMetadata load_formula_params(std::string_view formula_name, const Object &json)
+{
+    if (!json.is_object())
+    {
+        throw std::runtime_error(
+            "Invalid formula entry metadata '" + std::string{formula_name} + "', params is not an object");
+    }
+
+    FormulaParamsMetadata result;
+    if (json.contains("knobs"))
+    {
+        if (!json.at("knobs").is_object())
+        {
+            throw std::runtime_error(
+                "Invalid formula entry metadata '" + std::string{formula_name} + "', params.knobs is not an object");
+        }
+        for (const auto &[name, knob] : json.at("knobs").items())
+        {
+            result.knobs.emplace_back(load_formula_params_knob(formula_name, name, knob));
+        }
+    }
+    return result;
+}
+
+FormulaEntryMetadata load_formula_entry(std::string_view name, const Object &json)
+{
+    if (!json.is_object())
+    {
+        throw std::runtime_error("Invalid formula entry metadata '" + std::string{name} + "', value is not an object");
+    }
+
+    FormulaEntryMetadata result;
+    result.name = std::string{name};
+    if (json.contains("params"))
+    {
+        result.params = load_formula_params(name, json.at("params"));
+    }
+    return result;
+}
+
 void load_fractal_types(const Object &json, ParameterCatalog &result)
 {
     if (!json.contains("fractal-types"))
@@ -242,6 +388,22 @@ void load_fractal_types(const Object &json, ParameterCatalog &result)
     }
 }
 
+void load_formula_entries(const Object &json, ParameterCatalog &result)
+{
+    if (!json.contains("formula-entries"))
+    {
+        return;
+    }
+    if (!json.at("formula-entries").is_object())
+    {
+        throw std::runtime_error("Invalid parameter catalog, 'formula-entries' is not an object");
+    }
+    for (const auto &[name, formula_entry] : json.at("formula-entries").items())
+    {
+        result.formula_entries.emplace_back(load_formula_entry(name, formula_entry));
+    }
+}
+
 } // namespace
 
 ParameterCatalog read_parameter_catalog(std::string_view json_text)
@@ -254,6 +416,7 @@ ParameterCatalog read_parameter_catalog(std::string_view json_text)
         result.parameters.emplace_back(load_metadata(name, metadata));
     }
     load_fractal_types(json, result);
+    load_formula_entries(json, result);
     return result;
 }
 
@@ -308,6 +471,28 @@ const ParamsGroupMetadata &ParameterCatalog::params_group(std::string_view fract
             "Unknown params group '" + std::string{group} + "' for fractal type '" + std::string{fractal_type} + "'");
     }
     return *group_it;
+}
+
+const FormulaParamsKnobMetadata &ParameterCatalog::formula_params_knob(
+    std::string_view formula_name, std::string_view knob) const
+{
+    const std::string formula_key{formula_name};
+    const auto is_formula{[&](const FormulaEntryMetadata &metadata) { return metadata.name == formula_key; }};
+    const auto formula_it{std::find_if(formula_entries.begin(), formula_entries.end(), is_formula)};
+    if (formula_it == formula_entries.end())
+    {
+        throw std::runtime_error("Unknown formula entry metadata '" + std::string{formula_name} + "'");
+    }
+
+    const std::string knob_key{knob};
+    const auto is_knob{[&](const FormulaParamsKnobMetadata &metadata) { return metadata.name == knob_key; }};
+    const auto knob_it{std::find_if(formula_it->params.knobs.begin(), formula_it->params.knobs.end(), is_knob)};
+    if (knob_it == formula_it->params.knobs.end())
+    {
+        throw std::runtime_error(
+            "Unknown formula params knob '" + std::string{knob} + "' for formula '" + std::string{formula_name} + "'");
+    }
+    return *knob_it;
 }
 
 } // namespace ParFile

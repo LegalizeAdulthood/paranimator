@@ -29,6 +29,23 @@ ParFile::ParameterCatalog catalog_data()
                 {"params.c", ParFile::ParameterType::COMPLEX, ParFile::ParameterFormat::SLASH_PAIR,
                     ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
                 {0, 1}}}}});
+    result.formula_entries.push_back({"MandelbrotMix4",
+        {{{"bailout",
+              {"MandelbrotMix4.bailout", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW,
+                  ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
+              {0}},
+            {"bailout-copy",
+                {"MandelbrotMix4.bailout-copy", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW,
+                    ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
+                {0}},
+            {"scale factor",
+                {"MandelbrotMix4.scale factor", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW,
+                    ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
+                {1}},
+            {"c",
+                {"MandelbrotMix4.c", ParFile::ParameterType::COMPLEX, ParFile::ParameterFormat::SLASH_PAIR,
+                    ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
+                {2, 3}}}}});
     return result;
 }
 
@@ -53,6 +70,18 @@ ParFile::Config julia_config_data(std::string_view parameter)
 ParFile::ParSet julia_source_set()
 {
     return {"source", {{"type", "julia"}, {"params", "0/1/52"}}};
+}
+
+ParFile::Config formula_config_data(std::string_view parameter)
+{
+    ParFile::Config result{config_data()};
+    result.tracks = {{std::string{parameter}, {{0, "10"}, {2, "20"}}}};
+    return result;
+}
+
+ParFile::ParSet formula_source_set()
+{
+    return {"source", {{"type", "formula"}, {"formulaname", "MandelbrotMix4"}, {"params", "0.05/3/-1.5/-2/0/0"}}};
 }
 
 } // namespace
@@ -132,4 +161,55 @@ TEST(TestResolvedAnimation, juliaParamsSlot2Rejected)
 {
     EXPECT_THROW(ParFile::resolve_animation(julia_config_data("params[2]"), catalog_data(), julia_source_set()),
         std::runtime_error);
+}
+
+TEST(TestResolvedAnimation, formulaParamsKnobResolvesFromActiveFormulaname)
+{
+    const ParFile::ResolvedAnimation animation{ParFile::resolve_animation(
+        formula_config_data("MandelbrotMix4.bailout"), catalog_data(), formula_source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    EXPECT_EQ("MandelbrotMix4.bailout", track.parameter);
+    EXPECT_EQ("MandelbrotMix4.bailout", track.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::DOUBLE, track.metadata.type);
+    EXPECT_EQ("0.05/3/-1.5/-2/0/0", track.base_value);
+    EXPECT_EQ("params", track.output_parameter);
+    ASSERT_EQ(1U, track.slots.size());
+    EXPECT_EQ(0, track.slots[0]);
+}
+
+TEST(TestResolvedAnimation, formulaParamsKnobWithSpacesResolvesFromActiveFormulaname)
+{
+    const ParFile::ResolvedAnimation animation{ParFile::resolve_animation(
+        formula_config_data("MandelbrotMix4[\"scale factor\"]"), catalog_data(), formula_source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    EXPECT_EQ("MandelbrotMix4.scale factor", track.metadata.name);
+    ASSERT_EQ(1U, track.slots.size());
+    EXPECT_EQ(1, track.slots[0]);
+}
+
+TEST(TestResolvedAnimation, formulaParamsComplexKnobResolvesToPNSlots)
+{
+    ParFile::Config config{formula_config_data("MandelbrotMix4.c")};
+    config.tracks[0].keys = {{0, "-1/-2"}, {2, "-3/-4"}};
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(config, catalog_data(), formula_source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    EXPECT_EQ(ParFile::ParameterType::COMPLEX, track.metadata.type);
+    ASSERT_EQ(2U, track.slots.size());
+    EXPECT_EQ(2, track.slots[0]);
+    EXPECT_EQ(3, track.slots[1]);
+}
+
+TEST(TestResolvedAnimation, overlappingFormulaParamsKnobsRejected)
+{
+    ParFile::Config config{formula_config_data("MandelbrotMix4.bailout")};
+    config.tracks.push_back({"MandelbrotMix4.bailout-copy", {{0, "11"}, {2, "21"}}});
+
+    EXPECT_THROW(ParFile::resolve_animation(config, catalog_data(), formula_source_set()), std::runtime_error);
 }

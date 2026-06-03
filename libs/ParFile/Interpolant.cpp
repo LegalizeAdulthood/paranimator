@@ -69,6 +69,12 @@ public:
         m_segment(num_steps)
     {
     }
+    Base(std::string_view name, int num_steps, const std::vector<int> &output_slots) :
+        m_name(name),
+        m_output_slots(output_slots),
+        m_segment(num_steps)
+    {
+    }
     Base(const Base &rhs) = delete;
     Base &operator=(const Base &rhs) = delete;
     Base &operator=(Base &&rhs) = delete;
@@ -78,6 +84,10 @@ public:
     {
         return m_name;
     }
+    const std::vector<int> &output_slots() const override
+    {
+        return m_output_slots;
+    }
     bool has_value() const override
     {
         return m_has_value;
@@ -85,6 +95,7 @@ public:
 
 protected:
     std::string m_name;
+    std::vector<int> m_output_slots;
     int m_step{};
     bool m_has_value{true};
     SegmentEvaluator m_segment;
@@ -545,6 +556,63 @@ std::string DoubleInterpolant::step()
     return format_double(value);
 }
 
+class ParamsIntegerInterpolant : public Base
+{
+public:
+    ParamsIntegerInterpolant(const ResolvedTrack &track, Curve curve, int num_steps);
+    ~ParamsIntegerInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    int m_from_frame{};
+    int m_to_frame{};
+    int m_slot{};
+    int m_from{};
+    int m_to{};
+    std::vector<double> m_base_values;
+    Curve m_curve{};
+};
+
+ParamsIntegerInterpolant::ParamsIntegerInterpolant(const ResolvedTrack &track, Curve curve, int num_steps) :
+    Base(track.output_parameter, num_steps, track.slots),
+    m_from_frame(track.keys[0].frame),
+    m_to_frame(track.keys[1].frame),
+    m_from(parse_integer(track.keys[0].value)),
+    m_to(parse_integer(track.keys[1].value)),
+    m_base_values(parse_slash_doubles(track.base_value)),
+    m_curve(curve)
+{
+    if (track.slots.size() != 1U)
+    {
+        throw std::runtime_error("Track '" + track.parameter + "' requires exactly one params slot");
+    }
+    m_slot = track.slots[0];
+    validate_scalar_curve("integer", m_curve);
+    validate_params_slot(track.parameter, m_base_values, m_slot);
+}
+
+std::string ParamsIntegerInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+
+    int value{m_from};
+    if (frame >= m_to_frame)
+    {
+        value = m_to;
+    }
+    else if (frame > m_from_frame && m_curve != Curve::HOLD && m_curve != Curve::STEP)
+    {
+        const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        value = static_cast<int>(std::lround(m_from + fraction * (m_to - m_from)));
+    }
+
+    std::vector<double> values{m_base_values};
+    values[static_cast<std::size_t>(m_slot)] = value;
+    return format_slash_doubles(values);
+}
+
 class ParamsDoubleInterpolant : public Base
 {
 public:
@@ -564,7 +632,7 @@ private:
 };
 
 ParamsDoubleInterpolant::ParamsDoubleInterpolant(const ResolvedTrack &track, Curve curve, int num_steps) :
-    Base(track.output_parameter, num_steps),
+    Base(track.output_parameter, num_steps, track.slots),
     m_from_frame(track.keys[0].frame),
     m_to_frame(track.keys[1].frame),
     m_from(parse_double(track.keys[0].value)),
@@ -623,7 +691,7 @@ private:
 };
 
 ParamsComplexInterpolant::ParamsComplexInterpolant(const ResolvedTrack &track, Curve curve, int num_steps) :
-    Base(track.output_parameter, num_steps),
+    Base(track.output_parameter, num_steps, track.slots),
     m_from_frame(track.keys[0].frame),
     m_to_frame(track.keys[1].frame),
     m_slots(track.slots),
@@ -698,6 +766,11 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
         if (keys[1].curve)
         {
             curve = *keys[1].curve;
+        }
+        if (track.output_parameter == "params")
+        {
+            validate_full_range(metadata.name, keys, num_steps);
+            return std::make_shared<ParamsIntegerInterpolant>(track, curve, num_steps);
         }
         return std::make_shared<IntegerInterpolant>(metadata, keys, curve, track.base_value, num_steps);
     }

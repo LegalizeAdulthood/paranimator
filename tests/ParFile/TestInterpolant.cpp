@@ -443,6 +443,9 @@ TEST(TestInterpolant, paramsComplexInterpolatesSlashPair)
 
     ASSERT_TRUE(interpolant);
     EXPECT_EQ("params", interpolant->name());
+    ASSERT_EQ(2U, interpolant->output_slots().size());
+    EXPECT_EQ(0, interpolant->output_slots()[0]);
+    EXPECT_EQ(1, interpolant->output_slots()[1]);
     EXPECT_EQ("0/1/52", interpolant->step());
     EXPECT_EQ("1/2/52", interpolant->step());
     EXPECT_EQ("2/3/52", interpolant->step());
@@ -457,7 +460,25 @@ TEST(TestInterpolant, paramsSlotPreservesOtherSlots)
 
     ASSERT_TRUE(interpolant);
     EXPECT_EQ("params", interpolant->name());
+    ASSERT_EQ(1U, interpolant->output_slots().size());
+    EXPECT_EQ(0, interpolant->output_slots()[0]);
     EXPECT_EQ("2/1", interpolant->step());
     EXPECT_EQ("3/1", interpolant->step());
     EXPECT_EQ("4/1", interpolant->step());
+}
+
+TEST(TestInterpolant, paramsIntegerInterpolatesAndRoundsSlot)
+{
+    const int num_steps{4};
+    const std::vector<ParFile::KeyframeConfig> keys{{0, "0"}, {3, "2"}};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_params_track("MandelbrotMix4.iterations", ParFile::ParameterType::INTEGER, keys, "0/1/0", {2}),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("params", interpolant->name());
+    EXPECT_EQ("0/1/0", interpolant->step());
+    EXPECT_EQ("0/1/1", interpolant->step());
+    EXPECT_EQ("0/1/1", interpolant->step());
+    EXPECT_EQ("0/1/2", interpolant->step());
 }

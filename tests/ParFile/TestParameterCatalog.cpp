@@ -39,6 +39,12 @@ std::string catalog_text(std::string_view metadata)
     return "{\"parameters\":{\"x\":{" + std::string{metadata} + "}}}";
 }
 
+std::string formula_catalog_text(std::string_view knob)
+{
+    return "{\"parameters\":{},\"formula-entries\":{\"foo\":{\"params\":{\"knobs\":{\"x\":{" + std::string{knob} +
+        "}}}}}}";
+}
+
 ParFile::ParameterMetadata read_metadata(std::string_view metadata)
 {
     return ParFile::read_parameter_catalog(catalog_text(metadata)).metadata("x");
@@ -52,6 +58,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
 
     EXPECT_EQ(4U, catalog.parameters.size());
     EXPECT_EQ(1U, catalog.fractal_types.size());
+    EXPECT_EQ(1U, catalog.formula_entries.size());
 }
 
 TEST(TestParameterCatalog, centerMagMetadataLoads)
@@ -154,6 +161,57 @@ TEST(TestParameterCatalog, juliaParamsGroupMetadataLoads)
     EXPECT_EQ(1, group.slots[1]);
 }
 
+TEST(TestParameterCatalog, formulaParamsBailoutKnobMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("MandelbrotMix4", "bailout")};
+
+    EXPECT_EQ("bailout", knob.name);
+    EXPECT_EQ("MandelbrotMix4.bailout", knob.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::DOUBLE, knob.metadata.type);
+    ASSERT_TRUE(knob.metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::RAW, *knob.metadata.format);
+    ASSERT_EQ(1U, knob.slots.size());
+    EXPECT_EQ(0, knob.slots[0]);
+}
+
+TEST(TestParameterCatalog, formulaParamsScaleFactorKnobMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("MandelbrotMix4", "scale factor")};
+
+    EXPECT_EQ("scale factor", knob.name);
+    EXPECT_EQ("MandelbrotMix4.scale factor", knob.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::DOUBLE, knob.metadata.type);
+    ASSERT_EQ(1U, knob.slots.size());
+    EXPECT_EQ(1, knob.slots[0]);
+}
+
+TEST(TestParameterCatalog, formulaParamsComplexKnobMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("MandelbrotMix4", "c")};
+
+    EXPECT_EQ("c", knob.name);
+    EXPECT_EQ("MandelbrotMix4.c", knob.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::COMPLEX, knob.metadata.type);
+    ASSERT_TRUE(knob.metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::SLASH_PAIR, *knob.metadata.format);
+    ASSERT_EQ(2U, knob.slots.size());
+    EXPECT_EQ(2, knob.slots[0]);
+    EXPECT_EQ(3, knob.slots[1]);
+}
+
+TEST(TestParameterCatalog, formulaParamsIntegerKnobMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("MandelbrotMix4", "iterations")};
+
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, knob.metadata.type);
+    ASSERT_EQ(1U, knob.slots.size());
+    EXPECT_EQ(4, knob.slots[0]);
+}
+
 TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
 {
     EXPECT_EQ(ParFile::ParameterType::CENTER_MAG, read_metadata(R"("type":"center-mag")").type);
@@ -226,6 +284,37 @@ TEST(TestParameterCatalog, unknownParamsSlotRejected)
 TEST(TestParameterCatalog, unknownParamsGroupRejected)
 {
     EXPECT_THROW(core_catalog().params_group("julia", "unknown"), std::runtime_error);
+}
+
+TEST(TestParameterCatalog, unknownFormulaParamsKnobRejected)
+{
+    EXPECT_THROW(core_catalog().formula_params_knob("MandelbrotMix4", "unknown"), std::runtime_error);
+}
+
+TEST(TestParameterCatalog, realFormulaParamsKnobRejectsComplexVariable)
+{
+    EXPECT_THROW(
+        ParFile::read_parameter_catalog(formula_catalog_text(R"("type":"real","variable":"p1")")), std::runtime_error);
+}
+
+TEST(TestParameterCatalog, integerFormulaParamsKnobRejectsComplexVariable)
+{
+    EXPECT_THROW(ParFile::read_parameter_catalog(formula_catalog_text(R"("type":"integer","variable":"p1")")),
+        std::runtime_error);
+}
+
+TEST(TestParameterCatalog, complexFormulaParamsKnobRejectsComponentVariable)
+{
+    EXPECT_THROW(ParFile::read_parameter_catalog(formula_catalog_text(R"("type":"complex","variable":"p1.real")")),
+        std::runtime_error);
+}
+
+TEST(TestParameterCatalog, formulaParamsKnobRejectsP5Variable)
+{
+    EXPECT_THROW(ParFile::read_parameter_catalog(formula_catalog_text(R"("type":"real","variable":"p5.real")")),
+        std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(formula_catalog_text(R"("type":"complex","variable":"p5")")),
+        std::runtime_error);
 }
 
 TEST(TestParameterCatalog, missingMetadataTypeRejected)

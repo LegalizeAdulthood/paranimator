@@ -46,6 +46,12 @@ std::string catalog_with_metadata(std::string_view metadata)
     return "{\"parameters\":{\"x\":{" + std::string{metadata} + "}}}";
 }
 
+std::string catalog_with_formula_knob(std::string_view metadata)
+{
+    return "{\"parameters\":{},\"formula-entries\":{\"foo\":{\"params\":{\"knobs\":{\"x\":{" + std::string{metadata} +
+        "}}}}}}";
+}
+
 } // namespace
 
 TEST(TestJsonSchema, schemaPathStable)
@@ -133,6 +139,13 @@ TEST(TestJsonSchema, invalidMetadataMinimumTypeRejected)
 TEST(TestJsonSchema, invalidMetadataMaximumTypeRejected)
 {
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"double","max":"1000")")));
+}
+
+TEST(TestJsonSchema, invalidFormulaParamsVariableRejected)
+{
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_formula_knob(R"("type":"real","variable":"p1")")));
+    EXPECT_FALSE(
+        validates_parameter_catalog_text(catalog_with_formula_knob(R"("type":"complex","variable":"p1.real")")));
 }
 
 TEST(TestJsonSchema, invalidOutputDirectoryTypeRejected)
