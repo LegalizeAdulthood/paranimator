@@ -7,12 +7,15 @@
 
 #include <gtest/gtest.h>
 
+#include <optional>
+
 namespace
 {
 
-ParFile::ParameterMetadata metadata(const std::string &name, const std::string &type)
+ParFile::ParameterMetadata metadata(
+    const std::string &name, const std::string &type, std::optional<double> min = {}, std::optional<double> max = {})
 {
-    return {name, type, "slash", "linear", "clamp"};
+    return {name, type, "slash", "linear", "clamp", min, max};
 }
 
 std::vector<ParFile::KeyframeConfig> keyframes(const std::string &from, const std::string &to, int num_steps)
@@ -36,6 +39,12 @@ ParFile::InterpolantPtr create_interpolant(
     const std::string &name, const std::string &type, const std::vector<ParFile::KeyframeConfig> &keys, int num_steps)
 {
     return ParFile::create_interpolant(metadata(name, type), keys, num_steps);
+}
+
+ParFile::InterpolantPtr create_interpolant(
+    const ParFile::ParameterMetadata &parameter_metadata, const std::string &from, const std::string &to, int num_steps)
+{
+    return ParFile::create_interpolant(parameter_metadata, keyframes(from, to, num_steps), num_steps);
 }
 
 } // namespace
@@ -272,4 +281,40 @@ TEST(TestInterpolant, integerUnknownCurveRejected)
 
     EXPECT_THROW(create_interpolant("maxiter", "integer", keyframes("100", "200", "unknown", num_steps), num_steps),
         std::runtime_error);
+}
+
+TEST(TestInterpolant, doubleFraction)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_interpolant("bailout", "double", "1.25", "2.5", num_steps)};
+    static_cast<void>(interpolant->step());
+
+    const std::string value{interpolant->step()};
+
+    EXPECT_EQ("1.875", value);
+}
+
+TEST(TestInterpolant, doublePreservesFractionalEndpoints)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_interpolant("bailout", "double", "1.25", "2.5", num_steps)};
+
+    EXPECT_EQ("1.25", interpolant->step());
+    static_cast<void>(interpolant->step());
+    EXPECT_EQ("2.5", interpolant->step());
+}
+
+TEST(TestInterpolant, doubleMinimumRejected)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(create_interpolant(metadata("bailout", "double", 1.0), "0.5", "2.5", num_steps), std::runtime_error);
+}
+
+TEST(TestInterpolant, doubleMaximumRejected)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(
+        create_interpolant(metadata("bailout", "double", {}, 2.0), "1.25", "2.5", num_steps), std::runtime_error);
 }

@@ -63,6 +63,22 @@ TEST(TestParameterCatalog, maxiterMetadataLoads)
     EXPECT_EQ("clamp", metadata.extrapolate);
 }
 
+TEST(TestParameterCatalog, bailoutMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("bailout")};
+
+    EXPECT_EQ("bailout", metadata.name);
+    EXPECT_EQ("double", metadata.type);
+    EXPECT_EQ("raw", metadata.format);
+    EXPECT_EQ("linear", metadata.default_curve);
+    EXPECT_EQ("clamp", metadata.extrapolate);
+    ASSERT_TRUE(metadata.min);
+    ASSERT_TRUE(metadata.max);
+    EXPECT_EQ(0, *metadata.min);
+    EXPECT_EQ(1000, *metadata.max);
+}
+
 TEST(TestParameterCatalog, unknownAnimatedParameterRejected)
 {
     EXPECT_THROW(core_catalog().metadata("unknown"), std::runtime_error);

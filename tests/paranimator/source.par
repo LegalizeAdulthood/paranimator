@@ -9,3 +9,8 @@ Corners_Demo       { ; PAR for corners interpolation test
    reset type=mandel corners=-3/-1/-2/2 params=0/0 inside=0
    sound=no maxiter=678
 }
+
+Bailout_Demo       { ; PAR for double interpolation test
+   reset type=mandel center-mag=-0.5/0/1 params=0/0 inside=0
+   bailout=1.25 sound=no maxiter=678
+}

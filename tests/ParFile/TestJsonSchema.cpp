@@ -104,6 +104,16 @@ TEST(TestJsonSchema, unknownMetadataExtrapolateRejected)
         validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","extrapolate":"unknown")")));
 }
 
+TEST(TestJsonSchema, invalidMetadataMinimumTypeRejected)
+{
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"double","min":"0")")));
+}
+
+TEST(TestJsonSchema, invalidMetadataMaximumTypeRejected)
+{
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"double","max":"1000")")));
+}
+
 TEST(TestJsonSchema, invalidOutputDirectoryTypeRejected)
 {
     EXPECT_FALSE(validates_config_file(TestParFile::INVALID_OUTPUT_DIRECTORY_CONFIG_JSON));

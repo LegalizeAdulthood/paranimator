@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -44,14 +45,13 @@ const Object &load_parameters(const Object &json)
     return json.at(key);
 }
 
-std::string load_required_string(
-    const Object &json, std::string_view parameter, std::string_view field)
+std::string load_required_string(const Object &json, std::string_view parameter, std::string_view field)
 {
     const std::string key{field};
     if (!json.contains(key) || !json.at(key).is_string())
     {
-        throw std::runtime_error("Invalid parameter metadata '" + std::string{parameter} +
-            "', missing string '" + std::string{field} + "'");
+        throw std::runtime_error(
+            "Invalid parameter metadata '" + std::string{parameter} + "', missing string '" + std::string{field} + "'");
     }
     return json.at(key).get<std::string>();
 }
@@ -65,18 +65,30 @@ std::string load_optional_string(const Object &json, std::string_view field)
     }
     if (!json.at(key).is_string())
     {
-        throw std::runtime_error("Invalid parameter metadata, field '" +
-            std::string{field} + "' is not a string");
+        throw std::runtime_error("Invalid parameter metadata, field '" + std::string{field} + "' is not a string");
     }
     return json.at(key).get<std::string>();
+}
+
+std::optional<double> load_optional_number(const Object &json, std::string_view field)
+{
+    const std::string key{field};
+    if (!json.contains(key))
+    {
+        return {};
+    }
+    if (!json.at(key).is_number())
+    {
+        throw std::runtime_error("Invalid parameter metadata, field '" + std::string{field} + "' is not a number");
+    }
+    return json.at(key).get<double>();
 }
 
 ParameterMetadata load_metadata(std::string_view name, const Object &json)
 {
     if (!json.is_object())
     {
-        throw std::runtime_error(
-            "Invalid parameter metadata '" + std::string{name} + "', value is not an object");
+        throw std::runtime_error("Invalid parameter metadata '" + std::string{name} + "', value is not an object");
     }
 
     ParameterMetadata result;
@@ -85,6 +97,8 @@ ParameterMetadata load_metadata(std::string_view name, const Object &json)
     result.format = load_optional_string(json, "format");
     result.default_curve = load_optional_string(json, "default_curve");
     result.extrapolate = load_optional_string(json, "extrapolate");
+    result.min = load_optional_number(json, "min");
+    result.max = load_optional_number(json, "max");
     return result;
 }
 

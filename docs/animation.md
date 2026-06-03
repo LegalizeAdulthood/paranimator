@@ -1527,23 +1527,7 @@ Schema enums may stay duplicated while only two schemas need them. If
 another schema needs the same enum, or if an enum grows enough that drift
 is likely, add a shared schema file and external `$ref` loader support.
 
-### 1. Add Double Tracks
-
-Add double tracks with min and max validation. Keep the same key and
-curve machinery as integer tracks.
-
-Schema work:
-
-- create or update JSON schemas for fields or metadata JSON files added by
-  this slice.
-
-Unit tests:
-
-- bailout values preserve fractional input.
-- min and max reject invalid key values.
-- double tracks work in the generated par output.
-
-### 2. Add Multiple Independent Tracks
+### 1. Add Multiple Independent Tracks
 
 Allow more than one normal ID parameter track in one animation. Tracks
 may have different key frames.
@@ -1559,7 +1543,7 @@ Unit tests:
 - each track uses its own key frames.
 - generated par entries contain both assignments.
 
-### 3. Add Base And Omit Extrapolation
+### 2. Add Base And Omit Extrapolation
 
 Add base and omit extrapolation for existing integer and double tracks.
 
@@ -1574,7 +1558,7 @@ Unit tests:
 - omit writes no assignment outside the keyed range.
 - clamp behavior from the MVP path still works.
 
-### 4. Add Cycle And Ping-Pong Extrapolation
+### 3. Add Cycle And Ping-Pong Extrapolation
 
 Add cycle and ping_pong extrapolation for existing scalar tracks.
 
@@ -1589,7 +1573,7 @@ Unit tests:
 - ping_pong maps frames forward and backward.
 - boundary frames are not duplicated incorrectly.
 
-### 5. Add Type-Scoped Params Tracks
+### 4. Add Type-Scoped Params Tracks
 
 Add params as a type-scoped slash-list vector. For type=julia, support the
 named complex group `params.c` over slots 0 and 1. Compose one `params=`
@@ -1608,7 +1592,7 @@ Unit tests:
 - generated output writes one slash-delimited `params=` assignment.
 - params slot 2 is rejected for a type with no slot 2.
 
-### 6. Add Formula Entry Params Knobs
+### 5. Add Formula Entry Params Knobs
 
 Add params knob metadata attached to formula entry names. The active
 `formulaname` value selects the entry. Support integer, real, and complex
@@ -1631,7 +1615,7 @@ Unit tests:
 - updating a formula knob preserves all untouched params values.
 - overlapping formula knobs are rejected.
 
-### 7. Add Formula Function Keys
+### 6. Add Formula Function Keys
 
 Add formula-entry function metadata. Support enum keys named `fn1`
 through `fn4` and write one composed `function=` assignment.
@@ -1649,7 +1633,7 @@ Unit tests:
 - updating `fn2` preserves `fn1` from the source function value.
 - generated output writes one slash-delimited `function=` assignment.
 
-### 8. Add Numeric Tuple Tracks
+### 7. Add Numeric Tuple Tracks
 
 Add numeric_tuple with metadata arity and slash formatting.
 
@@ -1664,7 +1648,7 @@ Unit tests:
 - a 3-value tuple writes a slash-delimited value.
 - wrong arity is rejected.
 
-### 9. Add Point And Vector Aliases
+### 8. Add Point And Vector Aliases
 
 Add point2, vector2, point3, and vector3 aliases over numeric_tuple.
 Vector aliases support normalize=true.
@@ -1680,7 +1664,7 @@ Unit tests:
 - vector3 normalizes when requested.
 - point aliases do not normalize.
 
-### 10. Add Enum Hold Tracks
+### 9. Add Enum Hold Tracks
 
 Add enum tracks with hold behavior.
 
@@ -1695,7 +1679,7 @@ Unit tests:
 - an enum value not listed in metadata is rejected.
 - enum values are not numerically interpolated.
 
-### 11. Add Enum Step Tracks
+### 10. Add Enum Step Tracks
 
 Add step behavior for enum tracks.
 
@@ -1710,7 +1694,7 @@ Unit tests:
 - hold behavior remains unchanged.
 - missing enum values still fail validation.
 
-### 12. Add Enum PWM Tracks
+### 11. Add Enum PWM Tracks
 
 Add PWM mode for enum tracks using explicit a and b values.
 
@@ -1725,7 +1709,7 @@ Unit tests:
 - mix 1 emits only b.
 - window values below 2 are rejected.
 
-### 13. Read And Write ID Map Files
+### 12. Read And Write ID Map Files
 
 Add ID map file parsing and writing. Do not add animation effects yet.
 
@@ -1740,7 +1724,7 @@ Unit tests:
 - malformed RGB entries are rejected.
 - written map files use ID-compatible RGB values.
 
-### 14. Add Static Colormap Tracks
+### 13. Add Static Colormap Tracks
 
 Add colormap tracks that copy or emit one map per frame and return
 colors=@filename. Generated maps are written under output-directory/map.
@@ -1756,7 +1740,7 @@ Unit tests:
 - colors assignment uses @filename only.
 - source map filenames are not written as paths.
 
-### 15. Add Colormap Interpolation
+### 14. Add Colormap Interpolation
 
 Add the interpolate colormap effect.
 
@@ -1771,7 +1755,7 @@ Unit tests:
 - blend 0.5 averages matching entries.
 - blend 1 returns the second map.
 
-### 16. Add Colormap Rotation
+### 15. Add Colormap Rotation
 
 Add the rotate colormap effect.
 
@@ -1786,7 +1770,7 @@ Unit tests:
 - negative offsets wrap palette entries.
 - offset 0 leaves the map unchanged.
 
-### 17. Add Ranged Colormap Rotation
+### 16. Add Ranged Colormap Rotation
 
 Add rotate_range for inclusive palette index ranges.
 
@@ -1801,7 +1785,7 @@ Unit tests:
 - entries outside the range are unchanged.
 - invalid ranges are rejected.
 
-### 18. Add Colormap Sequence
+### 17. Add Colormap Sequence
 
 Add the sequence effect for stepping through map filenames.
 
@@ -1816,7 +1800,7 @@ Unit tests:
 - optional crossfade uses interpolation.
 - missing sequence maps are rejected.
 
-### 19. Add Colormap Reverse And Ping-Pong
+### 18. Add Colormap Reverse And Ping-Pong
 
 Add reverse and ping_pong effects for whole maps and ranges.
 
@@ -1831,7 +1815,7 @@ Unit tests:
 - ping_pong alternates forward and backward offsets.
 - invalid ranges are rejected.
 
-### 20. Add Gradient Map Sources
+### 19. Add Gradient Map Sources
 
 Add generated gradient sources with indexed RGB stops.
 
@@ -1846,7 +1830,7 @@ Unit tests:
 - three stops interpolate each interval.
 - RGB components outside 0 through 63 are rejected.
 
-### 21. Add One Color Adjustment Effect
+### 20. Add One Color Adjustment Effect
 
 Add brightness as the first color adjustment effect.
 
@@ -1861,7 +1845,7 @@ Unit tests:
 - values clamp to ID's 0 through 63 range.
 - amount 1 leaves the map unchanged.
 
-### 22. Add More Color Adjustment Effects
+### 21. Add More Color Adjustment Effects
 
 Add gamma, contrast, saturation, and hue_shift one at a time in one
 reviewable change if the implementation is still small.
@@ -1877,7 +1861,7 @@ Unit tests:
 - each effect has one non-identity test.
 - each effect clamps output to ID's valid RGB range.
 
-### 23. Add Masked Colormap Effects
+### 22. Add Masked Colormap Effects
 
 Add pulse, mask_blend, remap, and seeded sparkle one at a time in one
 reviewable change if the implementation is still small.
@@ -1893,7 +1877,7 @@ Unit tests:
 - mask_blend affects only selected ranges.
 - sparkle requires a seed and is repeatable.
 
-### 24. Add Constant And Line Paths
+### 23. Add Constant And Line Paths
 
 Add constant and line path generators for scalar and complex tracks.
 
@@ -1908,7 +1892,7 @@ Unit tests:
 - line matches an equivalent keyed linear track.
 - complex line paths preserve slash_pair formatting.
 
-### 25. Add Circle And Ellipse Paths
+### 24. Add Circle And Ellipse Paths
 
 Add circle and ellipse paths for complex and point tracks.
 
@@ -1923,7 +1907,7 @@ Unit tests:
 - ellipse uses independent x and y radii.
 - phase changes the starting point.
 
-### 26. Add Lissajous And Spiral Paths
+### 25. Add Lissajous And Spiral Paths
 
 Add lissajous and spiral path generators.
 
@@ -1938,7 +1922,7 @@ Unit tests:
 - spiral radius changes over time.
 - invalid frequency or radius values are rejected.
 
-### 27. Add Bezier Paths
+### 26. Add Bezier Paths
 
 Add bezier path generation.
 
@@ -1953,7 +1937,7 @@ Unit tests:
 - too few control points are rejected.
 - tuple-valued paths preserve arity.
 
-### 28. Add Catmull-Rom Paths
+### 27. Add Catmull-Rom Paths
 
 Add catmull_rom path generation. This is the first point where
 Boost.Math should be considered. Do not add it earlier. Keep it hidden
@@ -1972,7 +1956,7 @@ Unit tests:
 - too few control points are rejected.
 - tuple-valued paths preserve arity.
 
-### 29. Add Camera2D Corners Output
+### 28. Add Camera2D Corners Output
 
 Add camera2d with look_at, view_up, and height curves targeting corners.
 
@@ -1987,7 +1971,7 @@ Unit tests:
 - rotated camera writes expected third corner.
 - view_up is normalized before output.
 
-### 30. Add Camera2D Center-Mag Output
+### 29. Add Camera2D Center-Mag Output
 
 Add camera2d output to center-mag for axis-aligned cameras.
 
@@ -2002,7 +1986,7 @@ Unit tests:
 - rotated camera targeting center-mag is rejected.
 - aspect handling matches the source image shape.
 
-### 31. Add Basic ID 3D View Adapter
+### 30. Add Basic ID 3D View Adapter
 
 Add id_3d_view output for rotation, perspective, and xyshift.
 
@@ -2017,7 +2001,7 @@ Unit tests:
 - perspective writes an integer value.
 - xyshift writes a 2-value slash tuple.
 
-### 32. Add More ID 3D View Outputs
+### 31. Add More ID 3D View Outputs
 
 Add scalexyz, roughness, sphere, longitude, latitude, radius, stereo,
 interocular, and converge outputs.
@@ -2033,7 +2017,7 @@ Unit tests:
 - stereo controls write legal values.
 - unsupported target outputs are rejected.
 
-### 33. Add Julibrot View Adapter
+### 32. Add Julibrot View Adapter
 
 Add julibrot_view output for 3dmode, julibrot3d, julibroteyes, and
 julibrotfromto.
@@ -2049,7 +2033,7 @@ Unit tests:
 - julibrot3d writes six components.
 - arbitrary look_at or view_up requests are rejected.
 
-### 34. Add Single-Layer Stack
+### 33. Add Single-Layer Stack
 
 Allow animations to define one layer. It should behave like the existing
 single-source animation but use the layer schema.
@@ -2065,7 +2049,7 @@ Unit tests:
 - layer tracks apply to that layer.
 - duplicate layer ids are rejected.
 
-### 35. Add Multi-Layer Rendering
+### 34. Add Multi-Layer Rendering
 
 Allow multiple layers to render separate ID images before composition.
 
@@ -2080,7 +2064,7 @@ Unit tests:
 - each layer applies only its own tracks.
 - generated layer entry names include layer id and frame number.
 
-### 36. Add Layer Opacity
+### 35. Add Layer Opacity
 
 Add layer opacity evaluation and hidden-layer skipping.
 
@@ -2095,7 +2079,7 @@ Unit tests:
 - write_when_hidden renders opacity 0 layers.
 - opacity values outside 0 through 100 are rejected.
 
-### 37. Add ImageMagick Over Composition
+### 36. Add ImageMagick Over Composition
 
 Generate ImageMagick commands for Over composition.
 
@@ -2110,7 +2094,7 @@ Unit tests:
 - opacity is applied before composition.
 - output.background adds a flatten step when configured.
 
-### 38. Add More ImageMagick Compose Operators
+### 37. Add More ImageMagick Compose Operators
 
 Allow configured ImageMagick compose operators and validate them.
 
@@ -2125,7 +2109,7 @@ Unit tests:
 - unsupported operators are rejected.
 - no ParAnimator-specific blend aliases are accepted.
 
-### 39. Add Core Catalog Files
+### 38. Add Core Catalog Files
 
 Add default catalogs for core ID parameters and coloring.
 
@@ -2140,7 +2124,7 @@ Unit tests:
 - coloring catalog declares colors as colormap.
 - catalog inclusion fails clearly for missing files.
 
-### 40. Add 3D And Formula Catalog Files
+### 39. Add 3D And Formula Catalog Files
 
 Add default catalogs for ID 3D viewing and selected formula families.
 

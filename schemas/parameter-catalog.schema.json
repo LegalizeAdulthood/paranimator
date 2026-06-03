@@ -16,7 +16,9 @@
           "type": { "$ref": "#/$defs/parameter_type" },
           "format": { "$ref": "#/$defs/parameter_format" },
           "default_curve": { "$ref": "#/$defs/curve" },
-          "extrapolate": { "$ref": "#/$defs/extrapolate" }
+          "extrapolate": { "$ref": "#/$defs/extrapolate" },
+          "min": { "type": "number" },
+          "max": { "type": "number" }
         }
       }
     }
@@ -24,7 +26,7 @@
   "$defs": {
     "parameter_type": {
       "type": "string",
-      "enum": [ "center_mag", "corners", "integer" ]
+      "enum": [ "center_mag", "corners", "double", "integer" ]
     },
     "parameter_format": {
       "type": "string",

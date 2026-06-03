@@ -17,6 +17,14 @@
       "format": "raw",
       "default_curve": "linear",
       "extrapolate": "clamp"
+    },
+    "bailout": {
+      "type": "double",
+      "format": "raw",
+      "default_curve": "linear",
+      "extrapolate": "clamp",
+      "min": 0,
+      "max": 1000
     }
   }
 }

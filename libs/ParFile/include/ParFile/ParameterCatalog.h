@@ -2,6 +2,7 @@
 //
 #pragma once
 
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -16,6 +17,8 @@ struct ParameterMetadata
     std::string format;
     std::string default_curve;
     std::string extrapolate;
+    std::optional<double> min;
+    std::optional<double> max;
 };
 
 class ParameterCatalog

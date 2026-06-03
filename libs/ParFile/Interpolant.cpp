@@ -130,6 +130,48 @@ int parse_integer(const std::string &text)
     }
 }
 
+double parse_double(const std::string &text)
+{
+    try
+    {
+        std::size_t length{};
+        const double value{std::stod(text, &length)};
+        if (length != text.size() || !std::isfinite(value))
+        {
+            throw std::runtime_error("Invalid double value '" + text + "'");
+        }
+        return value;
+    }
+    catch (const std::invalid_argument &)
+    {
+        throw std::runtime_error("Invalid double value '" + text + "'");
+    }
+    catch (const std::out_of_range &)
+    {
+        throw std::runtime_error("Double value out of range '" + text + "'");
+    }
+}
+
+void validate_bounds(const ParameterMetadata &metadata, double value)
+{
+    if (metadata.min && value < *metadata.min)
+    {
+        throw std::runtime_error("Value for parameter '" + metadata.name + "' is below minimum");
+    }
+    if (metadata.max && value > *metadata.max)
+    {
+        throw std::runtime_error("Value for parameter '" + metadata.name + "' is above maximum");
+    }
+}
+
+void validate_scalar_curve(std::string_view type, const std::string &curve)
+{
+    if (curve != "linear" && curve != "hold" && curve != "step")
+    {
+        throw std::runtime_error("Unsupported " + std::string{type} + " curve '" + curve + "'");
+    }
+}
+
 struct CenterMag
 {
     CenterMag() = default;
@@ -293,10 +335,7 @@ IntegerInterpolant::IntegerInterpolant(
     m_to(parse_integer(keys[1].value)),
     m_curve(curve)
 {
-    if (m_curve != "linear" && m_curve != "hold" && m_curve != "step")
-    {
-        throw std::runtime_error("Unsupported integer curve '" + m_curve + "'");
-    }
+    validate_scalar_curve("integer", m_curve);
 }
 
 std::string IntegerInterpolant::step()
@@ -318,6 +357,54 @@ std::string IntegerInterpolant::step()
     const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
     const double value{m_from + fraction * (m_to - m_from)};
     return std::to_string(static_cast<int>(std::lround(value)));
+}
+
+class DoubleInterpolant : public Base
+{
+public:
+    DoubleInterpolant(const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys,
+        std::string_view curve, int num_steps);
+    ~DoubleInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    int m_from_frame{};
+    int m_to_frame{};
+    double m_from{};
+    double m_to{};
+    std::string m_curve;
+};
+
+DoubleInterpolant::DoubleInterpolant(
+    const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, std::string_view curve, int num_steps) :
+    Base(metadata.name, num_steps),
+    m_from_frame(keys[0].frame),
+    m_to_frame(keys[1].frame),
+    m_from(parse_double(keys[0].value)),
+    m_to(parse_double(keys[1].value)),
+    m_curve(curve)
+{
+    validate_scalar_curve("double", m_curve);
+    validate_bounds(metadata, m_from);
+    validate_bounds(metadata, m_to);
+}
+
+std::string DoubleInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+    double value{m_from};
+    if (frame >= m_to_frame)
+    {
+        value = m_to;
+    }
+    else if (frame > m_from_frame && m_curve != "hold" && m_curve != "step")
+    {
+        const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        value = m_from + fraction * (m_to - m_from);
+    }
+    return (boost::format("%.12g") % value).str();
 }
 
 } // namespace
@@ -344,6 +431,15 @@ InterpolantPtr create_interpolant(
             curve = keys[1].curve;
         }
         return std::make_shared<IntegerInterpolant>(metadata.name, keys, curve, num_steps);
+    }
+    if (metadata.type == "double")
+    {
+        std::string curve{metadata.default_curve};
+        if (!keys[1].curve.empty())
+        {
+            curve = keys[1].curve;
+        }
+        return std::make_shared<DoubleInterpolant>(metadata, keys, curve, num_steps);
     }
 
     throw std::runtime_error("Unknown track type '" + metadata.type + "' for parameter '" + metadata.name + "'");
