@@ -38,7 +38,7 @@
     },
     "extrapolate": {
       "type": "string",
-      "enum": [ "base", "clamp", "omit" ]
+      "enum": [ "base", "clamp", "cycle", "omit", "ping-pong" ]
     }
   }
 }

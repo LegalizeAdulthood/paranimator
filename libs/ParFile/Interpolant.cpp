@@ -177,13 +177,49 @@ void validate_scalar_curve(std::string_view type, const std::string &curve)
     }
 }
 
+int positive_mod(int value, int modulus)
+{
+    const int result{value % modulus};
+    if (result < 0)
+    {
+        return result + modulus;
+    }
+    return result;
+}
+
+int extrapolated_frame(int frame, int from_frame, int to_frame, const std::string &extrapolate)
+{
+    if (extrapolate == "cycle")
+    {
+        const int range_length{to_frame - from_frame + 1};
+        return from_frame + positive_mod(frame - from_frame, range_length);
+    }
+    if (extrapolate == "ping-pong")
+    {
+        const int span{to_frame - from_frame};
+        if (span <= 0)
+        {
+            return from_frame;
+        }
+        const int period{span * 2};
+        int offset{positive_mod(frame - from_frame, period)};
+        if (offset > span)
+        {
+            offset = period - offset;
+        }
+        return from_frame + offset;
+    }
+    return frame;
+}
+
 std::string extrapolate_mode(const ParameterMetadata &metadata)
 {
     if (metadata.extrapolate.empty())
     {
         return "clamp";
     }
-    if (metadata.extrapolate != "base" && metadata.extrapolate != "clamp" && metadata.extrapolate != "omit")
+    if (metadata.extrapolate != "base" && metadata.extrapolate != "clamp" && metadata.extrapolate != "cycle" &&
+        metadata.extrapolate != "omit" && metadata.extrapolate != "ping-pong")
     {
         throw std::runtime_error(
             "Unsupported extrapolate mode '" + metadata.extrapolate + "' for parameter '" + metadata.name + "'");
@@ -378,11 +414,12 @@ std::string IntegerInterpolant::step()
             return {};
         }
     }
-    if (frame <= m_from_frame)
+    const int sample_frame{extrapolated_frame(frame, m_from_frame, m_to_frame, m_extrapolate)};
+    if (sample_frame <= m_from_frame)
     {
         return std::to_string(m_from);
     }
-    if (frame >= m_to_frame)
+    if (sample_frame >= m_to_frame)
     {
         return std::to_string(m_to);
     }
@@ -390,7 +427,7 @@ std::string IntegerInterpolant::step()
     {
         return std::to_string(m_from);
     }
-    const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+    const double fraction{(sample_frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
     const double value{m_from + fraction * (m_to - m_from)};
     return std::to_string(static_cast<int>(std::lround(value)));
 }
@@ -447,14 +484,15 @@ std::string DoubleInterpolant::step()
             return {};
         }
     }
+    const int sample_frame{extrapolated_frame(frame, m_from_frame, m_to_frame, m_extrapolate)};
     double value{m_from};
-    if (frame >= m_to_frame)
+    if (sample_frame >= m_to_frame)
     {
         value = m_to;
     }
-    else if (frame > m_from_frame && m_curve != "hold" && m_curve != "step")
+    else if (sample_frame > m_from_frame && m_curve != "hold" && m_curve != "step")
     {
-        const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        const double fraction{(sample_frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
         value = m_from + fraction * (m_to - m_from);
     }
     return (boost::format("%.12g") % value).str();

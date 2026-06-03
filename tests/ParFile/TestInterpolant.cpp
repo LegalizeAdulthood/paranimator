@@ -268,6 +268,20 @@ TEST(TestInterpolant, integerBaseExtrapolation)
     EXPECT_TRUE(interpolant->has_value());
 }
 
+TEST(TestInterpolant, integerCycleExtrapolation)
+{
+    const int num_steps{5};
+    const std::vector<ParFile::KeyframeConfig> keys{{1, "100"}, {3, "300"}};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(metadata("maxiter", "integer", {}, {}, "cycle"), keys, num_steps, "678")};
+
+    EXPECT_EQ("300", interpolant->step());
+    EXPECT_EQ("100", interpolant->step());
+    EXPECT_EQ("200", interpolant->step());
+    EXPECT_EQ("300", interpolant->step());
+    EXPECT_EQ("100", interpolant->step());
+}
+
 TEST(TestInterpolant, integerHoldCurve)
 {
     const int num_steps{4};
@@ -351,4 +365,18 @@ TEST(TestInterpolant, doubleOmitExtrapolation)
     EXPECT_TRUE(interpolant->has_value());
     static_cast<void>(interpolant->step());
     EXPECT_FALSE(interpolant->has_value());
+}
+
+TEST(TestInterpolant, doublePingPongExtrapolation)
+{
+    const int num_steps{5};
+    const std::vector<ParFile::KeyframeConfig> keys{{1, "1"}, {3, "3"}};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(metadata("bailout", "double", {}, {}, "ping-pong"), keys, num_steps, "1.25")};
+
+    EXPECT_EQ("2", interpolant->step());
+    EXPECT_EQ("1", interpolant->step());
+    EXPECT_EQ("2", interpolant->step());
+    EXPECT_EQ("3", interpolant->step());
+    EXPECT_EQ("2", interpolant->step());
 }
