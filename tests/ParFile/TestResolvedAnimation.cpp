@@ -96,11 +96,11 @@ ParFile::Config formula_config_data(std::string_view parameter)
     return result;
 }
 
-ParFile::Config camera2d_config_data()
+ParFile::Config camera2d_config_data(std::string_view output = "corners")
 {
     ParFile::Camera2DConfig camera;
     camera.name = "camera";
-    camera.output = "corners";
+    camera.output = output;
     camera.aspect = "source";
     camera.look_at = {ParFile::ParameterType::POINT2, false, {{0, "0/0"}, {2, "1/1"}}};
     camera.view_up = {ParFile::ParameterType::VECTOR2, true, {{0, "0/2"}, {2, "1/1"}}};
@@ -181,6 +181,29 @@ TEST(TestResolvedAnimation, camera2dResolvesOutputMetadataAndSourceAspect)
     EXPECT_EQ(ParFile::ParameterType::VECTOR2, track.camera2d->view_up.metadata.type);
     EXPECT_TRUE(track.camera2d->view_up.metadata.normalize);
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, track.camera2d->height.metadata.type);
+}
+
+TEST(TestResolvedAnimation, camera2dResolvesCenterMagOutputAndVideoAspect)
+{
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(camera2d_config_data("center-mag"), catalog_data(), source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    EXPECT_EQ("camera", track.parameter);
+    EXPECT_EQ("center-mag", track.output_parameter);
+    EXPECT_EQ(ParFile::ParameterType::CENTER_MAG, track.metadata.type);
+    EXPECT_EQ("-0.5/0/1", track.base_value);
+    ASSERT_TRUE(track.camera2d);
+    EXPECT_DOUBLE_EQ(4.0 / 3.0, track.camera2d->aspect);
+}
+
+TEST(TestResolvedAnimation, camera2dCenterMagRejectsUnknownVideoShape)
+{
+    ParFile::Config config{camera2d_config_data("center-mag")};
+    config.video = "unknown";
+
+    EXPECT_THROW(ParFile::resolve_animation(config, catalog_data(), source_set()), std::runtime_error);
 }
 
 TEST(TestResolvedAnimation, juliaParamsGroupResolvesToParamsSlots)

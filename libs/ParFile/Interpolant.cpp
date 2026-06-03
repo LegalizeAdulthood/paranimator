@@ -1176,6 +1176,28 @@ bool is_normal_axis_aligned(const Point2D &up)
     return std::abs(up.x) < TOLERANCE && std::abs(up.y - 1.0) < TOLERANCE;
 }
 
+std::string format_camera2d_corners(
+    const Point2D &up, const Point2D &lower_left, const Point2D &lower_right, const Point2D &upper_left)
+{
+    if (is_normal_axis_aligned(up))
+    {
+        return format_slash_doubles(clean_path_components({lower_left.x, lower_right.x, lower_left.y, upper_left.y}));
+    }
+    return format_slash_doubles(
+        clean_path_components({lower_left.x, lower_left.y, lower_right.x, lower_right.y, upper_left.x, upper_left.y}));
+}
+
+std::string format_camera2d_center_mag(
+    const std::string &name, double aspect, const Point2D &look, const Point2D &up, double height)
+{
+    if (!is_normal_axis_aligned(up))
+    {
+        throw std::runtime_error("Camera2D track '" + name + "' requires view-up 0/1 for center-mag output");
+    }
+    const double magnification{4.0 / (aspect * height)};
+    return format_slash_doubles(clean_path_components({look.x, look.y, magnification}));
+}
+
 class Camera2DInterpolant : public Base
 {
 public:
@@ -1185,6 +1207,9 @@ public:
     std::string step() override;
 
 private:
+    void validate_center_mag_view_up(const std::string &name, int num_steps) const;
+
+    ParameterType m_output_type{};
     double m_aspect{};
     Camera2DValueEvaluator m_look_at;
     Camera2DValueEvaluator m_view_up;
@@ -1193,18 +1218,35 @@ private:
 
 Camera2DInterpolant::Camera2DInterpolant(const ResolvedTrack &track, int num_steps) :
     Base(track.output_parameter, num_steps),
+    m_output_type(track.metadata.type),
     m_aspect(camera2d_config(track).aspect),
     m_look_at(camera2d_config(track).look_at, num_steps, false),
     m_view_up(camera2d_config(track).view_up, num_steps, false),
     m_height(camera2d_config(track).height, num_steps, true)
 {
-    if (track.metadata.type != ParameterType::CORNERS)
+    if (track.metadata.type != ParameterType::CORNERS && track.metadata.type != ParameterType::CENTER_MAG)
     {
-        throw std::runtime_error("Camera2D track '" + track.parameter + "' requires a corners output");
+        throw std::runtime_error("Camera2D track '" + track.parameter + "' requires a corners or center-mag output");
     }
     if (m_aspect <= 0.0)
     {
         throw std::runtime_error("Camera2D track '" + track.parameter + "' requires a positive aspect");
+    }
+    if (m_output_type == ParameterType::CENTER_MAG)
+    {
+        validate_center_mag_view_up(track.parameter, num_steps);
+    }
+}
+
+void Camera2DInterpolant::validate_center_mag_view_up(const std::string &name, int num_steps) const
+{
+    for (int frame{}; frame < num_steps; ++frame)
+    {
+        const Point2D up{point2_from_values(m_view_up.value_at(frame), "view-up")};
+        if (!is_normal_axis_aligned(up))
+        {
+            throw std::runtime_error("Camera2D track '" + name + "' requires view-up 0/1 for center-mag output");
+        }
     }
 }
 
@@ -1222,12 +1264,11 @@ std::string Camera2DInterpolant::step()
     const Point2D lower_right{look + right * (width / 2.0) - up * (height / 2.0)};
     const Point2D upper_left{look - right * (width / 2.0) + up * (height / 2.0)};
 
-    if (is_normal_axis_aligned(up))
+    if (m_output_type == ParameterType::CENTER_MAG)
     {
-        return format_slash_doubles(clean_path_components({lower_left.x, lower_right.x, lower_left.y, upper_left.y}));
+        return format_camera2d_center_mag(m_name, m_aspect, look, up, height);
     }
-    return format_slash_doubles(
-        clean_path_components({lower_left.x, lower_left.y, lower_right.x, lower_right.y, upper_left.x, upper_left.y}));
+    return format_camera2d_corners(up, lower_left, lower_right, upper_left);
 }
 
 class IntegerInterpolant : public Base

@@ -101,6 +101,32 @@ double source_corners_aspect(std::string_view value)
     return width / height;
 }
 
+double source_video_aspect(std::string_view video)
+{
+    if (video == "F6")
+    {
+        return 4.0 / 3.0;
+    }
+    throw std::runtime_error(
+        "Camera2D center-mag output requires a known source video shape; unsupported video mode '" +
+        std::string{video} + "'");
+}
+
+double source_camera2d_aspect(
+    const ParameterMetadata &output_metadata, std::string_view output_value, std::string_view video)
+{
+    if (output_metadata.type == ParameterType::CORNERS)
+    {
+        return source_corners_aspect(output_value);
+    }
+    if (output_metadata.type == ParameterType::CENTER_MAG)
+    {
+        return source_video_aspect(video);
+    }
+    throw std::runtime_error(
+        "Camera2D output parameter '" + output_metadata.name + "' must have type corners or center-mag");
+}
+
 const Parameter *find_source_parameter(const ParSet &source, std::string_view name)
 {
     const std::string key{name};
@@ -294,7 +320,8 @@ ResolvedCamera2DValueTrack resolve_camera2d_value_track(
     return {camera2d_value_metadata(camera_name, member_name, track.type, normalize), track.keys};
 }
 
-ResolvedTrack resolve_camera2d_track(const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source)
+ResolvedTrack resolve_camera2d_track(
+    const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source, std::string_view video)
 {
     if (!track.camera2d)
     {
@@ -303,14 +330,9 @@ ResolvedTrack resolve_camera2d_track(const TrackConfig &track, const ParameterCa
 
     const Camera2DConfig &camera{*track.camera2d};
     const ParameterMetadata &output_metadata{catalog.metadata(camera.output)};
-    if (output_metadata.type != ParameterType::CORNERS)
-    {
-        throw std::runtime_error("Camera2D track '" + camera.name + "' requires a corners output");
-    }
-
     const Parameter &output{source_parameter(source, camera.output)};
     ResolvedCamera2DConfig camera2d;
-    camera2d.aspect = source_corners_aspect(output.value);
+    camera2d.aspect = source_camera2d_aspect(output_metadata, output.value, video);
     camera2d.look_at = resolve_camera2d_value_track(camera.look_at, camera.name, "look-at", false);
     camera2d.view_up = resolve_camera2d_value_track(camera.view_up, camera.name, "view-up", true);
     camera2d.height = resolve_camera2d_value_track(camera.height, camera.name, "height", false);
@@ -324,11 +346,12 @@ ResolvedTrack resolve_camera2d_track(const TrackConfig &track, const ParameterCa
     return result;
 }
 
-ResolvedTrack resolve_track(const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source)
+ResolvedTrack resolve_track(
+    const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source, std::string_view video)
 {
     if (track.kind == TrackKind::CAMERA2D)
     {
-        return resolve_camera2d_track(track, catalog, source);
+        return resolve_camera2d_track(track, catalog, source, video);
     }
     if (source_is_formula(source))
     {
@@ -390,7 +413,7 @@ ResolvedAnimation resolve_animation(const Config &config, const ParameterCatalog
     {
         if (track.kind != TrackKind::COLOR_MAP)
         {
-            result.tracks.push_back(resolve_track(track, catalog, source));
+            result.tracks.push_back(resolve_track(track, catalog, source, config.video));
         }
     }
     validate_slotted_track_overlaps(result.tracks);

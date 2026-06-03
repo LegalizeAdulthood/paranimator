@@ -163,7 +163,9 @@ ParFile::ResolvedCamera2DValueTrack resolved_camera2d_value_track(const std::str
 }
 
 ParFile::ResolvedTrack resolved_camera2d_track(double aspect, const std::vector<ParFile::KeyframeConfig> &look_at_keys,
-    const std::vector<ParFile::KeyframeConfig> &view_up_keys, const std::vector<ParFile::KeyframeConfig> &height_keys)
+    const std::vector<ParFile::KeyframeConfig> &view_up_keys, const std::vector<ParFile::KeyframeConfig> &height_keys,
+    ParFile::ParameterType output_type = ParFile::ParameterType::CORNERS,
+    const std::string &output_parameter = "corners")
 {
     ParFile::ResolvedCamera2DConfig camera2d;
     camera2d.aspect = aspect;
@@ -174,9 +176,9 @@ ParFile::ResolvedTrack resolved_camera2d_track(double aspect, const std::vector<
 
     ParFile::ResolvedTrack result;
     result.parameter = "camera";
-    result.metadata = metadata("corners", ParFile::ParameterType::CORNERS);
-    result.base_value = "-3/-1/-2/2";
-    result.output_parameter = "corners";
+    result.metadata = metadata(output_parameter, output_type);
+    result.base_value = output_type == ParFile::ParameterType::CENTER_MAG ? "-0.5/0/1" : "-3/-1/-2/2";
+    result.output_parameter = output_parameter;
     result.camera2d = camera2d;
     return result;
 }
@@ -465,6 +467,45 @@ TEST(TestInterpolant, camera2dHeightSupportsGeometricCurve)
     ASSERT_TRUE(interpolant);
     static_cast<void>(interpolant->step());
     EXPECT_EQ("-0.707106781187/0.707106781187/-1.41421356237/1.41421356237", interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dAxisAlignedWritesCenterMag)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_camera2d_track(4.0 / 3.0, keyframes("-0.5/0", "-0.25/0.5", num_steps),
+            keyframes("0/1", "0/1", num_steps), keyframes("3", "1.5", ParFile::Curve::GEOMETRIC, num_steps),
+            ParFile::ParameterType::CENTER_MAG, "center-mag"),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("center-mag", interpolant->name());
+    EXPECT_EQ("-0.5/0/1", interpolant->step());
+    EXPECT_EQ("-0.375/0.25/1.41421356237", interpolant->step());
+    EXPECT_EQ("-0.25/0.5/2", interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dCenterMagMagnificationUsesAspect)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_camera2d_track(2.0, keyframes("0/0", "0/0", num_steps), keyframes("0/1", "0/1", num_steps),
+            keyframes("4", "4", num_steps), ParFile::ParameterType::CENTER_MAG, "center-mag"),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("0/0/0.5", interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dRotatedCenterMagRejected)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(ParFile::create_interpolant(resolved_camera2d_track(4.0 / 3.0, keyframes("0/0", "0/0", num_steps),
+                                                 keyframes("1/1", "1/1", num_steps), keyframes("3", "3", num_steps),
+                                                 ParFile::ParameterType::CENTER_MAG, "center-mag"),
+                     num_steps),
+        std::runtime_error);
 }
 
 TEST(TestInterpolant, integerFrom)

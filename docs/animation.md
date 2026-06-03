@@ -1637,22 +1637,7 @@ Every new schema object, field, and enum or const value must include a
 
 
 
-### 1. Add Camera2D Center-Mag Output
-
-Add camera2d output to center-mag for axis-aligned cameras.
-
-Schema work:
-
-- create or update JSON schemas for fields or metadata JSON files added by
-  this slice.
-
-Unit tests:
-
-- axis-aligned camera writes expected center-mag.
-- rotated camera targeting center-mag is rejected.
-- aspect handling matches the source image shape.
-
-### 2. Add Basic Id 3D View Adapter
+### 1. Add Basic Id 3D View Adapter
 
 Add id-3d-view output for rotation, perspective, and xyshift.
 
@@ -1667,7 +1652,7 @@ Unit tests:
 - perspective writes an integer value.
 - xyshift writes a 2-value slash tuple.
 
-### 3. Add More Id 3D View Outputs
+### 2. Add More Id 3D View Outputs
 
 Add scalexyz, roughness, sphere, longitude, latitude, radius, stereo,
 interocular, and converge outputs.
@@ -1683,7 +1668,7 @@ Unit tests:
 - stereo controls write legal values.
 - unsupported target outputs are rejected.
 
-### 4. Add Julibrot View Adapter
+### 3. Add Julibrot View Adapter
 
 Add julibrot-view output for 3dmode, julibrot3d, julibroteyes, and
 julibrotfromto.
@@ -1699,7 +1684,7 @@ Unit tests:
 - julibrot3d writes six components.
 - arbitrary look-at or view-up requests are rejected.
 
-### 5. Add Single-Layer Stack
+### 4. Add Single-Layer Stack
 
 Allow animations to define one layer. It should behave like the existing
 single-source animation but use the layer schema.
@@ -1715,7 +1700,7 @@ Unit tests:
 - layer tracks apply to that layer.
 - duplicate layer ids are rejected.
 
-### 6. Add Multi-Layer Rendering
+### 5. Add Multi-Layer Rendering
 
 Allow multiple layers to render separate Id images before composition.
 
@@ -1730,7 +1715,7 @@ Unit tests:
 - each layer applies only its own tracks.
 - generated layer entry names include layer id and frame number.
 
-### 7. Add Layer Opacity
+### 6. Add Layer Opacity
 
 Add layer opacity evaluation and hidden-layer skipping.
 
@@ -1745,7 +1730,7 @@ Unit tests:
 - write-when-hidden renders opacity 0 layers.
 - opacity values outside 0 through 100 are rejected.
 
-### 8. Add source-over Composition
+### 7. Add source-over Composition
 
 Generate ImageMagick commands for the neutral `source-over` operator.
 
@@ -1760,7 +1745,7 @@ Unit tests:
 - opacity is applied before composition.
 - output.background adds a flatten step when configured.
 
-### 9. Add More Neutral Compose Operators
+### 8. Add More Neutral Compose Operators
 
 Allow configured neutral compose operators and validate them. Map those
 operators to ImageMagick names only inside the ImageMagick adapter.
@@ -1781,7 +1766,7 @@ Unit tests:
 - unsupported operators are rejected.
 - ImageMagick-specific operator spellings are rejected in animation JSON.
 
-### 10. Add Core Catalog Files
+### 9. Add Core Catalog Files
 
 Add default catalogs for core Id parameters and coloring.
 
@@ -1796,7 +1781,7 @@ Unit tests:
 - coloring catalog declares colors as color-map.
 - catalog inclusion fails clearly for missing files.
 
-### 11. Add 3D And Formula Catalog Files
+### 10. Add 3D And Formula Catalog Files
 
 Add default catalogs for Id 3D viewing and selected formula families.
 

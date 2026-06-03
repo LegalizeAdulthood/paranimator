@@ -429,6 +429,38 @@ TEST(TestJsonSchema, camera2dTrackAccepted)
     })")));
 }
 
+TEST(TestJsonSchema, camera2dCenterMagTrackAccepted)
+{
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "name": "camera",
+      "type": "camera2d",
+      "output": "center-mag",
+      "aspect": "source",
+      "look-at": {
+        "type": "point2",
+        "keys": [
+          { "frame": 0, "value": "-0.5/0" },
+          { "frame": 2, "value": "-0.25/0.5" }
+        ]
+      },
+      "view-up": {
+        "type": "vector2",
+        "normalize": true,
+        "keys": [
+          { "frame": 0, "value": "0/1" },
+          { "frame": 2, "value": "0/1" }
+        ]
+      },
+      "height": {
+        "type": "double",
+        "keys": [
+          { "frame": 0, "value": 3 },
+          { "frame": 2, "value": 1.5, "curve": "geometric" }
+        ]
+      }
+    })")));
+}
+
 TEST(TestJsonSchema, camera2dTrackRejectsInvalidShape)
 {
     EXPECT_FALSE(validates_config_text(config_with_track(R"({
