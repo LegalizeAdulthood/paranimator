@@ -443,8 +443,17 @@ strings.
 
 Color specifications are strings used anywhere the animation format names
 a concrete color, such as gradient stops, flash colors, and flatten
-backgrounds. A bare slash tuple is RGB and means `rgb:red/green/blue`.
-The explicit prefixes are:
+backgrounds. CSS named colors are accepted case-insensitively when they
+name a fixed sRGB color. Exclude special CSS keywords that do not name one
+specific color, such as `currentColor`, `transparent`, and system colors.
+Use the W3C CSS Color Module Level 4 named-colors table as the reference
+for the name-to-sRGB mapping. There is no canonical machine-readable form
+of that table. Implementations should check in a static table derived from
+the W3C table, with the source URL and retrieval date recorded in a
+comment. Do not scrape the spec at runtime.
+
+A bare slash tuple is RGB and means `rgb:red/green/blue`. The explicit
+prefixes are:
 
 | Prefix | Components |
 | --- | --- |
@@ -926,7 +935,7 @@ Example:
         "layers": "layer-%s-%04d.png",
         "script": "render.bat",
         "compose-script": "compose.bat",
-        "background": "rgb:0/0/0"
+        "background": "black"
       },
 
       "num-frames": 900,
@@ -1151,7 +1160,7 @@ Example generated map:
       "source": {
         "kind": "gradient",
         "stops": [
-          { "index": 0,   "color": "0/0/0" },
+          { "index": 0,   "color": "black" },
           { "index": 64,  "color": "hsv:20/1/1" },
           { "index": 128, "color": "hsl:60/1/0.5" },
           { "index": 255, "color": "hsl:0/0/1" }
@@ -1629,7 +1638,7 @@ Every new schema object, field, and enum or const value must include a
 
 Add color specifications for strings that currently mean
 `red/green/blue`. Accept an optional color-space prefix that defaults to
-`rgb:`.
+`rgb:`. Accept CSS named colors that name fixed sRGB colors.
 
 Schema work:
 
@@ -1639,9 +1648,11 @@ Schema work:
 Unit tests:
 
 - unprefixed `red/green/blue` matches explicit `rgb:red/green/blue`.
+- CSS named colors convert to expected RGB channel values.
 - HSV color specifications convert to expected RGB channel values.
 - HSL color specifications convert to expected RGB channel values.
 - unknown color-space prefixes are rejected.
+- CSS special keywords that do not name one fixed color are rejected.
 - out-of-range RGB, HSV, and HSL components are rejected.
 
 ### 2. Add Gradient Map Sources
