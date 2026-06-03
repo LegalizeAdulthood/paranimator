@@ -385,6 +385,13 @@ TEST(TestJsonSchema, pathTrackAccepted)
         "control-points": [ "0/1", "2/3", "4/5" ]
       }
     })")));
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "parameter": "params.c",
+      "path": {
+        "kind": "catmull-rom",
+        "control-points": [ "0/0", "1/2", "3/2", "4/0" ]
+      }
+    })")));
 }
 
 TEST(TestJsonSchema, pathTrackRejectsKeysAndPath)
@@ -426,6 +433,8 @@ TEST(TestJsonSchema, pathTrackRejectsInvalidRadius)
         R"({"parameter":"params.c","path":{"kind":"spiral","center":"0/0","from-radius":1,"to-radius":-1}})")));
     EXPECT_FALSE(validates_config_text(config_with_track(
         R"({"parameter":"params.c","path":{"kind":"bezier","control-points":["0/1"]}})")));
+    EXPECT_FALSE(validates_config_text(config_with_track(
+        R"({"parameter":"params.c","path":{"kind":"catmull-rom","control-points":["0/0","1/1","2/2"]}})")));
 }
 
 TEST(TestJsonSchema, unknownTrackModeRejected)

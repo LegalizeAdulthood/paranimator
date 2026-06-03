@@ -159,7 +159,8 @@
         { "$ref": "#/$defs/ellipse-path-generator" },
         { "$ref": "#/$defs/lissajous-path-generator" },
         { "$ref": "#/$defs/spiral-path-generator" },
-        { "$ref": "#/$defs/bezier-path-generator" }
+        { "$ref": "#/$defs/bezier-path-generator" },
+        { "$ref": "#/$defs/catmull-rom-path-generator" }
       ]
     },
     "constant-path-generator": {
@@ -351,6 +352,27 @@
           "minItems": 2,
           "items": {
             "description": "One slash-delimited numeric Bezier control point.",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "catmull-rom-path-generator": {
+      "description": "Path generator that samples a Catmull-Rom spline over the full frame range.",
+      "type": "object",
+      "required": [ "kind", "control-points" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "catmull-rom",
+          "description": "Generate values on a Catmull-Rom spline."
+        },
+        "control-points": {
+          "description": "Slash-delimited numeric control points for the Catmull-Rom spline.",
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "description": "One slash-delimited numeric Catmull-Rom control point.",
             "type": "string"
           }
         }

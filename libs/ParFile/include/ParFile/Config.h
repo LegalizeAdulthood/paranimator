@@ -42,7 +42,8 @@ enum class PathKind
     ELLIPSE,
     LISSAJOUS,
     SPIRAL,
-    BEZIER
+    BEZIER,
+    CATMULL_ROM
 };
 
 struct PathConfig

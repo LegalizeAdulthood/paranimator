@@ -123,6 +123,14 @@ ParFile::PathConfig bezier_path(std::vector<std::string> control_points)
     return result;
 }
 
+ParFile::PathConfig catmull_rom_path(std::vector<std::string> control_points)
+{
+    ParFile::PathConfig result;
+    result.kind = ParFile::PathKind::CATMULL_ROM;
+    result.control_points = std::move(control_points);
+    return result;
+}
+
 ParFile::ResolvedTrack resolved_path_track(
     const ParFile::ParameterMetadata &parameter_metadata, const ParFile::PathConfig &path)
 {
@@ -973,6 +981,57 @@ TEST(TestInterpolant, invalidBezierPathRejected)
         ParFile::create_interpolant(
             resolved_path_track(
                 metadata("look-at", ParFile::ParameterType::POINT2), bezier_path({"0/0", "1/1/1"})),
+            num_steps),
+        std::runtime_error);
+}
+
+TEST(TestInterpolant, catmullRomPathPassesThroughControlPoints)
+{
+    const int num_steps{7};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2),
+            catmull_rom_path({"0/0", "1/2", "3/2", "4/0"})),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("0/0", interpolant->step());
+    EXPECT_EQ("0.4375/1.125", interpolant->step());
+    EXPECT_EQ("1/2", interpolant->step());
+    EXPECT_EQ("2/2.25", interpolant->step());
+    EXPECT_EQ("3/2", interpolant->step());
+    EXPECT_EQ("3.5625/1.125", interpolant->step());
+    EXPECT_EQ("4/0", interpolant->step());
+}
+
+TEST(TestInterpolant, catmullRomTuplePathPreservesArity)
+{
+    const int num_steps{4};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_path_track(tuple_metadata("position", 3),
+            catmull_rom_path({"0/1/2", "2/3/4", "4/5/6", "6/7/8"})),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("0/1/2", interpolant->step());
+    EXPECT_EQ("2/3/4", interpolant->step());
+    EXPECT_EQ("4/5/6", interpolant->step());
+    EXPECT_EQ("6/7/8", interpolant->step());
+}
+
+TEST(TestInterpolant, invalidCatmullRomPathRejected)
+{
+    const int num_steps{7};
+
+    EXPECT_THROW(
+        ParFile::create_interpolant(
+            resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2),
+                catmull_rom_path({"0/0", "1/1", "2/2"})),
+            num_steps),
+        std::runtime_error);
+    EXPECT_THROW(
+        ParFile::create_interpolant(
+            resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2),
+                catmull_rom_path({"0/0", "1/1", "2/2", "3/3/3"})),
             num_steps),
         std::runtime_error);
 }

@@ -241,6 +241,10 @@ static PathKind load_path_kind(const Object &json)
     {
         return PathKind::BEZIER;
     }
+    if (kind == "catmull-rom")
+    {
+        return PathKind::CATMULL_ROM;
+    }
     throw std::runtime_error("Invalid config, unknown path kind '" + kind + "'");
 }
 
@@ -322,6 +326,13 @@ static PathConfig load_path_config(const Object &json)
             throw std::runtime_error("Invalid config, bezier path requires at least two control points");
         }
         break;
+    case PathKind::CATMULL_ROM:
+        result.control_points = load_string_array(json, "control-points");
+        if (result.control_points.size() < 4U)
+        {
+            throw std::runtime_error("Invalid config, catmull-rom path requires at least four control points");
+        }
+        break;
     }
     return result;
 }
@@ -344,6 +355,7 @@ static std::vector<KeyframeConfig> load_path_keyframes(const PathConfig &path, i
     case PathKind::LISSAJOUS:
     case PathKind::SPIRAL:
     case PathKind::BEZIER:
+    case PathKind::CATMULL_ROM:
         return {};
     }
     throw std::runtime_error("Invalid config, unknown path kind");

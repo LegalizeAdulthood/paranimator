@@ -451,9 +451,14 @@ bool is_bezier_path(PathKind kind)
     return kind == PathKind::BEZIER;
 }
 
+bool is_control_point_path(PathKind kind)
+{
+    return kind == PathKind::BEZIER || kind == PathKind::CATMULL_ROM;
+}
+
 bool is_explicit_path(PathKind kind)
 {
-    return is_planar_path(kind) || is_bezier_path(kind);
+    return is_planar_path(kind) || is_control_point_path(kind);
 }
 
 double clean_path_component(double value)
@@ -624,34 +629,42 @@ int path_arity(const ParameterMetadata &metadata)
     throw std::runtime_error("Path track '" + metadata.name + "' requires a complex or tuple target");
 }
 
-class BezierPathEvaluator
+class ControlPointPathEvaluator
 {
 public:
-    BezierPathEvaluator(const PathConfig &path, int num_steps, int arity);
+    ControlPointPathEvaluator(const PathConfig &path, int num_steps, int arity);
 
     std::vector<double> value_at(int frame) const;
 
 private:
     double fraction_at(int frame) const;
+    std::vector<double> bezier_value_at(double fraction) const;
+    std::vector<double> catmull_rom_value_at(double fraction) const;
 
+    PathKind m_kind{PathKind::BEZIER};
     std::vector<std::vector<double>> m_control_points;
     int m_num_steps{};
 };
 
-BezierPathEvaluator::BezierPathEvaluator(const PathConfig &path, int num_steps, int arity) :
+ControlPointPathEvaluator::ControlPointPathEvaluator(const PathConfig &path, int num_steps, int arity) :
+    m_kind(path.kind),
     m_num_steps(num_steps)
 {
     if (num_steps < 2)
     {
-        throw std::runtime_error("Bezier path requires at least two frames");
+        throw std::runtime_error("Control point path requires at least two frames");
     }
     if (arity <= 0)
     {
-        throw std::runtime_error("Bezier path requires a positive arity");
+        throw std::runtime_error("Control point path requires a positive arity");
     }
-    if (path.control_points.size() < 2U)
+
+    const std::size_t min_control_points{m_kind == PathKind::CATMULL_ROM ? 4U : 2U};
+    const std::string path_name{m_kind == PathKind::CATMULL_ROM ? "Catmull-Rom" : "Bezier"};
+    if (path.control_points.size() < min_control_points)
     {
-        throw std::runtime_error("Bezier path requires at least two control points");
+        throw std::runtime_error(
+            path_name + " path requires at least " + std::to_string(min_control_points) + " control points");
     }
 
     m_control_points.reserve(path.control_points.size());
@@ -660,21 +673,20 @@ BezierPathEvaluator::BezierPathEvaluator(const PathConfig &path, int num_steps, 
         std::vector<double> values{parse_slash_doubles(control_point)};
         if (values.size() != static_cast<std::size_t>(arity))
         {
-            throw std::runtime_error("Bezier control point '" + control_point + "' has arity " +
+            throw std::runtime_error(path_name + " control point '" + control_point + "' has arity " +
                 std::to_string(values.size()) + ", expected " + std::to_string(arity));
         }
         m_control_points.emplace_back(std::move(values));
     }
 }
 
-double BezierPathEvaluator::fraction_at(int frame) const
+double ControlPointPathEvaluator::fraction_at(int frame) const
 {
     return frame / static_cast<double>(m_num_steps - 1);
 }
 
-std::vector<double> BezierPathEvaluator::value_at(int frame) const
+std::vector<double> ControlPointPathEvaluator::bezier_value_at(double fraction) const
 {
-    const double fraction{fraction_at(frame)};
     std::vector<std::vector<double>> values{m_control_points};
     for (std::size_t order{values.size() - 1U}; order > 0U; --order)
     {
@@ -688,6 +700,41 @@ std::vector<double> BezierPathEvaluator::value_at(int frame) const
         }
     }
     return clean_path_components(values[0]);
+}
+
+std::vector<double> ControlPointPathEvaluator::catmull_rom_value_at(double fraction) const
+{
+    const double position{fraction * static_cast<double>(m_control_points.size() - 1U)};
+    const std::size_t last_segment{m_control_points.size() - 2U};
+    const std::size_t segment{std::min(static_cast<std::size_t>(std::floor(position)), last_segment)};
+    const double local{position - static_cast<double>(segment)};
+    const double local2{local * local};
+    const double local3{local2 * local};
+    const std::vector<double> &p1{m_control_points[segment]};
+    const std::vector<double> &p2{m_control_points[segment + 1U]};
+
+    std::vector<double> result(p1.size());
+    for (std::size_t i{}; i < result.size(); ++i)
+    {
+        const double p0{segment == 0U ? 2.0 * p1[i] - p2[i] : m_control_points[segment - 1U][i]};
+        const double p3{
+            segment + 2U < m_control_points.size() ? m_control_points[segment + 2U][i] : 2.0 * p2[i] - p1[i]};
+        result[i] = 0.5 *
+            ((2.0 * p1[i]) + (-p0 + p2[i]) * local +
+                (2.0 * p0 - 5.0 * p1[i] + 4.0 * p2[i] - p3) * local2 +
+                (-p0 + 3.0 * p1[i] - 3.0 * p2[i] + p3) * local3);
+    }
+    return clean_path_components(result);
+}
+
+std::vector<double> ControlPointPathEvaluator::value_at(int frame) const
+{
+    const double fraction{fraction_at(frame)};
+    if (m_kind == PathKind::CATMULL_ROM)
+    {
+        return catmull_rom_value_at(fraction);
+    }
+    return bezier_value_at(fraction);
 }
 
 class ComplexPathInterpolant : public Base
@@ -787,7 +834,7 @@ public:
 
 private:
     ParameterMetadata m_metadata;
-    BezierPathEvaluator m_path;
+    ControlPointPathEvaluator m_path;
 };
 
 TuplePathInterpolant::TuplePathInterpolant(const ResolvedTrack &track, int num_steps) :
@@ -815,7 +862,7 @@ public:
 
 private:
     ParameterMetadata m_metadata;
-    BezierPathEvaluator m_path;
+    ControlPointPathEvaluator m_path;
     std::vector<double> m_base_values;
 };
 
@@ -1534,7 +1581,7 @@ static InterpolantPtr create_path_interpolant(const ResolvedTrack &track, int nu
         throw std::runtime_error("Track '" + track.parameter + "' has no supported path generator");
     }
 
-    if (is_bezier_path(track.path->kind))
+    if (is_control_point_path(track.path->kind))
     {
         switch (track.metadata.type)
         {
@@ -1552,7 +1599,8 @@ static InterpolantPtr create_path_interpolant(const ResolvedTrack &track, int nu
         default:
             break;
         }
-        throw std::runtime_error("Bezier path track '" + track.parameter + "' requires a complex or tuple target");
+        throw std::runtime_error(
+            "Control point path track '" + track.parameter + "' requires a complex or tuple target");
     }
 
     switch (track.metadata.type)
