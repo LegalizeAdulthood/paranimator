@@ -591,8 +591,7 @@ std::complex<double> PlanarPathEvaluator::lissajous_value_at(double fraction) co
 {
     const double x_radians{degrees_to_radians(m_phase + 360.0 * m_x_frequency * fraction)};
     const double y_radians{degrees_to_radians(360.0 * m_y_frequency * fraction)};
-    return {
-        m_center.real() + std::cos(x_radians) * m_x_radius, m_center.imag() + std::sin(y_radians) * m_y_radius};
+    return {m_center.real() + std::cos(x_radians) * m_x_radius, m_center.imag() + std::sin(y_radians) * m_y_radius};
 }
 
 std::complex<double> PlanarPathEvaluator::spiral_value_at(double fraction) const
@@ -720,8 +719,7 @@ std::vector<double> ControlPointPathEvaluator::catmull_rom_value_at(double fract
         const double p3{
             segment + 2U < m_control_points.size() ? m_control_points[segment + 2U][i] : 2.0 * p2[i] - p1[i]};
         result[i] = 0.5 *
-            ((2.0 * p1[i]) + (-p0 + p2[i]) * local +
-                (2.0 * p0 - 5.0 * p1[i] + 4.0 * p2[i] - p3) * local2 +
+            ((2.0 * p1[i]) + (-p0 + p2[i]) * local + (2.0 * p0 - 5.0 * p1[i] + 4.0 * p2[i] - p3) * local2 +
                 (-p0 + 3.0 * p1[i] - 3.0 * p2[i] + p3) * local3);
     }
     return clean_path_components(result);
@@ -875,8 +873,7 @@ ParamsTuplePathInterpolant::ParamsTuplePathInterpolant(const ResolvedTrack &trac
     const int arity{path_arity(track.metadata)};
     if (track.slots.size() != static_cast<std::size_t>(arity))
     {
-        throw std::runtime_error("Track '" + track.parameter + "' requires " + std::to_string(arity) +
-            " params slots");
+        throw std::runtime_error("Track '" + track.parameter + "' requires " + std::to_string(arity) + " params slots");
     }
     for (const int slot : track.slots)
     {
@@ -1030,6 +1027,207 @@ std::string CornersInterpolant::step()
         result += format_double(value);
     }
     return result;
+}
+
+struct Point2D
+{
+    double x{};
+    double y{};
+};
+
+Point2D operator+(const Point2D &lhs, const Point2D &rhs)
+{
+    return {lhs.x + rhs.x, lhs.y + rhs.y};
+}
+
+Point2D operator-(const Point2D &lhs, const Point2D &rhs)
+{
+    return {lhs.x - rhs.x, lhs.y - rhs.y};
+}
+
+Point2D operator*(const Point2D &lhs, double scale)
+{
+    return {lhs.x * scale, lhs.y * scale};
+}
+
+Point2D point2_from_values(const std::vector<double> &values, std::string_view name)
+{
+    if (values.size() != 2U)
+    {
+        throw std::runtime_error("Camera2D value '" + std::string{name} + "' requires two components");
+    }
+    return {values[0], values[1]};
+}
+
+class Camera2DValueEvaluator
+{
+public:
+    Camera2DValueEvaluator(const ResolvedCamera2DValueTrack &track, int num_steps, bool positive);
+
+    std::vector<double> value_at(int frame) const;
+
+private:
+    std::vector<double> parse_value(const std::string &value) const;
+    void validate_curve() const;
+    void validate_positive_values() const;
+
+    ParameterMetadata m_metadata;
+    int m_from_frame{};
+    int m_to_frame{};
+    std::vector<double> m_from;
+    std::vector<double> m_to;
+    Curve m_curve{};
+    bool m_positive{};
+};
+
+Camera2DValueEvaluator::Camera2DValueEvaluator(const ResolvedCamera2DValueTrack &track, int num_steps, bool positive) :
+    m_metadata(track.metadata),
+    m_from_frame(track.keys[0].frame),
+    m_to_frame(track.keys[1].frame),
+    m_from(parse_value(track.keys[0].value)),
+    m_to(parse_value(track.keys[1].value)),
+    m_curve(default_curve(track.metadata)),
+    m_positive(positive)
+{
+    validate_keyframes(track.metadata.name, track.keys, num_steps);
+    validate_full_range(track.metadata.name, track.keys, num_steps);
+    if (track.keys[1].curve)
+    {
+        m_curve = *track.keys[1].curve;
+    }
+    validate_curve();
+    validate_positive_values();
+}
+
+std::vector<double> Camera2DValueEvaluator::parse_value(const std::string &value) const
+{
+    if (m_metadata.type == ParameterType::DOUBLE)
+    {
+        return {parse_double(value)};
+    }
+    const std::vector<double> values{parse_slash_doubles(value)};
+    const std::size_t arity{static_cast<std::size_t>(tuple_arity(m_metadata))};
+    if (values.size() != arity)
+    {
+        throw std::runtime_error(
+            "Camera2D value '" + m_metadata.name + "' requires " + std::to_string(arity) + " components");
+    }
+    return values;
+}
+
+void Camera2DValueEvaluator::validate_curve() const
+{
+    if (m_curve == Curve::GEOMETRIC && m_metadata.type != ParameterType::DOUBLE)
+    {
+        throw std::runtime_error("Camera2D value '" + m_metadata.name + "' does not support geometric curves");
+    }
+    if (m_curve != Curve::GEOMETRIC)
+    {
+        validate_scalar_curve(to_string(m_metadata.type), m_curve);
+    }
+}
+
+void Camera2DValueEvaluator::validate_positive_values() const
+{
+    if (m_positive && (m_from[0] <= 0.0 || m_to[0] <= 0.0))
+    {
+        throw std::runtime_error("Camera2D value '" + m_metadata.name + "' must be positive");
+    }
+}
+
+std::vector<double> Camera2DValueEvaluator::value_at(int frame) const
+{
+    std::vector<double> values{m_from};
+    if (frame >= m_to_frame)
+    {
+        values = m_to;
+    }
+    else if (frame > m_from_frame && m_curve != Curve::HOLD && m_curve != Curve::STEP)
+    {
+        const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        for (std::size_t i{}; i < values.size(); ++i)
+        {
+            if (m_curve == Curve::GEOMETRIC)
+            {
+                values[i] = m_from[i] * std::pow(m_to[i] / m_from[i], fraction);
+            }
+            else
+            {
+                values[i] = m_from[i] + fraction * (m_to[i] - m_from[i]);
+            }
+        }
+    }
+    normalize_vector(m_metadata, values);
+    return clean_path_components(values);
+}
+
+const ResolvedCamera2DConfig &camera2d_config(const ResolvedTrack &track)
+{
+    if (!track.camera2d)
+    {
+        throw std::runtime_error("Camera2D track '" + track.parameter + "' is missing camera settings");
+    }
+    return *track.camera2d;
+}
+
+bool is_normal_axis_aligned(const Point2D &up)
+{
+    constexpr double TOLERANCE{1.0e-12};
+    return std::abs(up.x) < TOLERANCE && std::abs(up.y - 1.0) < TOLERANCE;
+}
+
+class Camera2DInterpolant : public Base
+{
+public:
+    Camera2DInterpolant(const ResolvedTrack &track, int num_steps);
+    ~Camera2DInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    double m_aspect{};
+    Camera2DValueEvaluator m_look_at;
+    Camera2DValueEvaluator m_view_up;
+    Camera2DValueEvaluator m_height;
+};
+
+Camera2DInterpolant::Camera2DInterpolant(const ResolvedTrack &track, int num_steps) :
+    Base(track.output_parameter, num_steps),
+    m_aspect(camera2d_config(track).aspect),
+    m_look_at(camera2d_config(track).look_at, num_steps, false),
+    m_view_up(camera2d_config(track).view_up, num_steps, false),
+    m_height(camera2d_config(track).height, num_steps, true)
+{
+    if (track.metadata.type != ParameterType::CORNERS)
+    {
+        throw std::runtime_error("Camera2D track '" + track.parameter + "' requires a corners output");
+    }
+    if (m_aspect <= 0.0)
+    {
+        throw std::runtime_error("Camera2D track '" + track.parameter + "' requires a positive aspect");
+    }
+}
+
+std::string Camera2DInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+
+    const Point2D look{point2_from_values(m_look_at.value_at(frame), "look-at")};
+    const Point2D up{point2_from_values(m_view_up.value_at(frame), "view-up")};
+    const double height{m_height.value_at(frame)[0]};
+    const double width{height * m_aspect};
+    const Point2D right{up.y, -up.x};
+    const Point2D lower_left{look - right * (width / 2.0) - up * (height / 2.0)};
+    const Point2D lower_right{look + right * (width / 2.0) - up * (height / 2.0)};
+    const Point2D upper_left{look - right * (width / 2.0) + up * (height / 2.0)};
+
+    if (is_normal_axis_aligned(up))
+    {
+        return format_slash_doubles(clean_path_components({lower_left.x, lower_right.x, lower_left.y, upper_left.y}));
+    }
+    return format_slash_doubles(
+        clean_path_components({lower_left.x, lower_left.y, lower_right.x, lower_right.y, upper_left.x, upper_left.y}));
 }
 
 class IntegerInterpolant : public Base
@@ -1621,6 +1819,11 @@ static InterpolantPtr create_path_interpolant(const ResolvedTrack &track, int nu
 
 InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
 {
+    if (track.camera2d)
+    {
+        return std::make_shared<Camera2DInterpolant>(track, num_steps);
+    }
+
     const ParameterMetadata &metadata{track.metadata};
     const std::vector<KeyframeConfig> &keys{track.keys};
     if (track.path && keys.empty() && is_explicit_path(track.path->kind))

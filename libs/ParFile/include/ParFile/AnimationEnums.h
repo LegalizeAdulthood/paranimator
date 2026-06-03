@@ -58,6 +58,7 @@ enum class TrackMode
 enum class TrackKind
 {
     PARAMETER,
+    CAMERA2D,
     COLOR_MAP
 };
 

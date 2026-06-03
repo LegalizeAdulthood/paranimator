@@ -81,7 +81,8 @@ std::string config_with_gradient_stop_color(std::string_view color)
         "kind": "gradient",
         "stops": [
           { "index": 0, "color": "black" },
-          { "index": 255, "color": ")" + std::string{color} + R"(" }
+          { "index": 255, "color": ")" +
+        std::string{color} + R"(" }
         ]
       }
     }
@@ -110,7 +111,8 @@ std::string config_with_color_map_effect(std::string_view effect)
       "output": "colors-%04d.map",
       "source": "base.map",
       "effects": [
-        )" + std::string{effect} + R"(
+        )" +
+        std::string{effect} + R"(
       ]
     }
   ]
@@ -131,7 +133,8 @@ std::string config_with_track(std::string_view track)
   "video": "F6",
   "num-frames": 3,
   "tracks": [
-    )" + std::string{track} + R"(
+    )" + std::string{track} +
+        R"(
   ]
 })";
 }
@@ -394,6 +397,69 @@ TEST(TestJsonSchema, pathTrackAccepted)
     })")));
 }
 
+TEST(TestJsonSchema, camera2dTrackAccepted)
+{
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "name": "camera",
+      "type": "camera2d",
+      "output": "corners",
+      "aspect": "source",
+      "look-at": {
+        "type": "point2",
+        "keys": [
+          { "frame": 0, "value": "0/0" },
+          { "frame": 2, "value": "1/1" }
+        ]
+      },
+      "view-up": {
+        "type": "vector2",
+        "normalize": true,
+        "keys": [
+          { "frame": 0, "value": "0/2" },
+          { "frame": 2, "value": "1/1" }
+        ]
+      },
+      "height": {
+        "type": "double",
+        "keys": [
+          { "frame": 0, "value": 4 },
+          { "frame": 2, "value": 2, "curve": "geometric" }
+        ]
+      }
+    })")));
+}
+
+TEST(TestJsonSchema, camera2dTrackRejectsInvalidShape)
+{
+    EXPECT_FALSE(validates_config_text(config_with_track(R"({
+      "name": "camera",
+      "type": "camera2d",
+      "output": "corners",
+      "aspect": "source",
+      "look-at": {
+        "type": "vector2",
+        "keys": [
+          { "frame": 0, "value": "0/0" },
+          { "frame": 2, "value": "1/1" }
+        ]
+      },
+      "view-up": {
+        "type": "vector2",
+        "keys": [
+          { "frame": 0, "value": "0/1" },
+          { "frame": 2, "value": "0/1" }
+        ]
+      },
+      "height": {
+        "type": "double",
+        "keys": [
+          { "frame": 0, "value": 4 },
+          { "frame": 2, "value": 0 }
+        ]
+      }
+    })")));
+}
+
 TEST(TestJsonSchema, pathTrackRejectsKeysAndPath)
 {
     EXPECT_FALSE(validates_config_text(config_with_track(R"({
@@ -408,8 +474,8 @@ TEST(TestJsonSchema, pathTrackRejectsKeysAndPath)
 
 TEST(TestJsonSchema, unknownPathKindRejected)
 {
-    EXPECT_FALSE(validates_config_text(
-        config_with_track(R"({"parameter":"maxiter","path":{"kind":"unknown","value":"321"}})")));
+    EXPECT_FALSE(
+        validates_config_text(config_with_track(R"({"parameter":"maxiter","path":{"kind":"unknown","value":"321"}})")));
 }
 
 TEST(TestJsonSchema, pathTrackRejectsInvalidRadius)
@@ -431,8 +497,8 @@ TEST(TestJsonSchema, pathTrackRejectsInvalidRadius)
     })")));
     EXPECT_FALSE(validates_config_text(config_with_track(
         R"({"parameter":"params.c","path":{"kind":"spiral","center":"0/0","from-radius":1,"to-radius":-1}})")));
-    EXPECT_FALSE(validates_config_text(config_with_track(
-        R"({"parameter":"params.c","path":{"kind":"bezier","control-points":["0/1"]}})")));
+    EXPECT_FALSE(validates_config_text(
+        config_with_track(R"({"parameter":"params.c","path":{"kind":"bezier","control-points":["0/1"]}})")));
     EXPECT_FALSE(validates_config_text(config_with_track(
         R"({"parameter":"params.c","path":{"kind":"catmull-rom","control-points":["0/0","1/1","2/2"]}})")));
 }
@@ -669,13 +735,13 @@ TEST(TestJsonSchema, colorMapMaskedEffectsRejectInvalidRequiredFields)
     const std::string unit_amount{R"("amount":{"keys":[{"frame":0,"value":0.0},{"frame":2,"value":1.0}]})"};
     const std::string byte_amount{R"("amount":{"keys":[{"frame":0,"value":0.0},{"frame":2,"value":32.0}]})"};
 
+    EXPECT_FALSE(
+        validates_config_text(config_with_color_map_effect(R"({"kind":"pulse","color":"white",)" + unit_amount + "}")));
     EXPECT_FALSE(validates_config_text(
-        config_with_color_map_effect(R"({"kind":"pulse","color":"white",)" + unit_amount + "}")));
-    EXPECT_FALSE(validates_config_text(config_with_color_map_effect(
-        R"({"kind":"mask-blend","ranges":[],"source":"mask.map",)" + unit_amount + "}")));
+        config_with_color_map_effect(R"({"kind":"mask-blend","ranges":[],"source":"mask.map",)" + unit_amount + "}")));
     EXPECT_FALSE(validates_config_text(config_with_color_map_effect(R"({"kind":"remap","indices":[0,1]})")));
-    EXPECT_FALSE(validates_config_text(
-        config_with_color_map_effect(R"({"kind":"sparkle","range":[0,1],)" + byte_amount + "}")));
+    EXPECT_FALSE(
+        validates_config_text(config_with_color_map_effect(R"({"kind":"sparkle","range":[0,1],)" + byte_amount + "}")));
 }
 
 TEST(TestJsonSchema, colorMapMaskedEffectAmountsRejectOutOfRangeValues)

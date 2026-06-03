@@ -13,6 +13,20 @@
 namespace ParFile
 {
 
+struct ResolvedCamera2DValueTrack
+{
+    ParameterMetadata metadata;
+    std::vector<KeyframeConfig> keys;
+};
+
+struct ResolvedCamera2DConfig
+{
+    double aspect{};
+    ResolvedCamera2DValueTrack look_at;
+    ResolvedCamera2DValueTrack view_up;
+    ResolvedCamera2DValueTrack height;
+};
+
 struct ResolvedTrack
 {
     std::string parameter;
@@ -24,6 +38,7 @@ struct ResolvedTrack
     TrackMode mode{TrackMode::KEYFRAMES};
     std::optional<PwmConfig> pwm;
     std::optional<PathConfig> path;
+    std::optional<ResolvedCamera2DConfig> camera2d;
 };
 
 struct ResolvedAnimation

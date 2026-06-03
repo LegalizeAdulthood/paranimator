@@ -154,6 +154,33 @@ ParFile::ResolvedTrack resolved_pwm_track(const ParFile::ParameterMetadata &para
     return result;
 }
 
+ParFile::ResolvedCamera2DValueTrack resolved_camera2d_value_track(const std::string &name, ParFile::ParameterType type,
+    const std::vector<ParFile::KeyframeConfig> &keys, bool normalize = false)
+{
+    ParFile::ParameterMetadata parameter_metadata{metadata(name, type)};
+    parameter_metadata.normalize = normalize;
+    return {parameter_metadata, keys};
+}
+
+ParFile::ResolvedTrack resolved_camera2d_track(double aspect, const std::vector<ParFile::KeyframeConfig> &look_at_keys,
+    const std::vector<ParFile::KeyframeConfig> &view_up_keys, const std::vector<ParFile::KeyframeConfig> &height_keys)
+{
+    ParFile::ResolvedCamera2DConfig camera2d;
+    camera2d.aspect = aspect;
+    camera2d.look_at = resolved_camera2d_value_track("camera.look-at", ParFile::ParameterType::POINT2, look_at_keys);
+    camera2d.view_up =
+        resolved_camera2d_value_track("camera.view-up", ParFile::ParameterType::VECTOR2, view_up_keys, true);
+    camera2d.height = resolved_camera2d_value_track("camera.height", ParFile::ParameterType::DOUBLE, height_keys);
+
+    ParFile::ResolvedTrack result;
+    result.parameter = "camera";
+    result.metadata = metadata("corners", ParFile::ParameterType::CORNERS);
+    result.base_value = "-3/-1/-2/2";
+    result.output_parameter = "corners";
+    result.camera2d = camera2d;
+    return result;
+}
+
 ParFile::ParameterMetadata tuple_metadata(const std::string &name, int arity)
 {
     ParFile::ParameterMetadata result{metadata(name, ParFile::ParameterType::NUMERIC_TUPLE)};
@@ -387,6 +414,57 @@ TEST(TestInterpolant, cornersInvalidArityRejected)
 
     EXPECT_THROW(
         create_interpolant("corners", ParFile::ParameterType::CORNERS, from, to, num_steps), std::runtime_error);
+}
+
+TEST(TestInterpolant, camera2dAxisAlignedWritesFourValueCorners)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(resolved_camera2d_track(0.5, keyframes("0/0", "0/0", num_steps),
+                                        keyframes("0/1", "0/1", num_steps), keyframes("4", "4", num_steps)),
+            num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("corners", interpolant->name());
+    EXPECT_EQ("-1/1/-2/2", interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dRotatedWritesThirdCorner)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(resolved_camera2d_track(0.5, keyframes("0/0", "0/0", num_steps),
+                                        keyframes("1/1", "1/1", num_steps), keyframes("4", "4", num_steps)),
+            num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("-2.12132034356/-0.707106781187/-0.707106781187/-2.12132034356/0.707106781187/2.12132034356",
+        interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dNormalizesViewUp)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(resolved_camera2d_track(0.5, keyframes("0/0", "0/0", num_steps),
+                                        keyframes("0/2", "0/2", num_steps), keyframes("4", "4", num_steps)),
+            num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("-1/1/-2/2", interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dHeightSupportsGeometricCurve)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_camera2d_track(0.5, keyframes("0/0", "0/0", num_steps), keyframes("0/1", "0/1", num_steps),
+            keyframes("4", "2", ParFile::Curve::GEOMETRIC, num_steps)),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    static_cast<void>(interpolant->step());
+    EXPECT_EQ("-0.707106781187/0.707106781187/-1.41421356237/1.41421356237", interpolant->step());
 }
 
 TEST(TestInterpolant, integerFrom)
@@ -916,15 +994,13 @@ TEST(TestInterpolant, invalidPathFrequencyOrRadiusRejected)
 {
     const int num_steps{5};
 
-    EXPECT_THROW(
-        ParFile::create_interpolant(
-            resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2), lissajous_path("0/0", 0.0, 1.0)),
-            num_steps),
+    EXPECT_THROW(ParFile::create_interpolant(resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2),
+                                                 lissajous_path("0/0", 0.0, 1.0)),
+                     num_steps),
         std::runtime_error);
-    EXPECT_THROW(
-        ParFile::create_interpolant(
-            resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2), spiral_path("0/0", 1.0, -1.0)),
-            num_steps),
+    EXPECT_THROW(ParFile::create_interpolant(resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2),
+                                                 spiral_path("0/0", 1.0, -1.0)),
+                     num_steps),
         std::runtime_error);
 }
 
@@ -932,8 +1008,7 @@ TEST(TestInterpolant, bezierPathHitsFirstAndLastControlPoints)
 {
     const int num_steps{5};
     ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
-        resolved_path_track(
-            metadata("look-at", ParFile::ParameterType::POINT2), bezier_path({"0/0", "2/4", "4/0"})),
+        resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2), bezier_path({"0/0", "2/4", "4/0"})),
         num_steps)};
 
     ASSERT_TRUE(interpolant);
@@ -977,21 +1052,19 @@ TEST(TestInterpolant, invalidBezierPathRejected)
         ParFile::create_interpolant(
             resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2), bezier_path({"0/0"})), num_steps),
         std::runtime_error);
-    EXPECT_THROW(
-        ParFile::create_interpolant(
-            resolved_path_track(
-                metadata("look-at", ParFile::ParameterType::POINT2), bezier_path({"0/0", "1/1/1"})),
-            num_steps),
+    EXPECT_THROW(ParFile::create_interpolant(resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2),
+                                                 bezier_path({"0/0", "1/1/1"})),
+                     num_steps),
         std::runtime_error);
 }
 
 TEST(TestInterpolant, catmullRomPathPassesThroughControlPoints)
 {
     const int num_steps{7};
-    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
-        resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2),
-            catmull_rom_path({"0/0", "1/2", "3/2", "4/0"})),
-        num_steps)};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2),
+                                        catmull_rom_path({"0/0", "1/2", "3/2", "4/0"})),
+            num_steps)};
 
     ASSERT_TRUE(interpolant);
     EXPECT_EQ("0/0", interpolant->step());
@@ -1007,8 +1080,7 @@ TEST(TestInterpolant, catmullRomTuplePathPreservesArity)
 {
     const int num_steps{4};
     ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
-        resolved_path_track(tuple_metadata("position", 3),
-            catmull_rom_path({"0/1/2", "2/3/4", "4/5/6", "6/7/8"})),
+        resolved_path_track(tuple_metadata("position", 3), catmull_rom_path({"0/1/2", "2/3/4", "4/5/6", "6/7/8"})),
         num_steps)};
 
     ASSERT_TRUE(interpolant);
@@ -1022,17 +1094,13 @@ TEST(TestInterpolant, invalidCatmullRomPathRejected)
 {
     const int num_steps{7};
 
-    EXPECT_THROW(
-        ParFile::create_interpolant(
-            resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2),
-                catmull_rom_path({"0/0", "1/1", "2/2"})),
-            num_steps),
+    EXPECT_THROW(ParFile::create_interpolant(resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2),
+                                                 catmull_rom_path({"0/0", "1/1", "2/2"})),
+                     num_steps),
         std::runtime_error);
-    EXPECT_THROW(
-        ParFile::create_interpolant(
-            resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2),
-                catmull_rom_path({"0/0", "1/1", "2/2", "3/3/3"})),
-            num_steps),
+    EXPECT_THROW(ParFile::create_interpolant(resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2),
+                                                 catmull_rom_path({"0/0", "1/1", "2/2", "3/3/3"})),
+                     num_steps),
         std::runtime_error);
 }
 

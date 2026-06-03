@@ -3,11 +3,13 @@
 #include <ParFile/ResolvedAnimation.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace ParFile
 {
@@ -23,6 +25,80 @@ bool starts_with(std::string_view text, std::string_view prefix)
 bool ends_with(std::string_view text, std::string_view suffix)
 {
     return text.size() >= suffix.size() && text.substr(text.size() - suffix.size()) == suffix;
+}
+
+double parse_double(std::string_view text)
+{
+    try
+    {
+        std::size_t length{};
+        const std::string value{text};
+        const double result{std::stod(value, &length)};
+        if (length != value.size() || !std::isfinite(result))
+        {
+            throw std::runtime_error("Invalid numeric value '" + value + "'");
+        }
+        return result;
+    }
+    catch (const std::invalid_argument &)
+    {
+        throw std::runtime_error("Invalid numeric value '" + std::string{text} + "'");
+    }
+    catch (const std::out_of_range &)
+    {
+        throw std::runtime_error("Numeric value out of range '" + std::string{text} + "'");
+    }
+}
+
+std::vector<double> parse_slash_doubles(std::string_view text)
+{
+    std::vector<double> result;
+    std::size_t start{};
+    while (start <= text.size())
+    {
+        const std::size_t slash{text.find('/', start)};
+        const std::size_t end{slash == std::string_view::npos ? text.size() : slash};
+        result.push_back(parse_double(text.substr(start, end - start)));
+        if (slash == std::string_view::npos)
+        {
+            break;
+        }
+        start = slash + 1U;
+    }
+    return result;
+}
+
+double point_distance(double x0, double y0, double x1, double y1)
+{
+    const double dx{x1 - x0};
+    const double dy{y1 - y0};
+    return std::sqrt(dx * dx + dy * dy);
+}
+
+double source_corners_aspect(std::string_view value)
+{
+    const std::vector<double> values{parse_slash_doubles(value)};
+    double width{};
+    double height{};
+    if (values.size() == 4U)
+    {
+        width = std::abs(values[1] - values[0]);
+        height = std::abs(values[3] - values[2]);
+    }
+    else if (values.size() == 6U)
+    {
+        width = point_distance(values[0], values[1], values[2], values[3]);
+        height = point_distance(values[0], values[1], values[4], values[5]);
+    }
+    else
+    {
+        throw std::runtime_error("Source corners parameter must have 4 or 6 values");
+    }
+    if (width <= 0.0 || height <= 0.0)
+    {
+        throw std::runtime_error("Source corners parameter has zero width or height");
+    }
+    return width / height;
 }
 
 const Parameter *find_source_parameter(const ParSet &source, std::string_view name)
@@ -143,8 +219,7 @@ ResolvedTrack resolve_params_slot(
     const int slot{parse_params_slot(track.parameter)};
     const ParamsSlotMetadata &slot_metadata{catalog.params_slot(fractal_type, slot)};
     const Parameter &params{source_parameter(source, "params")};
-    return {
-        track.parameter, slot_metadata.metadata, params.value, track.keys, "params", {slot}, track.mode, track.pwm,
+    return {track.parameter, slot_metadata.metadata, params.value, track.keys, "params", {slot}, track.mode, track.pwm,
         track.path};
 }
 
@@ -196,12 +271,65 @@ ResolvedTrack resolve_regular_track(const TrackConfig &track, const ParameterCat
 {
     const ParameterMetadata &metadata{catalog.metadata(track.parameter)};
     const Parameter &parameter{source_parameter(source, track.parameter)};
-    return {track.parameter, metadata, parameter.value, track.keys, track.parameter, {}, track.mode, track.pwm,
-        track.path};
+    return {
+        track.parameter, metadata, parameter.value, track.keys, track.parameter, {}, track.mode, track.pwm, track.path};
+}
+
+ParameterMetadata camera2d_value_metadata(
+    std::string_view camera_name, std::string_view member_name, ParameterType type, bool normalize)
+{
+    ParameterMetadata result;
+    result.name = std::string{camera_name} + "." + std::string{member_name};
+    result.type = type;
+    result.format = type == ParameterType::DOUBLE ? ParameterFormat::RAW : ParameterFormat::SLASH;
+    result.default_curve = Curve::LINEAR;
+    result.extrapolate = ExtrapolateMode::CLAMP;
+    result.normalize = normalize;
+    return result;
+}
+
+ResolvedCamera2DValueTrack resolve_camera2d_value_track(
+    const Camera2DValueTrackConfig &track, std::string_view camera_name, std::string_view member_name, bool normalize)
+{
+    return {camera2d_value_metadata(camera_name, member_name, track.type, normalize), track.keys};
+}
+
+ResolvedTrack resolve_camera2d_track(const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source)
+{
+    if (!track.camera2d)
+    {
+        throw std::runtime_error("Camera2D track '" + track.parameter + "' is missing camera settings");
+    }
+
+    const Camera2DConfig &camera{*track.camera2d};
+    const ParameterMetadata &output_metadata{catalog.metadata(camera.output)};
+    if (output_metadata.type != ParameterType::CORNERS)
+    {
+        throw std::runtime_error("Camera2D track '" + camera.name + "' requires a corners output");
+    }
+
+    const Parameter &output{source_parameter(source, camera.output)};
+    ResolvedCamera2DConfig camera2d;
+    camera2d.aspect = source_corners_aspect(output.value);
+    camera2d.look_at = resolve_camera2d_value_track(camera.look_at, camera.name, "look-at", false);
+    camera2d.view_up = resolve_camera2d_value_track(camera.view_up, camera.name, "view-up", true);
+    camera2d.height = resolve_camera2d_value_track(camera.height, camera.name, "height", false);
+
+    ResolvedTrack result;
+    result.parameter = camera.name;
+    result.metadata = output_metadata;
+    result.base_value = output.value;
+    result.output_parameter = camera.output;
+    result.camera2d = camera2d;
+    return result;
 }
 
 ResolvedTrack resolve_track(const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source)
 {
+    if (track.kind == TrackKind::CAMERA2D)
+    {
+        return resolve_camera2d_track(track, catalog, source);
+    }
     if (source_is_formula(source))
     {
         const std::string formula_name{source_formula_name(source)};

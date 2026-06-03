@@ -242,8 +242,8 @@ TEST(TestConfig, jsonDeserializesOneTrack)
 TEST(TestConfig, jsonDeserializesConstantPathTrack)
 {
     Object json = valid_json();
-    json["tracks"] = Object::array(
-        {Object{{"parameter", "maxiter"}, {"path", Object{{"kind", "constant"}, {"value", "321"}}}}});
+    json["tracks"] =
+        Object::array({Object{{"parameter", "maxiter"}, {"path", Object{{"kind", "constant"}, {"value", "321"}}}}});
 
     const ParFile::Config config{ParFile::read_config(json.dump())};
 
@@ -283,8 +283,7 @@ TEST(TestConfig, jsonDeserializesCirclePathTrack)
 {
     Object json = valid_json();
     json["tracks"] = Object::array({Object{{"parameter", "params.c"},
-        {"path",
-            Object{{"kind", "circle"}, {"center", "0/0"}, {"radius", 1.5}, {"turns", 2.0}, {"phase", 90.0}}}}});
+        {"path", Object{{"kind", "circle"}, {"center", "0/0"}, {"radius", 1.5}, {"turns", 2.0}, {"phase", 90.0}}}}});
 
     const ParFile::Config config{ParFile::read_config(json.dump())};
 
@@ -322,13 +321,8 @@ TEST(TestConfig, jsonDeserializesLissajousPathTrack)
     Object json = valid_json();
     json["tracks"] = Object::array({Object{{"parameter", "params.c"},
         {"path",
-            Object{{"kind", "lissajous"},
-                {"center", "0/0"},
-                {"x-radius", 2.0},
-                {"y-radius", 1.0},
-                {"x-frequency", 3.0},
-                {"y-frequency", 2.0},
-                {"phase", 45.0}}}}});
+            Object{{"kind", "lissajous"}, {"center", "0/0"}, {"x-radius", 2.0}, {"y-radius", 1.0}, {"x-frequency", 3.0},
+                {"y-frequency", 2.0}, {"phase", 45.0}}}}});
 
     const ParFile::Config config{ParFile::read_config(json.dump())};
 
@@ -348,8 +342,7 @@ TEST(TestConfig, jsonDeserializesSpiralPathTrack)
     Object json = valid_json();
     json["tracks"] = Object::array({Object{{"parameter", "params.c"},
         {"path",
-            Object{
-                {"kind", "spiral"}, {"center", "0/0"}, {"from-radius", 1.0}, {"to-radius", 3.0}, {"turns", 2.0}}}}});
+            Object{{"kind", "spiral"}, {"center", "0/0"}, {"from-radius", 1.0}, {"to-radius", 3.0}, {"turns", 2.0}}}}});
 
     const ParFile::Config config{ParFile::read_config(json.dump())};
 
@@ -382,8 +375,7 @@ TEST(TestConfig, jsonDeserializesCatmullRomPathTrack)
 {
     Object json = valid_json();
     json["tracks"] = Object::array({Object{{"parameter", "params.c"},
-        {"path",
-            Object{{"kind", "catmull-rom"}, {"control-points", Object::array({"0/0", "1/2", "3/2", "4/0"})}}}}});
+        {"path", Object{{"kind", "catmull-rom"}, {"control-points", Object::array({"0/0", "1/2", "3/2", "4/0"})}}}}});
 
     const ParFile::Config config{ParFile::read_config(json.dump())};
 
@@ -392,6 +384,46 @@ TEST(TestConfig, jsonDeserializesCatmullRomPathTrack)
     EXPECT_EQ(ParFile::PathKind::CATMULL_ROM, config.tracks[0].path->kind);
     EXPECT_EQ((std::vector<std::string>{"0/0", "1/2", "3/2", "4/0"}), config.tracks[0].path->control_points);
     EXPECT_TRUE(config.tracks[0].keys.empty());
+}
+
+TEST(TestConfig, jsonDeserializesCamera2DCornersTrack)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"name", "camera"}, {"type", "camera2d"}, {"output", "corners"},
+        {"aspect", "source"},
+        {"look-at",
+            Object{{"type", "point2"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "0/0"}}, Object{{"frame", 59}, {"value", "1/1"}}})}}},
+        {"view-up",
+            Object{{"type", "vector2"}, {"normalize", true},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "0/2"}}, Object{{"frame", 59}, {"value", "1/1"}}})}}},
+        {"height",
+            Object{{"type", "double"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", 4.0}},
+                        Object{{"frame", 59}, {"value", 2.0}, {"curve", "geometric"}}})}}}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    EXPECT_EQ("camera", config.tracks[0].parameter);
+    EXPECT_EQ(ParFile::TrackKind::CAMERA2D, config.tracks[0].kind);
+    ASSERT_TRUE(config.tracks[0].camera2d);
+    const ParFile::Camera2DConfig &camera{*config.tracks[0].camera2d};
+    EXPECT_EQ("camera", camera.name);
+    EXPECT_EQ("corners", camera.output);
+    EXPECT_EQ("source", camera.aspect);
+    EXPECT_EQ(ParFile::ParameterType::POINT2, camera.look_at.type);
+    EXPECT_EQ(ParFile::ParameterType::VECTOR2, camera.view_up.type);
+    EXPECT_TRUE(camera.view_up.normalize);
+    EXPECT_EQ(ParFile::ParameterType::DOUBLE, camera.height.type);
+    ASSERT_EQ(2U, camera.height.keys.size());
+    EXPECT_EQ("4", camera.height.keys[0].value);
+    EXPECT_EQ("2", camera.height.keys[1].value);
+    ASSERT_TRUE(camera.height.keys[1].curve);
+    EXPECT_EQ(ParFile::Curve::GEOMETRIC, *camera.height.keys[1].curve);
 }
 
 TEST(TestConfig, jsonRejectsTrackWithKeysAndPath)
@@ -418,11 +450,7 @@ TEST(TestConfig, jsonRejectsInvalidPathFrequencyOrRadius)
     Object json = valid_json();
     json["tracks"] = Object::array({Object{{"parameter", "params.c"},
         {"path",
-            Object{{"kind", "lissajous"},
-                {"center", "0/0"},
-                {"x-radius", 1.0},
-                {"y-radius", 1.0},
-                {"x-frequency", 0.0},
+            Object{{"kind", "lissajous"}, {"center", "0/0"}, {"x-radius", 1.0}, {"y-radius", 1.0}, {"x-frequency", 0.0},
                 {"y-frequency", 1.0}}}}});
     expect_invalid(json);
 
@@ -430,8 +458,8 @@ TEST(TestConfig, jsonRejectsInvalidPathFrequencyOrRadius)
         {"path", Object{{"kind", "spiral"}, {"center", "0/0"}, {"from-radius", 1.0}, {"to-radius", -1.0}}}}});
     expect_invalid(json);
 
-    json["tracks"] = Object::array({Object{{"parameter", "params.c"},
-        {"path", Object{{"kind", "bezier"}, {"control-points", Object::array({"0/1"})}}}}});
+    json["tracks"] = Object::array({Object{
+        {"parameter", "params.c"}, {"path", Object{{"kind", "bezier"}, {"control-points", Object::array({"0/1"})}}}}});
     expect_invalid(json);
 
     json["tracks"] = Object::array({Object{{"parameter", "params.c"},
@@ -487,20 +515,15 @@ TEST(TestConfig, jsonDeserializesColorMapTrack)
 TEST(TestConfig, jsonDeserializesColorMapEffectTrack)
 {
     Object json = valid_json();
-    json["tracks"] =
-        Object::array({Object{{"parameter", "colors"},
-            {"type", "color-map"},
-            {"format", "at-file"},
-            {"output", "colors-%04d.map"},
-            {"source", "base.map"},
-            {"effects",
-                Object::array({Object{{"kind", "reverse"}, {"range", Object::array({2, 5})}},
-                    Object{{"kind", "ping-pong"},
-                        {"range", Object::array({2, 5})},
-                        {"offset",
-                            Object{{"keys",
-                                Object::array({Object{{"frame", 0}, {"value", 0.0}},
-                                    Object{{"frame", 4}, {"value", 4.0}}})}}}}})}}});
+    json["tracks"] = Object::array({Object{{"parameter", "colors"}, {"type", "color-map"}, {"format", "at-file"},
+        {"output", "colors-%04d.map"}, {"source", "base.map"},
+        {"effects",
+            Object::array({Object{{"kind", "reverse"}, {"range", Object::array({2, 5})}},
+                Object{{"kind", "ping-pong"}, {"range", Object::array({2, 5})},
+                    {"offset",
+                        Object{{"keys",
+                            Object::array(
+                                {Object{{"frame", 0}, {"value", 0.0}}, Object{{"frame", 4}, {"value", 4.0}}})}}}}})}}});
 
     const ParFile::Config config{ParFile::read_config(json.dump())};
 
@@ -523,17 +546,14 @@ TEST(TestConfig, jsonDeserializesColorMapEffectTrack)
 TEST(TestConfig, jsonDeserializesColorMapBrightnessEffect)
 {
     Object json = valid_json();
-    json["tracks"] = Object::array({Object{{"parameter", "colors"},
-        {"type", "color-map"},
-        {"format", "at-file"},
-        {"output", "colors-%04d.map"},
-        {"source", "base.map"},
+    json["tracks"] = Object::array({Object{{"parameter", "colors"}, {"type", "color-map"}, {"format", "at-file"},
+        {"output", "colors-%04d.map"}, {"source", "base.map"},
         {"effects",
             Object::array({Object{{"kind", "brightness"},
                 {"amount",
                     Object{{"keys",
-                        Object::array({Object{{"frame", 0}, {"value", 1.0}},
-                            Object{{"frame", 4}, {"value", 2.0}}})}}}}})}}});
+                        Object::array(
+                            {Object{{"frame", 0}, {"value", 1.0}}, Object{{"frame", 4}, {"value", 2.0}}})}}}}})}}});
 
     const ParFile::Config config{ParFile::read_config(json.dump())};
 
@@ -550,27 +570,24 @@ TEST(TestConfig, jsonDeserializesColorMapBrightnessEffect)
 TEST(TestConfig, jsonDeserializesColorMapAdjustmentEffects)
 {
     Object json = valid_json();
-    json["tracks"] = Object::array({Object{{"parameter", "colors"},
-        {"type", "color-map"},
-        {"format", "at-file"},
-        {"output", "colors-%04d.map"},
-        {"source", "base.map"},
+    json["tracks"] = Object::array({Object{{"parameter", "colors"}, {"type", "color-map"}, {"format", "at-file"},
+        {"output", "colors-%04d.map"}, {"source", "base.map"},
         {"effects",
             Object::array({Object{{"kind", "gamma"},
-                              {"amount",
-                                  Object{{"keys",
-                                      Object::array({Object{{"frame", 0}, {"value", 1.0}},
-                                          Object{{"frame", 4}, {"value", 2.0}}})}}}},
+                               {"amount",
+                                   Object{{"keys",
+                                       Object::array({Object{{"frame", 0}, {"value", 1.0}},
+                                           Object{{"frame", 4}, {"value", 2.0}}})}}}},
                 Object{{"kind", "contrast"},
                     {"amount",
                         Object{{"keys",
-                            Object::array({Object{{"frame", 0}, {"value", 1.0}},
-                                Object{{"frame", 4}, {"value", 0.5}}})}}}},
+                            Object::array(
+                                {Object{{"frame", 0}, {"value", 1.0}}, Object{{"frame", 4}, {"value", 0.5}}})}}}},
                 Object{{"kind", "saturation"},
                     {"amount",
                         Object{{"keys",
-                            Object::array({Object{{"frame", 0}, {"value", 1.0}},
-                                Object{{"frame", 4}, {"value", 0.0}}})}}}},
+                            Object::array(
+                                {Object{{"frame", 0}, {"value", 1.0}}, Object{{"frame", 4}, {"value", 0.0}}})}}}},
                 Object{{"kind", "hue-shift"},
                     {"amount",
                         Object{{"keys",
@@ -593,30 +610,22 @@ TEST(TestConfig, jsonDeserializesColorMapAdjustmentEffects)
 TEST(TestConfig, jsonDeserializesMaskedColorMapEffects)
 {
     Object json = valid_json();
-    json["tracks"] = Object::array({Object{{"parameter", "colors"},
-        {"type", "color-map"},
-        {"format", "at-file"},
-        {"output", "colors-%04d.map"},
-        {"source", "base.map"},
+    json["tracks"] = Object::array({Object{{"parameter", "colors"}, {"type", "color-map"}, {"format", "at-file"},
+        {"output", "colors-%04d.map"}, {"source", "base.map"},
         {"effects",
-            Object::array({Object{{"kind", "pulse"},
-                              {"range", Object::array({2, 5})},
-                              {"color", "white"},
-                              {"amount",
-                                  Object{{"keys",
-                                      Object::array({Object{{"frame", 0}, {"value", 0.0}},
-                                          Object{{"frame", 4}, {"value", 1.0}}})}}}},
+            Object::array({Object{{"kind", "pulse"}, {"range", Object::array({2, 5})}, {"color", "white"},
+                               {"amount",
+                                   Object{{"keys",
+                                       Object::array({Object{{"frame", 0}, {"value", 0.0}},
+                                           Object{{"frame", 4}, {"value", 1.0}}})}}}},
                 Object{{"kind", "mask-blend"},
-                    {"ranges", Object::array({Object::array({0, 1}), Object::array({4, 5})})},
-                    {"source", "mask.map"},
+                    {"ranges", Object::array({Object::array({0, 1}), Object::array({4, 5})})}, {"source", "mask.map"},
                     {"amount",
                         Object{{"keys",
-                            Object::array({Object{{"frame", 0}, {"value", 0.0}},
-                                Object{{"frame", 4}, {"value", 1.0}}})}}}},
+                            Object::array(
+                                {Object{{"frame", 0}, {"value", 0.0}}, Object{{"frame", 4}, {"value", 1.0}}})}}}},
                 Object{{"kind", "remap"}, {"indices", identity_indices()}},
-                Object{{"kind", "sparkle"},
-                    {"range", Object::array({6, 7})},
-                    {"seed", 1234},
+                Object{{"kind", "sparkle"}, {"range", Object::array({6, 7})}, {"seed", 1234},
                     {"amount",
                         Object{{"keys",
                             Object::array({Object{{"frame", 0}, {"value", 0.0}},
@@ -643,15 +652,13 @@ TEST(TestConfig, jsonDeserializesMaskedColorMapEffects)
 TEST(TestConfig, jsonDeserializesColorMapGradientSourceTrack)
 {
     Object json = valid_json();
-    json["tracks"] = Object::array({Object{{"parameter", "colors"},
-        {"type", "color-map"},
-        {"format", "at-file"},
-        {"output", "colors-%04d.map"},
-        {"source",
-            Object{{"kind", "gradient"},
-                {"stops",
-                    Object::array(
-                        {Object{{"index", 0}, {"color", "black"}}, Object{{"index", 255}, {"color", "white"}}})}}}}});
+    json["tracks"] = Object::array(
+        {Object{{"parameter", "colors"}, {"type", "color-map"}, {"format", "at-file"}, {"output", "colors-%04d.map"},
+            {"source",
+                Object{{"kind", "gradient"},
+                    {"stops",
+                        Object::array({Object{{"index", 0}, {"color", "black"}},
+                            Object{{"index", 255}, {"color", "white"}}})}}}}});
 
     const ParFile::Config config{ParFile::read_config(json.dump())};
 

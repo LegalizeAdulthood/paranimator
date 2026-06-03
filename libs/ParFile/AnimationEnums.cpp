@@ -152,6 +152,10 @@ TrackKind parse_track_kind(std::string_view text)
     {
         return TrackKind::PARAMETER;
     }
+    if (text == "camera2d")
+    {
+        return TrackKind::CAMERA2D;
+    }
     if (text == "color-map")
     {
         return TrackKind::COLOR_MAP;
@@ -270,6 +274,8 @@ std::string_view to_string(TrackKind value)
     {
     case TrackKind::PARAMETER:
         return "parameter";
+    case TrackKind::CAMERA2D:
+        return "camera2d";
     case TrackKind::COLOR_MAP:
         return "color-map";
     }

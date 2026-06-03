@@ -5,7 +5,9 @@
 #include <nlohmann/json.hpp>
 
 #include <cstddef>
+#include <iomanip>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -77,6 +79,20 @@ static std::optional<std::string> load_optional_string(const Object &json, std::
     return json.at(key).get<std::string>();
 }
 
+static std::optional<bool> load_optional_bool(const Object &json, std::string_view field)
+{
+    const std::string key{field};
+    if (!json.contains(key))
+    {
+        return std::nullopt;
+    }
+    if (!json.at(key).is_boolean())
+    {
+        throw std::runtime_error("Invalid config, field '" + std::string{field} + "' is not a boolean");
+    }
+    return json.at(key).get<bool>();
+}
+
 static std::vector<std::string> load_string_array(const Object &json, std::string_view name)
 {
     const std::string key{name};
@@ -126,6 +142,13 @@ static int load_int(const Object &json, std::string_view name)
         throw std::runtime_error("Invalid config, missing integer '" + std::string{name} + "'");
     }
     return json.at(key).get<int>();
+}
+
+static std::string format_config_double(double value)
+{
+    std::ostringstream out;
+    out << std::setprecision(12) << value;
+    return out.str();
 }
 
 static double load_double(const Object &json, std::string_view name)
@@ -207,6 +230,83 @@ static std::vector<KeyframeConfig> load_keyframes(const Object &json, TrackMode 
         }
         result.emplace_back(load_keyframe_config(item, mode));
     }
+    return result;
+}
+
+static std::string load_camera_keyframe_value(const Object &json, bool number_value)
+{
+    const std::string key{"value"};
+    if (number_value)
+    {
+        if (!json.contains(key) || !json.at(key).is_number())
+        {
+            throw std::runtime_error("Invalid config, missing number 'value'");
+        }
+        return format_config_double(json.at(key).get<double>());
+    }
+    return load_string(json, "value");
+}
+
+static KeyframeConfig load_camera_keyframe_config(const Object &json, bool number_value)
+{
+    KeyframeConfig result;
+    result.frame = load_int(json, "frame");
+    result.value = load_camera_keyframe_value(json, number_value);
+    if (const std::optional<std::string> curve{load_optional_string(json, "curve")})
+    {
+        result.curve = parse_curve(*curve);
+    }
+    return result;
+}
+
+static std::vector<KeyframeConfig> load_camera_keyframes(const Object &json, std::string_view name, bool number_value)
+{
+    const std::string key{"keys"};
+    if (!json.contains(key) || !json.at(key).is_array())
+    {
+        throw std::runtime_error("Invalid config, missing array '" + std::string{name} + ".keys'");
+    }
+    std::vector<KeyframeConfig> result;
+    for (const Object &item : json.at(key))
+    {
+        if (!item.is_object())
+        {
+            throw std::runtime_error(
+                "Invalid config, array '" + std::string{name} + ".keys' contains non-object value");
+        }
+        result.emplace_back(load_camera_keyframe_config(item, number_value));
+    }
+    return result;
+}
+
+static Camera2DValueTrackConfig load_camera2d_value_track_config(
+    const Object &json, std::string_view name, ParameterType expected_type, bool number_value)
+{
+    const Object &track{load_object(json, name)};
+    Camera2DValueTrackConfig result;
+    result.type = parse_parameter_type(load_string(track, name, "type"));
+    if (result.type != expected_type)
+    {
+        throw std::runtime_error("Invalid config, camera2d '" + std::string{name} + "' has the wrong type");
+    }
+    result.normalize = load_optional_bool(track, "normalize").value_or(false);
+    result.keys = load_camera_keyframes(track, name, number_value);
+    return result;
+}
+
+static Camera2DConfig load_camera2d_config(const Object &json)
+{
+    Camera2DConfig result;
+    result.name = load_string(json, "name");
+    result.output = load_string(json, "output");
+    result.aspect = load_string(json, "aspect");
+    if (result.aspect != "source")
+    {
+        throw std::runtime_error("Invalid config, camera2d aspect must be 'source'");
+    }
+    result.look_at = load_camera2d_value_track_config(json, "look-at", ParameterType::POINT2, false);
+    result.view_up = load_camera2d_value_track_config(json, "view-up", ParameterType::VECTOR2, false);
+    result.height = load_camera2d_value_track_config(json, "height", ParameterType::DOUBLE, true);
     return result;
 }
 
@@ -494,7 +594,8 @@ static NumberTrackConfig load_number_track_config(const Object &json, std::strin
     {
         if (!item.is_object())
         {
-            throw std::runtime_error("Invalid config, array '" + std::string{name} + ".keys' contains non-object value");
+            throw std::runtime_error(
+                "Invalid config, array '" + std::string{name} + ".keys' contains non-object value");
         }
         result.keys.emplace_back(load_number_keyframe_config(item));
     }
@@ -646,9 +747,16 @@ static ColorMapConfig load_color_map_config(const Object &json)
 static TrackConfig load_track_config(const Object &json, int num_frames)
 {
     TrackConfig result;
-    result.parameter = load_string(json, "parameter");
     result.kind = load_track_kind(json);
     result.mode = load_track_mode(json);
+    if (result.kind == TrackKind::CAMERA2D)
+    {
+        result.camera2d = load_camera2d_config(json);
+        result.parameter = result.camera2d->name;
+        return result;
+    }
+
+    result.parameter = load_string(json, "parameter");
     if (result.kind == TrackKind::COLOR_MAP)
     {
         result.color_map = load_color_map_config(json);

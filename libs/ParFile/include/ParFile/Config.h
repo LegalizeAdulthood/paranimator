@@ -138,6 +138,23 @@ struct ColorMapConfig
     std::vector<ColorMapEffectConfig> effects;
 };
 
+struct Camera2DValueTrackConfig
+{
+    ParameterType type{};
+    bool normalize{};
+    std::vector<KeyframeConfig> keys;
+};
+
+struct Camera2DConfig
+{
+    std::string name;
+    std::string output;
+    std::string aspect;
+    Camera2DValueTrackConfig look_at;
+    Camera2DValueTrackConfig view_up;
+    Camera2DValueTrackConfig height;
+};
+
 struct TrackConfig
 {
     std::string parameter;
@@ -147,6 +164,7 @@ struct TrackConfig
     TrackKind kind{TrackKind::PARAMETER};
     std::optional<ColorMapConfig> color_map;
     std::optional<PathConfig> path;
+    std::optional<Camera2DConfig> camera2d;
 };
 
 struct Config

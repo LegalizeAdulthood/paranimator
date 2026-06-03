@@ -77,7 +77,8 @@
         "oneOf": [
           { "$ref": "#/$defs/value-track" },
           { "$ref": "#/$defs/pwm-track" },
-          { "$ref": "#/$defs/color-map-track" }
+          { "$ref": "#/$defs/color-map-track" },
+          { "$ref": "#/$defs/camera2d-track" }
         ]
       }
     }
@@ -147,6 +148,164 @@
         "path": {
           "description": "Path generator that produces full-range keyframes for this track.",
           "$ref": "#/$defs/path-generator"
+        }
+      }
+    },
+    "camera2d-track": {
+      "description": "Virtual 2D camera track that writes one catalog-declared viewport output.",
+      "type": "object",
+      "required": [ "name", "type", "output", "aspect", "look-at", "view-up", "height" ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "description": "Local name used to report camera2d validation errors.",
+          "type": "string"
+        },
+        "type": {
+          "const": "camera2d",
+          "description": "Selects virtual 2D camera evaluation."
+        },
+        "output": {
+          "description": "Catalog parameter key that receives the computed viewport value.",
+          "type": "string"
+        },
+        "aspect": {
+          "const": "source",
+          "description": "Use the source viewport aspect ratio."
+        },
+        "look-at": {
+          "description": "Keyed point at the center of the planned camera view.",
+          "$ref": "#/$defs/camera2d-point2-track"
+        },
+        "view-up": {
+          "description": "Keyed up direction for the planned camera view.",
+          "$ref": "#/$defs/camera2d-vector2-track"
+        },
+        "height": {
+          "description": "Keyed camera view height in output coordinate units.",
+          "$ref": "#/$defs/camera2d-height-track"
+        }
+      }
+    },
+    "camera2d-point2-track": {
+      "description": "Camera2d point2 component track.",
+      "type": "object",
+      "required": [ "type", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "point2",
+          "description": "Declares a two-component point value."
+        },
+        "keys": {
+          "description": "Exactly two keyed point2 values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/camera2d-point2-keyframe" }
+        }
+      }
+    },
+    "camera2d-vector2-track": {
+      "description": "Camera2d vector2 component track.",
+      "type": "object",
+      "required": [ "type", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "vector2",
+          "description": "Declares a two-component direction value."
+        },
+        "normalize": {
+          "const": true,
+          "description": "Requests unit-vector normalization for this direction."
+        },
+        "keys": {
+          "description": "Exactly two keyed vector2 values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/camera2d-vector2-keyframe" }
+        }
+      }
+    },
+    "camera2d-height-track": {
+      "description": "Camera2d scalar height component track.",
+      "type": "object",
+      "required": [ "type", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "double",
+          "description": "Declares a scalar floating-point value."
+        },
+        "keys": {
+          "description": "Exactly two keyed positive height values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/camera2d-height-keyframe" }
+        }
+      }
+    },
+    "camera2d-point2-keyframe": {
+      "description": "One keyed camera point2 value.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this camera point key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Slash-delimited point2 value at this keyframe.",
+          "type": "string"
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this point key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
+      }
+    },
+    "camera2d-vector2-keyframe": {
+      "description": "One keyed camera vector2 value.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this camera vector key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Slash-delimited vector2 value at this keyframe.",
+          "type": "string"
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this vector key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
+      }
+    },
+    "camera2d-height-keyframe": {
+      "description": "One keyed camera height value.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this camera height key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Positive camera height at this keyframe.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this height key.",
+          "$ref": "#/$defs/curve"
         }
       }
     },
@@ -483,7 +642,7 @@
         },
         "type": {
           "description": "Selects color-map side-file generation for this track.",
-          "$ref": "#/$defs/track-kind"
+          "const": "color-map"
         },
         "format": {
           "description": "Format for the generated Id parameter value.",
