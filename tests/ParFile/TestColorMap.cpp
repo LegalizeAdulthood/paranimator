@@ -190,3 +190,39 @@ TEST(TestColorMap, rotateZeroOffsetLeavesMapUnchanged)
         EXPECT_EQ(map[i].blue, result[i].blue);
     }
 }
+
+TEST(TestColorMap, rotateRangeOnlySelectedRangeRotates)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    const ParFile::ColorMap result{ParFile::rotate_color_map_range(map, 2, 5, 1)};
+
+    EXPECT_EQ(1, result[1].red);
+    EXPECT_EQ(5, result[2].red);
+    EXPECT_EQ(2, result[3].red);
+    EXPECT_EQ(3, result[4].red);
+    EXPECT_EQ(4, result[5].red);
+    EXPECT_EQ(6, result[6].red);
+}
+
+TEST(TestColorMap, rotateRangeEntriesOutsideRangeAreUnchanged)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    const ParFile::ColorMap result{ParFile::rotate_color_map_range(map, 10, 12, -1)};
+
+    EXPECT_EQ(9, result[9].red);
+    EXPECT_EQ(11, result[10].red);
+    EXPECT_EQ(12, result[11].red);
+    EXPECT_EQ(10, result[12].red);
+    EXPECT_EQ(13, result[13].red);
+}
+
+TEST(TestColorMap, rotateRangeInvalidRangesAreRejected)
+{
+    const ParFile::ColorMap map{indexed_map()};
+
+    EXPECT_THROW(ParFile::rotate_color_map_range(map, 5, 4, 1), std::runtime_error);
+    EXPECT_THROW(ParFile::rotate_color_map_range(map, -1, 4, 1), std::runtime_error);
+    EXPECT_THROW(ParFile::rotate_color_map_range(map, 0, 256, 1), std::runtime_error);
+}

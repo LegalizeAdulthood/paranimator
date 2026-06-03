@@ -70,11 +70,23 @@ int interpolate_component(int from, int to, double blend)
     return static_cast<int>(std::lround(from + blend * (to - from)));
 }
 
-std::size_t rotate_source_index(std::size_t destination, int offset)
+std::size_t wrap_index(int index, int size)
 {
-    const int size{static_cast<int>(COLOR_MAP_SIZE)};
-    const int source{(static_cast<int>(destination) - offset) % size};
-    return static_cast<std::size_t>(source < 0 ? source + size : source);
+    const int wrapped{index % size};
+    return static_cast<std::size_t>(wrapped < 0 ? wrapped + size : wrapped);
+}
+
+std::size_t rotate_source_index(std::size_t destination, int offset, int size)
+{
+    return wrap_index(static_cast<int>(destination) - offset, size);
+}
+
+void validate_range(int first, int last)
+{
+    if (first < 0 || last < 0 || first > last || last >= static_cast<int>(COLOR_MAP_SIZE))
+    {
+        throw std::runtime_error("Color map range is invalid");
+    }
 }
 
 } // namespace
@@ -138,7 +150,20 @@ ColorMap rotate_color_map(const ColorMap &map, int offset)
     ColorMap result;
     for (std::size_t i = 0; i < result.size(); ++i)
     {
-        result[i] = map[rotate_source_index(i, offset)];
+        result[i] = map[rotate_source_index(i, offset, static_cast<int>(COLOR_MAP_SIZE))];
+    }
+    return result;
+}
+
+ColorMap rotate_color_map_range(const ColorMap &map, int first, int last, int offset)
+{
+    validate_range(first, last);
+    ColorMap result{map};
+    const int length{last - first + 1};
+    for (int i = first; i <= last; ++i)
+    {
+        const std::size_t source{static_cast<std::size_t>(first) + rotate_source_index(i - first, offset, length)};
+        result[static_cast<std::size_t>(i)] = map[source];
     }
     return result;
 }
