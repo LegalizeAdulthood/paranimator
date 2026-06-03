@@ -352,6 +352,10 @@ TEST(TestJsonSchema, pathTrackAccepted)
         config_with_track(R"({"parameter":"maxiter","path":{"kind":"constant","value":"321"}})")));
     EXPECT_TRUE(validates_config_text(
         config_with_track(R"({"parameter":"maxiter","path":{"kind":"line","from":"100","to":"200"}})")));
+    EXPECT_TRUE(validates_config_text(config_with_track(
+        R"({"parameter":"params.c","path":{"kind":"circle","center":"0/0","radius":1,"turns":1,"phase":90}})")));
+    EXPECT_TRUE(validates_config_text(config_with_track(
+        R"({"parameter":"look-at","path":{"kind":"ellipse","center":"0/0","x-radius":2,"y-radius":1}})")));
 }
 
 TEST(TestJsonSchema, pathTrackRejectsKeysAndPath)
@@ -370,6 +374,14 @@ TEST(TestJsonSchema, unknownPathKindRejected)
 {
     EXPECT_FALSE(validates_config_text(
         config_with_track(R"({"parameter":"maxiter","path":{"kind":"unknown","value":"321"}})")));
+}
+
+TEST(TestJsonSchema, pathTrackRejectsInvalidRadius)
+{
+    EXPECT_FALSE(validates_config_text(
+        config_with_track(R"({"parameter":"params.c","path":{"kind":"circle","center":"0/0","radius":-1}})")));
+    EXPECT_FALSE(validates_config_text(config_with_track(
+        R"({"parameter":"look-at","path":{"kind":"ellipse","center":"0/0","x-radius":1,"y-radius":-1}})")));
 }
 
 TEST(TestJsonSchema, unknownTrackModeRejected)

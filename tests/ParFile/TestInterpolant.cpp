@@ -64,6 +64,44 @@ ParFile::ResolvedTrack resolved_params_track(const std::string &name, ParFile::P
     return {name, metadata(name, type), base_value, keys, "params", std::move(slots)};
 }
 
+ParFile::PathConfig circle_path(const std::string &center, double radius, double turns = 1.0, double phase = 0.0)
+{
+    ParFile::PathConfig result;
+    result.kind = ParFile::PathKind::CIRCLE;
+    result.center = center;
+    result.radius = radius;
+    result.turns = turns;
+    result.phase = phase;
+    return result;
+}
+
+ParFile::PathConfig ellipse_path(
+    const std::string &center, double x_radius, double y_radius, double turns = 1.0, double phase = 0.0)
+{
+    ParFile::PathConfig result;
+    result.kind = ParFile::PathKind::ELLIPSE;
+    result.center = center;
+    result.x_radius = x_radius;
+    result.y_radius = y_radius;
+    result.turns = turns;
+    result.phase = phase;
+    return result;
+}
+
+ParFile::ResolvedTrack resolved_path_track(
+    const ParFile::ParameterMetadata &parameter_metadata, const ParFile::PathConfig &path)
+{
+    return {parameter_metadata.name, parameter_metadata, {}, {}, parameter_metadata.name, {},
+        ParFile::TrackMode::KEYFRAMES, {}, path};
+}
+
+ParFile::ResolvedTrack resolved_params_path_track(
+    const std::string &name, const ParFile::PathConfig &path, const std::string &base_value, std::vector<int> slots)
+{
+    return {name, metadata(name, ParFile::ParameterType::COMPLEX), base_value, {}, "params", std::move(slots),
+        ParFile::TrackMode::KEYFRAMES, {}, path};
+}
+
 ParFile::ResolvedTrack resolved_pwm_track(const ParFile::ParameterMetadata &parameter_metadata, const std::string &a,
     const std::string &b, int window, double from, double to, int num_steps)
 {
@@ -753,6 +791,49 @@ TEST(TestInterpolant, paramsComplexInterpolatesSlashPair)
     EXPECT_EQ("0/1/52", interpolant->step());
     EXPECT_EQ("1/2/52", interpolant->step());
     EXPECT_EQ("2/3/52", interpolant->step());
+}
+
+TEST(TestInterpolant, complexCirclePathReturnsToStartAfterOneTurn)
+{
+    const int num_steps{5};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_params_path_track("params.c", circle_path("0/0", 1.0), "0/0/52", {0, 1}), num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    const std::string first{interpolant->step()};
+    static_cast<void>(interpolant->step());
+    static_cast<void>(interpolant->step());
+    static_cast<void>(interpolant->step());
+    const std::string last{interpolant->step()};
+
+    EXPECT_EQ("1/0/52", first);
+    EXPECT_EQ(first, last);
+}
+
+TEST(TestInterpolant, pointEllipsePathUsesIndependentRadii)
+{
+    const int num_steps{5};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2), ellipse_path("0/0", 2.0, 1.0)),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("2/0", interpolant->step());
+    EXPECT_EQ("0/1", interpolant->step());
+    EXPECT_EQ("-2/0", interpolant->step());
+    EXPECT_EQ("0/-1", interpolant->step());
+    EXPECT_EQ("2/0", interpolant->step());
+}
+
+TEST(TestInterpolant, circlePathPhaseChangesStartingPoint)
+{
+    const int num_steps{5};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_path_track(metadata("look-at", ParFile::ParameterType::POINT2), circle_path("0/0", 1.0, 1.0, 90.0)),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("0/1", interpolant->step());
 }
 
 TEST(TestInterpolant, paramsSlotPreservesOtherSlots)

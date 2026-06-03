@@ -23,6 +23,7 @@ struct ResolvedTrack
     std::vector<int> slots;
     TrackMode mode{TrackMode::KEYFRAMES};
     std::optional<PwmConfig> pwm;
+    std::optional<PathConfig> path;
 };
 
 struct ResolvedAnimation

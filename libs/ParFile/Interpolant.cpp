@@ -439,6 +439,158 @@ void normalize_vector(const ParameterMetadata &metadata, std::vector<double> &va
     }
 }
 
+bool is_planar_path(PathKind kind)
+{
+    return kind == PathKind::CIRCLE || kind == PathKind::ELLIPSE;
+}
+
+double clean_path_component(double value)
+{
+    return std::abs(value) < 1.0e-12 ? 0.0 : value;
+}
+
+std::string format_slash_pair(const std::complex<double> &value)
+{
+    return format_slash_doubles({clean_path_component(value.real()), clean_path_component(value.imag())});
+}
+
+class PlanarPathEvaluator
+{
+public:
+    PlanarPathEvaluator(const PathConfig &path, int num_steps);
+
+    std::complex<double> value_at(int frame) const;
+
+private:
+    std::complex<double> m_center;
+    double m_x_radius{};
+    double m_y_radius{};
+    double m_turns{};
+    double m_phase{};
+    int m_num_steps{};
+};
+
+PlanarPathEvaluator::PlanarPathEvaluator(const PathConfig &path, int num_steps) :
+    m_center(parse_slash_pair(path.center)),
+    m_turns(path.turns),
+    m_phase(path.phase),
+    m_num_steps(num_steps)
+{
+    if (num_steps < 2)
+    {
+        throw std::runtime_error("Planar path requires at least two frames");
+    }
+    if (path.kind == PathKind::CIRCLE)
+    {
+        m_x_radius = path.radius;
+        m_y_radius = path.radius;
+    }
+    else if (path.kind == PathKind::ELLIPSE)
+    {
+        m_x_radius = path.x_radius;
+        m_y_radius = path.y_radius;
+    }
+    else
+    {
+        throw std::runtime_error("Planar path requires a circle or ellipse path");
+    }
+}
+
+std::complex<double> PlanarPathEvaluator::value_at(int frame) const
+{
+    constexpr double PI{3.141592653589793238462643383279502884};
+    const double fraction{frame / static_cast<double>(m_num_steps - 1)};
+    const double radians{(m_phase + 360.0 * m_turns * fraction) * PI / 180.0};
+    return {m_center.real() + std::cos(radians) * m_x_radius, m_center.imag() + std::sin(radians) * m_y_radius};
+}
+
+class ComplexPathInterpolant : public Base
+{
+public:
+    ComplexPathInterpolant(const ResolvedTrack &track, int num_steps);
+    ~ComplexPathInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    PlanarPathEvaluator m_path;
+};
+
+ComplexPathInterpolant::ComplexPathInterpolant(const ResolvedTrack &track, int num_steps) :
+    Base(track.output_parameter, num_steps),
+    m_path(*track.path, num_steps)
+{
+}
+
+std::string ComplexPathInterpolant::step()
+{
+    const std::complex<double> value{m_path.value_at(m_step)};
+    ++m_step;
+    return format_slash_pair(value);
+}
+
+class ParamsComplexPathInterpolant : public Base
+{
+public:
+    ParamsComplexPathInterpolant(const ResolvedTrack &track, int num_steps);
+    ~ParamsComplexPathInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    PlanarPathEvaluator m_path;
+    std::vector<double> m_base_values;
+};
+
+ParamsComplexPathInterpolant::ParamsComplexPathInterpolant(const ResolvedTrack &track, int num_steps) :
+    Base(track.output_parameter, num_steps, track.slots),
+    m_path(*track.path, num_steps),
+    m_base_values(parse_slash_doubles(track.base_value))
+{
+    if (track.slots.size() != 2U)
+    {
+        throw std::runtime_error("Track '" + track.parameter + "' requires exactly two params slots");
+    }
+    validate_params_slot(track.parameter, m_base_values, track.slots[0]);
+    validate_params_slot(track.parameter, m_base_values, track.slots[1]);
+}
+
+std::string ParamsComplexPathInterpolant::step()
+{
+    const std::complex<double> value{m_path.value_at(m_step)};
+    ++m_step;
+
+    std::vector<double> values{m_base_values};
+    values[static_cast<std::size_t>(m_output_slots[0])] = clean_path_component(value.real());
+    values[static_cast<std::size_t>(m_output_slots[1])] = clean_path_component(value.imag());
+    return format_slash_doubles(values);
+}
+
+class Point2PathInterpolant : public Base
+{
+public:
+    Point2PathInterpolant(const ResolvedTrack &track, int num_steps);
+    ~Point2PathInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    PlanarPathEvaluator m_path;
+};
+
+Point2PathInterpolant::Point2PathInterpolant(const ResolvedTrack &track, int num_steps) :
+    Base(track.output_parameter, num_steps),
+    m_path(*track.path, num_steps)
+{
+}
+
+std::string Point2PathInterpolant::step()
+{
+    const std::complex<double> value{m_path.value_at(m_step)};
+    ++m_step;
+    return format_slash_pair(value);
+}
+
 struct CenterMag
 {
     CenterMag() = default;
@@ -1115,10 +1267,37 @@ std::string FunctionEnumInterpolant::step()
 
 } // namespace
 
+static InterpolantPtr create_path_interpolant(const ResolvedTrack &track, int num_steps)
+{
+    if (!track.path || !is_planar_path(track.path->kind))
+    {
+        throw std::runtime_error("Track '" + track.parameter + "' has no supported path generator");
+    }
+
+    switch (track.metadata.type)
+    {
+    case ParameterType::COMPLEX:
+        if (track.output_parameter == "params")
+        {
+            return std::make_shared<ParamsComplexPathInterpolant>(track, num_steps);
+        }
+        return std::make_shared<ComplexPathInterpolant>(track, num_steps);
+    case ParameterType::POINT2:
+        return std::make_shared<Point2PathInterpolant>(track, num_steps);
+    default:
+        break;
+    }
+    throw std::runtime_error("Path track '" + track.parameter + "' requires a complex or point2 target");
+}
+
 InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
 {
     const ParameterMetadata &metadata{track.metadata};
     const std::vector<KeyframeConfig> &keys{track.keys};
+    if (track.path && is_planar_path(track.path->kind))
+    {
+        return create_path_interpolant(track, num_steps);
+    }
     validate_keyframes(metadata.name, keys, num_steps);
     if (track.mode == TrackMode::PWM)
     {

@@ -279,6 +279,44 @@ TEST(TestConfig, jsonDeserializesLinePathTrack)
     EXPECT_EQ(ParFile::Curve::LINEAR, *config.tracks[0].keys[1].curve);
 }
 
+TEST(TestConfig, jsonDeserializesCirclePathTrack)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"parameter", "params.c"},
+        {"path",
+            Object{{"kind", "circle"}, {"center", "0/0"}, {"radius", 1.5}, {"turns", 2.0}, {"phase", 90.0}}}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_TRUE(config.tracks[0].path);
+    EXPECT_EQ(ParFile::PathKind::CIRCLE, config.tracks[0].path->kind);
+    EXPECT_EQ("0/0", config.tracks[0].path->center);
+    EXPECT_DOUBLE_EQ(1.5, config.tracks[0].path->radius);
+    EXPECT_DOUBLE_EQ(2.0, config.tracks[0].path->turns);
+    EXPECT_DOUBLE_EQ(90.0, config.tracks[0].path->phase);
+    EXPECT_TRUE(config.tracks[0].keys.empty());
+}
+
+TEST(TestConfig, jsonDeserializesEllipsePathTrack)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"parameter", "look-at"},
+        {"path", Object{{"kind", "ellipse"}, {"center", "0/0"}, {"x-radius", 2.0}, {"y-radius", 1.0}}}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_TRUE(config.tracks[0].path);
+    EXPECT_EQ(ParFile::PathKind::ELLIPSE, config.tracks[0].path->kind);
+    EXPECT_EQ("0/0", config.tracks[0].path->center);
+    EXPECT_DOUBLE_EQ(2.0, config.tracks[0].path->x_radius);
+    EXPECT_DOUBLE_EQ(1.0, config.tracks[0].path->y_radius);
+    EXPECT_DOUBLE_EQ(1.0, config.tracks[0].path->turns);
+    EXPECT_DOUBLE_EQ(0.0, config.tracks[0].path->phase);
+    EXPECT_TRUE(config.tracks[0].keys.empty());
+}
+
 TEST(TestConfig, jsonRejectsTrackWithKeysAndPath)
 {
     Object json = valid_json();

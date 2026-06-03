@@ -34,6 +34,28 @@ struct KeyframeConfig
     std::optional<double> mix;
 };
 
+enum class PathKind
+{
+    CONSTANT,
+    LINE,
+    CIRCLE,
+    ELLIPSE
+};
+
+struct PathConfig
+{
+    PathKind kind{PathKind::CONSTANT};
+    std::string value;
+    std::string from;
+    std::string to;
+    std::string center;
+    double radius{};
+    double x_radius{};
+    double y_radius{};
+    double turns{1.0};
+    double phase{};
+};
+
 struct PwmConfig
 {
     std::string a;
@@ -115,6 +137,7 @@ struct TrackConfig
     std::optional<PwmConfig> pwm;
     TrackKind kind{TrackKind::PARAMETER};
     std::optional<ColorMapConfig> color_map;
+    std::optional<PathConfig> path;
 };
 
 struct Config

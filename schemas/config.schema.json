@@ -154,7 +154,9 @@
       "description": "Full-range value generator used instead of explicit keyframes.",
       "oneOf": [
         { "$ref": "#/$defs/constant-path-generator" },
-        { "$ref": "#/$defs/line-path-generator" }
+        { "$ref": "#/$defs/line-path-generator" },
+        { "$ref": "#/$defs/circle-path-generator" },
+        { "$ref": "#/$defs/ellipse-path-generator" }
       ]
     },
     "constant-path-generator": {
@@ -190,6 +192,69 @@
         "to": {
           "description": "Parameter value text at the final frame.",
           "type": "string"
+        }
+      }
+    },
+    "circle-path-generator": {
+      "description": "Path generator that samples a circle over the full frame range.",
+      "type": "object",
+      "required": [ "kind", "center", "radius" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "circle",
+          "description": "Generate values on a circular path."
+        },
+        "center": {
+          "description": "Path center as a slash-pair value.",
+          "type": "string"
+        },
+        "radius": {
+          "description": "Circle radius in output value units.",
+          "type": "number",
+          "minimum": 0
+        },
+        "turns": {
+          "description": "Number of complete turns sampled over the full frame range.",
+          "type": "number"
+        },
+        "phase": {
+          "description": "Starting phase angle in degrees.",
+          "type": "number"
+        }
+      }
+    },
+    "ellipse-path-generator": {
+      "description": "Path generator that samples an axis-aligned ellipse over the full frame range.",
+      "type": "object",
+      "required": [ "kind", "center", "x-radius", "y-radius" ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "ellipse",
+          "description": "Generate values on an axis-aligned elliptical path."
+        },
+        "center": {
+          "description": "Path center as a slash-pair value.",
+          "type": "string"
+        },
+        "x-radius": {
+          "description": "Ellipse radius along the first output component.",
+          "type": "number",
+          "minimum": 0
+        },
+        "y-radius": {
+          "description": "Ellipse radius along the second output component.",
+          "type": "number",
+          "minimum": 0
+        },
+        "turns": {
+          "description": "Number of complete turns sampled over the full frame range.",
+          "type": "number"
+        },
+        "phase": {
+          "description": "Starting phase angle in degrees.",
+          "type": "number"
         }
       }
     },

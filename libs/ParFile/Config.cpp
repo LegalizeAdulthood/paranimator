@@ -138,6 +138,20 @@ static double load_double(const Object &json, std::string_view name)
     return json.at(key).get<double>();
 }
 
+static double load_optional_double(const Object &json, std::string_view name, double default_value)
+{
+    const std::string key{name};
+    if (!json.contains(key))
+    {
+        return default_value;
+    }
+    if (!json.at(key).is_number())
+    {
+        throw std::runtime_error("Invalid config, field '" + std::string{name} + "' is not a number");
+    }
+    return json.at(key).get<double>();
+}
+
 static TrackMode load_track_mode(const Object &json)
 {
     const std::optional<std::string> mode{load_optional_string(json, "mode")};
@@ -196,20 +210,6 @@ static std::vector<KeyframeConfig> load_keyframes(const Object &json, TrackMode 
     return result;
 }
 
-enum class PathKind
-{
-    CONSTANT,
-    LINE
-};
-
-struct PathConfig
-{
-    PathKind kind{PathKind::CONSTANT};
-    std::string value;
-    std::string from;
-    std::string to;
-};
-
 static PathKind load_path_kind(const Object &json)
 {
     const std::string kind{load_string(json, "kind")};
@@ -221,7 +221,23 @@ static PathKind load_path_kind(const Object &json)
     {
         return PathKind::LINE;
     }
+    if (kind == "circle")
+    {
+        return PathKind::CIRCLE;
+    }
+    if (kind == "ellipse")
+    {
+        return PathKind::ELLIPSE;
+    }
     throw std::runtime_error("Invalid config, unknown path kind '" + kind + "'");
+}
+
+static void validate_nonnegative(double value, std::string_view name)
+{
+    if (value < 0.0)
+    {
+        throw std::runtime_error("Invalid config, path field '" + std::string{name} + "' must be nonnegative");
+    }
 }
 
 static PathConfig load_path_config(const Object &json)
@@ -242,24 +258,42 @@ static PathConfig load_path_config(const Object &json)
         result.from = load_string(json, "from");
         result.to = load_string(json, "to");
         break;
+    case PathKind::CIRCLE:
+        result.center = load_string(json, "center");
+        result.radius = load_double(json, "radius");
+        validate_nonnegative(result.radius, "radius");
+        result.turns = load_optional_double(json, "turns", 1.0);
+        result.phase = load_optional_double(json, "phase", 0.0);
+        break;
+    case PathKind::ELLIPSE:
+        result.center = load_string(json, "center");
+        result.x_radius = load_double(json, "x-radius");
+        result.y_radius = load_double(json, "y-radius");
+        validate_nonnegative(result.x_radius, "x-radius");
+        validate_nonnegative(result.y_radius, "y-radius");
+        result.turns = load_optional_double(json, "turns", 1.0);
+        result.phase = load_optional_double(json, "phase", 0.0);
+        break;
     }
     return result;
 }
 
-static std::vector<KeyframeConfig> load_path_keyframes(const Object &json, int num_frames)
+static std::vector<KeyframeConfig> load_path_keyframes(const PathConfig &path, int num_frames)
 {
     if (num_frames < 2)
     {
         throw std::runtime_error("Invalid config, path tracks require at least two frames");
     }
 
-    const PathConfig path{load_path_config(json)};
     switch (path.kind)
     {
     case PathKind::CONSTANT:
         return {{0, path.value}, {num_frames - 1, path.value, Curve::HOLD}};
     case PathKind::LINE:
         return {{0, path.from}, {num_frames - 1, path.to, Curve::LINEAR}};
+    case PathKind::CIRCLE:
+    case PathKind::ELLIPSE:
+        return {};
     }
     throw std::runtime_error("Invalid config, unknown path kind");
 }
@@ -574,7 +608,8 @@ static TrackConfig load_track_config(const Object &json, int num_frames)
         {
             throw std::runtime_error("Invalid config, path is only valid for parameter tracks");
         }
-        result.keys = load_path_keyframes(json.at("path"), num_frames);
+        result.path = load_path_config(json.at("path"));
+        result.keys = load_path_keyframes(*result.path, num_frames);
     }
     else if (result.kind != TrackKind::COLOR_MAP)
     {
