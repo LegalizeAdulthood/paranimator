@@ -32,6 +32,7 @@ configure_file("test.h.in" "include/TestParFile/test.h" @ONLY)
 
 add_executable(test-par-file
     TestColorMap.cpp
+    TestColorSpec.cpp
     TestConfig.cpp
     TestInterpolant.cpp
     TestInterpolator.cpp
