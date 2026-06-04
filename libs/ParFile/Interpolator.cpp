@@ -48,8 +48,8 @@ void validate_track_keyframes(const std::string &name, const std::vector<Keyfram
     }
 }
 
-void validate_number_track_keyframes(const std::string &name, const std::vector<NumberKeyframeConfig> &keys,
-    int num_frames)
+void validate_number_track_keyframes(
+    const std::string &name, const std::vector<NumberKeyframeConfig> &keys, int num_frames)
 {
     if (keys.size() != 2U)
     {
@@ -421,8 +421,8 @@ ColorMap ColorMapInterpolant::apply_effect(const ColorMap &map, const ColorMapEf
         {
             throw std::runtime_error("Color map sparkle effect is missing range or seed");
         }
-        return sparkle_color_map(map, to_color_map_range(*effect.range), *effect.seed,
-            color_map_effect_amount_at_frame(effect, frame));
+        return sparkle_color_map(
+            map, to_color_map_range(*effect.range), *effect.seed, color_map_effect_amount_at_frame(effect, frame));
     case ColorMapEffectKind::REVERSE:
         if (effect.range)
         {
@@ -594,8 +594,7 @@ std::vector<InterpolantPtr> Interpolator::load_interpolants(const ResolvedAnimat
     return result;
 }
 
-Interpolator::Interpolator(const Config &config) :
-    Interpolator(load_animation(config))
+void Interpolator::load_color_map_interpolants(const Config &config)
 {
     const OutputLayout output{config};
     for (const TrackConfig &track : config.tracks)
@@ -608,8 +607,26 @@ Interpolator::Interpolator(const Config &config) :
     }
 }
 
+Interpolator::Interpolator(const Config &config) :
+    Interpolator(load_animation(config))
+{
+    load_color_map_interpolants(config);
+}
+
+Interpolator::Interpolator(const Config &config, std::string_view layer_id) :
+    Interpolator(load_animation(config), layer_id)
+{
+    load_color_map_interpolants(config);
+}
+
 Interpolator::Interpolator(const ResolvedAnimation &animation) :
+    Interpolator(animation, {})
+{
+}
+
+Interpolator::Interpolator(const ResolvedAnimation &animation, std::string_view layer_id) :
     m_frame_name(animation.frame_name),
+    m_layer_id(layer_id),
     m_video(animation.video),
     m_source(animation.source),
     m_interpolants(load_interpolants(animation))
@@ -645,7 +662,14 @@ ParSet Interpolator::operator()()
             par_set.params.erase(it);
         }
     }
-    par_set.name = (boost::format(m_frame_name) % m_frame).str();
+    if (m_layer_id.empty())
+    {
+        par_set.name = (boost::format(m_frame_name) % m_frame).str();
+    }
+    else
+    {
+        par_set.name = (boost::format(m_frame_name) % m_layer_id % m_frame).str();
+    }
     par_set.params.push_back({"batch", "yes"});
     par_set.params.push_back({"savename", par_set.name + ".gif"});
     par_set.params.push_back({"overwrite", "yes"});

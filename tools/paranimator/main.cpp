@@ -76,6 +76,78 @@ void interpolate(const ParFile::Config &config)
     }
 }
 
+ParFile::Config layer_config(const ParFile::Config &config, const ParFile::LayerConfig &layer)
+{
+    ParFile::Config result{config};
+    result.source = layer.source;
+    result.tracks = layer.tracks;
+    result.layers.clear();
+    return result;
+}
+
+std::vector<ParFile::Interpolator> layer_interpolators(const ParFile::Config &config)
+{
+    std::vector<ParFile::Interpolator> result;
+    result.reserve(config.layers.size());
+    for (const ParFile::LayerConfig &layer : config.layers)
+    {
+        result.emplace_back(layer_config(config, layer), layer.id);
+    }
+    return result;
+}
+
+void interpolate_layers(const ParFile::Config &config)
+{
+    std::vector<ParFile::Interpolator> lerpers{layer_interpolators(config)};
+    ParFile::OutputLayout output{config};
+    output.create_directories();
+    ParFile::Script script{config};
+    std::ofstream out{output.par_file().string().c_str()};
+    std::vector<std::ofstream> scripts;
+    if (config.parallel == 1)
+    {
+        scripts.emplace_back(output.script_file().string().c_str());
+    }
+    else
+    {
+        for (int i = 1; i <= config.parallel; ++i)
+        {
+            scripts.emplace_back(output.script_file(i).string().c_str());
+        }
+    }
+    auto current_script{scripts.begin()};
+    bool first_entry{true};
+    for (int i = 0; i < config.num_frames; ++i)
+    {
+        for (ParFile::Interpolator &lerper : lerpers)
+        {
+            const ParFile::ParSet frame{lerper()};
+            if (!first_entry)
+            {
+                out << '\n';
+            }
+            first_entry = false;
+            out << frame;
+            *current_script << script.commands(frame.name);
+            ++current_script;
+            if (current_script == scripts.end())
+            {
+                current_script = scripts.begin();
+            }
+        }
+    }
+}
+
+void render(const ParFile::Config &config)
+{
+    if (config.layers.size() > 1U)
+    {
+        interpolate_layers(config);
+        return;
+    }
+    interpolate(config);
+}
+
 std::string read_text(const std::filesystem::path &path);
 
 ParFile::Config load_config(const std::filesystem::path &path)
@@ -109,7 +181,7 @@ int main(const std::vector<std::string_view> &args)
             return usage(args[0]);
         }
         const std::string_view json_file{args[1]};
-        interpolate(load_config(std::filesystem::path{std::string{json_file}}));
+        render(load_config(std::filesystem::path{std::string{json_file}}));
 
         return 0;
     }

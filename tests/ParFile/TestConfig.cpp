@@ -265,6 +265,35 @@ TEST(TestConfig, jsonDeserializesSingleLayer)
     EXPECT_EQ("maxiter", config.tracks[0].parameter);
 }
 
+TEST(TestConfig, jsonDeserializesMultipleLayersInOrder)
+{
+    Object json = valid_json();
+    json.erase("source");
+    json.erase("tracks");
+    const Object base{{"id", "base"}, {"source", Object{{"file", "foo.par"}, {"name", "foo"}}},
+        {"tracks",
+            Object::array({Object{{"parameter", "maxiter"},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "100"}}, Object{{"frame", 59}, {"value", "200"}}})}}})}};
+    const Object detail{{"id", "detail"}, {"source", Object{{"file", "foo.par"}, {"name", "detail"}}},
+        {"tracks",
+            Object::array({Object{{"parameter", "inside"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "0"}}, Object{{"frame", 59}, {"value", "1"}}})}}})}};
+    json["layers"] = Object::array({base, detail});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(2U, config.layers.size());
+    EXPECT_EQ("base", config.layers[0].id);
+    EXPECT_EQ("detail", config.layers[1].id);
+    EXPECT_EQ("foo", config.layers[0].source.name);
+    EXPECT_EQ("detail", config.layers[1].source.name);
+    EXPECT_EQ("maxiter", config.layers[0].tracks[0].parameter);
+    EXPECT_EQ("inside", config.layers[1].tracks[0].parameter);
+}
+
 TEST(TestConfig, jsonRejectsDuplicateLayerIds)
 {
     Object json = valid_json();

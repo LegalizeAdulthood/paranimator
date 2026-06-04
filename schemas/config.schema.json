@@ -13,7 +13,7 @@
       "not": { "required": [ "layers" ] }
     },
     {
-      "description": "Layered animation form with one layer for this implementation slice.",
+      "description": "Layered animation form with one or more Id render layers.",
       "required": [ "layers" ],
       "not": {
         "anyOf": [
@@ -97,7 +97,6 @@
       "description": "Layer stack evaluated from bottom to top.",
       "type": "array",
       "minItems": 1,
-      "maxItems": 1,
       "items": {
         "$ref": "#/$defs/layer"
       }

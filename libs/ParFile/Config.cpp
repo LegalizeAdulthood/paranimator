@@ -1103,10 +1103,6 @@ static std::vector<LayerConfig> load_layers(const Object &json, int num_frames)
     {
         throw std::runtime_error("Invalid config, layers must contain at least one layer");
     }
-    if (result.size() > 1U)
-    {
-        throw std::runtime_error("Invalid config, only one layer is supported");
-    }
     return result;
 }
 

@@ -1637,22 +1637,7 @@ Every new schema object, field, and enum or const value must include a
 
 
 
-### 1. Add Multi-Layer Rendering
-
-Allow multiple layers to render separate Id images before composition.
-
-Schema work:
-
-- create or update JSON schemas for fields or metadata JSON files added by
-  this slice.
-
-Unit tests:
-
-- layers are evaluated from bottom to top.
-- each layer applies only its own tracks.
-- generated layer entry names include layer id and frame number.
-
-### 2. Add Layer Opacity
+### 1. Add Layer Opacity
 
 Add layer opacity evaluation and hidden-layer skipping.
 
@@ -1667,7 +1652,7 @@ Unit tests:
 - write-when-hidden renders opacity 0 layers.
 - opacity values outside 0 through 100 are rejected.
 
-### 3. Add source-over Composition
+### 2. Add source-over Composition
 
 Generate ImageMagick commands for the neutral `source-over` operator.
 
@@ -1682,7 +1667,7 @@ Unit tests:
 - opacity is applied before composition.
 - output.background adds a flatten step when configured.
 
-### 4. Add More Neutral Compose Operators
+### 3. Add More Neutral Compose Operators
 
 Allow configured neutral compose operators and validate them. Map those
 operators to ImageMagick names only inside the ImageMagick adapter.
@@ -1703,7 +1688,7 @@ Unit tests:
 - unsupported operators are rejected.
 - ImageMagick-specific operator spellings are rejected in animation JSON.
 
-### 5. Add Core Catalog Files
+### 4. Add Core Catalog Files
 
 Add default catalogs for core Id parameters and coloring.
 
@@ -1718,7 +1703,7 @@ Unit tests:
 - coloring catalog declares colors as color-map.
 - catalog inclusion fails clearly for missing files.
 
-### 6. Add 3D And Formula Catalog Files
+### 5. Add 3D And Formula Catalog Files
 
 Add default catalogs for Id 3D viewing and selected formula families.
 

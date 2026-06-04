@@ -2,7 +2,7 @@
 #
 function(add_paranimator_test name)
     set(options)
-    set(one_value_args CATALOG FRAMES INDEXED_MAP OUTPUT_MAP)
+    set(one_value_args CATALOG FRAMES INDEXED_MAP OUTPUT_MAP LAYER_IDS)
     set(multi_value_args)
     cmake_parse_arguments(TEST
         "${options}"
@@ -31,6 +31,7 @@ function(add_paranimator_test name)
             "-DINDEXED_MAP=${TEST_INDEXED_MAP}"
             "-DOUTPUT_MAP=${TEST_OUTPUT_MAP}"
             "-DGOLD_MAP=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/gold-${name}.map>"
+            "-DTEST_LAYER_IDS=${TEST_LAYER_IDS}"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/paranimator_test.cmake"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${name}"
     )
@@ -56,6 +57,7 @@ add_paranimator_test(center-mag)
 add_paranimator_test(corners)
 add_paranimator_test(maxiter)
 add_paranimator_test(single-layer)
+add_paranimator_test(layer-stack LAYER_IDS "base,detail")
 add_paranimator_test(bailout)
 add_paranimator_test(multi-track)
 add_paranimator_test(maxiter-base CATALOG maxiter-base-catalog.json FRAMES 4)
