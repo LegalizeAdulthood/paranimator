@@ -1,10 +1,39 @@
 {
   "parameters": {
-    "type": {
+    "aspectdrift": {
+      "type": "double",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 0
+    },
+    "bailout": {
+      "type": "double",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 1,
+      "max": 2100000000
+    },
+    "bailoutest": {
       "type": "enum",
       "format": "raw",
-      "values": [ "mandel", "julia", "formula" ],
+      "values": [ "mod", "real", "imag", "or", "and", "manh", "manr" ],
       "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "bfdigits": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 0,
+      "max": 2000
+    },
+    "biomorph": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "center-mag": {
@@ -19,19 +48,60 @@
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
-    "maxiter": {
-      "type": "integer",
+    "fillcolor": {
+      "type": "string",
       "format": "raw",
-      "default-curve": "linear",
+      "default-curve": "hold",
       "extrapolate": "clamp"
     },
-    "bailout": {
-      "type": "double",
+    "finattract": {
+      "type": "enum",
       "format": "raw",
-      "default-curve": "linear",
-      "extrapolate": "clamp",
-      "min": 0,
-      "max": 1000
+      "values": [ "yes", "no", "y", "n" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "formulafile": {
+      "type": "string",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "formulaname": {
+      "type": "string",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "function": {
+      "type": "string",
+      "format": "slash-list",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "ifs": {
+      "type": "string",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "ifs3d": {
+      "type": "string",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "ifsfile": {
+      "type": "string",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "initorbit": {
+      "type": "string",
+      "format": "slash",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
     },
     "inside": {
       "type": "inside",
@@ -52,6 +122,84 @@
       "min": 0,
       "max": 255
     },
+    "invert": {
+      "type": "string",
+      "format": "slash",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "ismand": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "yes", "no", "y", "n" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "lfile": {
+      "type": "string",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "lname": {
+      "type": "string",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "mathtolerance": {
+      "type": "string",
+      "format": "slash",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "maxiter": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 2
+    },
+    "miim": {
+      "type": "string",
+      "format": "slash",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "orbitcorners": {
+      "type": "corners",
+      "format": "slash",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "orbitdelay": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 0
+    },
+    "orbitdrawmode": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "rectangle", "line", "function", "r", "l", "f" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "orbitinterval": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 1,
+      "max": 255
+    },
+    "orbitname": {
+      "type": "string",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
     "outside": {
       "type": "outside",
       "format": "raw",
@@ -69,6 +217,187 @@
       "extrapolate": "clamp",
       "min": 0,
       "max": 255
+    },
+    "params": {
+      "type": "string",
+      "format": "slash-list",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "passes": {
+      "type": "string",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "periodicity": {
+      "type": "string",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "potential": {
+      "type": "string",
+      "format": "slash",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "proximity": {
+      "type": "double",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "reset": {
+      "type": "string",
+      "format": "slash",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "rseed": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "screencoords": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "yes", "no", "y", "n" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "showorbit": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "yes", "no", "y", "n" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "symmetry": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "xaxis", "yaxis", "xyaxis", "origin", "pi", "none" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "type": {
+      "type": "enum",
+      "format": "raw",
+      "values": [
+        "ant",
+        "barnsleyj1",
+        "barnsleyj2",
+        "barnsleyj3",
+        "barnsleym1",
+        "barnsleym2",
+        "barnsleym3",
+        "bif+sinpi",
+        "bif=sinpi",
+        "biflambda",
+        "bifmay",
+        "bifstewart",
+        "bifurcation",
+        "burning-ship",
+        "cellular",
+        "chip",
+        "circle",
+        "cmplxmarksjul",
+        "cmplxmarksmand",
+        "complexbasin",
+        "complexnewton",
+        "diffusion",
+        "dividebrot5",
+        "dynamic",
+        "escher_julia",
+        "fn(z)+fn(pix)",
+        "fn(z*z)",
+        "fn*fn",
+        "fn*z+z",
+        "fn+fn",
+        "formula",
+        "frothybasin",
+        "gingerbreadman",
+        "halley",
+        "henon",
+        "hopalong",
+        "hypercomplex",
+        "hypercomplexj",
+        "icons",
+        "icons3d",
+        "ifs",
+        "ifs3d",
+        "julfn+exp",
+        "julfn+zsqrd",
+        "julia",
+        "julia(fn||fn)",
+        "julia_inverse",
+        "julia4",
+        "julibrot",
+        "julzpower",
+        "julzzpwr",
+        "kamtorus",
+        "kamtorus3d",
+        "lambda",
+        "lambda(fn||fn)",
+        "lambdafn",
+        "latoocarfian",
+        "lorenz",
+        "lorenz3d",
+        "lorenz3d1",
+        "lorenz3d3",
+        "lorenz3d4",
+        "lsystem",
+        "lyapunov",
+        "magnet1j",
+        "magnet1m",
+        "magnet2j",
+        "magnet2m",
+        "mandel",
+        "mandel(fn||fn)",
+        "mandel4",
+        "mandelbrotmix4",
+        "mandelcloud",
+        "mandelfn",
+        "mandellambda",
+        "mandphoenix",
+        "mandphoenixclx",
+        "manfn+exp",
+        "manfn+zsqrd",
+        "manlam(fn||fn)",
+        "manowar",
+        "manowarj",
+        "manzpower",
+        "manzzpwr",
+        "marksjulia",
+        "marksmandel",
+        "marksmandelpwr",
+        "martin",
+        "newtbasin",
+        "newton",
+        "phoenix",
+        "phoenixcplx",
+        "pickover",
+        "plasma",
+        "popcorn",
+        "popcornjul",
+        "quadruptwo",
+        "quat",
+        "quatjul",
+        "rossler3d",
+        "sierpinski",
+        "spider",
+        "sqr(1/fn)",
+        "sqr(fn)",
+        "test",
+        "tetrate",
+        "threeply",
+        "tim's_error",
+        "unity",
+        "volterra-lotka"
+      ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
     }
   },
   "fractal-types": {

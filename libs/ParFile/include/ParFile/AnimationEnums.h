@@ -21,6 +21,7 @@ enum class ParameterType
     OUTSIDE,
     POINT2,
     POINT3,
+    STRING,
     VECTOR2,
     VECTOR3
 };

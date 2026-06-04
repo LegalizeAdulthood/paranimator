@@ -530,6 +530,11 @@ TEST(TestJsonSchema, tupleAliasMetadataAccepted)
     EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"vector3","normalize":true)")));
 }
 
+TEST(TestJsonSchema, stringMetadataAccepted)
+{
+    EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"string")")));
+}
+
 TEST(TestJsonSchema, unknownMetadataFormatRejected)
 {
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","format":"unknown")")));
@@ -597,6 +602,7 @@ TEST(TestJsonSchema, invalidEnumMetadataRejected)
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"enum","values":"id-functions")")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"enum","values":["a",1])")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","values":["a"])")));
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"string","values":["a"])")));
 }
 
 TEST(TestJsonSchema, invalidFormulaParamsVariableRejected)

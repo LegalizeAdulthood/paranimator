@@ -305,6 +305,14 @@ ParFile::ParameterMetadata outside_metadata(const std::string &name)
     return result;
 }
 
+ParFile::ParameterMetadata string_metadata(const std::string &name)
+{
+    ParFile::ParameterMetadata result{
+        metadata(name, ParFile::ParameterType::STRING, {}, {}, ParFile::ExtrapolateMode::CLAMP, ParFile::Curve::HOLD)};
+    result.format = ParFile::ParameterFormat::RAW;
+    return result;
+}
+
 std::vector<std::string> id_functions()
 {
     return {"sin", "cos", "tan", "cotan", "sinh", "cosh", "tanh", "cotanh", "exp", "log", "sqr", "recip", "ident",
@@ -1145,6 +1153,39 @@ TEST(TestInterpolant, enumLinearCurveRejected)
         ParFile::create_interpolant(
             resolved_track(parameter_metadata, keyframes("bof60", "zmag", ParFile::Curve::LINEAR, num_steps), "bof60"),
             num_steps),
+        std::runtime_error);
+}
+
+TEST(TestInterpolant, stringHold)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_interpolant(string_metadata("formulaname"), "foo", "bar", num_steps)};
+
+    EXPECT_EQ("foo", interpolant->step());
+    EXPECT_EQ("foo", interpolant->step());
+    EXPECT_EQ("bar", interpolant->step());
+}
+
+TEST(TestInterpolant, stringStep)
+{
+    const int num_steps{4};
+    ParFile::InterpolantPtr interpolant{
+        create_interpolant(string_metadata("passes"), "g1", "g6", ParFile::Curve::STEP, num_steps)};
+
+    EXPECT_EQ("g1", interpolant->step());
+    EXPECT_EQ("g1", interpolant->step());
+    EXPECT_EQ("g1", interpolant->step());
+    EXPECT_EQ("g6", interpolant->step());
+}
+
+TEST(TestInterpolant, stringLinearCurveRejected)
+{
+    const int num_steps{3};
+    const ParFile::ParameterMetadata parameter_metadata{string_metadata("formulaname")};
+
+    EXPECT_THROW(ParFile::create_interpolant(resolved_track(parameter_metadata,
+                                                 keyframes("foo", "bar", ParFile::Curve::LINEAR, num_steps), "foo"),
+                     num_steps),
         std::runtime_error);
 }
 

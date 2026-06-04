@@ -78,7 +78,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
 {
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
-    EXPECT_EQ(7U, catalog.parameters.size());
+    EXPECT_EQ(41U, catalog.parameters.size());
     EXPECT_EQ(1U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
@@ -99,6 +99,10 @@ TEST(TestParameterCatalog, typeMetadataLoads)
     EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "mandel"));
     EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "julia"));
     EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "formula"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "julibrot"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "mandelbrotmix4"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "tim's_error"));
+    EXPECT_EQ(110U, metadata.values.size());
 }
 
 TEST(TestParameterCatalog, coloringCatalogDeclaresColors)
@@ -114,6 +118,38 @@ TEST(TestParameterCatalog, coloringCatalogDeclaresColors)
     EXPECT_EQ(ParFile::Curve::HOLD, *metadata.default_curve);
     ASSERT_TRUE(metadata.extrapolate);
     EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
+}
+
+TEST(TestParameterCatalog, coloringCatalogIncludesSavedImageParameters)
+{
+    const ParFile::ParameterCatalog catalog{coloring_catalog()};
+    const ParFile::ParameterMetadata &mode{catalog.metadata("logmode")};
+    const ParFile::ParameterMetadata &ranges{catalog.metadata("ranges")};
+    const ParFile::ParameterMetadata &distance_estimator{catalog.metadata("distest")};
+
+    EXPECT_EQ(11U, catalog.parameters.size());
+    EXPECT_EQ(ParFile::ParameterType::ENUM, mode.type);
+    EXPECT_NE(mode.values.end(), std::find(mode.values.begin(), mode.values.end(), "fly"));
+    EXPECT_NE(mode.values.end(), std::find(mode.values.begin(), mode.values.end(), "table"));
+    EXPECT_EQ(ParFile::ParameterType::STRING, ranges.type);
+    EXPECT_EQ(ParFile::ParameterType::STRING, distance_estimator.type);
+}
+
+TEST(TestParameterCatalog, nonSavedImageControlsAreNotCataloged)
+{
+    const ParFile::ParameterCatalog core{core_catalog()};
+    const ParFile::ParameterCatalog coloring{coloring_catalog()};
+    const ParFile::ParameterCatalog id_3d{id_3d_catalog()};
+    const char *names[]{"askvideo", "fastrestore", "viewwindows", "virtual", "recordcolors", "cyclerange", "cyclelimit",
+        "textcolors", "hertz", "sound", "volume", "attenuate", "polyphony", "wavetype", "attack", "decay", "sustain",
+        "srelease", "scalemap", "orbitsave", "orbitsavename"};
+
+    for (const char *name : names)
+    {
+        EXPECT_THROW(core.metadata(name), std::runtime_error);
+        EXPECT_THROW(coloring.metadata(name), std::runtime_error);
+        EXPECT_THROW(id_3d.metadata(name), std::runtime_error);
+    }
 }
 
 TEST(TestParameterCatalog, centerMagMetadataLoads)
@@ -172,7 +208,10 @@ TEST(TestParameterCatalog, id3DViewMetadataLoads)
     const ParFile::ParameterMetadata &sphere{catalog.metadata("sphere")};
     const ParFile::ParameterMetadata &longitude{catalog.metadata("longitude")};
     const ParFile::ParameterMetadata &stereo{catalog.metadata("stereo")};
+    const ParFile::ParameterMetadata &light_source{catalog.metadata("lightsource")};
+    const ParFile::ParameterMetadata &ray{catalog.metadata("ray")};
 
+    EXPECT_EQ(42U, catalog.parameters.size());
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, rotation.type);
     ASSERT_TRUE(rotation.arity);
     EXPECT_EQ(3, *rotation.arity);
@@ -193,6 +232,10 @@ TEST(TestParameterCatalog, id3DViewMetadataLoads)
     ASSERT_TRUE(stereo.max);
     EXPECT_EQ(0.0, *stereo.min);
     EXPECT_EQ(4.0, *stereo.max);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, light_source.type);
+    ASSERT_TRUE(light_source.arity);
+    EXPECT_EQ(3, *light_source.arity);
+    EXPECT_EQ(ParFile::ParameterType::STRING, ray.type);
 }
 
 TEST(TestParameterCatalog, julibrotViewMetadataLoads)
@@ -248,8 +291,8 @@ TEST(TestParameterCatalog, bailoutMetadataLoads)
     EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
     ASSERT_TRUE(metadata.min);
     ASSERT_TRUE(metadata.max);
-    EXPECT_EQ(0, *metadata.min);
-    EXPECT_EQ(1000, *metadata.max);
+    EXPECT_EQ(1, *metadata.min);
+    EXPECT_EQ(2100000000, *metadata.max);
 }
 
 TEST(TestParameterCatalog, insideMetadataLoads)
@@ -410,6 +453,7 @@ TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
     EXPECT_EQ(ParFile::ParameterType::OUTSIDE, read_metadata(R"("type":"outside","values":["iter"])").type);
     EXPECT_EQ(ParFile::ParameterType::POINT2, read_metadata(R"("type":"point2")").type);
     EXPECT_EQ(ParFile::ParameterType::POINT3, read_metadata(R"("type":"point3")").type);
+    EXPECT_EQ(ParFile::ParameterType::STRING, read_metadata(R"("type":"string")").type);
     EXPECT_EQ(ParFile::ParameterType::VECTOR2, read_metadata(R"("type":"vector2")").type);
     EXPECT_EQ(ParFile::ParameterType::VECTOR3, read_metadata(R"("type":"vector3")").type);
 }
@@ -521,6 +565,7 @@ TEST(TestParameterCatalog, enumMissingValuesRejected)
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"enum")")), std::runtime_error);
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"inside")")), std::runtime_error);
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"outside")")), std::runtime_error);
+    EXPECT_NO_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"string")")));
 }
 
 TEST(TestParameterCatalog, valuesRequireDiscreteType)

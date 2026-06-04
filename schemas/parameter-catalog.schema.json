@@ -515,6 +515,10 @@
           "description": "Three-component point alias over numeric-tuple."
         },
         {
+          "const": "string",
+          "description": "Arbitrary string value held from keyframe to keyframe without interpolation."
+        },
+        {
           "const": "vector2",
           "description": "Two-component vector alias over numeric-tuple."
         },

@@ -1,84 +1,10 @@
 {
   "parameters": {
-    "rotation": {
-      "type": "numeric-tuple",
-      "format": "slash",
-      "arity": 3,
-      "default-curve": "linear",
-      "extrapolate": "clamp"
-    },
-    "perspective": {
-      "type": "integer",
-      "format": "raw",
-      "default-curve": "linear",
-      "extrapolate": "clamp"
-    },
-    "xyshift": {
-      "type": "numeric-tuple",
-      "format": "slash",
-      "arity": 2,
-      "default-curve": "linear",
-      "extrapolate": "clamp"
-    },
-    "scalexyz": {
-      "type": "numeric-tuple",
-      "format": "slash",
-      "arity": 3,
-      "default-curve": "linear",
-      "extrapolate": "clamp"
-    },
-    "roughness": {
-      "type": "integer",
-      "format": "raw",
-      "default-curve": "linear",
-      "extrapolate": "clamp"
-    },
-    "sphere": {
+    "3d": {
       "type": "enum",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
+      "values": [ "yes", "no", "y", "n", "overlay" ],
       "default-curve": "hold",
-      "extrapolate": "clamp"
-    },
-    "longitude": {
-      "type": "numeric-tuple",
-      "format": "slash",
-      "arity": 2,
-      "default-curve": "linear",
-      "extrapolate": "clamp"
-    },
-    "latitude": {
-      "type": "numeric-tuple",
-      "format": "slash",
-      "arity": 2,
-      "default-curve": "linear",
-      "extrapolate": "clamp"
-    },
-    "radius": {
-      "type": "integer",
-      "format": "raw",
-      "default-curve": "linear",
-      "extrapolate": "clamp",
-      "min": 0
-    },
-    "stereo": {
-      "type": "integer",
-      "format": "raw",
-      "default-curve": "linear",
-      "extrapolate": "clamp",
-      "min": 0,
-      "max": 4
-    },
-    "interocular": {
-      "type": "integer",
-      "format": "raw",
-      "default-curve": "linear",
-      "extrapolate": "clamp"
-    },
-    "converge": {
-      "type": "integer",
-      "format": "raw",
-      "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "3dmode": {
@@ -86,6 +12,89 @@
       "format": "raw",
       "values": [ "monocular", "lefteye", "righteye", "red-blue" ],
       "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "ambient": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 0,
+      "max": 100
+    },
+    "background": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 3,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "brief": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "yes", "no", "y", "n" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "bright": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 2,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "coarse": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 3,
+      "max": 2000
+    },
+    "converge": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "crop": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 4,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "filename": {
+      "type": "string",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "filltype": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "fullcolor": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "yes", "no", "y", "n" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "haze": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 0,
+      "max": 100
+    },
+    "interocular": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "julibrot3d": {
@@ -105,6 +114,175 @@
       "type": "numeric-tuple",
       "format": "slash",
       "arity": 4,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "latitude": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 2,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "lightsource": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 3,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "longitude": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 2,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "monitorwidth": {
+      "type": "double",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "perspective": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "preview": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "yes", "no", "y", "n" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "radius": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 0
+    },
+    "randomize": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 0,
+      "max": 7
+    },
+    "ray": {
+      "type": "string",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "rds": {
+      "type": "string",
+      "format": "slash",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "rds-texture": {
+      "type": "string",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "rotation": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 3,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "roughness": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "scalexyz": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 3,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "showbox": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "yes", "no", "y", "n" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "smoothing": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 0
+    },
+    "sphere": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "yes", "no", "y", "n" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "stereo": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 0,
+      "max": 4
+    },
+    "stereowidth": {
+      "type": "double",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "targa_overlay": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "yes", "no", "y", "n" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "transparent": {
+      "type": "string",
+      "format": "slash",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "usegrayscale": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "yes", "no", "y", "n" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "waterline": {
+      "type": "integer",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp",
+      "min": 0
+    },
+    "xyadjust": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 2,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "xyshift": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 2,
       "default-curve": "linear",
       "extrapolate": "clamp"
     }

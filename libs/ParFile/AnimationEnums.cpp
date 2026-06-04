@@ -59,6 +59,10 @@ ParameterType parse_parameter_type(std::string_view text)
     {
         return ParameterType::POINT3;
     }
+    if (text == "string")
+    {
+        return ParameterType::STRING;
+    }
     if (text == "vector2")
     {
         return ParameterType::VECTOR2;
@@ -212,6 +216,8 @@ std::string_view to_string(ParameterType value)
         return "point2";
     case ParameterType::POINT3:
         return "point3";
+    case ParameterType::STRING:
+        return "string";
     case ParameterType::VECTOR2:
         return "vector2";
     case ParameterType::VECTOR3:

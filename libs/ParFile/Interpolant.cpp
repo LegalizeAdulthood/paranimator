@@ -293,6 +293,11 @@ bool is_pwm_type(ParameterType type)
     return type == ParameterType::ENUM || type == ParameterType::INSIDE || type == ParameterType::OUTSIDE;
 }
 
+bool has_validated_discrete_values(ParameterType type)
+{
+    return type == ParameterType::ENUM || type == ParameterType::INSIDE || type == ParameterType::OUTSIDE;
+}
+
 double validate_mix(const std::string &name, const KeyframeConfig &key)
 {
     if (!key.mix)
@@ -2163,8 +2168,11 @@ DiscreteInterpolant::DiscreteInterpolant(
     m_curve(curve)
 {
     validate_discrete_curve(to_string(metadata.type), m_curve);
-    validate_discrete_value(metadata, m_from);
-    validate_discrete_value(metadata, m_to);
+    if (has_validated_discrete_values(metadata.type))
+    {
+        validate_discrete_value(metadata, m_from);
+        validate_discrete_value(metadata, m_to);
+    }
 }
 
 std::string DiscreteInterpolant::step()
@@ -2452,6 +2460,16 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
             curve = *keys[1].curve;
         }
         return std::make_shared<NumericTupleInterpolant>(metadata, keys, curve, num_steps);
+    }
+    case ParameterType::STRING:
+    {
+        validate_full_range(metadata.name, keys, num_steps);
+        Curve curve{default_curve(metadata)};
+        if (keys[1].curve)
+        {
+            curve = *keys[1].curve;
+        }
+        return std::make_shared<DiscreteInterpolant>(metadata, keys, curve, num_steps);
     }
     case ParameterType::ENUM:
     {
