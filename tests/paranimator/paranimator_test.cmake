@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
-foreach(name PARANIMATOR TEST_NAME TEST_FRAMES TEST_SOURCE_DIR CORE_CATALOG GOLD_PAR)
+foreach(name PARANIMATOR TEST_NAME TEST_SOURCE_DIR CORE_CATALOG GOLD_PAR GOLD_SCRIPT)
     if(NOT DEFINED ${name})
         message(FATAL_ERROR "Missing required variable: ${name}")
     endif()
@@ -57,35 +57,20 @@ if(NOT EXISTS "${generated_script}")
         "Generated batch file was not created: ${generated_script}")
 endif()
 
-file(READ "${generated_script}" generated_script_text)
-string(FIND "${generated_script_text}" "librarydirs=${output_directory}" found)
-if(found EQUAL -1)
+execute_process(
+    COMMAND
+        "${CMAKE_COMMAND}" -E compare_files
+        "${GOLD_SCRIPT}"
+        "${generated_script}"
+    RESULT_VARIABLE script_compare_result
+)
+if(NOT script_compare_result EQUAL 0)
     message(FATAL_ERROR
-        "Generated batch file is missing expected text: librarydirs=${output_directory}")
+        "Generated batch file does not match gold batch file:\n"
+        "  gold: ${GOLD_SCRIPT}\n"
+        "  generated: ${generated_script}"
+    )
 endif()
-foreach(frame RANGE 1 ${TEST_FRAMES})
-    string(REGEX REPLACE "^0*([0-9]+)$" "\\1" frame_number "${frame}")
-    string(LENGTH "${frame_number}" frame_number_length)
-    string(SUBSTRING "0000${frame_number}" "${frame_number_length}" 4 frame_text)
-    if(DEFINED TEST_LAYER_IDS AND NOT TEST_LAYER_IDS STREQUAL "")
-        string(REPLACE "," ";" layer_ids "${TEST_LAYER_IDS}")
-        foreach(layer_id IN LISTS layer_ids)
-            set(expected "@frames.par/layer-${layer_id}-${frame_text}")
-            string(FIND "${generated_script_text}" "${expected}" found)
-            if(found EQUAL -1)
-                message(FATAL_ERROR
-                    "Generated batch file is missing expected text: ${expected}")
-            endif()
-        endforeach()
-    else()
-        set(expected "@frames.par/frame-${frame_text}")
-        string(FIND "${generated_script_text}" "${expected}" found)
-        if(found EQUAL -1)
-            message(FATAL_ERROR
-                "Generated batch file is missing expected text: ${expected}")
-        endif()
-    endif()
-endforeach()
 
 execute_process(
     COMMAND
