@@ -54,3 +54,26 @@ TEST(TestOutputLayout, parallelScriptFileIsIndexed)
 
     EXPECT_EQ(layout.directory() / "frames-1.bat", layout.script_file(1));
 }
+
+TEST(TestOutputLayout, createLayerAndFrameDirectories)
+{
+    ParFile::Config config{config_data()};
+    config.output.frames = "frames/frame%04d.png";
+    config.output.layers = "layers/layer-%s-%04d.png";
+    ParFile::OutputLayout layout{config};
+    std::filesystem::remove_all(layout.directory());
+
+    layout.create_directories();
+
+    EXPECT_TRUE(std::filesystem::is_directory(layout.directory() / "frames"));
+    EXPECT_TRUE(std::filesystem::is_directory(layout.directory() / "layers"));
+}
+
+TEST(TestOutputLayout, composeScriptFileIsUnderOutputDirectory)
+{
+    ParFile::Config config{config_data()};
+    config.output.compose_script = "compose.bat";
+    ParFile::OutputLayout layout{config};
+
+    EXPECT_EQ(layout.directory() / "compose.bat", layout.compose_script_file());
+}

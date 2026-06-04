@@ -43,6 +43,7 @@ private:
     static std::vector<InterpolantPtr> load_interpolants(const ResolvedAnimation &animation);
     void load_color_map_interpolants(const Config &config);
     std::string m_frame_name;
+    std::string m_layer_image_name;
     std::string m_layer_id;
     std::string m_video;
     ParSet m_source;

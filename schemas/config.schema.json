@@ -71,6 +71,22 @@
         "script": {
           "description": "Generated batch script filename.",
           "type": "string"
+        },
+        "frames": {
+          "description": "Final composed frame image filename pattern.",
+          "type": "string"
+        },
+        "layers": {
+          "description": "Rendered layer image filename pattern.",
+          "type": "string"
+        },
+        "compose-script": {
+          "description": "Generated ImageMagick composition batch script filename.",
+          "type": "string"
+        },
+        "background": {
+          "description": "Optional background color used to flatten final frames.",
+          "type": "string"
         }
       }
     },
@@ -147,6 +163,10 @@
         "write-when-hidden": {
           "description": "Render this layer even when evaluated opacity is 0.",
           "type": "boolean"
+        },
+        "compose": {
+          "const": "source-over",
+          "description": "Composite this source layer over the accumulated destination image."
         },
         "tracks": {
           "description": "Animated parameter tracks applied only to this layer.",

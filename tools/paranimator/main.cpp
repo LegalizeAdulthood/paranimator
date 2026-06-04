@@ -2,6 +2,7 @@
 //
 #include <ConfigSchema.h>
 
+#include <ParFile/ComposeScript.h>
 #include <ParFile/Config.h>
 #include <ParFile/Interpolator.h>
 #include <ParFile/JsonSchema.h>
@@ -91,7 +92,7 @@ std::vector<ParFile::Interpolator> layer_interpolators(const ParFile::Config &co
 {
     std::vector<ParFile::Interpolator> result;
     result.reserve(config.layers.size());
-    const bool include_layer_id{config.layers.size() > 1U};
+    const bool include_layer_id{config.layers.size() > 1U || config.output.layers};
     for (const ParFile::LayerConfig &layer : config.layers)
     {
         if (include_layer_id)
@@ -160,11 +161,27 @@ void interpolate_layers(const ParFile::Config &config)
     }
 }
 
+void write_compose_script(const ParFile::Config &config)
+{
+    if (!config.output.compose_script)
+    {
+        return;
+    }
+    const ParFile::OutputLayout output{config};
+    const ParFile::ComposeScript compose{config};
+    std::ofstream out{output.compose_script_file().string().c_str()};
+    for (int i = 0; i < config.num_frames; ++i)
+    {
+        out << compose.commands(i);
+    }
+}
+
 void render(const ParFile::Config &config)
 {
     if (!config.layers.empty())
     {
         interpolate_layers(config);
+        write_compose_script(config);
         return;
     }
     interpolate(config);

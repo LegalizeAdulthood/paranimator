@@ -24,6 +24,15 @@ struct OutputConfig
     std::string par;
     std::string entry;
     std::string script;
+    std::optional<std::string> frames;
+    std::optional<std::string> layers;
+    std::optional<std::string> compose_script;
+    std::optional<std::string> background;
+};
+
+enum class ComposeOperator
+{
+    SOURCE_OVER
 };
 
 struct KeyframeConfig
@@ -241,6 +250,7 @@ struct LayerConfig
     NamedFileParSet source;
     std::optional<NumberTrackConfig> opacity;
     bool write_when_hidden{};
+    ComposeOperator compose{ComposeOperator::SOURCE_OVER};
     std::vector<TrackConfig> tracks;
 };
 

@@ -322,6 +322,72 @@ TEST(TestJsonSchema, layerOpacityAccepted)
 })"));
 }
 
+TEST(TestJsonSchema, layerComposeSourceOverAccepted)
+{
+    EXPECT_TRUE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "layer-%s-%04d",
+    "script": "frames.bat",
+    "frames": "frames/frame%04d.png",
+    "layers": "layers/layer-%s-%04d.png",
+    "compose-script": "compose.bat",
+    "background": "black"
+  },
+  "video": "F6",
+  "num-frames": 3,
+  "layers": [
+    {
+      "id": "base",
+      "source": { "file": "from.par", "name": "Mandel_Demo" },
+      "compose": "source-over",
+      "tracks": [
+        {
+          "parameter": "maxiter",
+          "keys": [
+            { "frame": 0, "value": "100" },
+            { "frame": 2, "value": "200" }
+          ]
+        }
+      ]
+    }
+  ]
+})"));
+}
+
+TEST(TestJsonSchema, layerComposeRejectsUnsupportedOperator)
+{
+    EXPECT_FALSE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "layer-%s-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 3,
+  "layers": [
+    {
+      "id": "base",
+      "source": { "file": "from.par", "name": "Mandel_Demo" },
+      "compose": "screen",
+      "tracks": [
+        {
+          "parameter": "maxiter",
+          "keys": [
+            { "frame": 0, "value": "100" },
+            { "frame": 2, "value": "200" }
+          ]
+        }
+      ]
+    }
+  ]
+})"));
+}
+
 TEST(TestJsonSchema, layerOpacityRejectsValuesOutsidePercentRange)
 {
     const std::string before{R"({

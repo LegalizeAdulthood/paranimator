@@ -10,6 +10,8 @@ set(input_directory "input")
 set(output_directory "output")
 set(generated_par "${output_directory}/par/frames.par")
 set(generated_script "${output_directory}/frames.bat")
+set(generated_compose_script "${output_directory}/compose.bat")
+set(gold_compose_script "${TEST_SOURCE_DIR}/gold-${TEST_NAME}-compose.bat")
 set(valid_config "${input_directory}/${TEST_NAME}.json")
 
 file(REMOVE_RECURSE "${input_directory}" "${output_directory}")
@@ -117,6 +119,27 @@ if(DEFINED OUTPUT_MAP AND NOT OUTPUT_MAP STREQUAL "")
             "Generated map file does not match gold map file:\n"
             "  gold: ${GOLD_MAP}\n"
             "  generated: ${generated_map}"
+        )
+    endif()
+endif()
+
+if(EXISTS "${gold_compose_script}")
+    if(NOT EXISTS "${generated_compose_script}")
+        message(FATAL_ERROR
+            "Generated compose batch file was not created: ${generated_compose_script}")
+    endif()
+    execute_process(
+        COMMAND
+            "${CMAKE_COMMAND}" -E compare_files
+            "${gold_compose_script}"
+            "${generated_compose_script}"
+        RESULT_VARIABLE compose_compare_result
+    )
+    if(NOT compose_compare_result EQUAL 0)
+        message(FATAL_ERROR
+            "Generated compose batch file does not match gold batch file:\n"
+            "  gold: ${gold_compose_script}\n"
+            "  generated: ${generated_compose_script}"
         )
     endif()
 endif()

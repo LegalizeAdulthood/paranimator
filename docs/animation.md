@@ -1637,22 +1637,7 @@ Every new schema object, field, and enum or const value must include a
 
 
 
-### 1. Add source-over Composition
-
-Generate ImageMagick commands for the neutral `source-over` operator.
-
-Schema work:
-
-- create or update JSON schemas for fields or metadata JSON files added by
-  this slice.
-
-Unit tests:
-
-- generated commands compose layers in stack order.
-- opacity is applied before composition.
-- output.background adds a flatten step when configured.
-
-### 2. Add More Neutral Compose Operators
+### 1. Add More Neutral Compose Operators
 
 Allow configured neutral compose operators and validate them. Map those
 operators to ImageMagick names only inside the ImageMagick adapter.
@@ -1673,7 +1658,7 @@ Unit tests:
 - unsupported operators are rejected.
 - ImageMagick-specific operator spellings are rejected in animation JSON.
 
-### 3. Add Core Catalog Files
+### 2. Add Core Catalog Files
 
 Add default catalogs for core Id parameters and coloring.
 
@@ -1688,7 +1673,7 @@ Unit tests:
 - coloring catalog declares colors as color-map.
 - catalog inclusion fails clearly for missing files.
 
-### 4. Add 3D And Formula Catalog Files
+### 3. Add 3D And Formula Catalog Files
 
 Add default catalogs for Id 3D viewing and selected formula families.
 

@@ -134,7 +134,25 @@ static OutputConfig load_output_config(const Object &json)
     result.par = load_string(output, "output", "par");
     result.entry = load_string(output, "output", "entry");
     result.script = load_string(output, "output", "script");
+    result.frames = load_optional_string(output, "frames");
+    result.layers = load_optional_string(output, "layers");
+    result.compose_script = load_optional_string(output, "compose-script");
+    result.background = load_optional_string(output, "background");
+    if (result.compose_script && (!result.frames || !result.layers))
+    {
+        throw std::runtime_error("Invalid config, compose-script requires output frames and layers");
+    }
     return result;
+}
+
+static ComposeOperator load_compose_operator(const Object &json)
+{
+    const std::optional<std::string> compose{load_optional_string(json, "compose")};
+    if (!compose || *compose == "source-over")
+    {
+        return ComposeOperator::SOURCE_OVER;
+    }
+    throw std::runtime_error("Invalid config, unknown compose operator '" + *compose + "'");
 }
 
 static int load_int(const Object &json, std::string_view name)
@@ -1092,6 +1110,7 @@ static LayerConfig load_layer_config(const Object &json, int num_frames)
         validate_percent_track("opacity", *result.opacity, num_frames);
     }
     result.write_when_hidden = load_optional_bool(json, "write-when-hidden").value_or(false);
+    result.compose = load_compose_operator(json);
     result.tracks = load_tracks(json, "tracks", num_frames);
     return result;
 }

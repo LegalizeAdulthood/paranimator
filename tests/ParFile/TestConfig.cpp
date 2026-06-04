@@ -174,6 +174,38 @@ TEST(TestConfig, outputMissingScript)
     expect_invalid(json);
 }
 
+TEST(TestConfig, jsonDeserializesComposeOutput)
+{
+    Object json = valid_json();
+    json.at("output")["frames"] = "frames/frame%04d.png";
+    json.at("output")["layers"] = "layers/layer-%s-%04d.png";
+    json.at("output")["compose-script"] = "compose.bat";
+    json.at("output")["background"] = "black";
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_TRUE(config.output.frames);
+    EXPECT_EQ("frames/frame%04d.png", *config.output.frames);
+    ASSERT_TRUE(config.output.layers);
+    EXPECT_EQ("layers/layer-%s-%04d.png", *config.output.layers);
+    ASSERT_TRUE(config.output.compose_script);
+    EXPECT_EQ("compose.bat", *config.output.compose_script);
+    ASSERT_TRUE(config.output.background);
+    EXPECT_EQ("black", *config.output.background);
+}
+
+TEST(TestConfig, jsonRejectsComposeScriptWithoutFrameAndLayerOutput)
+{
+    Object json = valid_json();
+    json.at("output")["compose-script"] = "compose.bat";
+
+    expect_invalid(json);
+
+    json.at("output")["frames"] = "frames/frame%04d.png";
+
+    expect_invalid(json);
+}
+
 TEST(TestConfig, missingVideo)
 {
     Object json = valid_json();
@@ -289,6 +321,41 @@ TEST(TestConfig, jsonDeserializesLayerOpacity)
     EXPECT_EQ(0.0, config.layers[0].opacity->keys[0].value);
     EXPECT_EQ(100.0, config.layers[0].opacity->keys[1].value);
     EXPECT_TRUE(config.layers[0].write_when_hidden);
+}
+
+TEST(TestConfig, jsonDeserializesLayerComposeSourceOver)
+{
+    Object json = valid_json();
+    json.erase("source");
+    json.erase("tracks");
+    json["layers"] = Object::array(
+        {Object{{"id", "base"}, {"source", Object{{"file", "foo.par"}, {"name", "foo"}}}, {"compose", "source-over"},
+            {"tracks",
+                Object::array({Object{{"parameter", "maxiter"},
+                    {"keys",
+                        Object::array(
+                            {Object{{"frame", 0}, {"value", "100"}}, Object{{"frame", 59}, {"value", "200"}}})}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.layers.size());
+    EXPECT_EQ(ParFile::ComposeOperator::SOURCE_OVER, config.layers[0].compose);
+}
+
+TEST(TestConfig, jsonRejectsUnknownLayerComposeOperator)
+{
+    Object json = valid_json();
+    json.erase("source");
+    json.erase("tracks");
+    json["layers"] = Object::array(
+        {Object{{"id", "base"}, {"source", Object{{"file", "foo.par"}, {"name", "foo"}}}, {"compose", "screen"},
+            {"tracks",
+                Object::array({Object{{"parameter", "maxiter"},
+                    {"keys",
+                        Object::array(
+                            {Object{{"frame", 0}, {"value", "100"}}, Object{{"frame", 59}, {"value", "200"}}})}}})}}});
+
+    expect_invalid(json);
 }
 
 TEST(TestConfig, jsonRejectsLayerOpacityOutsidePercentRange)
