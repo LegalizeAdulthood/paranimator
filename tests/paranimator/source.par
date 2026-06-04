@@ -19,3 +19,8 @@ Bailout_Demo       { ; PAR for double interpolation test
    reset type=mandel center-mag=-0.5/0/1 params=0/0 inside=0
    bailout=1.25 sound=no maxiter=678
 }
+
+Julibrot_Demo      { ; PAR for Julibrot camera adapter test
+   reset type=julibrot 3dmode=monocular julibrot3d=128/8/8/7/10/24
+   sound=no maxiter=678
+}

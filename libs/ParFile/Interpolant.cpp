@@ -1461,6 +1461,303 @@ std::string Camera2DInterpolant::step()
     return format_camera2d_corners(m_aspect, look, up, height, skew);
 }
 
+struct Point3D
+{
+    double x{};
+    double y{};
+    double z{};
+};
+
+Point3D operator+(const Point3D &lhs, const Point3D &rhs)
+{
+    return {lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z};
+}
+
+Point3D operator-(const Point3D &lhs, const Point3D &rhs)
+{
+    return {lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z};
+}
+
+Point3D operator*(const Point3D &lhs, double scale)
+{
+    return {lhs.x * scale, lhs.y * scale, lhs.z * scale};
+}
+
+Point3D operator/(const Point3D &lhs, double scale)
+{
+    return {lhs.x / scale, lhs.y / scale, lhs.z / scale};
+}
+
+double dot(const Point3D &lhs, const Point3D &rhs)
+{
+    return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
+}
+
+Point3D cross(const Point3D &lhs, const Point3D &rhs)
+{
+    return {lhs.y * rhs.z - lhs.z * rhs.y, lhs.z * rhs.x - lhs.x * rhs.z, lhs.x * rhs.y - lhs.y * rhs.x};
+}
+
+double length(const Point3D &value)
+{
+    return std::sqrt(dot(value, value));
+}
+
+bool near_zero(double value)
+{
+    constexpr double TOLERANCE{1.0e-9};
+    return std::abs(value) < TOLERANCE;
+}
+
+bool near(const Point3D &lhs, const Point3D &rhs)
+{
+    return near_zero(lhs.x - rhs.x) && near_zero(lhs.y - rhs.y) && near_zero(lhs.z - rhs.z);
+}
+
+Point3D point3_from_values(const std::vector<double> &values, std::string_view name)
+{
+    if (values.size() != 3U)
+    {
+        throw std::runtime_error("Camera3D value '" + std::string{name} + "' requires three components");
+    }
+    return {values[0], values[1], values[2]};
+}
+
+Point3D normalized_camera3d_vector(const Point3D &value, std::string_view name)
+{
+    const double magnitude{length(value)};
+    if (magnitude == 0.0 || !std::isfinite(magnitude))
+    {
+        throw std::runtime_error("Camera3D value '" + std::string{name} + "' must be a nonzero vector");
+    }
+    return value / magnitude;
+}
+
+class Camera3DValueEvaluator
+{
+public:
+    Camera3DValueEvaluator(const ResolvedCamera3DValueTrack &track, int num_steps);
+
+    std::vector<double> value_at(int frame) const;
+
+private:
+    std::vector<double> parse_value(const std::string &value) const;
+
+    ParameterMetadata m_metadata;
+    int m_from_frame{};
+    int m_to_frame{};
+    std::vector<double> m_from;
+    std::vector<double> m_to;
+    Curve m_curve{};
+};
+
+Camera3DValueEvaluator::Camera3DValueEvaluator(const ResolvedCamera3DValueTrack &track, int num_steps) :
+    m_metadata(track.metadata)
+{
+    validate_keyframes(track.metadata.name, track.keys, num_steps);
+    validate_full_range(track.metadata.name, track.keys, num_steps);
+    m_from_frame = track.keys[0].frame;
+    m_to_frame = track.keys[1].frame;
+    m_from = parse_value(track.keys[0].value);
+    m_to = parse_value(track.keys[1].value);
+    m_curve = default_curve(track.metadata);
+    if (track.keys[1].curve)
+    {
+        m_curve = *track.keys[1].curve;
+    }
+    validate_scalar_curve(to_string(m_metadata.type), m_curve);
+}
+
+std::vector<double> Camera3DValueEvaluator::parse_value(const std::string &value) const
+{
+    const std::vector<double> values{parse_slash_doubles(value)};
+    const std::size_t arity{static_cast<std::size_t>(tuple_arity(m_metadata))};
+    if (values.size() != arity)
+    {
+        throw std::runtime_error(
+            "Camera3D value '" + m_metadata.name + "' requires " + std::to_string(arity) + " components");
+    }
+    return values;
+}
+
+std::vector<double> Camera3DValueEvaluator::value_at(int frame) const
+{
+    std::vector<double> values{m_from};
+    if (frame >= m_to_frame)
+    {
+        values = m_to;
+    }
+    else if (frame > m_from_frame && m_curve != Curve::HOLD && m_curve != Curve::STEP)
+    {
+        const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        for (std::size_t i{}; i < values.size(); ++i)
+        {
+            values[i] = m_from[i] + fraction * (m_to[i] - m_from[i]);
+        }
+    }
+    normalize_vector(m_metadata, values);
+    return clean_path_components(values);
+}
+
+struct Camera3DFrame
+{
+    Point3D eye;
+    Point3D look_at;
+    Point3D forward;
+    Point3D right;
+    Point3D up;
+    double distance{};
+};
+
+Camera3DFrame camera3d_frame(const Point3D &eye, const Point3D &look_at, const Point3D &view_up, std::string_view name)
+{
+    Camera3DFrame result;
+    result.eye = eye;
+    result.look_at = look_at;
+    const Point3D to_target{look_at - eye};
+    result.distance = length(to_target);
+    if (result.distance == 0.0 || !std::isfinite(result.distance))
+    {
+        throw std::runtime_error("Camera3D value '" + std::string{name} + "' has degenerate eye and look-at");
+    }
+    result.forward = to_target / result.distance;
+    const Point3D up_hint{normalized_camera3d_vector(view_up, name)};
+    result.right = cross(result.forward, up_hint);
+    const double right_length{length(result.right)};
+    if (right_length == 0.0 || !std::isfinite(right_length))
+    {
+        throw std::runtime_error("Camera3D value '" + std::string{name} + "' has parallel forward and view-up");
+    }
+    result.right = result.right / right_length;
+    result.up = cross(result.right, result.forward);
+    return result;
+}
+
+Point3D no_roll_camera3d_up(const Camera3DFrame &frame)
+{
+    const Point3D world_up{0.0, 1.0, 0.0};
+    const Point3D right{cross(frame.forward, world_up)};
+    const double right_length{length(right)};
+    if (right_length == 0.0 || !std::isfinite(right_length))
+    {
+        throw std::runtime_error("Camera3D frame cannot represent a vertical view direction without roll");
+    }
+    return cross(right / right_length, frame.forward);
+}
+
+void require_centered_camera3d(const Camera3DFrame &frame, std::string_view output)
+{
+    if (!near(frame.look_at, {0.0, 0.0, 0.0}))
+    {
+        throw std::runtime_error("Camera3D output '" + std::string{output} + "' does not support center-of-interest");
+    }
+}
+
+void require_no_roll_camera3d(const Camera3DFrame &frame, std::string_view output)
+{
+    if (!near(frame.up, no_roll_camera3d_up(frame)))
+    {
+        throw std::runtime_error("Camera3D output '" + std::string{output} + "' does not support roll");
+    }
+}
+
+std::string id_camera3d_rotation(const Camera3DFrame &frame)
+{
+    require_centered_camera3d(frame, "rotation");
+    require_no_roll_camera3d(frame, "rotation");
+    const double horizontal{std::hypot(frame.forward.x, frame.forward.z)};
+    const double x_rotation{-std::atan2(frame.forward.y, horizontal) * 180.0 / CAMERA2D_PI};
+    const double y_rotation{std::atan2(frame.forward.x, -frame.forward.z) * 180.0 / CAMERA2D_PI};
+    return format_slash_doubles(clean_path_components({x_rotation, y_rotation, 0.0}));
+}
+
+std::string id_camera3d_perspective(const Camera3DFrame &frame)
+{
+    require_centered_camera3d(frame, "perspective");
+    require_no_roll_camera3d(frame, "perspective");
+    return std::to_string(static_cast<int>(std::lround(frame.distance)));
+}
+
+std::string id_camera3d_xyshift(const Camera3DFrame &frame)
+{
+    require_centered_camera3d(frame, "xyshift");
+    require_no_roll_camera3d(frame, "xyshift");
+    return "0/0";
+}
+
+std::string julibrot_camera3d_geometry(const Camera3DFrame &frame, const std::string &base_value)
+{
+    require_centered_camera3d(frame, "julibrot3d");
+    if (!near(frame.forward, {0.0, 0.0, -1.0}) || !near(frame.up, {0.0, 1.0, 0.0}))
+    {
+        throw std::runtime_error("Camera3D output 'julibrot3d' supports only a centered straight-on frame");
+    }
+    std::vector<double> values{parse_slash_doubles(base_value)};
+    if (values.size() != 6U)
+    {
+        throw std::runtime_error("Camera3D output 'julibrot3d' source geometry must have six values");
+    }
+    values[5] = frame.distance;
+    return format_slash_doubles(clean_path_components(values));
+}
+
+class Camera3DInterpolant : public Base
+{
+public:
+    Camera3DInterpolant(const ResolvedTrack &track, int num_steps);
+    ~Camera3DInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    Camera3DFrame frame_at(int frame) const;
+
+    Camera3DOutputKind m_output_kind{};
+    Camera3DValueEvaluator m_eye;
+    Camera3DValueEvaluator m_look_at;
+    Camera3DValueEvaluator m_view_up;
+    std::string m_base_value;
+};
+
+Camera3DInterpolant::Camera3DInterpolant(const ResolvedTrack &track, int num_steps) :
+    Base(track.output_parameter, num_steps),
+    m_output_kind(track.camera3d->output_kind),
+    m_eye(track.camera3d->eye, num_steps),
+    m_look_at(track.camera3d->look_at, num_steps),
+    m_view_up(track.camera3d->view_up, num_steps),
+    m_base_value(track.base_value)
+{
+}
+
+Camera3DFrame Camera3DInterpolant::frame_at(int frame) const
+{
+    const Point3D eye{point3_from_values(m_eye.value_at(frame), "eye")};
+    const Point3D look_at{point3_from_values(m_look_at.value_at(frame), "look-at")};
+    const Point3D view_up{point3_from_values(m_view_up.value_at(frame), "view-up")};
+    return camera3d_frame(eye, look_at, view_up, name());
+}
+
+std::string Camera3DInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+
+    const Camera3DFrame camera{frame_at(frame)};
+    if (m_output_kind == Camera3DOutputKind::ID_ROTATION)
+    {
+        return id_camera3d_rotation(camera);
+    }
+    if (m_output_kind == Camera3DOutputKind::ID_PERSPECTIVE)
+    {
+        return id_camera3d_perspective(camera);
+    }
+    if (m_output_kind == Camera3DOutputKind::ID_XYSHIFT)
+    {
+        return id_camera3d_xyshift(camera);
+    }
+    return julibrot_camera3d_geometry(camera, m_base_value);
+}
+
 class IntegerInterpolant : public Base
 {
 public:
@@ -2057,6 +2354,10 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
     if (track.camera2d)
     {
         return std::make_shared<Camera2DInterpolant>(track, num_steps);
+    }
+    if (track.camera3d)
+    {
+        return std::make_shared<Camera3DInterpolant>(track, num_steps);
     }
 
     const ParameterMetadata &metadata{track.metadata};

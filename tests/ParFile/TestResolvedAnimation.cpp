@@ -191,6 +191,37 @@ ParFile::Config id_3d_view_more_config_data()
     return result;
 }
 
+ParFile::Camera3DConfig camera3d_config_data(std::string_view eye_to = "10/0/0")
+{
+    ParFile::Camera3DConfig camera;
+    camera.eye = ParFile::Camera3DValueTrackConfig{
+        ParFile::ParameterType::POINT3, false, {{0, "0/0/24"}, {2, std::string{eye_to}}}};
+    camera.look_at =
+        ParFile::Camera3DValueTrackConfig{ParFile::ParameterType::POINT3, false, {{0, "0/0/0"}, {2, "0/0/0"}}};
+    camera.view_up =
+        ParFile::Camera3DValueTrackConfig{ParFile::ParameterType::VECTOR3, true, {{0, "0/2/0"}, {2, "0/2/0"}}};
+    return camera;
+}
+
+ParFile::Config id_3d_view_camera_config_data()
+{
+    ParFile::Id3DViewConfig view;
+    view.name = "view";
+    view.outputs.rotation = "rotation";
+    view.outputs.perspective = "perspective";
+    view.outputs.xyshift = "xyshift";
+    view.camera3d = camera3d_config_data();
+
+    ParFile::TrackConfig track;
+    track.parameter = "view";
+    track.kind = ParFile::TrackKind::ID_3D_VIEW;
+    track.id_3d_view = view;
+
+    ParFile::Config result{config_data()};
+    result.tracks = {track};
+    return result;
+}
+
 ParFile::Config julibrot_view_config_data()
 {
     ParFile::JulibrotViewConfig view;
@@ -214,6 +245,30 @@ ParFile::Config julibrot_view_config_data()
 
     ParFile::Config result{config_data()};
     result.tracks = {track};
+    return result;
+}
+
+ParFile::Config julibrot_view_camera_config_data()
+{
+    ParFile::JulibrotViewConfig view;
+    view.name = "view";
+    view.outputs.geometry = "julibrot3d";
+    view.camera3d = camera3d_config_data("0/0/12");
+
+    ParFile::TrackConfig track;
+    track.parameter = "view";
+    track.kind = ParFile::TrackKind::JULIBROT_VIEW;
+    track.julibrot_view = view;
+
+    ParFile::Config result{config_data()};
+    result.tracks = {track};
+    return result;
+}
+
+ParFile::ParSet julibrot_source_set()
+{
+    ParFile::ParSet result{source_set()};
+    result.params.push_back({"julibrot3d", "128/8/8/7/10/24"});
     return result;
 }
 
@@ -418,6 +473,29 @@ TEST(TestResolvedAnimation, id3DViewResolvesAdditionalOutputTracks)
     EXPECT_EQ(4.0, *animation.tracks[1].metadata.max);
 }
 
+TEST(TestResolvedAnimation, id3DViewCameraResolvesGeneratedOutputs)
+{
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(id_3d_view_camera_config_data(), catalog_data(), source_set())};
+
+    ASSERT_EQ(3U, animation.tracks.size());
+    EXPECT_EQ("view.rotation", animation.tracks[0].parameter);
+    EXPECT_EQ("rotation", animation.tracks[0].output_parameter);
+    ASSERT_TRUE(animation.tracks[0].camera3d);
+    EXPECT_EQ(ParFile::Camera3DOutputKind::ID_ROTATION, animation.tracks[0].camera3d->output_kind);
+    EXPECT_EQ("view.camera3d.eye", animation.tracks[0].camera3d->eye.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::POINT3, animation.tracks[0].camera3d->eye.metadata.type);
+    EXPECT_EQ("0/0/24", animation.tracks[0].camera3d->eye.keys[0].value);
+    EXPECT_EQ("view.perspective", animation.tracks[1].parameter);
+    EXPECT_EQ("perspective", animation.tracks[1].output_parameter);
+    ASSERT_TRUE(animation.tracks[1].camera3d);
+    EXPECT_EQ(ParFile::Camera3DOutputKind::ID_PERSPECTIVE, animation.tracks[1].camera3d->output_kind);
+    EXPECT_EQ("view.xyshift", animation.tracks[2].parameter);
+    EXPECT_EQ("xyshift", animation.tracks[2].output_parameter);
+    ASSERT_TRUE(animation.tracks[2].camera3d);
+    EXPECT_EQ(ParFile::Camera3DOutputKind::ID_XYSHIFT, animation.tracks[2].camera3d->output_kind);
+}
+
 TEST(TestResolvedAnimation, id3DViewRejectsWrongOutputMetadata)
 {
     ParFile::Config config{id_3d_view_more_config_data()};
@@ -451,6 +529,27 @@ TEST(TestResolvedAnimation, julibrotViewResolvesToOutputTracks)
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, animation.tracks[3].metadata.type);
     ASSERT_TRUE(animation.tracks[3].metadata.arity);
     EXPECT_EQ(4, *animation.tracks[3].metadata.arity);
+}
+
+TEST(TestResolvedAnimation, julibrotViewCameraResolvesGeneratedGeometry)
+{
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(julibrot_view_camera_config_data(), catalog_data(), julibrot_source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    EXPECT_EQ("view.geometry", animation.tracks[0].parameter);
+    EXPECT_EQ("julibrot3d", animation.tracks[0].output_parameter);
+    EXPECT_EQ("128/8/8/7/10/24", animation.tracks[0].base_value);
+    ASSERT_TRUE(animation.tracks[0].camera3d);
+    EXPECT_EQ(ParFile::Camera3DOutputKind::JULIBROT_GEOMETRY, animation.tracks[0].camera3d->output_kind);
+    EXPECT_EQ("view.camera3d.view-up", animation.tracks[0].camera3d->view_up.metadata.name);
+    EXPECT_TRUE(animation.tracks[0].camera3d->view_up.metadata.normalize);
+}
+
+TEST(TestResolvedAnimation, julibrotViewCameraRequiresSourceGeometry)
+{
+    EXPECT_THROW(ParFile::resolve_animation(julibrot_view_camera_config_data(), catalog_data(), source_set()),
+        std::runtime_error);
 }
 
 TEST(TestResolvedAnimation, julibrotViewRejectsWrongOutputMetadata)

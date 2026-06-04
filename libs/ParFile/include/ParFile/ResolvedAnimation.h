@@ -31,6 +31,28 @@ struct ResolvedCamera2DConfig
     std::optional<ResolvedCamera2DValueTrack> skew;
 };
 
+enum class Camera3DOutputKind
+{
+    ID_ROTATION,
+    ID_PERSPECTIVE,
+    ID_XYSHIFT,
+    JULIBROT_GEOMETRY
+};
+
+struct ResolvedCamera3DValueTrack
+{
+    ParameterMetadata metadata;
+    std::vector<KeyframeConfig> keys;
+};
+
+struct ResolvedCamera3DConfig
+{
+    Camera3DOutputKind output_kind{};
+    ResolvedCamera3DValueTrack eye;
+    ResolvedCamera3DValueTrack look_at;
+    ResolvedCamera3DValueTrack view_up;
+};
+
 struct ResolvedTrack
 {
     std::string parameter;
@@ -43,6 +65,7 @@ struct ResolvedTrack
     std::optional<PwmConfig> pwm;
     std::optional<PathConfig> path;
     std::optional<ResolvedCamera2DConfig> camera2d;
+    std::optional<ResolvedCamera3DConfig> camera3d;
 };
 
 struct ResolvedAnimation

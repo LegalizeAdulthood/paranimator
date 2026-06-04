@@ -824,6 +824,43 @@ TEST(TestConfig, jsonDeserializesId3DViewTrack)
     EXPECT_EQ("2", view.stereo->keys[1].value);
 }
 
+TEST(TestConfig, jsonDeserializesId3DViewCamera3DFrame)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"name", "view"}, {"type", "id-3d-view"},
+        {"outputs", Object{{"rotation", "rotation"}, {"perspective", "perspective"}, {"xyshift", "xyshift"}}},
+        {"camera3d",
+            Object{{"eye",
+                       Object{{"type", "point3"},
+                           {"keys",
+                               Object::array({Object{{"frame", 0}, {"value", "0/0/24"}},
+                                   Object{{"frame", 59}, {"value", "10/0/0"}}})}}},
+                {"look-at",
+                    Object{{"type", "point3"},
+                        {"keys",
+                            Object::array({Object{{"frame", 0}, {"value", "0/0/0"}},
+                                Object{{"frame", 59}, {"value", "0/0/0"}}})}}},
+                {"view-up",
+                    Object{{"type", "vector3"}, {"normalize", true},
+                        {"keys",
+                            Object::array({Object{{"frame", 0}, {"value", "0/2/0"}},
+                                Object{{"frame", 59}, {"value", "0/2/0"}}})}}}}}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_TRUE(config.tracks[0].id_3d_view);
+    const ParFile::Id3DViewConfig &view{*config.tracks[0].id_3d_view};
+    ASSERT_TRUE(view.camera3d);
+    EXPECT_EQ(ParFile::ParameterType::POINT3, view.camera3d->eye.type);
+    EXPECT_EQ(ParFile::ParameterType::POINT3, view.camera3d->look_at.type);
+    EXPECT_EQ(ParFile::ParameterType::VECTOR3, view.camera3d->view_up.type);
+    EXPECT_TRUE(view.camera3d->view_up.normalize);
+    EXPECT_FALSE(view.rotation);
+    EXPECT_FALSE(view.perspective);
+    EXPECT_FALSE(view.xyshift);
+}
+
 TEST(TestConfig, jsonDeserializesJulibrotViewTrack)
 {
     Object json = valid_json();
@@ -880,6 +917,41 @@ TEST(TestConfig, jsonDeserializesJulibrotViewTrack)
     EXPECT_EQ("1", view.eyes->keys[1].value);
     ASSERT_TRUE(view.from_to->arity);
     EXPECT_EQ(4, *view.from_to->arity);
+}
+
+TEST(TestConfig, jsonDeserializesJulibrotViewCamera3DFrame)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array(
+        {Object{{"name", "view"}, {"type", "julibrot-view"}, {"outputs", Object{{"geometry", "julibrot3d"}}},
+            {"camera3d",
+                Object{{"eye",
+                           Object{{"type", "point3"},
+                               {"keys",
+                                   Object::array({Object{{"frame", 0}, {"value", "0/0/24"}},
+                                       Object{{"frame", 59}, {"value", "0/0/12"}}})}}},
+                    {"look-at",
+                        Object{{"type", "point3"},
+                            {"keys",
+                                Object::array({Object{{"frame", 0}, {"value", "0/0/0"}},
+                                    Object{{"frame", 59}, {"value", "0/0/0"}}})}}},
+                    {"view-up",
+                        Object{{"type", "vector3"}, {"normalize", true},
+                            {"keys",
+                                Object::array({Object{{"frame", 0}, {"value", "0/1/0"}},
+                                    Object{{"frame", 59}, {"value", "0/1/0"}}})}}}}}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_TRUE(config.tracks[0].julibrot_view);
+    const ParFile::JulibrotViewConfig &view{*config.tracks[0].julibrot_view};
+    ASSERT_TRUE(view.camera3d);
+    EXPECT_EQ(ParFile::ParameterType::POINT3, view.camera3d->eye.type);
+    EXPECT_EQ(ParFile::ParameterType::POINT3, view.camera3d->look_at.type);
+    EXPECT_EQ(ParFile::ParameterType::VECTOR3, view.camera3d->view_up.type);
+    EXPECT_TRUE(view.camera3d->view_up.normalize);
+    EXPECT_FALSE(view.geometry);
 }
 
 TEST(TestConfig, jsonRejectsJulibrotViewCameraRequests)

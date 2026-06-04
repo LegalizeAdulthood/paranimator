@@ -583,6 +583,10 @@
       "additionalProperties": false,
       "anyOf": [
         {
+          "description": "Adapter includes a shared camera3d frame.",
+          "required": [ "camera3d" ]
+        },
+        {
           "description": "Adapter includes a rotation component track.",
           "required": [ "rotation" ]
         },
@@ -643,6 +647,10 @@
         "outputs": {
           "description": "Catalog parameter keys that receive computed 3D view values.",
           "$ref": "#/$defs/id-3d-view-outputs"
+        },
+        "camera3d": {
+          "description": "Optional shared 3D camera frame used to generate supported Id 3D view outputs.",
+          "$ref": "#/$defs/camera3d-frame"
         },
         "rotation": {
           "description": "Keyed x/y/z rotation values.",
@@ -1048,6 +1056,10 @@
       "additionalProperties": false,
       "anyOf": [
         {
+          "description": "Adapter includes a shared camera3d frame.",
+          "required": [ "camera3d" ]
+        },
+        {
           "description": "Adapter includes a 3dmode component track.",
           "required": [ "mode" ]
         },
@@ -1076,6 +1088,10 @@
         "outputs": {
           "description": "Catalog parameter keys that receive computed Julibrot view values.",
           "$ref": "#/$defs/julibrot-view-outputs"
+        },
+        "camera3d": {
+          "description": "Optional shared 3D camera frame used to generate supported Julibrot outputs.",
+          "$ref": "#/$defs/camera3d-frame"
         },
         "mode": {
           "description": "Keyed Julibrot 3D mode values.",
@@ -1277,6 +1293,108 @@
         },
         "curve": {
           "description": "Optional interpolation curve ending at this Julibrot scalar key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
+      }
+    },
+    "camera3d-frame": {
+      "description": "Shared 3D planning camera frame with eye, look-at, and view-up component tracks.",
+      "type": "object",
+      "required": [ "eye", "look-at", "view-up" ],
+      "additionalProperties": false,
+      "properties": {
+        "eye": {
+          "description": "Keyed camera eye point in 3D planning space.",
+          "$ref": "#/$defs/camera3d-point3-track"
+        },
+        "look-at": {
+          "description": "Keyed camera target point in 3D planning space.",
+          "$ref": "#/$defs/camera3d-point3-track"
+        },
+        "view-up": {
+          "description": "Keyed up direction used to orient the camera frame.",
+          "$ref": "#/$defs/camera3d-vector3-track"
+        }
+      }
+    },
+    "camera3d-point3-track": {
+      "description": "Camera3d point3 component track.",
+      "type": "object",
+      "required": [ "type", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "point3",
+          "description": "Declares a three-component point value."
+        },
+        "keys": {
+          "description": "Exactly two keyed point3 values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/camera3d-point3-keyframe" }
+        }
+      }
+    },
+    "camera3d-vector3-track": {
+      "description": "Camera3d vector3 component track.",
+      "type": "object",
+      "required": [ "type", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "vector3",
+          "description": "Declares a three-component direction value."
+        },
+        "normalize": {
+          "const": true,
+          "description": "Requests unit-vector normalization for this direction."
+        },
+        "keys": {
+          "description": "Exactly two keyed vector3 values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/camera3d-vector3-keyframe" }
+        }
+      }
+    },
+    "camera3d-point3-keyframe": {
+      "description": "One keyed camera point3 value.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this camera point key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Slash-delimited point3 value at this keyframe.",
+          "type": "string"
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this point key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
+      }
+    },
+    "camera3d-vector3-keyframe": {
+      "description": "One keyed camera vector3 value.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this camera vector key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Slash-delimited vector3 value at this keyframe.",
+          "type": "string"
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this vector key.",
           "$ref": "#/$defs/scalar-curve"
         }
       }

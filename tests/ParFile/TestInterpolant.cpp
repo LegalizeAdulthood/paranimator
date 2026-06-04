@@ -241,6 +241,36 @@ ParFile::ResolvedTrack resolved_camera2d_eye_path_track(double aspect,
     return result;
 }
 
+ParFile::ResolvedCamera3DValueTrack resolved_camera3d_value_track(const std::string &name, ParFile::ParameterType type,
+    const std::vector<ParFile::KeyframeConfig> &keys, bool normalize = false)
+{
+    ParFile::ParameterMetadata parameter_metadata{metadata(name, type)};
+    parameter_metadata.normalize = normalize;
+    return {parameter_metadata, keys};
+}
+
+ParFile::ResolvedTrack resolved_camera3d_track(ParFile::Camera3DOutputKind output_kind, ParFile::ParameterType type,
+    const std::string &output_parameter, const std::vector<ParFile::KeyframeConfig> &eye_keys,
+    const std::vector<ParFile::KeyframeConfig> &look_at_keys, const std::vector<ParFile::KeyframeConfig> &view_up_keys,
+    const std::string &base_value = {})
+{
+    ParFile::ResolvedCamera3DConfig camera3d;
+    camera3d.output_kind = output_kind;
+    camera3d.eye = resolved_camera3d_value_track("view.camera3d.eye", ParFile::ParameterType::POINT3, eye_keys);
+    camera3d.look_at =
+        resolved_camera3d_value_track("view.camera3d.look-at", ParFile::ParameterType::POINT3, look_at_keys);
+    camera3d.view_up =
+        resolved_camera3d_value_track("view.camera3d.view-up", ParFile::ParameterType::VECTOR3, view_up_keys, true);
+
+    ParFile::ResolvedTrack result;
+    result.parameter = "view.camera3d";
+    result.metadata = metadata(output_parameter, type);
+    result.base_value = base_value;
+    result.output_parameter = output_parameter;
+    result.camera3d = camera3d;
+    return result;
+}
+
 ParFile::ParameterMetadata tuple_metadata(const std::string &name, int arity)
 {
     ParFile::ParameterMetadata result{metadata(name, ParFile::ParameterType::NUMERIC_TUPLE)};
@@ -716,6 +746,90 @@ TEST(TestInterpolant, camera2dInvalidSkewRejected)
                 std::optional<std::vector<ParFile::KeyframeConfig>>{keyframes("nan", "nan", num_steps)}),
             num_steps),
         std::runtime_error);
+}
+
+TEST(TestInterpolant, camera3dRotationMapsCenteredEyeOrbit)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_camera3d_track(ParFile::Camera3DOutputKind::ID_ROTATION, ParFile::ParameterType::NUMERIC_TUPLE,
+            "rotation", keyframes("0/0/10", "10/0/0", num_steps), keyframes("0/0/0", "0/0/0", num_steps),
+            keyframes("0/2/0", "0/2/0", num_steps)),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("0/0/0", interpolant->step());
+    EXPECT_EQ("0/-45/0", interpolant->step());
+    EXPECT_EQ("0/-90/0", interpolant->step());
+}
+
+TEST(TestInterpolant, camera3dPerspectiveUsesEyeDistance)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_camera3d_track(ParFile::Camera3DOutputKind::ID_PERSPECTIVE, ParFile::ParameterType::INTEGER,
+            "perspective", keyframes("0/0/24", "0/0/12", num_steps), keyframes("0/0/0", "0/0/0", num_steps),
+            keyframes("0/1/0", "0/1/0", num_steps)),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("24", interpolant->step());
+    EXPECT_EQ("18", interpolant->step());
+    EXPECT_EQ("12", interpolant->step());
+}
+
+TEST(TestInterpolant, camera3dJulibrotGeometryUsesEyeDistance)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_camera3d_track(ParFile::Camera3DOutputKind::JULIBROT_GEOMETRY, ParFile::ParameterType::NUMERIC_TUPLE,
+            "julibrot3d", keyframes("0/0/24", "0/0/12", num_steps), keyframes("0/0/0", "0/0/0", num_steps),
+            keyframes("0/1/0", "0/1/0", num_steps), "128/8/8/7/10/24"),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("128/8/8/7/10/24", interpolant->step());
+    EXPECT_EQ("128/8/8/7/10/18", interpolant->step());
+    EXPECT_EQ("128/8/8/7/10/12", interpolant->step());
+}
+
+TEST(TestInterpolant, camera3dEyeEqualLookAtRejected)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_camera3d_track(ParFile::Camera3DOutputKind::ID_ROTATION, ParFile::ParameterType::NUMERIC_TUPLE,
+            "rotation", keyframes("0/0/0", "0/0/10", num_steps), keyframes("0/0/0", "0/0/0", num_steps),
+            keyframes("0/1/0", "0/1/0", num_steps)),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_THROW(static_cast<void>(interpolant->step()), std::runtime_error);
+}
+
+TEST(TestInterpolant, camera3dParallelViewUpRejected)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_camera3d_track(ParFile::Camera3DOutputKind::ID_ROTATION, ParFile::ParameterType::NUMERIC_TUPLE,
+            "rotation", keyframes("0/0/10", "0/0/10", num_steps), keyframes("0/0/0", "0/0/0", num_steps),
+            keyframes("0/0/-1", "0/0/-1", num_steps)),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_THROW(static_cast<void>(interpolant->step()), std::runtime_error);
+}
+
+TEST(TestInterpolant, camera3dRollRejected)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_camera3d_track(ParFile::Camera3DOutputKind::ID_ROTATION, ParFile::ParameterType::NUMERIC_TUPLE,
+            "rotation", keyframes("0/0/10", "0/0/10", num_steps), keyframes("0/0/0", "0/0/0", num_steps),
+            keyframes("1/0/0", "1/0/0", num_steps)),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_THROW(static_cast<void>(interpolant->step()), std::runtime_error);
 }
 
 TEST(TestInterpolant, integerFrom)

@@ -188,6 +188,20 @@ struct Camera2DConfig
     std::optional<Camera2DValueTrackConfig> skew;
 };
 
+struct Camera3DValueTrackConfig
+{
+    ParameterType type{};
+    bool normalize{};
+    std::vector<KeyframeConfig> keys;
+};
+
+struct Camera3DConfig
+{
+    Camera3DValueTrackConfig eye;
+    Camera3DValueTrackConfig look_at;
+    Camera3DValueTrackConfig view_up;
+};
+
 struct Id3DViewValueTrackConfig
 {
     ParameterType type{};
@@ -215,6 +229,7 @@ struct Id3DViewConfig
 {
     std::string name;
     Id3DViewOutputsConfig outputs;
+    std::optional<Camera3DConfig> camera3d;
     std::optional<Id3DViewValueTrackConfig> rotation;
     std::optional<Id3DViewValueTrackConfig> perspective;
     std::optional<Id3DViewValueTrackConfig> xyshift;
@@ -248,6 +263,7 @@ struct JulibrotViewConfig
 {
     std::string name;
     JulibrotViewOutputsConfig outputs;
+    std::optional<Camera3DConfig> camera3d;
     std::optional<JulibrotViewValueTrackConfig> mode;
     std::optional<JulibrotViewValueTrackConfig> geometry;
     std::optional<JulibrotViewValueTrackConfig> eyes;

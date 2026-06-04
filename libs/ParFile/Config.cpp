@@ -521,6 +521,36 @@ static std::vector<KeyframeConfig> load_view_keyframes(const Object &json, std::
     return result;
 }
 
+static Camera3DValueTrackConfig load_camera3d_value_track_config(
+    const Object &json, std::string_view name, ParameterType expected_type)
+{
+    const Object &track{load_object(json, name)};
+    Camera3DValueTrackConfig result;
+    result.type = parse_parameter_type(load_string(track, name, "type"));
+    if (result.type != expected_type)
+    {
+        throw std::runtime_error("Invalid config, camera3d '" + std::string{name} + "' has the wrong type");
+    }
+    result.normalize = load_optional_bool(track, "normalize").value_or(false);
+    result.keys = load_view_keyframes(track, name, result.type);
+    return result;
+}
+
+static std::optional<Camera3DConfig> load_optional_camera3d_config(const Object &json)
+{
+    if (!json.contains("camera3d"))
+    {
+        return {};
+    }
+
+    const Object &camera{load_object(json, "camera3d")};
+    Camera3DConfig result;
+    result.eye = load_camera3d_value_track_config(camera, "eye", ParameterType::POINT3);
+    result.look_at = load_camera3d_value_track_config(camera, "look-at", ParameterType::POINT3);
+    result.view_up = load_camera3d_value_track_config(camera, "view-up", ParameterType::VECTOR3);
+    return result;
+}
+
 static std::optional<Id3DViewValueTrackConfig> load_optional_id_3d_view_value_track_config(
     const Object &json, std::string_view name, ParameterType expected_type, int expected_arity)
 {
@@ -574,12 +604,16 @@ static Id3DViewOutputsConfig load_id_3d_view_outputs_config(const Object &json)
     return result;
 }
 
-static void validate_id_3d_view_member(
-    const char *name, const std::optional<std::string> &output, const std::optional<Id3DViewValueTrackConfig> &track)
+static void validate_id_3d_view_member(const char *name, const std::optional<std::string> &output,
+    const std::optional<Id3DViewValueTrackConfig> &track, const std::optional<Camera3DConfig> &camera3d)
 {
     if (output && !track)
     {
-        throw std::runtime_error("Invalid config, id-3d-view output '" + std::string{name} + "' has no track");
+        const std::string member{name};
+        if (!camera3d || (member != "rotation" && member != "perspective" && member != "xyshift"))
+        {
+            throw std::runtime_error("Invalid config, id-3d-view output '" + member + "' has no track");
+        }
     }
     if (!output && track)
     {
@@ -592,6 +626,7 @@ static Id3DViewConfig load_id_3d_view_config(const Object &json)
     Id3DViewConfig result;
     result.name = load_string(json, "name");
     result.outputs = load_id_3d_view_outputs_config(json);
+    result.camera3d = load_optional_camera3d_config(json);
     result.rotation = load_optional_id_3d_view_value_track_config(json, "rotation", ParameterType::NUMERIC_TUPLE, 3);
     result.perspective = load_optional_id_3d_view_value_track_config(json, "perspective", ParameterType::INTEGER, 0);
     result.xyshift = load_optional_id_3d_view_value_track_config(json, "xyshift", ParameterType::NUMERIC_TUPLE, 2);
@@ -604,18 +639,18 @@ static Id3DViewConfig load_id_3d_view_config(const Object &json)
     result.stereo = load_optional_id_3d_view_value_track_config(json, "stereo", ParameterType::INTEGER, 0);
     result.interocular = load_optional_id_3d_view_value_track_config(json, "interocular", ParameterType::INTEGER, 0);
     result.converge = load_optional_id_3d_view_value_track_config(json, "converge", ParameterType::INTEGER, 0);
-    validate_id_3d_view_member("rotation", result.outputs.rotation, result.rotation);
-    validate_id_3d_view_member("perspective", result.outputs.perspective, result.perspective);
-    validate_id_3d_view_member("xyshift", result.outputs.xyshift, result.xyshift);
-    validate_id_3d_view_member("scalexyz", result.outputs.scalexyz, result.scalexyz);
-    validate_id_3d_view_member("roughness", result.outputs.roughness, result.roughness);
-    validate_id_3d_view_member("sphere", result.outputs.sphere, result.sphere);
-    validate_id_3d_view_member("longitude", result.outputs.longitude, result.longitude);
-    validate_id_3d_view_member("latitude", result.outputs.latitude, result.latitude);
-    validate_id_3d_view_member("radius", result.outputs.radius, result.radius);
-    validate_id_3d_view_member("stereo", result.outputs.stereo, result.stereo);
-    validate_id_3d_view_member("interocular", result.outputs.interocular, result.interocular);
-    validate_id_3d_view_member("converge", result.outputs.converge, result.converge);
+    validate_id_3d_view_member("rotation", result.outputs.rotation, result.rotation, result.camera3d);
+    validate_id_3d_view_member("perspective", result.outputs.perspective, result.perspective, result.camera3d);
+    validate_id_3d_view_member("xyshift", result.outputs.xyshift, result.xyshift, result.camera3d);
+    validate_id_3d_view_member("scalexyz", result.outputs.scalexyz, result.scalexyz, result.camera3d);
+    validate_id_3d_view_member("roughness", result.outputs.roughness, result.roughness, result.camera3d);
+    validate_id_3d_view_member("sphere", result.outputs.sphere, result.sphere, result.camera3d);
+    validate_id_3d_view_member("longitude", result.outputs.longitude, result.longitude, result.camera3d);
+    validate_id_3d_view_member("latitude", result.outputs.latitude, result.latitude, result.camera3d);
+    validate_id_3d_view_member("radius", result.outputs.radius, result.radius, result.camera3d);
+    validate_id_3d_view_member("stereo", result.outputs.stereo, result.stereo, result.camera3d);
+    validate_id_3d_view_member("interocular", result.outputs.interocular, result.interocular, result.camera3d);
+    validate_id_3d_view_member("converge", result.outputs.converge, result.converge, result.camera3d);
     return result;
 }
 
@@ -663,11 +698,15 @@ static JulibrotViewOutputsConfig load_julibrot_view_outputs_config(const Object 
 }
 
 static void validate_julibrot_view_member(const char *name, const std::optional<std::string> &output,
-    const std::optional<JulibrotViewValueTrackConfig> &track)
+    const std::optional<JulibrotViewValueTrackConfig> &track, const std::optional<Camera3DConfig> &camera3d)
 {
     if (output && !track)
     {
-        throw std::runtime_error("Invalid config, julibrot-view output '" + std::string{name} + "' has no track");
+        const std::string member{name};
+        if (!camera3d || member != "geometry")
+        {
+            throw std::runtime_error("Invalid config, julibrot-view output '" + member + "' has no track");
+        }
     }
     if (!output && track)
     {
@@ -691,14 +730,15 @@ static JulibrotViewConfig load_julibrot_view_config(const Object &json)
     JulibrotViewConfig result;
     result.name = load_string(json, "name");
     result.outputs = load_julibrot_view_outputs_config(json);
+    result.camera3d = load_optional_camera3d_config(json);
     result.mode = load_optional_julibrot_view_value_track_config(json, "mode", ParameterType::ENUM, 0);
     result.geometry = load_optional_julibrot_view_value_track_config(json, "geometry", ParameterType::NUMERIC_TUPLE, 6);
     result.eyes = load_optional_julibrot_view_value_track_config(json, "eyes", ParameterType::DOUBLE, 0);
     result.from_to = load_optional_julibrot_view_value_track_config(json, "from-to", ParameterType::NUMERIC_TUPLE, 4);
-    validate_julibrot_view_member("mode", result.outputs.mode, result.mode);
-    validate_julibrot_view_member("geometry", result.outputs.geometry, result.geometry);
-    validate_julibrot_view_member("eyes", result.outputs.eyes, result.eyes);
-    validate_julibrot_view_member("from-to", result.outputs.from_to, result.from_to);
+    validate_julibrot_view_member("mode", result.outputs.mode, result.mode, result.camera3d);
+    validate_julibrot_view_member("geometry", result.outputs.geometry, result.geometry, result.camera3d);
+    validate_julibrot_view_member("eyes", result.outputs.eyes, result.eyes, result.camera3d);
+    validate_julibrot_view_member("from-to", result.outputs.from_to, result.from_to, result.camera3d);
     return result;
 }
 

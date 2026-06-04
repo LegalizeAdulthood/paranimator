@@ -666,6 +666,18 @@ when they can be converted to Id's x/y/z rotation, perspective, and shift
 controls. If the requested camera motion needs an unsupported target,
 roll, projection, or center of interest, reject it with a clear error.
 
+The optional `camera3d` input uses keyed point3 `eye`, point3 `look-at`,
+and vector3 `view-up` tracks. The adapter evaluates the frame for each
+frame, computes `forward = normalize(look-at - eye)`, normalizes
+`view-up`, and builds an orthonormal basis. `eye == look-at`, zero
+`view-up`, and parallel `forward`/`view-up` are invalid.
+
+For `id-3d-view`, camera3d can generate `rotation`, `perspective`, and
+`xyshift` only. The supported frame is centered on `0/0/0` and has no
+roll. Eye distance maps to `perspective`; `xyshift` is `0/0`; the view
+direction maps to x/y rotation with z rotation fixed at 0. Other outputs
+must still be keyed explicitly.
+
 The general 3D view supports the broader output set. Orbital 3D types
 such as lorenz3d and ifs3d support a smaller set: rotation,
 perspective, xyshift, and stereo controls. Validate against the selected
@@ -738,6 +750,12 @@ Julibrot has no arbitrary view-up, roll, or look-at camera. If a planned
 camera path asks for those, the adapter must reject it unless the request
 can be expressed by Julibrot's origin, depth, screen size, viewer
 distance, eye separation, and from/to slice parameters.
+
+For `julibrot-view`, camera3d currently generates only `geometry`. The
+source `julibrot3d` value supplies z dots, origin, depth, height, and
+width. The camera eye distance replaces the geometry distance. The frame
+must be centered, straight-on, and unrolled: `look-at=0/0/0`,
+`forward=0/0/-1`, and `view-up=0/1/0`.
 
 The orbitname parameter belongs to the Julibrot fractal setup, but it is
 not a view control. Animate it as a normal string or enum track when
@@ -1674,57 +1692,6 @@ Every new schema object, field, and enum or const value must include a
 The intent is not to finish a large subsystem before anything runs. The
 intent is to get a small valid Id animation working quickly, then keep
 that path working while each later feature is added.
-
-### 1. 3D Camera
-
-Add a shared 3D planning camera frame for the existing 3D viewing
-adapters. The planning model uses point3 eye and look-at points plus a
-vector3 view-up direction, then each adapter maps the frame into the Id
-parameters it can support.
-
-Implement:
-
-- Add a typed camera3d planning frame with point3 `eye`, point3
-  `look-at`, and vector3 `view-up` tracks.
-- Compute `forward = normalize(look-at - eye)` for each frame.
-- Normalize view-up for frame construction.
-- Reject `eye == look-at`.
-- Reject view-up that is zero length or parallel to forward.
-- Feed the evaluated frame into id-3d-view when it can be represented by
-  Id rotation, perspective, and shift controls.
-- Feed the evaluated frame into julibrot-view only when it can be
-  represented by Julibrot's geometry, eyes, and from-to parameters.
-- Reject unsupported roll, projection, center-of-interest, or slice
-  requests with clear errors instead of silently approximating.
-
-Add schema documentation:
-
-- Document camera3d `eye`, `look-at`, and `view-up`.
-- Document the degenerate-frame rejection rules.
-- Document the adapter limits for id-3d-view and julibrot-view.
-- Add `description` strings to every new schema object, field, enum, and
-  const.
-
-Add unit tests:
-
-- Config deserialization reads camera3d frame tracks into typed data.
-- Schema validation accepts a documented camera3d frame.
-- Schema validation rejects missing required frame tracks.
-- Frame evaluation computes an orthonormal camera basis.
-- Degenerate eye/look-at and parallel view-up are rejected.
-- id-3d-view maps a simple camera orbit into the expected output tracks.
-- julibrot-view maps a supported frame into the expected output tracks.
-- julibrot-view rejects a frame that cannot be expressed by its existing
-  parameters.
-
-Add integration tests:
-
-- Add an `id-3d-view-camera` gold fixture that writes the generated 3D
-  view parameters and batch file.
-- Add a `julibrot-view-camera` gold fixture that writes the generated
-  Julibrot view parameters and batch file.
-- Include at least one rejected integration fixture or schema/error test
-  for an unsupported Julibrot camera request.
 
 ## Design Boundary
 

@@ -382,6 +382,32 @@ ResolvedTrack resolve_camera2d_track(
     return result;
 }
 
+ParameterMetadata camera3d_value_metadata(
+    std::string_view camera_name, std::string_view member_name, ParameterType type, bool normalize)
+{
+    ParameterMetadata result{std::string{camera_name} + ".camera3d." + std::string{member_name}, type,
+        ParameterFormat::SLASH, Curve::LINEAR, ExtrapolateMode::CLAMP};
+    result.normalize = normalize;
+    return result;
+}
+
+ResolvedCamera3DValueTrack resolve_camera3d_value_track(
+    const Camera3DValueTrackConfig &track, std::string_view camera_name, std::string_view member_name, bool normalize)
+{
+    return {camera3d_value_metadata(camera_name, member_name, track.type, normalize), track.keys};
+}
+
+ResolvedCamera3DConfig resolve_camera3d_config(
+    const Camera3DConfig &camera, std::string_view camera_name, Camera3DOutputKind output_kind)
+{
+    ResolvedCamera3DConfig result;
+    result.output_kind = output_kind;
+    result.eye = resolve_camera3d_value_track(camera.eye, camera_name, "eye", false);
+    result.look_at = resolve_camera3d_value_track(camera.look_at, camera_name, "look-at", false);
+    result.view_up = resolve_camera3d_value_track(camera.view_up, camera_name, "view-up", true);
+    return result;
+}
+
 std::string id_3d_view_base_value(
     const ParSet &source, const std::string &output_parameter, const std::vector<KeyframeConfig> &keys)
 {
@@ -395,6 +421,29 @@ std::string id_3d_view_base_value(
         throw std::runtime_error("Id 3D view output '" + output_parameter + "' has no keyframes");
     }
     return keys[0].value;
+}
+
+std::string id_3d_view_base_value(
+    const ParSet &source, const std::string &output_parameter, Camera3DOutputKind output_kind)
+{
+    const Parameter *parameter{find_source_parameter(source, output_parameter)};
+    if (parameter != nullptr)
+    {
+        return parameter->value;
+    }
+    if (output_kind == Camera3DOutputKind::ID_ROTATION)
+    {
+        return "0/0/0";
+    }
+    if (output_kind == Camera3DOutputKind::ID_PERSPECTIVE)
+    {
+        return "0";
+    }
+    if (output_kind == Camera3DOutputKind::ID_XYSHIFT)
+    {
+        return "0/0";
+    }
+    throw std::runtime_error("Id 3D view output '" + output_parameter + "' has no source value");
 }
 
 void validate_id_3d_view_output_metadata(
@@ -437,6 +486,28 @@ void add_id_3d_view_member(std::vector<ResolvedTrack> &tracks, const Id3DViewCon
     }
 }
 
+void add_id_3d_view_camera_member(std::vector<ResolvedTrack> &tracks, const Id3DViewConfig &view,
+    const char *member_name, const std::optional<std::string> &output,
+    const std::optional<Id3DViewValueTrackConfig> &member, const ParameterCatalog &catalog, const ParSet &source,
+    ParameterType expected_type, int expected_arity, Camera3DOutputKind output_kind)
+{
+    if (!output || member || !view.camera3d)
+    {
+        return;
+    }
+
+    const ParameterMetadata &metadata{catalog.metadata(*output)};
+    validate_id_3d_view_output_metadata(*output, metadata, expected_type, expected_arity);
+
+    ResolvedTrack result;
+    result.parameter = view.name + "." + member_name;
+    result.metadata = metadata;
+    result.base_value = id_3d_view_base_value(source, *output, output_kind);
+    result.output_parameter = *output;
+    result.camera3d = resolve_camera3d_config(*view.camera3d, view.name, output_kind);
+    tracks.emplace_back(result);
+}
+
 std::vector<ResolvedTrack> resolve_id_3d_view_track(
     const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source)
 {
@@ -449,10 +520,16 @@ std::vector<ResolvedTrack> resolve_id_3d_view_track(
     std::vector<ResolvedTrack> result;
     add_id_3d_view_member(result, view, "rotation", view.outputs.rotation, view.rotation, catalog, source,
         ParameterType::NUMERIC_TUPLE, 3);
+    add_id_3d_view_camera_member(result, view, "rotation", view.outputs.rotation, view.rotation, catalog, source,
+        ParameterType::NUMERIC_TUPLE, 3, Camera3DOutputKind::ID_ROTATION);
     add_id_3d_view_member(result, view, "perspective", view.outputs.perspective, view.perspective, catalog, source,
         ParameterType::INTEGER, 0);
+    add_id_3d_view_camera_member(result, view, "perspective", view.outputs.perspective, view.perspective, catalog,
+        source, ParameterType::INTEGER, 0, Camera3DOutputKind::ID_PERSPECTIVE);
     add_id_3d_view_member(
         result, view, "xyshift", view.outputs.xyshift, view.xyshift, catalog, source, ParameterType::NUMERIC_TUPLE, 2);
+    add_id_3d_view_camera_member(result, view, "xyshift", view.outputs.xyshift, view.xyshift, catalog, source,
+        ParameterType::NUMERIC_TUPLE, 2, Camera3DOutputKind::ID_XYSHIFT);
     add_id_3d_view_member(result, view, "scalexyz", view.outputs.scalexyz, view.scalexyz, catalog, source,
         ParameterType::NUMERIC_TUPLE, 3);
     add_id_3d_view_member(
@@ -487,6 +564,21 @@ std::string julibrot_view_base_value(
         throw std::runtime_error("Julibrot view output '" + output_parameter + "' has no keyframes");
     }
     return keys[0].value;
+}
+
+std::string julibrot_view_base_value(
+    const ParSet &source, const std::string &output_parameter, Camera3DOutputKind output_kind)
+{
+    const Parameter *parameter{find_source_parameter(source, output_parameter)};
+    if (parameter != nullptr)
+    {
+        return parameter->value;
+    }
+    if (output_kind == Camera3DOutputKind::JULIBROT_GEOMETRY)
+    {
+        throw std::runtime_error("Julibrot camera output '" + output_parameter + "' requires a source value");
+    }
+    throw std::runtime_error("Julibrot view output '" + output_parameter + "' has no source value");
 }
 
 void validate_julibrot_view_output_metadata(
@@ -530,6 +622,28 @@ void add_julibrot_view_member(std::vector<ResolvedTrack> &tracks, const Julibrot
     }
 }
 
+void add_julibrot_view_camera_member(std::vector<ResolvedTrack> &tracks, const JulibrotViewConfig &view,
+    const char *member_name, const std::optional<std::string> &output,
+    const std::optional<JulibrotViewValueTrackConfig> &member, const ParameterCatalog &catalog, const ParSet &source,
+    ParameterType expected_type, int expected_arity, Camera3DOutputKind output_kind)
+{
+    if (!output || member || !view.camera3d)
+    {
+        return;
+    }
+
+    const ParameterMetadata &metadata{catalog.metadata(*output)};
+    validate_julibrot_view_output_metadata(*output, metadata, expected_type, expected_arity);
+
+    ResolvedTrack result;
+    result.parameter = view.name + "." + member_name;
+    result.metadata = metadata;
+    result.base_value = julibrot_view_base_value(source, *output, output_kind);
+    result.output_parameter = *output;
+    result.camera3d = resolve_camera3d_config(*view.camera3d, view.name, output_kind);
+    tracks.emplace_back(result);
+}
+
 std::vector<ResolvedTrack> resolve_julibrot_view_track(
     const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source)
 {
@@ -544,6 +658,8 @@ std::vector<ResolvedTrack> resolve_julibrot_view_track(
         result, view, "mode", view.outputs.mode, view.mode, catalog, source, ParameterType::ENUM, 0);
     add_julibrot_view_member(result, view, "geometry", view.outputs.geometry, view.geometry, catalog, source,
         ParameterType::NUMERIC_TUPLE, 6);
+    add_julibrot_view_camera_member(result, view, "geometry", view.outputs.geometry, view.geometry, catalog, source,
+        ParameterType::NUMERIC_TUPLE, 6, Camera3DOutputKind::JULIBROT_GEOMETRY);
     add_julibrot_view_member(
         result, view, "eyes", view.outputs.eyes, view.eyes, catalog, source, ParameterType::DOUBLE, 0);
     add_julibrot_view_member(

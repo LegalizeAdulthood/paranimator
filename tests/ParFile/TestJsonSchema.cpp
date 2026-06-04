@@ -931,6 +931,70 @@ TEST(TestJsonSchema, id3DViewMoreOutputsAccepted)
     })")));
 }
 
+TEST(TestJsonSchema, id3DViewCamera3DFrameAccepted)
+{
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "name": "view",
+      "type": "id-3d-view",
+      "outputs": {
+        "rotation": "rotation",
+        "perspective": "perspective",
+        "xyshift": "xyshift"
+      },
+      "camera3d": {
+        "eye": {
+          "type": "point3",
+          "keys": [
+            { "frame": 0, "value": "0/0/24" },
+            { "frame": 2, "value": "10/0/0" }
+          ]
+        },
+        "look-at": {
+          "type": "point3",
+          "keys": [
+            { "frame": 0, "value": "0/0/0" },
+            { "frame": 2, "value": "0/0/0" }
+          ]
+        },
+        "view-up": {
+          "type": "vector3",
+          "normalize": true,
+          "keys": [
+            { "frame": 0, "value": "0/2/0" },
+            { "frame": 2, "value": "0/2/0" }
+          ]
+        }
+      }
+    })")));
+}
+
+TEST(TestJsonSchema, id3DViewCamera3DFrameRejectsMissingViewUp)
+{
+    EXPECT_FALSE(validates_config_text(config_with_track(R"({
+      "name": "view",
+      "type": "id-3d-view",
+      "outputs": {
+        "rotation": "rotation"
+      },
+      "camera3d": {
+        "eye": {
+          "type": "point3",
+          "keys": [
+            { "frame": 0, "value": "0/0/24" },
+            { "frame": 2, "value": "10/0/0" }
+          ]
+        },
+        "look-at": {
+          "type": "point3",
+          "keys": [
+            { "frame": 0, "value": "0/0/0" },
+            { "frame": 2, "value": "0/0/0" }
+          ]
+        }
+      }
+    })")));
+}
+
 TEST(TestJsonSchema, id3DViewStereoRejectsInvalidValue)
 {
     EXPECT_FALSE(validates_config_text(config_with_track(R"({
@@ -989,6 +1053,41 @@ TEST(TestJsonSchema, julibrotViewTrackAccepted)
           { "frame": 0, "value": "-0.83/-0.83/0.25/-0.25" },
           { "frame": 2, "value": "-0.7/-0.9/0.2/-0.2" }
         ]
+      }
+    })")));
+}
+
+TEST(TestJsonSchema, julibrotViewCamera3DFrameAccepted)
+{
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "name": "view",
+      "type": "julibrot-view",
+      "outputs": {
+        "geometry": "julibrot3d"
+      },
+      "camera3d": {
+        "eye": {
+          "type": "point3",
+          "keys": [
+            { "frame": 0, "value": "0/0/24" },
+            { "frame": 2, "value": "0/0/12" }
+          ]
+        },
+        "look-at": {
+          "type": "point3",
+          "keys": [
+            { "frame": 0, "value": "0/0/0" },
+            { "frame": 2, "value": "0/0/0" }
+          ]
+        },
+        "view-up": {
+          "type": "vector3",
+          "normalize": true,
+          "keys": [
+            { "frame": 0, "value": "0/1/0" },
+            { "frame": 2, "value": "0/1/0" }
+          ]
+        }
       }
     })")));
 }
