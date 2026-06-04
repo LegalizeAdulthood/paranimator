@@ -162,6 +162,14 @@ ParFile::ResolvedCamera2DValueTrack resolved_camera2d_value_track(const std::str
     return {parameter_metadata, keys};
 }
 
+ParFile::ResolvedCamera2DValueTrack resolved_camera2d_path_value_track(
+    const std::string &name, ParFile::ParameterType type, const ParFile::PathConfig &path, bool normalize = false)
+{
+    ParFile::ParameterMetadata parameter_metadata{metadata(name, type)};
+    parameter_metadata.normalize = normalize;
+    return {parameter_metadata, {}, path};
+}
+
 ParFile::ResolvedTrack resolved_camera2d_track(double aspect, const std::vector<ParFile::KeyframeConfig> &look_at_keys,
     const std::vector<ParFile::KeyframeConfig> &view_up_keys, const std::vector<ParFile::KeyframeConfig> &height_keys,
     ParFile::ParameterType output_type = ParFile::ParameterType::CORNERS,
@@ -173,6 +181,50 @@ ParFile::ResolvedTrack resolved_camera2d_track(double aspect, const std::vector<
     camera2d.look_at = resolved_camera2d_value_track("camera.look-at", ParFile::ParameterType::POINT2, look_at_keys);
     camera2d.view_up =
         resolved_camera2d_value_track("camera.view-up", ParFile::ParameterType::VECTOR2, view_up_keys, true);
+    camera2d.height = resolved_camera2d_value_track("camera.height", ParFile::ParameterType::DOUBLE, height_keys);
+
+    ParFile::ResolvedTrack result;
+    result.parameter = "camera";
+    result.metadata = metadata(output_parameter, output_type);
+    result.base_value = output_type == ParFile::ParameterType::CENTER_MAG ? "-0.5/0/1" : "-3/-1/-2/2";
+    result.output_parameter = output_parameter;
+    result.camera2d = camera2d;
+    return result;
+}
+
+ParFile::ResolvedTrack resolved_camera2d_eye_track(double aspect,
+    const std::vector<ParFile::KeyframeConfig> &look_at_keys, const std::vector<ParFile::KeyframeConfig> &eye_keys,
+    const std::vector<ParFile::KeyframeConfig> &height_keys,
+    ParFile::ParameterType output_type = ParFile::ParameterType::CORNERS,
+    const std::string &output_parameter = "corners", double center_mag_x_mag_factor = 1.0)
+{
+    ParFile::ResolvedCamera2DConfig camera2d;
+    camera2d.aspect = aspect;
+    camera2d.center_mag_x_mag_factor = center_mag_x_mag_factor;
+    camera2d.look_at = resolved_camera2d_value_track("camera.look-at", ParFile::ParameterType::POINT2, look_at_keys);
+    camera2d.eye = resolved_camera2d_value_track("camera.eye", ParFile::ParameterType::POINT2, eye_keys);
+    camera2d.height = resolved_camera2d_value_track("camera.height", ParFile::ParameterType::DOUBLE, height_keys);
+
+    ParFile::ResolvedTrack result;
+    result.parameter = "camera";
+    result.metadata = metadata(output_parameter, output_type);
+    result.base_value = output_type == ParFile::ParameterType::CENTER_MAG ? "-0.5/0/1" : "-3/-1/-2/2";
+    result.output_parameter = output_parameter;
+    result.camera2d = camera2d;
+    return result;
+}
+
+ParFile::ResolvedTrack resolved_camera2d_eye_path_track(double aspect,
+    const std::vector<ParFile::KeyframeConfig> &look_at_keys, const ParFile::PathConfig &eye_path,
+    const std::vector<ParFile::KeyframeConfig> &height_keys,
+    ParFile::ParameterType output_type = ParFile::ParameterType::CORNERS,
+    const std::string &output_parameter = "corners", double center_mag_x_mag_factor = 1.0)
+{
+    ParFile::ResolvedCamera2DConfig camera2d;
+    camera2d.aspect = aspect;
+    camera2d.center_mag_x_mag_factor = center_mag_x_mag_factor;
+    camera2d.look_at = resolved_camera2d_value_track("camera.look-at", ParFile::ParameterType::POINT2, look_at_keys);
+    camera2d.eye = resolved_camera2d_path_value_track("camera.eye", ParFile::ParameterType::POINT2, eye_path);
     camera2d.height = resolved_camera2d_value_track("camera.height", ParFile::ParameterType::DOUBLE, height_keys);
 
     ParFile::ResolvedTrack result;
@@ -482,6 +534,63 @@ TEST(TestInterpolant, camera2dRotatedWritesThirdCorner)
     ASSERT_TRUE(interpolant);
     EXPECT_EQ("-2.12132034356/-0.707106781187/-0.707106781187/-2.12132034356/0.707106781187/2.12132034356",
         interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dEyeDerivesViewUp)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(resolved_camera2d_eye_track(0.5, keyframes("0/0", "0/0", num_steps),
+                                        keyframes("1/0", "1/0", num_steps), keyframes("4", "4", num_steps)),
+            num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("-2/1/-2/-1/2/1", interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dEyeCircleRotatesCenterMag)
+{
+    const int num_steps{5};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(resolved_camera2d_eye_path_track(4.0 / 3.0, keyframes("0/0", "0/0", num_steps),
+                                        circle_path("0/0", 1.0, 1.0, 90.0), keyframes("3", "3", num_steps),
+                                        ParFile::ParameterType::CENTER_MAG, "center-mag"),
+            num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("0/0/1", interpolant->step());
+    EXPECT_EQ("0/0/1/1/-90", interpolant->step());
+    EXPECT_EQ("0/0/1/1/180", interpolant->step());
+    EXPECT_EQ("0/0/1/1/90", interpolant->step());
+    EXPECT_EQ("0/0/1", interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dEyeCircleWritesRotatedCorners)
+{
+    const int num_steps{5};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(resolved_camera2d_eye_path_track(1.0, keyframes("0/0", "0/0", num_steps),
+                                        circle_path("0/0", 1.0, 1.0, 90.0), keyframes("2", "2", num_steps)),
+            num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("-1/1/-1/1", interpolant->step());
+    EXPECT_EQ("1/-1/1/1/-1/-1", interpolant->step());
+    EXPECT_EQ("1/1/-1/1/1/-1", interpolant->step());
+    EXPECT_EQ("-1/1/-1/-1/1/1", interpolant->step());
+    EXPECT_EQ("-1/1/-1/1", interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dEyeEqualLookAtRejected)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(resolved_camera2d_eye_track(0.5, keyframes("0/0", "0/0", num_steps),
+                                        keyframes("0/0", "1/0", num_steps), keyframes("4", "4", num_steps)),
+            num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_THROW(static_cast<void>(interpolant->step()), std::runtime_error);
 }
 
 TEST(TestInterpolant, camera2dNormalizesViewUp)

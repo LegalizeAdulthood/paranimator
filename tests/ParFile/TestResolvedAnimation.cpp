@@ -135,7 +135,7 @@ ParFile::Config camera2d_config_data(std::string_view output = "corners")
     camera.output = output;
     camera.aspect = "source";
     camera.look_at = {ParFile::ParameterType::POINT2, false, {{0, "0/0"}, {2, "1/1"}}};
-    camera.view_up = {ParFile::ParameterType::VECTOR2, true, {{0, "0/2"}, {2, "1/1"}}};
+    camera.view_up = ParFile::Camera2DValueTrackConfig{ParFile::ParameterType::VECTOR2, true, {{0, "0/2"}, {2, "1/1"}}};
     camera.height = {ParFile::ParameterType::DOUBLE, false, {{0, "4"}, {2, "2", ParFile::Curve::GEOMETRIC}}};
 
     ParFile::TrackConfig track;
@@ -279,9 +279,32 @@ TEST(TestResolvedAnimation, camera2dResolvesOutputMetadataAndSourceAspect)
     EXPECT_DOUBLE_EQ(0.5, track.camera2d->aspect);
     EXPECT_EQ("camera.look-at", track.camera2d->look_at.metadata.name);
     EXPECT_EQ(ParFile::ParameterType::POINT2, track.camera2d->look_at.metadata.type);
-    EXPECT_EQ(ParFile::ParameterType::VECTOR2, track.camera2d->view_up.metadata.type);
-    EXPECT_TRUE(track.camera2d->view_up.metadata.normalize);
+    ASSERT_TRUE(track.camera2d->view_up);
+    EXPECT_EQ(ParFile::ParameterType::VECTOR2, track.camera2d->view_up->metadata.type);
+    EXPECT_TRUE(track.camera2d->view_up->metadata.normalize);
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, track.camera2d->height.metadata.type);
+}
+
+TEST(TestResolvedAnimation, camera2dResolvesEyeTrack)
+{
+    ParFile::Config config{camera2d_config_data("center-mag")};
+    ASSERT_TRUE(config.tracks[0].camera2d);
+    config.tracks[0].camera2d->view_up.reset();
+    config.tracks[0].camera2d->eye =
+        ParFile::Camera2DValueTrackConfig{ParFile::ParameterType::POINT2, false, {{0, "1/0"}, {2, "0/1"}}};
+
+    const ParFile::ResolvedAnimation animation{ParFile::resolve_animation(config, catalog_data(), source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    ASSERT_TRUE(track.camera2d);
+    EXPECT_FALSE(track.camera2d->view_up);
+    ASSERT_TRUE(track.camera2d->eye);
+    EXPECT_EQ("camera.eye", track.camera2d->eye->metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::POINT2, track.camera2d->eye->metadata.type);
+    EXPECT_FALSE(track.camera2d->eye->metadata.normalize);
+    ASSERT_EQ(2U, track.camera2d->eye->keys.size());
+    EXPECT_EQ("1/0", track.camera2d->eye->keys[0].value);
 }
 
 TEST(TestResolvedAnimation, camera2dResolvesCenterMagOutputAndVideoAspect)

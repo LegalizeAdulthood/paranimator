@@ -542,10 +542,22 @@ Example:
       }
     }
 
+Instead of `view-up`, camera2d may specify an `eye` point2 track. The
+evaluated view-up vector is then `normalize(eye - look-at)`. Eye distance
+does not affect height, magnification, zoom, or corners extent. If the
+evaluated eye equals the evaluated look-at point, the frame is invalid.
+
+Camera point tracks may use keyed values or an existing path generator.
+This lets a fixed look-at point plus a circular eye path rotate the image
+without changing zoom.
+
 At each frame:
 
     look = evaluate look-at point2 track
-    up = normalize(evaluate view-up vector2 track)
+    if eye is configured:
+        up = normalize(evaluate eye point2 track - look)
+    else:
+        up = normalize(evaluate view-up vector2 track)
     right = perpendicular clockwise from up
     height = evaluate height track
     width = height * aspect
@@ -1656,59 +1668,7 @@ The intent is not to finish a large subsystem before anything runs. The
 intent is to get a small valid Id animation working quickly, then keep
 that path working while each later feature is added.
 
-### 1. 2D Camera
-
-Extend the camera2d application data type so it can derive the view-up
-vector from an eye point and the evaluated look-at point.
-
-Implement:
-
-- Add an optional point2 `eye` planning track to camera2d.
-- Keep the existing point2 `look-at`, vector2 `view-up`, and scalar
-  `height` tracks.
-- Accept either `view-up` or `eye`; reject a camera2d track that has
-  neither.
-- When `eye` is present, derive `view-up` from
-  `normalize(eye - look-at)`.
-- Treat eye distance as orientation only. It must not change height,
-  magnification, zoom, or corners extent.
-- Reject `eye == look-at` after evaluation because the derived vector has
-  zero length.
-- Continue to map the evaluated camera to both output types:
-  - corners writes rotated 6-value corners with zero skew.
-  - center-mag writes `Xctr/Yctr/Mag[/Xmagfactor/rotation/skew]`
-    with skew defaulted to 0.
-
-Add schema documentation:
-
-- Document camera2d `eye`, including that it is an orientation point, not
-  a zoom control.
-- Document the `view-up` and `eye` alternative.
-- Document the zero-length derived view-up rejection.
-- Add `description` strings to every new schema object, field, enum, and
-  const.
-
-Add unit tests:
-
-- Config deserialization accepts camera2d with `eye` and no `view-up`.
-- Schema validation accepts camera2d `eye` tracks.
-- Schema validation rejects camera2d with neither `eye` nor `view-up`.
-- Resolved animation keeps the typed eye track and output metadata.
-- Interpolant derives view-up from `eye - look-at`.
-- A circular eye path around fixed look-at rotates center-mag through
-  360 degrees without changing magnification.
-- The same circular eye path writes rotated 6-value corners without
-  changing extent.
-- Degenerate `eye == look-at` is rejected.
-
-Add integration tests:
-
-- Add a `camera2d-eye-center-mag` gold fixture that keeps look-at fixed,
-  moves eye on a circle, and checks generated par and batch files.
-- Add a `camera2d-eye-corners` gold fixture with the same path and checks
-  rotated 6-value corners.
-
-### 2. 2D Camera Skew
+### 1. 2D Camera Skew
 
 Extend camera2d with an optional scalar skew track. Id source treats
 6-value corners as three points that define an affine pixel grid, so skew
@@ -1760,7 +1720,7 @@ Add integration tests:
 - Add a `camera2d-skew-corners` gold fixture that writes skewed 6-value
   corners and checks generated par and batch files.
 
-### 3. 3D Camera
+### 2. 3D Camera
 
 Add a shared 3D planning camera frame for the existing 3D viewing
 adapters. The planning model uses point3 eye and look-at points plus a

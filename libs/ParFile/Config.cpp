@@ -398,8 +398,11 @@ static std::vector<KeyframeConfig> load_camera_keyframes(const Object &json, std
     return result;
 }
 
+static PathConfig load_path_config(const Object &json);
+static std::vector<KeyframeConfig> load_path_keyframes(const PathConfig &path, int num_frames);
+
 static Camera2DValueTrackConfig load_camera2d_value_track_config(
-    const Object &json, std::string_view name, ParameterType expected_type, bool number_value)
+    const Object &json, std::string_view name, ParameterType expected_type, bool number_value, int num_frames)
 {
     const Object &track{load_object(json, name)};
     Camera2DValueTrackConfig result;
@@ -409,11 +412,38 @@ static Camera2DValueTrackConfig load_camera2d_value_track_config(
         throw std::runtime_error("Invalid config, camera2d '" + std::string{name} + "' has the wrong type");
     }
     result.normalize = load_optional_bool(track, "normalize").value_or(false);
-    result.keys = load_camera_keyframes(track, name, number_value);
+    if (track.contains("keys") && track.contains("path"))
+    {
+        throw std::runtime_error(
+            "Invalid config, camera2d '" + std::string{name} + "' cannot contain both keys and path");
+    }
+    if (track.contains("path"))
+    {
+        result.path = load_path_config(track.at("path"));
+        result.keys = load_path_keyframes(*result.path, num_frames);
+        if (!result.keys.empty())
+        {
+            result.path.reset();
+        }
+    }
+    else
+    {
+        result.keys = load_camera_keyframes(track, name, number_value);
+    }
     return result;
 }
 
-static Camera2DConfig load_camera2d_config(const Object &json)
+static std::optional<Camera2DValueTrackConfig> load_optional_camera2d_value_track_config(
+    const Object &json, std::string_view name, ParameterType expected_type, bool number_value, int num_frames)
+{
+    if (!json.contains(std::string{name}))
+    {
+        return {};
+    }
+    return load_camera2d_value_track_config(json, name, expected_type, number_value, num_frames);
+}
+
+static Camera2DConfig load_camera2d_config(const Object &json, int num_frames)
 {
     Camera2DConfig result;
     result.name = load_string(json, "name");
@@ -423,9 +453,15 @@ static Camera2DConfig load_camera2d_config(const Object &json)
     {
         throw std::runtime_error("Invalid config, camera2d aspect must be 'source'");
     }
-    result.look_at = load_camera2d_value_track_config(json, "look-at", ParameterType::POINT2, false);
-    result.view_up = load_camera2d_value_track_config(json, "view-up", ParameterType::VECTOR2, false);
-    result.height = load_camera2d_value_track_config(json, "height", ParameterType::DOUBLE, true);
+    result.look_at = load_camera2d_value_track_config(json, "look-at", ParameterType::POINT2, false, num_frames);
+    result.view_up =
+        load_optional_camera2d_value_track_config(json, "view-up", ParameterType::VECTOR2, false, num_frames);
+    result.eye = load_optional_camera2d_value_track_config(json, "eye", ParameterType::POINT2, false, num_frames);
+    if (!result.view_up && !result.eye)
+    {
+        throw std::runtime_error("Invalid config, camera2d requires view-up or eye");
+    }
+    result.height = load_camera2d_value_track_config(json, "height", ParameterType::DOUBLE, true, num_frames);
     return result;
 }
 
@@ -1117,7 +1153,7 @@ static TrackConfig load_track_config(const Object &json, int num_frames)
     result.kind = load_track_kind(json);
     if (result.kind == TrackKind::CAMERA2D)
     {
-        result.camera2d = load_camera2d_config(json);
+        result.camera2d = load_camera2d_config(json, num_frames);
         result.parameter = result.camera2d->name;
         return result;
     }

@@ -747,6 +747,38 @@ TEST(TestJsonSchema, camera2dCenterMagTrackAccepted)
     })")));
 }
 
+TEST(TestJsonSchema, camera2dEyeTrackAccepted)
+{
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "name": "camera",
+      "type": "camera2d",
+      "output": "center-mag",
+      "aspect": "source",
+      "look-at": {
+        "type": "point2",
+        "keys": [
+          { "frame": 0, "value": "0/0" },
+          { "frame": 2, "value": "0/0" }
+        ]
+      },
+      "eye": {
+        "type": "point2",
+        "path": {
+          "kind": "circle",
+          "center": "0/0",
+          "radius": 1
+        }
+      },
+      "height": {
+        "type": "double",
+        "keys": [
+          { "frame": 0, "value": 3 },
+          { "frame": 2, "value": 3 }
+        ]
+      }
+    })")));
+}
+
 TEST(TestJsonSchema, id3DViewTrackAccepted)
 {
     EXPECT_TRUE(validates_config_text(config_with_track(R"({
@@ -1012,6 +1044,30 @@ TEST(TestJsonSchema, camera2dTrackRejectsInvalidShape)
         "keys": [
           { "frame": 0, "value": 4 },
           { "frame": 2, "value": 0 }
+        ]
+      }
+    })")));
+}
+
+TEST(TestJsonSchema, camera2dTrackRejectsMissingOrientation)
+{
+    EXPECT_FALSE(validates_config_text(config_with_track(R"({
+      "name": "camera",
+      "type": "camera2d",
+      "output": "corners",
+      "aspect": "source",
+      "look-at": {
+        "type": "point2",
+        "keys": [
+          { "frame": 0, "value": "0/0" },
+          { "frame": 2, "value": "1/1" }
+        ]
+      },
+      "height": {
+        "type": "double",
+        "keys": [
+          { "frame": 0, "value": 4 },
+          { "frame": 2, "value": 4 }
         ]
       }
     })")));

@@ -13,6 +13,7 @@
 #include <complex>
 #include <cstddef>
 #include <iterator>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -1111,6 +1112,16 @@ Point2D operator*(const Point2D &lhs, double scale)
     return {lhs.x * scale, lhs.y * scale};
 }
 
+Point2D operator/(const Point2D &lhs, double scale)
+{
+    return {lhs.x / scale, lhs.y / scale};
+}
+
+double length(const Point2D &value)
+{
+    return std::hypot(value.x, value.y);
+}
+
 Point2D point2_from_values(const std::vector<double> &values, std::string_view name)
 {
     if (values.size() != 2U)
@@ -1118,6 +1129,17 @@ Point2D point2_from_values(const std::vector<double> &values, std::string_view n
         throw std::runtime_error("Camera2D value '" + std::string{name} + "' requires two components");
     }
     return {values[0], values[1]};
+}
+
+Point2D derived_view_up(const Point2D &look, const Point2D &eye)
+{
+    const Point2D up{eye - look};
+    const double magnitude{length(up)};
+    if (magnitude == 0.0)
+    {
+        throw std::runtime_error("Camera2D eye must not equal look-at");
+    }
+    return up / magnitude;
 }
 
 class Camera2DValueEvaluator
@@ -1131,6 +1153,7 @@ private:
     std::vector<double> parse_value(const std::string &value) const;
     void validate_curve() const;
     void validate_positive_values() const;
+    std::vector<double> path_value_at(int frame) const;
 
     ParameterMetadata m_metadata;
     int m_from_frame{};
@@ -1139,19 +1162,42 @@ private:
     std::vector<double> m_to;
     Curve m_curve{};
     bool m_positive{};
+    std::optional<PlanarPathEvaluator> m_planar_path;
+    std::optional<ControlPointPathEvaluator> m_control_path;
 };
 
 Camera2DValueEvaluator::Camera2DValueEvaluator(const ResolvedCamera2DValueTrack &track, int num_steps, bool positive) :
     m_metadata(track.metadata),
-    m_from_frame(track.keys[0].frame),
-    m_to_frame(track.keys[1].frame),
-    m_from(parse_value(track.keys[0].value)),
-    m_to(parse_value(track.keys[1].value)),
-    m_curve(default_curve(track.metadata)),
     m_positive(positive)
 {
+    if (track.path)
+    {
+        if (!is_explicit_path(track.path->kind))
+        {
+            throw std::runtime_error("Camera2D value '" + m_metadata.name + "' has no supported path generator");
+        }
+        if (is_control_point_path(track.path->kind))
+        {
+            m_control_path.emplace(*track.path, num_steps, path_arity(track.metadata));
+        }
+        else
+        {
+            m_planar_path.emplace(*track.path, num_steps);
+            if (path_arity(track.metadata) != 2)
+            {
+                throw std::runtime_error("Camera2D planar path '" + m_metadata.name + "' requires two components");
+            }
+        }
+        return;
+    }
+
     validate_keyframes(track.metadata.name, track.keys, num_steps);
     validate_full_range(track.metadata.name, track.keys, num_steps);
+    m_from_frame = track.keys[0].frame;
+    m_to_frame = track.keys[1].frame;
+    m_from = parse_value(track.keys[0].value);
+    m_to = parse_value(track.keys[1].value);
+    m_curve = default_curve(track.metadata);
     if (track.keys[1].curve)
     {
         m_curve = *track.keys[1].curve;
@@ -1196,8 +1242,29 @@ void Camera2DValueEvaluator::validate_positive_values() const
     }
 }
 
+std::vector<double> Camera2DValueEvaluator::path_value_at(int frame) const
+{
+    if (m_planar_path)
+    {
+        const std::complex<double> value{m_planar_path->value_at(frame)};
+        return clean_path_components({value.real(), value.imag()});
+    }
+    if (m_control_path)
+    {
+        return m_control_path->value_at(frame);
+    }
+    throw std::runtime_error("Camera2D value '" + m_metadata.name + "' has no path generator");
+}
+
 std::vector<double> Camera2DValueEvaluator::value_at(int frame) const
 {
+    if (m_planar_path || m_control_path)
+    {
+        std::vector<double> values{path_value_at(frame)};
+        normalize_vector(m_metadata, values);
+        return clean_path_components(values);
+    }
+
     std::vector<double> values{m_from};
     if (frame >= m_to_frame)
     {
@@ -1220,6 +1287,16 @@ std::vector<double> Camera2DValueEvaluator::value_at(int frame) const
     }
     normalize_vector(m_metadata, values);
     return clean_path_components(values);
+}
+
+std::optional<Camera2DValueEvaluator> optional_camera2d_value_evaluator(
+    const std::optional<ResolvedCamera2DValueTrack> &track, int num_steps, bool positive)
+{
+    if (!track)
+    {
+        return {};
+    }
+    return Camera2DValueEvaluator{*track, num_steps, positive};
 }
 
 const ResolvedCamera2DConfig &camera2d_config(const ResolvedTrack &track)
@@ -1275,7 +1352,8 @@ private:
     double m_aspect{};
     double m_center_mag_x_mag_factor{1.0};
     Camera2DValueEvaluator m_look_at;
-    Camera2DValueEvaluator m_view_up;
+    std::optional<Camera2DValueEvaluator> m_view_up;
+    std::optional<Camera2DValueEvaluator> m_eye;
     Camera2DValueEvaluator m_height;
 };
 
@@ -1285,7 +1363,8 @@ Camera2DInterpolant::Camera2DInterpolant(const ResolvedTrack &track, int num_ste
     m_aspect(camera2d_config(track).aspect),
     m_center_mag_x_mag_factor(camera2d_config(track).center_mag_x_mag_factor),
     m_look_at(camera2d_config(track).look_at, num_steps, false),
-    m_view_up(camera2d_config(track).view_up, num_steps, false),
+    m_view_up(optional_camera2d_value_evaluator(camera2d_config(track).view_up, num_steps, false)),
+    m_eye(optional_camera2d_value_evaluator(camera2d_config(track).eye, num_steps, false)),
     m_height(camera2d_config(track).height, num_steps, true)
 {
     if (track.metadata.type != ParameterType::CORNERS && track.metadata.type != ParameterType::CENTER_MAG)
@@ -1296,6 +1375,10 @@ Camera2DInterpolant::Camera2DInterpolant(const ResolvedTrack &track, int num_ste
     {
         throw std::runtime_error("Camera2D track '" + track.parameter + "' requires a positive aspect");
     }
+    if (!m_view_up && !m_eye)
+    {
+        throw std::runtime_error("Camera2D track '" + track.parameter + "' requires view-up or eye");
+    }
 }
 
 std::string Camera2DInterpolant::step()
@@ -1304,7 +1387,16 @@ std::string Camera2DInterpolant::step()
     ++m_step;
 
     const Point2D look{point2_from_values(m_look_at.value_at(frame), "look-at")};
-    const Point2D up{point2_from_values(m_view_up.value_at(frame), "view-up")};
+    Point2D up;
+    if (m_eye)
+    {
+        const Point2D eye{point2_from_values(m_eye->value_at(frame), "eye")};
+        up = derived_view_up(look, eye);
+    }
+    else
+    {
+        up = point2_from_values(m_view_up->value_at(frame), "view-up");
+    }
     const double height{m_height.value_at(frame)[0]};
     const double width{height * m_aspect};
     const Point2D right{up.y, -up.x};

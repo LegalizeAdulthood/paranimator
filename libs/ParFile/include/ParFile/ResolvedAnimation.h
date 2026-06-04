@@ -17,6 +17,7 @@ struct ResolvedCamera2DValueTrack
 {
     ParameterMetadata metadata;
     std::vector<KeyframeConfig> keys;
+    std::optional<PathConfig> path;
 };
 
 struct ResolvedCamera2DConfig
@@ -24,7 +25,8 @@ struct ResolvedCamera2DConfig
     double aspect{};
     double center_mag_x_mag_factor{1.0};
     ResolvedCamera2DValueTrack look_at;
-    ResolvedCamera2DValueTrack view_up;
+    std::optional<ResolvedCamera2DValueTrack> view_up;
+    std::optional<ResolvedCamera2DValueTrack> eye;
     ResolvedCamera2DValueTrack height;
 };
 

@@ -336,7 +336,18 @@ ParameterMetadata camera2d_value_metadata(
 ResolvedCamera2DValueTrack resolve_camera2d_value_track(
     const Camera2DValueTrackConfig &track, std::string_view camera_name, std::string_view member_name, bool normalize)
 {
-    return {camera2d_value_metadata(camera_name, member_name, track.type, normalize), track.keys};
+    return {camera2d_value_metadata(camera_name, member_name, track.type, normalize), track.keys, track.path};
+}
+
+std::optional<ResolvedCamera2DValueTrack> resolve_optional_camera2d_value_track(
+    const std::optional<Camera2DValueTrackConfig> &track, std::string_view camera_name, std::string_view member_name,
+    bool normalize)
+{
+    if (!track)
+    {
+        return {};
+    }
+    return resolve_camera2d_value_track(*track, camera_name, member_name, normalize);
 }
 
 ResolvedTrack resolve_camera2d_track(
@@ -357,7 +368,8 @@ ResolvedTrack resolve_camera2d_track(
         camera2d.center_mag_x_mag_factor = center_mag_x_mag_factor(output.value);
     }
     camera2d.look_at = resolve_camera2d_value_track(camera.look_at, camera.name, "look-at", false);
-    camera2d.view_up = resolve_camera2d_value_track(camera.view_up, camera.name, "view-up", true);
+    camera2d.view_up = resolve_optional_camera2d_value_track(camera.view_up, camera.name, "view-up", true);
+    camera2d.eye = resolve_optional_camera2d_value_track(camera.eye, camera.name, "eye", false);
     camera2d.height = resolve_camera2d_value_track(camera.height, camera.name, "height", false);
 
     ResolvedTrack result;

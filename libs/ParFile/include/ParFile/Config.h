@@ -173,6 +173,7 @@ struct Camera2DValueTrackConfig
     ParameterType type{};
     bool normalize{};
     std::vector<KeyframeConfig> keys;
+    std::optional<PathConfig> path;
 };
 
 struct Camera2DConfig
@@ -181,7 +182,8 @@ struct Camera2DConfig
     std::string output;
     std::string aspect;
     Camera2DValueTrackConfig look_at;
-    Camera2DValueTrackConfig view_up;
+    std::optional<Camera2DValueTrackConfig> view_up;
+    std::optional<Camera2DValueTrackConfig> eye;
     Camera2DValueTrackConfig height;
 };
 

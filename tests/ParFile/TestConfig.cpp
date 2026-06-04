@@ -646,14 +646,47 @@ TEST(TestConfig, jsonDeserializesCamera2DCornersTrack)
     EXPECT_EQ("corners", camera.output);
     EXPECT_EQ("source", camera.aspect);
     EXPECT_EQ(ParFile::ParameterType::POINT2, camera.look_at.type);
-    EXPECT_EQ(ParFile::ParameterType::VECTOR2, camera.view_up.type);
-    EXPECT_TRUE(camera.view_up.normalize);
+    ASSERT_TRUE(camera.view_up);
+    EXPECT_EQ(ParFile::ParameterType::VECTOR2, camera.view_up->type);
+    EXPECT_TRUE(camera.view_up->normalize);
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, camera.height.type);
     ASSERT_EQ(2U, camera.height.keys.size());
     EXPECT_EQ("4", camera.height.keys[0].value);
     EXPECT_EQ("2", camera.height.keys[1].value);
     ASSERT_TRUE(camera.height.keys[1].curve);
     EXPECT_EQ(ParFile::Curve::GEOMETRIC, *camera.height.keys[1].curve);
+}
+
+TEST(TestConfig, jsonDeserializesCamera2DEyeTrack)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"name", "camera"}, {"type", "camera2d"}, {"output", "center-mag"},
+        {"aspect", "source"},
+        {"look-at",
+            Object{{"type", "point2"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "0/0"}}, Object{{"frame", 59}, {"value", "0/0"}}})}}},
+        {"eye", Object{{"type", "point2"}, {"path", Object{{"kind", "circle"}, {"center", "0/0"}, {"radius", 1.0}}}}},
+        {"height",
+            Object{{"type", "double"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", 3.0}}, Object{{"frame", 59}, {"value", 3.0}}})}}}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_TRUE(config.tracks[0].camera2d);
+    const ParFile::Camera2DConfig &camera{*config.tracks[0].camera2d};
+    EXPECT_EQ("camera", camera.name);
+    EXPECT_EQ("center-mag", camera.output);
+    EXPECT_FALSE(camera.view_up);
+    ASSERT_TRUE(camera.eye);
+    EXPECT_EQ(ParFile::ParameterType::POINT2, camera.eye->type);
+    ASSERT_TRUE(camera.eye->path);
+    EXPECT_EQ(ParFile::PathKind::CIRCLE, camera.eye->path->kind);
+    EXPECT_EQ("0/0", camera.eye->path->center);
+    EXPECT_DOUBLE_EQ(1.0, camera.eye->path->radius);
+    EXPECT_TRUE(camera.eye->keys.empty());
 }
 
 TEST(TestConfig, jsonDeserializesId3DViewTrack)
