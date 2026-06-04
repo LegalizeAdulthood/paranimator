@@ -55,13 +55,12 @@ TEST(TestScript, commandForLayerMovesSavedImage)
 
     const std::string commands{script.layer_commands("layer-base-0001", "base", 0)};
 
-    EXPECT_EQ(std::string{"if not exist \"layers\" mkdir \"layers\"\n"
-                          "start/wait id batch=yes overwrite=yes savename=layer-base-0001.png savedir=. "
+    EXPECT_EQ(std::string{"start/wait id batch=yes overwrite=yes savename=layer-base-0001.png savedir=. "
                           "librarydirs=. video="} +
             TestParFile::TEST_VIDEO_MODE + " @" + TestParFile::TEST_OUTPUT_PAR +
             "/layer-base-0001\n"
             "if errorlevel 1 exit /b 1\n"
-            "move /y \"image/layer-base-0001.png\" \"layers/layer-base-0001.png\"\n"
+            "move /y \"image\\layer-base-0001.png\" \"layers\\layer-base-0001.png\"\n"
             "if errorlevel 1 exit /b 1\n",
         commands);
 }
@@ -76,4 +75,18 @@ TEST(TestScript, prologueRunsFromScriptDirectory)
               "if errorlevel 1 exit /b 1\n",
         script.prologue());
     EXPECT_EQ("popd\n", script.epilogue());
+}
+
+TEST(TestScript, prologueCreatesLayerDirectory)
+{
+    ParFile::Config config{config_data()};
+    config.output.layers = "layers/layer-%s-%04d.png";
+    ParFile::Script script{config};
+
+    EXPECT_EQ("@echo off\n"
+              "pushd \"%~dp0\"\n"
+              "if errorlevel 1 exit /b 1\n"
+              "if not exist \"layers\" mkdir \"layers\"\n"
+              "if errorlevel 1 exit /b 1\n",
+        script.prologue());
 }

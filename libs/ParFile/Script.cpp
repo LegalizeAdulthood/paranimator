@@ -11,6 +11,17 @@
 namespace ParFile
 {
 
+namespace
+{
+
+std::string batch_path(std::filesystem::path path)
+{
+    path.make_preferred();
+    return path.string();
+}
+
+} // namespace
+
 Script::Script(const Config &config) :
     m_par(config.output.par),
     m_layers(config.output.layers),
@@ -20,9 +31,16 @@ Script::Script(const Config &config) :
 
 std::string Script::prologue() const
 {
-    return "@echo off\n"
-           "pushd \"%~dp0\"\n"
-           "if errorlevel 1 exit /b 1\n";
+    std::string result{"@echo off\n"
+                       "pushd \"%~dp0\"\n"
+                       "if errorlevel 1 exit /b 1\n"};
+    const std::string directory{layer_directory()};
+    if (!directory.empty())
+    {
+        result += "if not exist \"" + directory + "\" mkdir \"" + directory + "\"\n";
+        result += "if errorlevel 1 exit /b 1\n";
+    }
+    return result;
 }
 
 std::string Script::epilogue() const
@@ -43,15 +61,10 @@ std::string Script::layer_commands(const std::string &par_name, const std::strin
     }
     const std::string destination{layer_file(layer_id, frame)};
     const std::string save_name{std::filesystem::path{destination}.filename().string()};
-    const std::filesystem::path layer_directory{std::filesystem::path{destination}.parent_path()};
     std::string result;
-    if (!layer_directory.empty())
-    {
-        result += "if not exist \"" + layer_directory.generic_string() + "\" mkdir \"" +
-            layer_directory.generic_string() + "\"\n";
-    }
     result += render_command(par_name, save_name);
-    result += "move /y \"image/" + save_name + "\" \"" + destination + "\"\n";
+    result += "move /y \"" + batch_path(std::filesystem::path{"image"} / save_name) + "\" \"" +
+        batch_path(destination) + "\"\n";
     result += "if errorlevel 1 exit /b 1\n";
     return result;
 }
@@ -66,6 +79,15 @@ std::string Script::render_command(const std::string &par_name, const std::strin
 std::string Script::layer_file(const std::string &layer_id, int frame) const
 {
     return (boost::format(*m_layers) % layer_id % (frame + 1)).str();
+}
+
+std::string Script::layer_directory() const
+{
+    if (!m_layers)
+    {
+        return {};
+    }
+    return batch_path(std::filesystem::path{*m_layers}.parent_path());
 }
 
 } // namespace ParFile
