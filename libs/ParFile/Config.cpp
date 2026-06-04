@@ -894,6 +894,21 @@ static PathConfig load_path_config(const Object &json)
     return result;
 }
 
+static KeyframeConfig path_keyframe(int frame, const std::string &value)
+{
+    KeyframeConfig result;
+    result.frame = frame;
+    result.value = value;
+    return result;
+}
+
+static KeyframeConfig path_keyframe(int frame, const std::string &value, Curve curve)
+{
+    KeyframeConfig result{path_keyframe(frame, value)};
+    result.curve = curve;
+    return result;
+}
+
 static std::vector<KeyframeConfig> load_path_keyframes(const PathConfig &path, int num_frames)
 {
     if (num_frames < 2)
@@ -904,9 +919,9 @@ static std::vector<KeyframeConfig> load_path_keyframes(const PathConfig &path, i
     switch (path.kind)
     {
     case PathKind::CONSTANT:
-        return {{0, path.value}, {num_frames - 1, path.value, Curve::HOLD}};
+        return {path_keyframe(0, path.value), path_keyframe(num_frames - 1, path.value, Curve::HOLD)};
     case PathKind::LINE:
-        return {{0, path.from}, {num_frames - 1, path.to, Curve::LINEAR}};
+        return {path_keyframe(0, path.from), path_keyframe(num_frames - 1, path.to, Curve::LINEAR)};
     case PathKind::CIRCLE:
     case PathKind::ELLIPSE:
     case PathKind::LISSAJOUS:

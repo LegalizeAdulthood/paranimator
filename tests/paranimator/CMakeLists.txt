@@ -1,5 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
+if(WIN32)
+    set(PARANIMATOR_SCRIPT_GOLD_EXTENSION ".bat")
+else()
+    set(PARANIMATOR_SCRIPT_GOLD_EXTENSION ".sh")
+endif()
+
 function(add_paranimator_test name)
     set(options)
     set(one_value_args CATALOG FRAMES INDEXED_MAP OUTPUT_MAP)
@@ -28,7 +34,8 @@ function(add_paranimator_test name)
             "-DCOLORING_CATALOG=$<SHELL_PATH:${CMAKE_SOURCE_DIR}/data/coloring-catalog.json>"
             "-DCORE_CATALOG=$<SHELL_PATH:${TEST_CATALOG_PATH}>"
             "-DGOLD_PAR=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/gold-${name}.par>"
-            "-DGOLD_SCRIPT=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/gold-${name}.bat>"
+            "-DGOLD_SCRIPT=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/gold-${name}${PARANIMATOR_SCRIPT_GOLD_EXTENSION}>"
+            "-DGOLD_COMPOSE_SCRIPT=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/gold-${name}-compose${PARANIMATOR_SCRIPT_GOLD_EXTENSION}>"
             "-DINDEXED_MAP=${TEST_INDEXED_MAP}"
             "-DOUTPUT_MAP=${TEST_OUTPUT_MAP}"
             "-DGOLD_MAP=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/gold-${name}.map>"

@@ -52,12 +52,20 @@ TEST(TestComposeScript, commandsComposeLayersInStackOrder)
     config.output.background = "black";
     const ParFile::ComposeScript script{config};
 
+#ifdef _WIN32
     EXPECT_EQ("magick ^( \"layers/layer-base-0002.gif\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
               "^( \"layers/layer-detail-0002.gif\" -alpha set -channel A -evaluate multiply 0.5 +channel ^) "
               "-compose Over -composite -background \"black\" -alpha remove -alpha off "
               "\"frames/frame0002.png\"\n"
               "if errorlevel 1 exit /b 1\n",
         script.commands(1));
+#else
+    EXPECT_EQ("magick \\( \"layers/layer-base-0002.gif\" -alpha set -channel A -evaluate multiply 1 +channel \\) "
+              "\\( \"layers/layer-detail-0002.gif\" -alpha set -channel A -evaluate multiply 0.5 +channel \\) "
+              "-compose Over -composite -background \"black\" -alpha remove -alpha off "
+              "\"frames/frame0002.png\"\n",
+        script.commands(1));
+#endif
 }
 
 TEST(TestComposeScript, commandsMapNeutralOperatorsToImagemagickOperators)
@@ -104,10 +112,16 @@ TEST(TestComposeScript, hiddenLayerIsSkipped)
     config.layers[1].opacity = opacity(0.0);
     const ParFile::ComposeScript script{config};
 
+#ifdef _WIN32
     EXPECT_EQ("magick ^( \"layers/layer-base-0001.gif\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
               "\"frames/frame0001.png\"\n"
               "if errorlevel 1 exit /b 1\n",
         script.commands(0));
+#else
+    EXPECT_EQ("magick \\( \"layers/layer-base-0001.gif\" -alpha set -channel A -evaluate multiply 1 +channel \\) "
+              "\"frames/frame0001.png\"\n",
+        script.commands(0));
+#endif
 }
 
 TEST(TestComposeScript, writeWhenHiddenKeepsZeroOpacityLayer)
@@ -117,20 +131,35 @@ TEST(TestComposeScript, writeWhenHiddenKeepsZeroOpacityLayer)
     config.layers[1].write_when_hidden = true;
     const ParFile::ComposeScript script{config};
 
+#ifdef _WIN32
     EXPECT_EQ("magick ^( \"layers/layer-base-0001.gif\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
               "^( \"layers/layer-detail-0001.gif\" -alpha set -channel A -evaluate multiply 0 +channel ^) "
               "-compose Over -composite \"frames/frame0001.png\"\n"
               "if errorlevel 1 exit /b 1\n",
         script.commands(0));
+#else
+    EXPECT_EQ("magick \\( \"layers/layer-base-0001.gif\" -alpha set -channel A -evaluate multiply 1 +channel \\) "
+              "\\( \"layers/layer-detail-0001.gif\" -alpha set -channel A -evaluate multiply 0 +channel \\) "
+              "-compose Over -composite \"frames/frame0001.png\"\n",
+        script.commands(0));
+#endif
 }
 
 TEST(TestComposeScript, prologueRunsFromScriptDirectory)
 {
     const ParFile::ComposeScript script{config_data()};
 
+#ifdef _WIN32
     EXPECT_EQ("@echo off\n"
               "pushd \"%~dp0\"\n"
               "if errorlevel 1 exit /b 1\n",
         script.prologue());
     EXPECT_EQ("popd\n", script.epilogue());
+#else
+    EXPECT_EQ("#!/usr/bin/env bash\n"
+              "set -e\n"
+              "pushd \"$(dirname \"$0\")\" >/dev/null\n",
+        script.prologue());
+    EXPECT_EQ("popd >/dev/null\n", script.epilogue());
+#endif
 }

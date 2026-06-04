@@ -1,6 +1,14 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
-foreach(name PARANIMATOR TEST_NAME TEST_SOURCE_DIR COLORING_CATALOG CORE_CATALOG GOLD_PAR GOLD_SCRIPT)
+foreach(name
+        PARANIMATOR
+        TEST_NAME
+        TEST_SOURCE_DIR
+        COLORING_CATALOG
+        CORE_CATALOG
+        GOLD_PAR
+        GOLD_SCRIPT
+        GOLD_COMPOSE_SCRIPT)
     if(NOT DEFINED ${name})
         message(FATAL_ERROR "Missing required variable: ${name}")
     endif()
@@ -11,7 +19,7 @@ set(output_directory "output")
 set(generated_par "${output_directory}/par/frames.par")
 set(generated_script "${output_directory}/frames.bat")
 set(generated_compose_script "${output_directory}/compose.bat")
-set(gold_compose_script "${TEST_SOURCE_DIR}/gold-${TEST_NAME}-compose.bat")
+set(gold_compose_script "${GOLD_COMPOSE_SCRIPT}")
 set(valid_config "${input_directory}/${TEST_NAME}.json")
 
 file(REMOVE_RECURSE "${input_directory}" "${output_directory}")
@@ -55,7 +63,7 @@ endif()
 
 if(NOT EXISTS "${generated_script}")
     message(FATAL_ERROR
-        "Generated batch file was not created: ${generated_script}")
+        "Generated script file was not created: ${generated_script}")
 endif()
 
 execute_process(
@@ -67,7 +75,7 @@ execute_process(
 )
 if(NOT script_compare_result EQUAL 0)
     message(FATAL_ERROR
-        "Generated batch file does not match gold batch file:\n"
+        "Generated script file does not match gold script file:\n"
         "  gold: ${GOLD_SCRIPT}\n"
         "  generated: ${generated_script}"
     )
@@ -112,7 +120,7 @@ endif()
 if(EXISTS "${gold_compose_script}")
     if(NOT EXISTS "${generated_compose_script}")
         message(FATAL_ERROR
-            "Generated compose batch file was not created: ${generated_compose_script}")
+            "Generated compose script file was not created: ${generated_compose_script}")
     endif()
     execute_process(
         COMMAND
@@ -123,7 +131,7 @@ if(EXISTS "${gold_compose_script}")
     )
     if(NOT compose_compare_result EQUAL 0)
         message(FATAL_ERROR
-            "Generated compose batch file does not match gold batch file:\n"
+            "Generated compose script file does not match gold script file:\n"
             "  gold: ${gold_compose_script}\n"
             "  generated: ${generated_compose_script}"
         )

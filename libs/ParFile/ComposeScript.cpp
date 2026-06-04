@@ -45,6 +45,55 @@ std::string opacity_text(double opacity)
     return out.str();
 }
 
+std::string script_prologue()
+{
+#ifdef _WIN32
+    return "@echo off\n"
+           "pushd \"%~dp0\"\n"
+           "if errorlevel 1 exit /b 1\n";
+#else
+    return "#!/usr/bin/env bash\n"
+           "set -e\n"
+           "pushd \"$(dirname \"$0\")\" >/dev/null\n";
+#endif
+}
+
+std::string script_epilogue()
+{
+#ifdef _WIN32
+    return "popd\n";
+#else
+    return "popd >/dev/null\n";
+#endif
+}
+
+std::string error_check()
+{
+#ifdef _WIN32
+    return "if errorlevel 1 exit /b 1\n";
+#else
+    return {};
+#endif
+}
+
+std::string open_group()
+{
+#ifdef _WIN32
+    return "^(";
+#else
+    return "\\(";
+#endif
+}
+
+std::string close_group()
+{
+#ifdef _WIN32
+    return "^)";
+#else
+    return "\\)";
+#endif
+}
+
 std::string_view imagemagick_compose_operator(ComposeOperator op)
 {
     switch (op)
@@ -110,14 +159,12 @@ ComposeScript::ComposeScript(const Config &config) :
 
 std::string ComposeScript::prologue() const
 {
-    return "@echo off\n"
-           "pushd \"%~dp0\"\n"
-           "if errorlevel 1 exit /b 1\n";
+    return script_prologue();
 }
 
 std::string ComposeScript::epilogue() const
 {
-    return "popd\n";
+    return script_epilogue();
 }
 
 std::string ComposeScript::commands(int frame) const
@@ -148,7 +195,7 @@ std::string ComposeScript::commands(int frame) const
         result += " -background " + quote(*m_config.output.background) + " -alpha remove -alpha off";
     }
     result += ' ' + quote(frame_file(frame)) + '\n';
-    result += "if errorlevel 1 exit /b 1\n";
+    result += error_check();
     return result;
 }
 
@@ -164,8 +211,8 @@ std::string ComposeScript::layer_file(const LayerConfig &layer, int frame) const
 
 std::string ComposeScript::layer_image(const LayerConfig &layer, int frame) const
 {
-    return "^( " + quote(layer_file(layer, frame)) + " -alpha set -channel A -evaluate multiply " +
-        opacity_text(opacity(layer, frame)) + " +channel ^)";
+    return open_group() + " " + quote(layer_file(layer, frame)) + " -alpha set -channel A -evaluate multiply " +
+        opacity_text(opacity(layer, frame)) + " +channel " + close_group();
 }
 
 double ComposeScript::opacity(const LayerConfig &layer, int frame) const

@@ -193,6 +193,22 @@ int formula_function_slot(std::string_view name)
     return -1;
 }
 
+ResolvedTrack make_resolved_track(const TrackConfig &track, const ParameterMetadata &metadata,
+    const std::string &base_value, const std::string &output_parameter, const std::vector<int> &slots)
+{
+    ResolvedTrack result;
+    result.parameter = track.parameter;
+    result.metadata = metadata;
+    result.base_value = base_value;
+    result.keys = track.keys;
+    result.output_parameter = output_parameter;
+    result.slots = slots;
+    result.mode = track.mode;
+    result.pwm = track.pwm;
+    result.path = track.path;
+    return result;
+}
+
 std::string default_function_value(int slot)
 {
     std::string result{"ident"};
@@ -264,8 +280,7 @@ ResolvedTrack resolve_params_slot(
     const int slot{parse_params_slot(track.parameter)};
     const ParamsSlotMetadata &slot_metadata{catalog.params_slot(fractal_type, slot)};
     const Parameter &params{source_parameter(source, "params")};
-    return {track.parameter, slot_metadata.metadata, params.value, track.keys, "params", {slot}, track.mode, track.pwm,
-        track.path};
+    return make_resolved_track(track, slot_metadata.metadata, params.value, "params", {slot});
 }
 
 ResolvedTrack resolve_params_group(
@@ -278,8 +293,7 @@ ResolvedTrack resolve_params_group(
     }
     const ParamsGroupMetadata &group_metadata{catalog.params_group(fractal_type, group)};
     const Parameter &params{source_parameter(source, "params")};
-    return {track.parameter, group_metadata.metadata, params.value, track.keys, "params", group_metadata.slots,
-        track.mode, track.pwm, track.path};
+    return make_resolved_track(track, group_metadata.metadata, params.value, "params", group_metadata.slots);
 }
 
 ResolvedTrack resolve_formula_params_knob(
@@ -292,8 +306,7 @@ ResolvedTrack resolve_formula_params_knob(
     }
     const FormulaParamsKnobMetadata &knob_metadata{catalog.formula_params_knob(formula_name, *knob)};
     const Parameter &params{source_parameter(source, "params")};
-    return {track.parameter, knob_metadata.metadata, params.value, track.keys, "params", knob_metadata.slots,
-        track.mode, track.pwm, track.path};
+    return make_resolved_track(track, knob_metadata.metadata, params.value, "params", knob_metadata.slots);
 }
 
 ResolvedTrack resolve_formula_function(
@@ -308,16 +321,14 @@ ResolvedTrack resolve_formula_function(
     const Parameter *function{find_source_parameter(source, "function")};
     const std::string base_value{
         function == nullptr ? default_function_value(function_metadata.slot) : function->value};
-    return {track.parameter, function_metadata.metadata, base_value, track.keys, "function", {function_metadata.slot},
-        track.mode, track.pwm, track.path};
+    return make_resolved_track(track, function_metadata.metadata, base_value, "function", {function_metadata.slot});
 }
 
 ResolvedTrack resolve_regular_track(const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source)
 {
     const ParameterMetadata &metadata{catalog.metadata(track.parameter)};
     const Parameter &parameter{source_parameter(source, track.parameter)};
-    return {
-        track.parameter, metadata, parameter.value, track.keys, track.parameter, {}, track.mode, track.pwm, track.path};
+    return make_resolved_track(track, metadata, parameter.value, track.parameter, {});
 }
 
 ParameterMetadata camera2d_value_metadata(
@@ -336,7 +347,11 @@ ParameterMetadata camera2d_value_metadata(
 ResolvedCamera2DValueTrack resolve_camera2d_value_track(
     const Camera2DValueTrackConfig &track, std::string_view camera_name, std::string_view member_name, bool normalize)
 {
-    return {camera2d_value_metadata(camera_name, member_name, track.type, normalize), track.keys, track.path};
+    ResolvedCamera2DValueTrack result;
+    result.metadata = camera2d_value_metadata(camera_name, member_name, track.type, normalize);
+    result.keys = track.keys;
+    result.path = track.path;
+    return result;
 }
 
 std::optional<ResolvedCamera2DValueTrack> resolve_optional_camera2d_value_track(
@@ -385,8 +400,12 @@ ResolvedTrack resolve_camera2d_track(
 ParameterMetadata camera3d_value_metadata(
     std::string_view camera_name, std::string_view member_name, ParameterType type, bool normalize)
 {
-    ParameterMetadata result{std::string{camera_name} + ".camera3d." + std::string{member_name}, type,
-        ParameterFormat::SLASH, Curve::LINEAR, ExtrapolateMode::CLAMP};
+    ParameterMetadata result;
+    result.name = std::string{camera_name} + ".camera3d." + std::string{member_name};
+    result.type = type;
+    result.format = ParameterFormat::SLASH;
+    result.default_curve = Curve::LINEAR;
+    result.extrapolate = ExtrapolateMode::CLAMP;
     result.normalize = normalize;
     return result;
 }
@@ -394,7 +413,10 @@ ParameterMetadata camera3d_value_metadata(
 ResolvedCamera3DValueTrack resolve_camera3d_value_track(
     const Camera3DValueTrackConfig &track, std::string_view camera_name, std::string_view member_name, bool normalize)
 {
-    return {camera3d_value_metadata(camera_name, member_name, track.type, normalize), track.keys};
+    ResolvedCamera3DValueTrack result;
+    result.metadata = camera3d_value_metadata(camera_name, member_name, track.type, normalize);
+    result.keys = track.keys;
+    return result;
 }
 
 ResolvedCamera3DConfig resolve_camera3d_config(
