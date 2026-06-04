@@ -14,6 +14,8 @@ configure_file("from.par.in" "from.par" @ONLY)
 configure_file("to.par.in" "to.par" @ONLY)
 configure_file("${CMAKE_SOURCE_DIR}/data/core-catalog.json" "core-catalog.json" COPYONLY)
 configure_file("${CMAKE_SOURCE_DIR}/data/coloring-catalog.json" "coloring-catalog.json" COPYONLY)
+configure_file("${CMAKE_SOURCE_DIR}/data/id-3d-catalog.json" "id-3d-catalog.json" COPYONLY)
+configure_file("${CMAKE_SOURCE_DIR}/data/formula-catalog.json" "formula-catalog.json" COPYONLY)
 set(TEST_SOURCE_PAR "Mandel_Demo")
 set(TEST_TRACK_PARAMETER "center-mag")
 set(TEST_TRACK_FROM "-0.5/0/1")
@@ -54,11 +56,15 @@ add_executable(test-par-file
     config.json.in
     "${CMAKE_SOURCE_DIR}/data/coloring-catalog.json"
     "${CMAKE_SOURCE_DIR}/data/core-catalog.json"
+    "${CMAKE_SOURCE_DIR}/data/formula-catalog.json"
+    "${CMAKE_SOURCE_DIR}/data/id-3d-catalog.json"
     test.h.in
     "${CMAKE_CURRENT_BINARY_DIR}/from.par"
     "${CMAKE_CURRENT_BINARY_DIR}/to.par"
     "${CMAKE_CURRENT_BINARY_DIR}/core-catalog.json"
     "${CMAKE_CURRENT_BINARY_DIR}/coloring-catalog.json"
+    "${CMAKE_CURRENT_BINARY_DIR}/id-3d-catalog.json"
+    "${CMAKE_CURRENT_BINARY_DIR}/formula-catalog.json"
     "${CMAKE_CURRENT_BINARY_DIR}/center-mag.json"
     "${CMAKE_CURRENT_BINARY_DIR}/corners.json"
     "${CMAKE_CURRENT_BINARY_DIR}/maxiter.json"

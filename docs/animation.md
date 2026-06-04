@@ -1648,25 +1648,6 @@ is likely, add a shared schema file and external `$ref` loader support.
 Every new schema object, field, and enum or const value must include a
 `description` string when the schema element is added.
 
-
-
-
-### 1. Add 3D And Formula Catalog Files
-
-Add default catalogs for Id 3D viewing and selected formula families.
-
-Schema work:
-
-- create or update JSON schemas for fields or metadata JSON files added by
-  this slice.
-
-Unit tests:
-
-- 3D catalog declares rotation and julibrot3d arity.
-- formula catalogs attach params knob and function key metadata to formula
-  entry names.
-- animation files include only the catalogs they need.
-
 The intent is not to finish a large subsystem before anything runs. The
 intent is to get a small valid Id animation working quickly, then keep
 that path working while each later feature is added.

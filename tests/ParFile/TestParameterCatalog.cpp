@@ -32,6 +32,16 @@ ParFile::ParameterCatalog coloring_catalog()
     return ParFile::read_parameter_catalog(read_text(TestParFile::COLORING_CATALOG_JSON));
 }
 
+ParFile::ParameterCatalog id_3d_catalog()
+{
+    return ParFile::read_parameter_catalog(read_text(TestParFile::ID_3D_CATALOG_JSON));
+}
+
+ParFile::ParameterCatalog formula_catalog()
+{
+    return ParFile::read_parameter_catalog(read_text(TestParFile::FORMULA_CATALOG_JSON));
+}
+
 ParFile::ParameterCatalog typed_catalog()
 {
     return {{{"center-mag", ParFile::ParameterType::CENTER_MAG, ParFile::ParameterFormat::SLASH,
@@ -68,9 +78,9 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
 {
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
-    EXPECT_EQ(23U, catalog.parameters.size());
+    EXPECT_EQ(7U, catalog.parameters.size());
     EXPECT_EQ(1U, catalog.fractal_types.size());
-    EXPECT_EQ(1U, catalog.formula_entries.size());
+    EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
 TEST(TestParameterCatalog, typeMetadataLoads)
@@ -138,7 +148,7 @@ TEST(TestParameterCatalog, cornersMetadataLoads)
 
 TEST(TestParameterCatalog, xyshiftMetadataLoads)
 {
-    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterCatalog catalog{id_3d_catalog()};
     const ParFile::ParameterMetadata &metadata{catalog.metadata("xyshift")};
 
     EXPECT_EQ("xyshift", metadata.name);
@@ -155,7 +165,7 @@ TEST(TestParameterCatalog, xyshiftMetadataLoads)
 
 TEST(TestParameterCatalog, id3DViewMetadataLoads)
 {
-    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterCatalog catalog{id_3d_catalog()};
     const ParFile::ParameterMetadata &rotation{catalog.metadata("rotation")};
     const ParFile::ParameterMetadata &perspective{catalog.metadata("perspective")};
     const ParFile::ParameterMetadata &scalexyz{catalog.metadata("scalexyz")};
@@ -187,7 +197,7 @@ TEST(TestParameterCatalog, id3DViewMetadataLoads)
 
 TEST(TestParameterCatalog, julibrotViewMetadataLoads)
 {
-    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterCatalog catalog{id_3d_catalog()};
     const ParFile::ParameterMetadata &mode{catalog.metadata("3dmode")};
     const ParFile::ParameterMetadata &geometry{catalog.metadata("julibrot3d")};
     const ParFile::ParameterMetadata &eyes{catalog.metadata("julibroteyes")};
@@ -318,7 +328,7 @@ TEST(TestParameterCatalog, juliaParamsGroupMetadataLoads)
 
 TEST(TestParameterCatalog, formulaParamsBailoutKnobMetadataLoads)
 {
-    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterCatalog catalog{formula_catalog()};
     const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("MandelbrotMix4", "bailout")};
 
     EXPECT_EQ("bailout", knob.name);
@@ -332,7 +342,7 @@ TEST(TestParameterCatalog, formulaParamsBailoutKnobMetadataLoads)
 
 TEST(TestParameterCatalog, formulaParamsScaleFactorKnobMetadataLoads)
 {
-    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterCatalog catalog{formula_catalog()};
     const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("MandelbrotMix4", "scale factor")};
 
     EXPECT_EQ("scale factor", knob.name);
@@ -344,7 +354,7 @@ TEST(TestParameterCatalog, formulaParamsScaleFactorKnobMetadataLoads)
 
 TEST(TestParameterCatalog, formulaParamsComplexKnobMetadataLoads)
 {
-    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterCatalog catalog{formula_catalog()};
     const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("MandelbrotMix4", "c")};
 
     EXPECT_EQ("c", knob.name);
@@ -359,7 +369,7 @@ TEST(TestParameterCatalog, formulaParamsComplexKnobMetadataLoads)
 
 TEST(TestParameterCatalog, formulaParamsIntegerKnobMetadataLoads)
 {
-    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterCatalog catalog{formula_catalog()};
     const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("MandelbrotMix4", "iterations")};
 
     EXPECT_EQ(ParFile::ParameterType::INTEGER, knob.metadata.type);
@@ -369,7 +379,7 @@ TEST(TestParameterCatalog, formulaParamsIntegerKnobMetadataLoads)
 
 TEST(TestParameterCatalog, formulaFunctionMetadataLoads)
 {
-    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterCatalog catalog{formula_catalog()};
     const ParFile::FormulaFunctionMetadata &function{catalog.formula_function("MandelbrotMix4", "fn1")};
 
     EXPECT_EQ("fn1", function.name);
@@ -543,12 +553,12 @@ TEST(TestParameterCatalog, unknownParamsGroupRejected)
 
 TEST(TestParameterCatalog, unknownFormulaParamsKnobRejected)
 {
-    EXPECT_THROW(core_catalog().formula_params_knob("MandelbrotMix4", "unknown"), std::runtime_error);
+    EXPECT_THROW(formula_catalog().formula_params_knob("MandelbrotMix4", "unknown"), std::runtime_error);
 }
 
 TEST(TestParameterCatalog, unknownFormulaFunctionRejected)
 {
-    EXPECT_THROW(core_catalog().formula_function("MandelbrotMix4", "fn5"), std::runtime_error);
+    EXPECT_THROW(formula_catalog().formula_function("MandelbrotMix4", "fn5"), std::runtime_error);
 }
 
 TEST(TestParameterCatalog, unknownFormulaFunctionValuesRejected)

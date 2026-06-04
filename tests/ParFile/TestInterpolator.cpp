@@ -17,6 +17,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace
 {
@@ -35,9 +36,16 @@ ParFile::Config config_data()
         {{"center-mag", {{0, "-0.5/0/1"}, {59, "-0.5/0/10"}}}}};              //
 }
 
-ParFile::Config parsed_config(std::string_view source_name, int num_frames, const Object &track)
+ParFile::Config parsed_config(std::string_view source_name, int num_frames, const Object &track,
+    std::vector<std::string> parameter_catalogs = {TestParFile::CORE_CATALOG_JSON})
 {
-    const Object json{{"parameter-catalogs", Object::array({TestParFile::CORE_CATALOG_JSON})},
+    Object catalogs{Object::array()};
+    for (const std::string &catalog : parameter_catalogs)
+    {
+        catalogs.push_back(catalog);
+    }
+
+    const Object json{{"parameter-catalogs", catalogs},
         {"source", Object{{"file", TestParFile::FROM_PAR}, {"name", std::string{source_name}}}},
         {"output",
             Object{{"directory", TestParFile::TEST_OUTPUT_DIRECTORY}, {"par", TestParFile::TEST_OUTPUT_PAR},
@@ -164,7 +172,8 @@ TEST_F(TestInterpolator, id3DViewWritesRotationPerspectiveAndXyshift)
                 {"keys",
                     Object::array(
                         {Object{{"frame", 0}, {"value", "0/0"}}, Object{{"frame", 2}, {"value", "20/-10"}}})}}}};
-    const ParFile::Config config{parsed_config("Mandel_Demo", 3, track)};
+    const ParFile::Config config{
+        parsed_config("Mandel_Demo", 3, track, {TestParFile::CORE_CATALOG_JSON, TestParFile::ID_3D_CATALOG_JSON})};
     ParFile::Interpolator lerper{config};
 
     const ParFile::ParSet first{lerper()};
@@ -202,7 +211,8 @@ TEST_F(TestInterpolator, id3DViewWritesScaleSphereAndStereoControls)
         {"converge",
             Object{{"type", "integer"},
                 {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 2}, {"value", -2}}})}}}};
-    const ParFile::Config config{parsed_config("Mandel_Demo", 3, track)};
+    const ParFile::Config config{
+        parsed_config("Mandel_Demo", 3, track, {TestParFile::CORE_CATALOG_JSON, TestParFile::ID_3D_CATALOG_JSON})};
     ParFile::Interpolator lerper{config};
 
     static_cast<void>(lerper());
@@ -220,7 +230,8 @@ TEST_F(TestInterpolator, id3DViewRejectsIllegalStereoValue)
         {"stereo",
             Object{{"type", "integer"},
                 {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 2}, {"value", 5}}})}}}};
-    const ParFile::Config config{parsed_config("Mandel_Demo", 3, track)};
+    const ParFile::Config config{
+        parsed_config("Mandel_Demo", 3, track, {TestParFile::CORE_CATALOG_JSON, TestParFile::ID_3D_CATALOG_JSON})};
 
     EXPECT_THROW(ParFile::Interpolator{config}, std::runtime_error);
 }
@@ -249,7 +260,8 @@ TEST_F(TestInterpolator, julibrotViewWritesModeGeometryEyesAndFromTo)
                 {"keys",
                     Object::array({Object{{"frame", 0}, {"value", "-0.83/-0.83/0.25/-0.25"}},
                         Object{{"frame", 2}, {"value", "-0.7/-0.9/0.2/-0.2"}}})}}}};
-    const ParFile::Config config{parsed_config("Mandel_Demo", 3, track)};
+    const ParFile::Config config{
+        parsed_config("Mandel_Demo", 3, track, {TestParFile::CORE_CATALOG_JSON, TestParFile::ID_3D_CATALOG_JSON})};
     ParFile::Interpolator lerper{config};
 
     const ParFile::ParSet first{lerper()};
@@ -352,6 +364,7 @@ TEST_F(TestInterpolator, paramsTrackWritesOneParamsAssignment)
 TEST_F(TestInterpolator, formulaParamsTracksMergeOneParamsAssignment)
 {
     m_config_data.source.name = "Formula_Demo";
+    m_config_data.parameter_catalogs = {TestParFile::CORE_CATALOG_JSON, TestParFile::FORMULA_CATALOG_JSON};
     m_config_data.num_frames = 3;
     m_config_data.tracks = {
         {"MandelbrotMix4.bailout", {{0, "10"}, {2, "20"}}}, {"MandelbrotMix4.c", {{0, "-1/-2"}, {2, "-3/-4"}}}};
@@ -370,6 +383,7 @@ TEST_F(TestInterpolator, formulaParamsTracksMergeOneParamsAssignment)
 TEST_F(TestInterpolator, formulaFunctionTrackWritesOneFunctionAssignment)
 {
     m_config_data.source.name = "Formula_Demo";
+    m_config_data.parameter_catalogs = {TestParFile::CORE_CATALOG_JSON, TestParFile::FORMULA_CATALOG_JSON};
     m_config_data.num_frames = 3;
     m_config_data.tracks = {{"MandelbrotMix4.fn2", {{0, "tan"}, {2, "log"}}}};
     m_config = m_config_data;

@@ -435,6 +435,8 @@ TEST(TestJsonSchema, validParameterCatalogPasses)
 {
     EXPECT_TRUE(validates_parameter_catalog_file(TestParFile::CORE_CATALOG_JSON));
     EXPECT_TRUE(validates_parameter_catalog_file(TestParFile::COLORING_CATALOG_JSON));
+    EXPECT_TRUE(validates_parameter_catalog_file(TestParFile::ID_3D_CATALOG_JSON));
+    EXPECT_TRUE(validates_parameter_catalog_file(TestParFile::FORMULA_CATALOG_JSON));
 }
 
 TEST(TestJsonSchema, missingMetadataTypeRejected)
