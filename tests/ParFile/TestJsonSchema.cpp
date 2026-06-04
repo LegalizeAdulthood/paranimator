@@ -285,6 +285,83 @@ TEST(TestJsonSchema, multiLayerConfigAccepted)
 })"));
 }
 
+TEST(TestJsonSchema, layerOpacityAccepted)
+{
+    EXPECT_TRUE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "layer-%s-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 3,
+  "layers": [
+    {
+      "id": "base",
+      "source": { "file": "from.par", "name": "Mandel_Demo" },
+      "opacity": {
+        "keys": [
+          { "frame": 0, "value": 0 },
+          { "frame": 2, "value": 100 }
+        ]
+      },
+      "write-when-hidden": true,
+      "tracks": [
+        {
+          "parameter": "maxiter",
+          "keys": [
+            { "frame": 0, "value": "100" },
+            { "frame": 2, "value": "200" }
+          ]
+        }
+      ]
+    }
+  ]
+})"));
+}
+
+TEST(TestJsonSchema, layerOpacityRejectsValuesOutsidePercentRange)
+{
+    const std::string before{R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "layer-%s-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 3,
+  "layers": [
+    {
+      "id": "base",
+      "source": { "file": "from.par", "name": "Mandel_Demo" },
+      "opacity": {
+        "keys": [
+          { "frame": 0, "value": )"};
+    const std::string after{R"( },
+          { "frame": 2, "value": 100 }
+        ]
+      },
+      "tracks": [
+        {
+          "parameter": "maxiter",
+          "keys": [
+            { "frame": 0, "value": "100" },
+            { "frame": 2, "value": "200" }
+          ]
+        }
+      ]
+    }
+  ]
+})"};
+
+    EXPECT_FALSE(validates_config_text(before + "-1" + after));
+    EXPECT_FALSE(validates_config_text(before + "101" + after));
+}
+
 TEST(TestJsonSchema, parameterCatalogSchemaPathStable)
 {
     const std::filesystem::path path{TestParFile::PARAMETER_CATALOG_SCHEMA_JSON};

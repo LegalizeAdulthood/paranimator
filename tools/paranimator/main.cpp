@@ -5,10 +5,12 @@
 #include <ParFile/Config.h>
 #include <ParFile/Interpolator.h>
 #include <ParFile/JsonSchema.h>
+#include <ParFile/NumberTrack.h>
 #include <ParFile/OutputLayout.h>
 #include <ParFile/ParFile.h>
 #include <ParFile/Script.h>
 
+#include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -89,11 +91,28 @@ std::vector<ParFile::Interpolator> layer_interpolators(const ParFile::Config &co
 {
     std::vector<ParFile::Interpolator> result;
     result.reserve(config.layers.size());
+    const bool include_layer_id{config.layers.size() > 1U};
     for (const ParFile::LayerConfig &layer : config.layers)
     {
-        result.emplace_back(layer_config(config, layer), layer.id);
+        if (include_layer_id)
+        {
+            result.emplace_back(layer_config(config, layer), layer.id);
+        }
+        else
+        {
+            result.emplace_back(layer_config(config, layer));
+        }
     }
     return result;
+}
+
+bool should_render_layer(const ParFile::LayerConfig &layer, int frame)
+{
+    if (!layer.opacity)
+    {
+        return true;
+    }
+    return layer.write_when_hidden || ParFile::number_track_value_at_frame(*layer.opacity, frame) > 0.0;
 }
 
 void interpolate_layers(const ParFile::Config &config)
@@ -119,20 +138,23 @@ void interpolate_layers(const ParFile::Config &config)
     bool first_entry{true};
     for (int i = 0; i < config.num_frames; ++i)
     {
-        for (ParFile::Interpolator &lerper : lerpers)
+        for (std::size_t layer = 0; layer < lerpers.size(); ++layer)
         {
-            const ParFile::ParSet frame{lerper()};
-            if (!first_entry)
+            const ParFile::ParSet frame{lerpers[layer]()};
+            if (should_render_layer(config.layers[layer], i))
             {
-                out << '\n';
-            }
-            first_entry = false;
-            out << frame;
-            *current_script << script.commands(frame.name);
-            ++current_script;
-            if (current_script == scripts.end())
-            {
-                current_script = scripts.begin();
+                if (!first_entry)
+                {
+                    out << '\n';
+                }
+                first_entry = false;
+                out << frame;
+                *current_script << script.commands(frame.name);
+                ++current_script;
+                if (current_script == scripts.end())
+                {
+                    current_script = scripts.begin();
+                }
             }
         }
     }
@@ -140,7 +162,7 @@ void interpolate_layers(const ParFile::Config &config)
 
 void render(const ParFile::Config &config)
 {
-    if (config.layers.size() > 1U)
+    if (!config.layers.empty())
     {
         interpolate_layers(config);
         return;

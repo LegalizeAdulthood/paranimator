@@ -265,6 +265,55 @@ TEST(TestConfig, jsonDeserializesSingleLayer)
     EXPECT_EQ("maxiter", config.tracks[0].parameter);
 }
 
+TEST(TestConfig, jsonDeserializesLayerOpacity)
+{
+    Object json = valid_json();
+    json.erase("source");
+    json.erase("tracks");
+    json["layers"] = Object::array({Object{{"id", "base"}, {"source", Object{{"file", "foo.par"}, {"name", "foo"}}},
+        {"opacity",
+            Object{
+                {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 59}, {"value", 100}}})}}},
+        {"write-when-hidden", true},
+        {"tracks",
+            Object::array({Object{{"parameter", "maxiter"},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "100"}}, Object{{"frame", 59}, {"value", "200"}}})}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.layers.size());
+    ASSERT_TRUE(config.layers[0].opacity);
+    ASSERT_EQ(2U, config.layers[0].opacity->keys.size());
+    EXPECT_EQ(0.0, config.layers[0].opacity->keys[0].value);
+    EXPECT_EQ(100.0, config.layers[0].opacity->keys[1].value);
+    EXPECT_TRUE(config.layers[0].write_when_hidden);
+}
+
+TEST(TestConfig, jsonRejectsLayerOpacityOutsidePercentRange)
+{
+    Object json = valid_json();
+    json.erase("source");
+    json.erase("tracks");
+    json["layers"] = Object::array({Object{{"id", "base"}, {"source", Object{{"file", "foo.par"}, {"name", "foo"}}},
+        {"opacity",
+            Object{
+                {"keys", Object::array({Object{{"frame", 0}, {"value", -1}}, Object{{"frame", 59}, {"value", 100}}})}}},
+        {"tracks",
+            Object::array({Object{{"parameter", "maxiter"},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "100"}}, Object{{"frame", 59}, {"value", "200"}}})}}})}}});
+
+    expect_invalid(json);
+
+    json["layers"][0]["opacity"]["keys"][0]["value"] = 0;
+    json["layers"][0]["opacity"]["keys"][1]["value"] = 101;
+
+    expect_invalid(json);
+}
+
 TEST(TestConfig, jsonDeserializesMultipleLayersInOrder)
 {
     Object json = valid_json();

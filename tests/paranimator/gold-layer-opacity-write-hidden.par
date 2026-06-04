@@ -1,0 +1,83 @@
+layer-base-0001 {
+    reset
+    type=mandel
+    center-mag=-0.5/0/1
+    params=0/0
+    inside=0
+    sound=no
+    maxiter=100
+    batch=yes
+    savename=layer-base-0001.gif
+    overwrite=yes
+    video=F6
+}
+
+layer-detail-0001 {
+    reset
+    type=julia
+    center-mag=-0.5/0/1
+    params=0/1
+    inside=0
+    sound=no
+    maxiter=300
+    batch=yes
+    savename=layer-detail-0001.gif
+    overwrite=yes
+    video=F6
+}
+
+layer-base-0002 {
+    reset
+    type=mandel
+    center-mag=-0.5/0/1
+    params=0/0
+    inside=0
+    sound=no
+    maxiter=150
+    batch=yes
+    savename=layer-base-0002.gif
+    overwrite=yes
+    video=F6
+}
+
+layer-detail-0002 {
+    reset
+    type=julia
+    center-mag=-0.5/0/1
+    params=0/1
+    inside=0
+    sound=no
+    maxiter=400
+    batch=yes
+    savename=layer-detail-0002.gif
+    overwrite=yes
+    video=F6
+}
+
+layer-base-0003 {
+    reset
+    type=mandel
+    center-mag=-0.5/0/1
+    params=0/0
+    inside=0
+    sound=no
+    maxiter=200
+    batch=yes
+    savename=layer-base-0003.gif
+    overwrite=yes
+    video=F6
+}
+
+layer-detail-0003 {
+    reset
+    type=julia
+    center-mag=-0.5/0/1
+    params=0/1
+    inside=0
+    sound=no
+    maxiter=500
+    batch=yes
+    savename=layer-detail-0003.gif
+    overwrite=yes
+    video=F6
+}

@@ -239,6 +239,8 @@ struct LayerConfig
 {
     std::string id;
     NamedFileParSet source;
+    std::optional<NumberTrackConfig> opacity;
+    bool write_when_hidden{};
     std::vector<TrackConfig> tracks;
 };
 

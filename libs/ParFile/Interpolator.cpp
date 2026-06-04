@@ -6,6 +6,7 @@
 #include <ParFile/ColorSpec.h>
 #include <ParFile/Config.h>
 #include <ParFile/Interpolant.h>
+#include <ParFile/NumberTrack.h>
 #include <ParFile/OutputLayout.h>
 #include <ParFile/ParFile.h>
 #include <ParFile/ParameterCatalog.h>
@@ -46,47 +47,6 @@ void validate_track_keyframes(const std::string &name, const std::vector<Keyfram
     {
         throw std::runtime_error("Track '" + name + "' keyframes must be in increasing order");
     }
-}
-
-void validate_number_track_keyframes(
-    const std::string &name, const std::vector<NumberKeyframeConfig> &keys, int num_frames)
-{
-    if (keys.size() != 2U)
-    {
-        throw std::runtime_error("Number track '" + name + "' requires exactly two keyframes");
-    }
-    if (keys[0].frame < 0 || keys[1].frame < 0 || keys[0].frame >= num_frames || keys[1].frame >= num_frames)
-    {
-        throw std::runtime_error("Number track '" + name + "' has keyframes outside the frame range");
-    }
-    if (keys[0].frame >= keys[1].frame)
-    {
-        throw std::runtime_error("Number track '" + name + "' keyframes must be in increasing order");
-    }
-    if (keys[1].curve == Curve::GEOMETRIC)
-    {
-        throw std::runtime_error("Number track '" + name + "' does not support geometric curves");
-    }
-}
-
-double number_track_value_at_frame(const NumberTrackConfig &track, int frame)
-{
-    const NumberKeyframeConfig &from{track.keys[0]};
-    const NumberKeyframeConfig &to{track.keys[1]};
-    if (frame <= from.frame)
-    {
-        return from.value;
-    }
-    if (frame >= to.frame)
-    {
-        return to.value;
-    }
-    if (to.curve == Curve::HOLD || to.curve == Curve::STEP)
-    {
-        return from.value;
-    }
-    const double fraction{(frame - from.frame) / static_cast<double>(to.frame - from.frame)};
-    return from.value + fraction * (to.value - from.value);
 }
 
 bool color_map_effect_uses_amount(ColorMapEffectKind kind)

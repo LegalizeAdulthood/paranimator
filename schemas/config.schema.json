@@ -140,6 +140,14 @@
             }
           }
         },
+        "opacity": {
+          "description": "Keyed percent opacity for this layer from 0 through 100.",
+          "$ref": "#/$defs/percent-number-track"
+        },
+        "write-when-hidden": {
+          "description": "Render this layer even when evaluated opacity is 0.",
+          "type": "boolean"
+        },
         "tracks": {
           "description": "Animated parameter tracks applied only to this layer.",
           "type": "array",
@@ -1894,6 +1902,45 @@
         },
         "curve": {
           "description": "Optional interpolation curve ending at this positive numeric key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
+      }
+    },
+    "percent-number-track": {
+      "description": "Keyed numeric percent from 0 through 100.",
+      "type": "object",
+      "required": [ "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "keys": {
+          "description": "Exactly two keyed percent values from 0 through 100.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/percent-number-keyframe"
+          }
+        }
+      }
+    },
+    "percent-number-keyframe": {
+      "description": "One keyed numeric percent value at an animation frame.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this percent key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Percent value sampled at this keyframe.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this percent key.",
           "$ref": "#/$defs/scalar-curve"
         }
       }

@@ -13,6 +13,7 @@ add_library(ParFile
     include/ParFile/Interpolant.h
     include/ParFile/Interpolator.h
     include/ParFile/JsonSchema.h
+    include/ParFile/NumberTrack.h
     include/ParFile/OutputLayout.h
     include/ParFile/ParameterCatalog.h
     include/ParFile/ParFile.h
@@ -25,6 +26,7 @@ add_library(ParFile
     Interpolant.cpp
     Interpolator.cpp
     JsonSchema.cpp
+    NumberTrack.cpp
     OutputLayout.cpp
     ParameterCatalog.cpp
     ParFile.cpp

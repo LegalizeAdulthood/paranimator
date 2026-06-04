@@ -2,6 +2,8 @@
 //
 #include <ParFile/Config.h>
 
+#include <ParFile/NumberTrack.h>
+
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
@@ -849,6 +851,18 @@ static NumberTrackConfig load_number_track_config(const Object &json, std::strin
     return result;
 }
 
+static void validate_percent_track(std::string_view name, const NumberTrackConfig &track, int num_frames)
+{
+    validate_number_track_keyframes(name, track.keys, num_frames);
+    for (const NumberKeyframeConfig &key : track.keys)
+    {
+        if (key.value < 0.0 || key.value > 100.0)
+        {
+            throw std::runtime_error("Invalid config, '" + std::string{name} + "' value must be from 0 through 100");
+        }
+    }
+}
+
 static ColorMapGradientStopConfig load_color_map_gradient_stop_config(const Object &json)
 {
     ColorMapGradientStopConfig result;
@@ -1072,6 +1086,12 @@ static LayerConfig load_layer_config(const Object &json, int num_frames)
     LayerConfig result;
     result.id = load_string(json, "id");
     result.source = load_named_file_par_set(json, "source");
+    if (json.contains("opacity"))
+    {
+        result.opacity = load_number_track_config(json, "opacity");
+        validate_percent_track("opacity", *result.opacity, num_frames);
+    }
+    result.write_when_hidden = load_optional_bool(json, "write-when-hidden").value_or(false);
     result.tracks = load_tracks(json, "tracks", num_frames);
     return result;
 }
