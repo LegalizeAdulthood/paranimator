@@ -1637,28 +1637,7 @@ Every new schema object, field, and enum or const value must include a
 
 
 
-### 1. Add More Neutral Compose Operators
-
-Allow configured neutral compose operators and validate them. Map those
-operators to ImageMagick names only inside the ImageMagick adapter.
-
-Schema work:
-
-- create or update JSON schemas for fields or metadata JSON files added by
-  this slice.
-
-Unit tests:
-
-- Porter-Duff operators such as `source-over` and `destination-over` are
-  accepted.
-- math operators such as `add`, `subtract`, `multiply`, `divide`, `min`,
-  and `max` are accepted.
-- useful blend operators such as `difference`, `average`, `screen`, and
-  `overlay` are accepted.
-- unsupported operators are rejected.
-- ImageMagick-specific operator spellings are rejected in animation JSON.
-
-### 2. Add Core Catalog Files
+### 1. Add Core Catalog Files
 
 Add default catalogs for core Id parameters and coloring.
 
@@ -1673,7 +1652,7 @@ Unit tests:
 - coloring catalog declares colors as color-map.
 - catalog inclusion fails clearly for missing files.
 
-### 3. Add 3D And Formula Catalog Files
+### 2. Add 3D And Formula Catalog Files
 
 Add default catalogs for Id 3D viewing and selected formula families.
 

@@ -148,9 +148,97 @@ static OutputConfig load_output_config(const Object &json)
 static ComposeOperator load_compose_operator(const Object &json)
 {
     const std::optional<std::string> compose{load_optional_string(json, "compose")};
-    if (!compose || *compose == "source-over")
+    if (!compose)
     {
         return ComposeOperator::SOURCE_OVER;
+    }
+    if (*compose == "clear")
+    {
+        return ComposeOperator::CLEAR;
+    }
+    if (*compose == "copy")
+    {
+        return ComposeOperator::COPY;
+    }
+    if (*compose == "destination")
+    {
+        return ComposeOperator::DESTINATION;
+    }
+    if (*compose == "source-over")
+    {
+        return ComposeOperator::SOURCE_OVER;
+    }
+    if (*compose == "destination-over")
+    {
+        return ComposeOperator::DESTINATION_OVER;
+    }
+    if (*compose == "source-in")
+    {
+        return ComposeOperator::SOURCE_IN;
+    }
+    if (*compose == "destination-in")
+    {
+        return ComposeOperator::DESTINATION_IN;
+    }
+    if (*compose == "source-out")
+    {
+        return ComposeOperator::SOURCE_OUT;
+    }
+    if (*compose == "destination-out")
+    {
+        return ComposeOperator::DESTINATION_OUT;
+    }
+    if (*compose == "source-atop")
+    {
+        return ComposeOperator::SOURCE_ATOP;
+    }
+    if (*compose == "destination-atop")
+    {
+        return ComposeOperator::DESTINATION_ATOP;
+    }
+    if (*compose == "xor")
+    {
+        return ComposeOperator::XOR;
+    }
+    if (*compose == "add")
+    {
+        return ComposeOperator::ADD;
+    }
+    if (*compose == "subtract")
+    {
+        return ComposeOperator::SUBTRACT;
+    }
+    if (*compose == "multiply")
+    {
+        return ComposeOperator::MULTIPLY;
+    }
+    if (*compose == "divide")
+    {
+        return ComposeOperator::DIVIDE;
+    }
+    if (*compose == "min")
+    {
+        return ComposeOperator::MIN;
+    }
+    if (*compose == "max")
+    {
+        return ComposeOperator::MAX;
+    }
+    if (*compose == "difference")
+    {
+        return ComposeOperator::DIFFERENCE;
+    }
+    if (*compose == "average")
+    {
+        return ComposeOperator::AVERAGE;
+    }
+    if (*compose == "screen")
+    {
+        return ComposeOperator::SCREEN;
+    }
+    if (*compose == "overlay")
+    {
+        return ComposeOperator::OVERLAY;
     }
     throw std::runtime_error("Invalid config, unknown compose operator '" + *compose + "'");
 }

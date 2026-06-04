@@ -6,6 +6,9 @@
 #include <nlohmann/json.hpp>
 
 #include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 using Object = nlohmann::json;
 
@@ -52,6 +55,16 @@ Object identity_indices()
 void expect_invalid(const Object &json)
 {
     EXPECT_THROW(static_cast<void>(ParFile::read_config(json.dump())), std::runtime_error);
+}
+
+Object layer_with_compose(const std::string &compose)
+{
+    return Object{{"id", "base"}, {"source", Object{{"file", "foo.par"}, {"name", "foo"}}}, {"compose", compose},
+        {"tracks",
+            Object::array({Object{{"parameter", "maxiter"},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "100"}}, Object{{"frame", 59}, {"value", "200"}}})}}})}};
 }
 
 } // namespace
@@ -323,23 +336,45 @@ TEST(TestConfig, jsonDeserializesLayerOpacity)
     EXPECT_TRUE(config.layers[0].write_when_hidden);
 }
 
-TEST(TestConfig, jsonDeserializesLayerComposeSourceOver)
+TEST(TestConfig, jsonDeserializesLayerComposeOperators)
 {
-    Object json = valid_json();
-    json.erase("source");
-    json.erase("tracks");
-    json["layers"] = Object::array(
-        {Object{{"id", "base"}, {"source", Object{{"file", "foo.par"}, {"name", "foo"}}}, {"compose", "source-over"},
-            {"tracks",
-                Object::array({Object{{"parameter", "maxiter"},
-                    {"keys",
-                        Object::array(
-                            {Object{{"frame", 0}, {"value", "100"}}, Object{{"frame", 59}, {"value", "200"}}})}}})}}});
+    const std::vector<std::pair<std::string, ParFile::ComposeOperator>> cases{
+        {"clear", ParFile::ComposeOperator::CLEAR},
+        {"copy", ParFile::ComposeOperator::COPY},
+        {"destination", ParFile::ComposeOperator::DESTINATION},
+        {"source-over", ParFile::ComposeOperator::SOURCE_OVER},
+        {"destination-over", ParFile::ComposeOperator::DESTINATION_OVER},
+        {"source-in", ParFile::ComposeOperator::SOURCE_IN},
+        {"destination-in", ParFile::ComposeOperator::DESTINATION_IN},
+        {"source-out", ParFile::ComposeOperator::SOURCE_OUT},
+        {"destination-out", ParFile::ComposeOperator::DESTINATION_OUT},
+        {"source-atop", ParFile::ComposeOperator::SOURCE_ATOP},
+        {"destination-atop", ParFile::ComposeOperator::DESTINATION_ATOP},
+        {"xor", ParFile::ComposeOperator::XOR},
+        {"add", ParFile::ComposeOperator::ADD},
+        {"subtract", ParFile::ComposeOperator::SUBTRACT},
+        {"multiply", ParFile::ComposeOperator::MULTIPLY},
+        {"divide", ParFile::ComposeOperator::DIVIDE},
+        {"min", ParFile::ComposeOperator::MIN},
+        {"max", ParFile::ComposeOperator::MAX},
+        {"difference", ParFile::ComposeOperator::DIFFERENCE},
+        {"average", ParFile::ComposeOperator::AVERAGE},
+        {"screen", ParFile::ComposeOperator::SCREEN},
+        {"overlay", ParFile::ComposeOperator::OVERLAY},
+    };
 
-    const ParFile::Config config{ParFile::read_config(json.dump())};
+    for (const auto &[name, op] : cases)
+    {
+        Object json = valid_json();
+        json.erase("source");
+        json.erase("tracks");
+        json["layers"] = Object::array({layer_with_compose(name)});
 
-    ASSERT_EQ(1U, config.layers.size());
-    EXPECT_EQ(ParFile::ComposeOperator::SOURCE_OVER, config.layers[0].compose);
+        const ParFile::Config config{ParFile::read_config(json.dump())};
+
+        ASSERT_EQ(1U, config.layers.size());
+        EXPECT_EQ(op, config.layers[0].compose) << name;
+    }
 }
 
 TEST(TestConfig, jsonRejectsUnknownLayerComposeOperator)
@@ -347,13 +382,21 @@ TEST(TestConfig, jsonRejectsUnknownLayerComposeOperator)
     Object json = valid_json();
     json.erase("source");
     json.erase("tracks");
-    json["layers"] = Object::array(
-        {Object{{"id", "base"}, {"source", Object{{"file", "foo.par"}, {"name", "foo"}}}, {"compose", "screen"},
-            {"tracks",
-                Object::array({Object{{"parameter", "maxiter"},
-                    {"keys",
-                        Object::array(
-                            {Object{{"frame", 0}, {"value", "100"}}, Object{{"frame", 59}, {"value", "200"}}})}}})}}});
+    json["layers"] = Object::array({layer_with_compose("hard-light")});
+
+    expect_invalid(json);
+}
+
+TEST(TestConfig, jsonRejectsImagemagickComposeOperatorNames)
+{
+    Object json = valid_json();
+    json.erase("source");
+    json.erase("tracks");
+    json["layers"] = Object::array({layer_with_compose("Dst_Over")});
+
+    expect_invalid(json);
+
+    json["layers"][0]["compose"] = "Over";
 
     expect_invalid(json);
 }

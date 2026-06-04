@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace
 {
@@ -53,10 +54,48 @@ TEST(TestComposeScript, commandsComposeLayersInStackOrder)
 
     EXPECT_EQ("magick ^( \"output/layers/layer-base-0002.png\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
               "^( \"output/layers/layer-detail-0002.png\" -alpha set -channel A -evaluate multiply 0.5 +channel ^) "
-              "-compose over -composite -background \"black\" -alpha remove -alpha off "
+              "-compose Over -composite -background \"black\" -alpha remove -alpha off "
               "\"output/frames/frame0002.png\"\n"
               "if errorlevel 1 exit /b 1\n",
         script.commands(1));
+}
+
+TEST(TestComposeScript, commandsMapNeutralOperatorsToImagemagickOperators)
+{
+    const std::vector<std::pair<ParFile::ComposeOperator, std::string>> cases{
+        {ParFile::ComposeOperator::CLEAR, "Clear"},
+        {ParFile::ComposeOperator::COPY, "Src"},
+        {ParFile::ComposeOperator::DESTINATION, "Dst"},
+        {ParFile::ComposeOperator::SOURCE_OVER, "Over"},
+        {ParFile::ComposeOperator::DESTINATION_OVER, "Dst_Over"},
+        {ParFile::ComposeOperator::SOURCE_IN, "Src_In"},
+        {ParFile::ComposeOperator::DESTINATION_IN, "Dst_In"},
+        {ParFile::ComposeOperator::SOURCE_OUT, "Src_Out"},
+        {ParFile::ComposeOperator::DESTINATION_OUT, "Dst_Out"},
+        {ParFile::ComposeOperator::SOURCE_ATOP, "Src_Atop"},
+        {ParFile::ComposeOperator::DESTINATION_ATOP, "Dst_Atop"},
+        {ParFile::ComposeOperator::XOR, "Xor"},
+        {ParFile::ComposeOperator::ADD, "Plus"},
+        {ParFile::ComposeOperator::SUBTRACT, "Minus_Src"},
+        {ParFile::ComposeOperator::MULTIPLY, "Multiply"},
+        {ParFile::ComposeOperator::DIVIDE, "Divide_Src"},
+        {ParFile::ComposeOperator::MIN, "Min"},
+        {ParFile::ComposeOperator::MAX, "Max"},
+        {ParFile::ComposeOperator::DIFFERENCE, "Difference"},
+        {ParFile::ComposeOperator::AVERAGE, "Average"},
+        {ParFile::ComposeOperator::SCREEN, "Screen"},
+        {ParFile::ComposeOperator::OVERLAY, "Overlay"},
+    };
+
+    for (const auto &[op, imagemagick_name] : cases)
+    {
+        ParFile::Config config{config_data()};
+        config.layers[1].compose = op;
+        const ParFile::ComposeScript script{config};
+
+        EXPECT_NE(std::string::npos, script.commands(0).find("-compose " + imagemagick_name + " -composite"))
+            << imagemagick_name;
+    }
 }
 
 TEST(TestComposeScript, hiddenLayerIsSkipped)
@@ -80,7 +119,7 @@ TEST(TestComposeScript, writeWhenHiddenKeepsZeroOpacityLayer)
 
     EXPECT_EQ("magick ^( \"output/layers/layer-base-0001.png\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
               "^( \"output/layers/layer-detail-0001.png\" -alpha set -channel A -evaluate multiply 0 +channel ^) "
-              "-compose over -composite \"output/frames/frame0001.png\"\n"
+              "-compose Over -composite \"output/frames/frame0001.png\"\n"
               "if errorlevel 1 exit /b 1\n",
         script.commands(0));
 }

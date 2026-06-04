@@ -45,6 +45,58 @@ std::string opacity_text(double opacity)
     return out.str();
 }
 
+std::string_view imagemagick_compose_operator(ComposeOperator op)
+{
+    switch (op)
+    {
+    case ComposeOperator::CLEAR:
+        return "Clear";
+    case ComposeOperator::COPY:
+        return "Src";
+    case ComposeOperator::DESTINATION:
+        return "Dst";
+    case ComposeOperator::SOURCE_OVER:
+        return "Over";
+    case ComposeOperator::DESTINATION_OVER:
+        return "Dst_Over";
+    case ComposeOperator::SOURCE_IN:
+        return "Src_In";
+    case ComposeOperator::DESTINATION_IN:
+        return "Dst_In";
+    case ComposeOperator::SOURCE_OUT:
+        return "Src_Out";
+    case ComposeOperator::DESTINATION_OUT:
+        return "Dst_Out";
+    case ComposeOperator::SOURCE_ATOP:
+        return "Src_Atop";
+    case ComposeOperator::DESTINATION_ATOP:
+        return "Dst_Atop";
+    case ComposeOperator::XOR:
+        return "Xor";
+    case ComposeOperator::ADD:
+        return "Plus";
+    case ComposeOperator::SUBTRACT:
+        return "Minus_Src";
+    case ComposeOperator::MULTIPLY:
+        return "Multiply";
+    case ComposeOperator::DIVIDE:
+        return "Divide_Src";
+    case ComposeOperator::MIN:
+        return "Min";
+    case ComposeOperator::MAX:
+        return "Max";
+    case ComposeOperator::DIFFERENCE:
+        return "Difference";
+    case ComposeOperator::AVERAGE:
+        return "Average";
+    case ComposeOperator::SCREEN:
+        return "Screen";
+    case ComposeOperator::OVERLAY:
+        return "Overlay";
+    }
+    return "Over";
+}
+
 } // namespace
 
 ComposeScript::ComposeScript(const Config &config) :
@@ -71,7 +123,7 @@ std::string ComposeScript::commands(int frame) const
             }
             else
             {
-                result += " -compose over -composite";
+                result += " -compose " + std::string{imagemagick_compose_operator(layer.compose)} + " -composite";
             }
         }
     }

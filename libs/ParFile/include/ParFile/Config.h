@@ -32,7 +32,28 @@ struct OutputConfig
 
 enum class ComposeOperator
 {
-    SOURCE_OVER
+    CLEAR,
+    COPY,
+    DESTINATION,
+    SOURCE_OVER,
+    DESTINATION_OVER,
+    SOURCE_IN,
+    DESTINATION_IN,
+    SOURCE_OUT,
+    DESTINATION_OUT,
+    SOURCE_ATOP,
+    DESTINATION_ATOP,
+    XOR,
+    ADD,
+    SUBTRACT,
+    MULTIPLY,
+    DIVIDE,
+    MIN,
+    MAX,
+    DIFFERENCE,
+    AVERAGE,
+    SCREEN,
+    OVERLAY
 };
 
 struct KeyframeConfig

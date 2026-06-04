@@ -165,8 +165,8 @@
           "type": "boolean"
         },
         "compose": {
-          "const": "source-over",
-          "description": "Composite this source layer over the accumulated destination image."
+          "description": "Backend-neutral operator for this layer over the accumulated image.",
+          "$ref": "#/$defs/compose-operator"
         },
         "tracks": {
           "description": "Animated parameter tracks applied only to this layer.",
@@ -176,6 +176,100 @@
           }
         }
       }
+    },
+    "compose-operator": {
+      "description": "Backend-neutral layer composition operator.",
+      "type": "string",
+      "oneOf": [
+        {
+          "const": "clear",
+          "description": "Output transparent black."
+        },
+        {
+          "const": "copy",
+          "description": "Replace destination with source."
+        },
+        {
+          "const": "destination",
+          "description": "Keep destination unchanged."
+        },
+        {
+          "const": "source-over",
+          "description": "Place source over destination."
+        },
+        {
+          "const": "destination-over",
+          "description": "Place destination over source."
+        },
+        {
+          "const": "source-in",
+          "description": "Keep source only where destination alpha exists."
+        },
+        {
+          "const": "destination-in",
+          "description": "Keep destination only where source alpha exists."
+        },
+        {
+          "const": "source-out",
+          "description": "Keep source only where destination alpha is absent."
+        },
+        {
+          "const": "destination-out",
+          "description": "Keep destination only where source alpha is absent."
+        },
+        {
+          "const": "source-atop",
+          "description": "Place source atop destination while keeping destination alpha."
+        },
+        {
+          "const": "destination-atop",
+          "description": "Place destination atop source while keeping source alpha."
+        },
+        {
+          "const": "xor",
+          "description": "Keep source and destination outside their overlap."
+        },
+        {
+          "const": "add",
+          "description": "Add source and destination channels."
+        },
+        {
+          "const": "subtract",
+          "description": "Subtract source channels from destination channels."
+        },
+        {
+          "const": "multiply",
+          "description": "Multiply normalized source and destination channels."
+        },
+        {
+          "const": "divide",
+          "description": "Divide destination channels by source channels."
+        },
+        {
+          "const": "min",
+          "description": "Keep the smaller source or destination channel value."
+        },
+        {
+          "const": "max",
+          "description": "Keep the larger source or destination channel value."
+        },
+        {
+          "const": "difference",
+          "description": "Use absolute source and destination channel difference."
+        },
+        {
+          "const": "average",
+          "description": "Average source and destination channels."
+        },
+        {
+          "const": "screen",
+          "description": "Apply inverse multiply for glow and light layers."
+        },
+        {
+          "const": "overlay",
+          "description": "Multiply dark areas and screen light areas."
+        }
+      ]
     },
     "track-kind": {
       "description": "Application-level kind of animation track.",

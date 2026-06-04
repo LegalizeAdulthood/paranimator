@@ -11,6 +11,7 @@
 #include <iterator>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace
 {
@@ -39,6 +40,43 @@ bool validates_parameter_catalog_file(const char *path)
 bool validates_parameter_catalog_text(std::string_view json)
 {
     return ParFile::validate_json_schema(read_text(TestParFile::PARAMETER_CATALOG_SCHEMA_JSON), json);
+}
+
+std::string config_with_layer_compose(std::string_view compose)
+{
+    return R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "layer-%s-%04d",
+    "script": "frames.bat",
+    "frames": "frames/frame%04d.png",
+    "layers": "layers/layer-%s-%04d.png",
+    "compose-script": "compose.bat",
+    "background": "black"
+  },
+  "video": "F6",
+  "num-frames": 3,
+  "layers": [
+    {
+      "id": "base",
+      "source": { "file": "from.par", "name": "Mandel_Demo" },
+      "compose": ")" +
+        std::string{compose} +
+        R"(",
+      "tracks": [
+        {
+          "parameter": "maxiter",
+          "keys": [
+            { "frame": 0, "value": "100" },
+            { "frame": 2, "value": "200" }
+          ]
+        }
+      ]
+    }
+  ]
+})";
 }
 
 std::string catalog_with_metadata(std::string_view metadata)
@@ -322,70 +360,27 @@ TEST(TestJsonSchema, layerOpacityAccepted)
 })"));
 }
 
-TEST(TestJsonSchema, layerComposeSourceOverAccepted)
+TEST(TestJsonSchema, layerComposeOperatorsAccepted)
 {
-    EXPECT_TRUE(validates_config_text(R"({
-  "parameter-catalogs": [ "core-catalog.json" ],
-  "output": {
-    "directory": "out",
-    "par": "frames.par",
-    "entry": "layer-%s-%04d",
-    "script": "frames.bat",
-    "frames": "frames/frame%04d.png",
-    "layers": "layers/layer-%s-%04d.png",
-    "compose-script": "compose.bat",
-    "background": "black"
-  },
-  "video": "F6",
-  "num-frames": 3,
-  "layers": [
+    const std::vector<std::string> operators{"clear", "copy", "destination", "source-over", "destination-over",
+        "source-in", "destination-in", "source-out", "destination-out", "source-atop", "destination-atop", "xor", "add",
+        "subtract", "multiply", "divide", "min", "max", "difference", "average", "screen", "overlay"};
+
+    for (const std::string &op : operators)
     {
-      "id": "base",
-      "source": { "file": "from.par", "name": "Mandel_Demo" },
-      "compose": "source-over",
-      "tracks": [
-        {
-          "parameter": "maxiter",
-          "keys": [
-            { "frame": 0, "value": "100" },
-            { "frame": 2, "value": "200" }
-          ]
-        }
-      ]
+        EXPECT_TRUE(validates_config_text(config_with_layer_compose(op))) << op;
     }
-  ]
-})"));
 }
 
 TEST(TestJsonSchema, layerComposeRejectsUnsupportedOperator)
 {
-    EXPECT_FALSE(validates_config_text(R"({
-  "parameter-catalogs": [ "core-catalog.json" ],
-  "output": {
-    "directory": "out",
-    "par": "frames.par",
-    "entry": "layer-%s-%04d",
-    "script": "frames.bat"
-  },
-  "video": "F6",
-  "num-frames": 3,
-  "layers": [
-    {
-      "id": "base",
-      "source": { "file": "from.par", "name": "Mandel_Demo" },
-      "compose": "screen",
-      "tracks": [
-        {
-          "parameter": "maxiter",
-          "keys": [
-            { "frame": 0, "value": "100" },
-            { "frame": 2, "value": "200" }
-          ]
-        }
-      ]
-    }
-  ]
-})"));
+    EXPECT_FALSE(validates_config_text(config_with_layer_compose("hard-light")));
+}
+
+TEST(TestJsonSchema, layerComposeRejectsImagemagickOperatorNames)
+{
+    EXPECT_FALSE(validates_config_text(config_with_layer_compose("Dst_Over")));
+    EXPECT_FALSE(validates_config_text(config_with_layer_compose("Over")));
 }
 
 TEST(TestJsonSchema, layerOpacityRejectsValuesOutsidePercentRange)
