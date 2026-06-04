@@ -15,6 +15,8 @@ class ComposeScript
 public:
     explicit ComposeScript(const Config &config);
 
+    std::string prologue() const;
+    std::string epilogue() const;
     std::string commands(int frame) const;
 
 private:

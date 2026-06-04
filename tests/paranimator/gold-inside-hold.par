@@ -6,10 +6,6 @@ frame-0001 {
     inside=bof60
     sound=no
     maxiter=678
-    batch=yes
-    savename=frame-0001.gif
-    overwrite=yes
-    video=F6
 }
 
 frame-0002 {
@@ -20,10 +16,6 @@ frame-0002 {
     inside=bof60
     sound=no
     maxiter=678
-    batch=yes
-    savename=frame-0002.gif
-    overwrite=yes
-    video=F6
 }
 
 frame-0003 {
@@ -34,8 +26,4 @@ frame-0003 {
     inside=zmag
     sound=no
     maxiter=678
-    batch=yes
-    savename=frame-0003.gif
-    overwrite=yes
-    video=F6
 }

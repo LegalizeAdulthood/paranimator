@@ -58,20 +58,10 @@ protected:
         m_lerper = ParFile::Interpolator{m_config};
     }
 
-    void add_expected_params(ParFile::ParSet &frame, const std::string &save_name);
-
     ParFile::Config m_config_data;
     ParFile::Config m_config{};
     ParFile::Interpolator m_lerper{};
 };
-
-void TestInterpolator::add_expected_params(ParFile::ParSet &expected, const std::string &save_name)
-{
-    expected.params.push_back({"batch", "yes"});
-    expected.params.push_back({"savename", save_name});
-    expected.params.push_back({"overwrite", "yes"});
-    expected.params.push_back({"video", TestParFile::TEST_VIDEO_MODE});
-}
 
 void set_param(ParFile::ParSet &par_set, const std::string &name, const std::string &value)
 {
@@ -129,7 +119,6 @@ TEST_F(TestInterpolator, firstFrameCopiesSource)
     ParFile::ParSet expected{m_lerper.source()};
     expected.params[2].value = "-0.5/0/1";
     expected.name = "frame-0001";
-    add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
 
     ASSERT_EQ(expected, frame);
@@ -259,7 +248,6 @@ TEST_F(TestInterpolator, lastFrameIsTrackEndValue)
     ParFile::ParSet expected{m_lerper.source()};
     expected.params[2].value = "-0.5/0/10";
     expected.name = "frame-0002";
-    add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
 
     frame = m_lerper();
@@ -276,7 +264,6 @@ TEST_F(TestInterpolator, inbetweenFramesAreInterpolated)
     ParFile::ParSet expected{m_lerper.source()};
     expected.params[2].value = "-0.5/0/3.16228";
     expected.name = "frame-0002";
-    add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
 
     frame = m_lerper();
@@ -332,7 +319,6 @@ TEST_F(TestInterpolator, paramsTrackWritesOneParamsAssignment)
     ParFile::ParSet expected{m_lerper.source()};
     set_param(expected, "params", "1/2");
     expected.name = "frame-0002";
-    add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
 
     frame = m_lerper();
@@ -351,7 +337,6 @@ TEST_F(TestInterpolator, formulaParamsTracksMergeOneParamsAssignment)
     ParFile::ParSet expected{m_lerper.source()};
     set_param(expected, "params", "15/3/-2/-3/0/0");
     expected.name = "frame-0002";
-    add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
 
     frame = m_lerper();
@@ -369,7 +354,6 @@ TEST_F(TestInterpolator, formulaFunctionTrackWritesOneFunctionAssignment)
     ParFile::ParSet expected{m_lerper.source()};
     set_param(expected, "function", "sin/tan");
     expected.name = "frame-0002";
-    add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
 
     frame = m_lerper();
@@ -388,7 +372,6 @@ TEST_F(TestInterpolator, multipleTracksHaveIndependentKeys)
     set_param(expected, "center-mag", "-0.5/0/3.16228");
     set_param(expected, "maxiter", "200");
     expected.name = "frame-0002";
-    add_expected_params(expected, expected.name + ".gif");
     ParFile::ParSet frame{m_lerper()};
 
     frame = m_lerper();

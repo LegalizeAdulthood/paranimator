@@ -62,6 +62,10 @@ void interpolate(const ParFile::Config &config)
         }
     }
     auto current_script{scripts.begin()};
+    for (std::ofstream &out_script : scripts)
+    {
+        out_script << script.prologue();
+    }
     for (int i = 0; i < config.num_frames; ++i)
     {
         const ParFile::ParSet frame{lerper()};
@@ -76,6 +80,10 @@ void interpolate(const ParFile::Config &config)
         {
             current_script = scripts.begin();
         }
+    }
+    for (std::ofstream &out_script : scripts)
+    {
+        out_script << script.epilogue();
     }
 }
 
@@ -136,6 +144,10 @@ void interpolate_layers(const ParFile::Config &config)
         }
     }
     auto current_script{scripts.begin()};
+    for (std::ofstream &out_script : scripts)
+    {
+        out_script << script.prologue();
+    }
     bool first_entry{true};
     for (int i = 0; i < config.num_frames; ++i)
     {
@@ -150,7 +162,7 @@ void interpolate_layers(const ParFile::Config &config)
                 }
                 first_entry = false;
                 out << frame;
-                *current_script << script.commands(frame.name);
+                *current_script << script.layer_commands(frame.name, config.layers[layer].id, i);
                 ++current_script;
                 if (current_script == scripts.end())
                 {
@@ -158,6 +170,10 @@ void interpolate_layers(const ParFile::Config &config)
                 }
             }
         }
+    }
+    for (std::ofstream &out_script : scripts)
+    {
+        out_script << script.epilogue();
     }
 }
 
@@ -170,10 +186,12 @@ void write_compose_script(const ParFile::Config &config)
     const ParFile::OutputLayout output{config};
     const ParFile::ComposeScript compose{config};
     std::ofstream out{output.compose_script_file().string().c_str()};
+    out << compose.prologue();
     for (int i = 0; i < config.num_frames; ++i)
     {
         out << compose.commands(i);
     }
+    out << compose.epilogue();
 }
 
 void render(const ParFile::Config &config)

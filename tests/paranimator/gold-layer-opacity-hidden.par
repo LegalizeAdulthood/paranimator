@@ -6,10 +6,6 @@ layer-base-0001 {
     inside=0
     sound=no
     maxiter=100
-    batch=yes
-    savename=layer-base-0001.gif
-    overwrite=yes
-    video=F6
 }
 
 layer-base-0002 {
@@ -20,10 +16,6 @@ layer-base-0002 {
     inside=0
     sound=no
     maxiter=150
-    batch=yes
-    savename=layer-base-0002.gif
-    overwrite=yes
-    video=F6
 }
 
 layer-base-0003 {
@@ -34,8 +26,4 @@ layer-base-0003 {
     inside=0
     sound=no
     maxiter=200
-    batch=yes
-    savename=layer-base-0003.gif
-    overwrite=yes
-    video=F6
 }

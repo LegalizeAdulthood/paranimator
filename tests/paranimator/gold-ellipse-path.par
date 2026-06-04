@@ -6,10 +6,6 @@ frame-0001 {
     inside=0
     sound=no
     maxiter=678
-    batch=yes
-    savename=frame-0001.gif
-    overwrite=yes
-    video=F6
 }
 
 frame-0002 {
@@ -20,10 +16,6 @@ frame-0002 {
     inside=0
     sound=no
     maxiter=678
-    batch=yes
-    savename=frame-0002.gif
-    overwrite=yes
-    video=F6
 }
 
 frame-0003 {
@@ -34,10 +26,6 @@ frame-0003 {
     inside=0
     sound=no
     maxiter=678
-    batch=yes
-    savename=frame-0003.gif
-    overwrite=yes
-    video=F6
 }
 
 frame-0004 {
@@ -48,10 +36,6 @@ frame-0004 {
     inside=0
     sound=no
     maxiter=678
-    batch=yes
-    savename=frame-0004.gif
-    overwrite=yes
-    video=F6
 }
 
 frame-0005 {
@@ -62,8 +46,4 @@ frame-0005 {
     inside=0
     sound=no
     maxiter=678
-    batch=yes
-    savename=frame-0005.gif
-    overwrite=yes
-    video=F6
 }

@@ -7,10 +7,6 @@ frame-0001 {
     sound=no
     maxiter=678
     colors=@adjustments-0001.map
-    batch=yes
-    savename=frame-0001.gif
-    overwrite=yes
-    video=F6
 }
 
 frame-0002 {
@@ -22,10 +18,6 @@ frame-0002 {
     sound=no
     maxiter=678
     colors=@adjustments-0002.map
-    batch=yes
-    savename=frame-0002.gif
-    overwrite=yes
-    video=F6
 }
 
 frame-0003 {
@@ -37,8 +29,4 @@ frame-0003 {
     sound=no
     maxiter=678
     colors=@adjustments-0003.map
-    batch=yes
-    savename=frame-0003.gif
-    overwrite=yes
-    video=F6
 }

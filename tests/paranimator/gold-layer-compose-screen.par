@@ -6,10 +6,6 @@ layer-base-0001 {
     inside=0
     sound=no
     maxiter=678
-    batch=yes
-    savename=output/layers/layer-base-0001.png
-    overwrite=yes
-    video=F6
 }
 
 layer-detail-0001 {
@@ -20,8 +16,4 @@ layer-detail-0001 {
     inside=0
     sound=no
     maxiter=678
-    batch=yes
-    savename=output/layers/layer-detail-0001.png
-    overwrite=yes
-    video=F6
 }

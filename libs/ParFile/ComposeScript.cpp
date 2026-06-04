@@ -33,9 +33,9 @@ std::string quote(std::string_view text)
     return '"' + std::string{text} + '"';
 }
 
-std::string output_path(const Config &config, const std::string &path)
+std::string output_path(const std::string &path)
 {
-    return config.output.directory + '/' + path;
+    return path;
 }
 
 std::string opacity_text(double opacity)
@@ -108,6 +108,18 @@ ComposeScript::ComposeScript(const Config &config) :
     }
 }
 
+std::string ComposeScript::prologue() const
+{
+    return "@echo off\n"
+           "pushd \"%~dp0\"\n"
+           "if errorlevel 1 exit /b 1\n";
+}
+
+std::string ComposeScript::epilogue() const
+{
+    return "popd\n";
+}
+
 std::string ComposeScript::commands(int frame) const
 {
     std::string result{"magick"};
@@ -142,12 +154,12 @@ std::string ComposeScript::commands(int frame) const
 
 std::string ComposeScript::frame_file(int frame) const
 {
-    return output_path(m_config, (boost::format(*m_config.output.frames) % (frame + 1)).str());
+    return output_path((boost::format(*m_config.output.frames) % (frame + 1)).str());
 }
 
 std::string ComposeScript::layer_file(const LayerConfig &layer, int frame) const
 {
-    return output_path(m_config, (boost::format(*m_config.output.layers) % layer.id % (frame + 1)).str());
+    return output_path((boost::format(*m_config.output.layers) % layer.id % (frame + 1)).str());
 }
 
 std::string ComposeScript::layer_image(const LayerConfig &layer, int frame) const

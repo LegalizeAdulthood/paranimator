@@ -52,10 +52,10 @@ TEST(TestComposeScript, commandsComposeLayersInStackOrder)
     config.output.background = "black";
     const ParFile::ComposeScript script{config};
 
-    EXPECT_EQ("magick ^( \"output/layers/layer-base-0002.png\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
-              "^( \"output/layers/layer-detail-0002.png\" -alpha set -channel A -evaluate multiply 0.5 +channel ^) "
+    EXPECT_EQ("magick ^( \"layers/layer-base-0002.png\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
+              "^( \"layers/layer-detail-0002.png\" -alpha set -channel A -evaluate multiply 0.5 +channel ^) "
               "-compose Over -composite -background \"black\" -alpha remove -alpha off "
-              "\"output/frames/frame0002.png\"\n"
+              "\"frames/frame0002.png\"\n"
               "if errorlevel 1 exit /b 1\n",
         script.commands(1));
 }
@@ -104,8 +104,8 @@ TEST(TestComposeScript, hiddenLayerIsSkipped)
     config.layers[1].opacity = opacity(0.0);
     const ParFile::ComposeScript script{config};
 
-    EXPECT_EQ("magick ^( \"output/layers/layer-base-0001.png\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
-              "\"output/frames/frame0001.png\"\n"
+    EXPECT_EQ("magick ^( \"layers/layer-base-0001.png\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
+              "\"frames/frame0001.png\"\n"
               "if errorlevel 1 exit /b 1\n",
         script.commands(0));
 }
@@ -117,9 +117,20 @@ TEST(TestComposeScript, writeWhenHiddenKeepsZeroOpacityLayer)
     config.layers[1].write_when_hidden = true;
     const ParFile::ComposeScript script{config};
 
-    EXPECT_EQ("magick ^( \"output/layers/layer-base-0001.png\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
-              "^( \"output/layers/layer-detail-0001.png\" -alpha set -channel A -evaluate multiply 0 +channel ^) "
-              "-compose Over -composite \"output/frames/frame0001.png\"\n"
+    EXPECT_EQ("magick ^( \"layers/layer-base-0001.png\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
+              "^( \"layers/layer-detail-0001.png\" -alpha set -channel A -evaluate multiply 0 +channel ^) "
+              "-compose Over -composite \"frames/frame0001.png\"\n"
               "if errorlevel 1 exit /b 1\n",
         script.commands(0));
+}
+
+TEST(TestComposeScript, prologueRunsFromScriptDirectory)
+{
+    const ParFile::ComposeScript script{config_data()};
+
+    EXPECT_EQ("@echo off\n"
+              "pushd \"%~dp0\"\n"
+              "if errorlevel 1 exit /b 1\n",
+        script.prologue());
+    EXPECT_EQ("popd\n", script.epilogue());
 }

@@ -431,7 +431,6 @@ Concrete string parameters include:
 - `lfile`
 - `ifsfile`
 - `filename`
-- `savename`
 
 For animation planning, the important string selectors are
 `formulaname`, which selects formula entry metadata, and `orbitname`,
@@ -897,14 +896,26 @@ Example generated colors value:
 
 Example batch command shape:
 
-    id batch=yes librarydirs=out/julia-pan @frames.par/frame0042
+    id batch=yes overwrite=yes savename=frame0042.gif savedir=. \
+        librarydirs=. video=F6 @frames.par/frame0042
 
 This uses Id's @par/name syntax. Here par is frames.par, a generated file
 in output-directory/par, and name is frame0042, an entry in that file.
 
-The batch file passes librarydirs pointing at the animation output
-directory. Id then locates generated par files in the par subdirectory
-and generated map files in the map subdirectory.
+Generated render batch files run from the animation output directory.
+They pass librarydirs=. so Id locates generated par files in the par
+subdirectory and generated map files in the map subdirectory. They pass
+savedir=. so Id writes image files under output-directory/image.
+
+The generated par entry contains only fractal parameters. Runtime render
+parameters are written on the Id command line:
+
+- batch=yes
+- overwrite=yes
+- savename=<filename only>
+- savedir=.
+- librarydirs=.
+- video=<mode>
 
 Source par and map names are filenames too. ParAnimator may resolve them
 using its own configured library search, but generated output should not
@@ -916,6 +927,12 @@ An animation may define a layer stack instead of a single source
 parameter set. Each layer renders an Iterated Dynamics image for the
 current frame. The final animation frame is produced by compositing those
 layer images with ImageMagick.
+
+When output.layers is configured, the render batch invokes Id with a
+filename-only savename. Id writes that image to output-directory/image.
+The batch file then creates the layer output directory if needed and moves
+the generated image into the configured layer image path. ImageMagick
+composition reads layer images after this move step.
 
 Layers are evaluated from bottom to top.
 
@@ -1570,13 +1587,10 @@ The generated frame loop should remain simple:
             apply track assignments at frame_number
 
         write map side files to output-directory/map
-        append batch parameters
-        append savename parameter
-        append overwrite parameter
-        append video parameter
 
         write frame entry to output-directory/par/<output.par>
-        write script command using librarydirs and @par/name
+        write Id command with render parameters, savedir=., librarydirs=.,
+            and @par/name
 
 This preserves the current ParAnimator workflow while allowing much richer
 animation.
@@ -1596,10 +1610,10 @@ ImageMagick composition:
             if opacity is 0 and write-when-hidden is false:
                 skip layer render
             else:
-                append batch parameters
-                append layer savename parameter
                 write layer entry to output-directory/par/<output.par>
-                write Id command using librarydirs and @par/name
+                write Id command with filename-only savename, savedir=.,
+                    librarydirs=., and @par/name
+                move output-directory/image/<savename> to output layer path
 
         start with a transparent canvas
 

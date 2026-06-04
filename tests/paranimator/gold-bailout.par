@@ -7,10 +7,6 @@ frame-0001 {
     bailout=1.25
     sound=no
     maxiter=678
-    batch=yes
-    savename=frame-0001.gif
-    overwrite=yes
-    video=F6
 }
 
 frame-0002 {
@@ -22,10 +18,6 @@ frame-0002 {
     bailout=1.875
     sound=no
     maxiter=678
-    batch=yes
-    savename=frame-0002.gif
-    overwrite=yes
-    video=F6
 }
 
 frame-0003 {
@@ -37,8 +29,4 @@ frame-0003 {
     bailout=2.5
     sound=no
     maxiter=678
-    batch=yes
-    savename=frame-0003.gif
-    overwrite=yes
-    video=F6
 }

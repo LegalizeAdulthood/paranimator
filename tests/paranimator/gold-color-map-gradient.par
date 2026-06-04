@@ -7,8 +7,4 @@ frame-0001 {
     sound=no
     maxiter=678
     colors=@gradient-0001.map
-    batch=yes
-    savename=frame-0001.gif
-    overwrite=yes
-    video=F6
 }

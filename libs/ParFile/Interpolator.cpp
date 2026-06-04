@@ -576,10 +576,6 @@ Interpolator::Interpolator(const Config &config) :
 Interpolator::Interpolator(const Config &config, std::string_view layer_id) :
     Interpolator(load_animation(config), layer_id)
 {
-    if (config.output.layers)
-    {
-        m_layer_image_name = config.output.directory + '/' + *config.output.layers;
-    }
     load_color_map_interpolants(config);
 }
 
@@ -591,7 +587,6 @@ Interpolator::Interpolator(const ResolvedAnimation &animation) :
 Interpolator::Interpolator(const ResolvedAnimation &animation, std::string_view layer_id) :
     m_frame_name(animation.frame_name),
     m_layer_id(layer_id),
-    m_video(animation.video),
     m_source(animation.source),
     m_interpolants(load_interpolants(animation))
 {
@@ -634,17 +629,6 @@ ParSet Interpolator::operator()()
     {
         par_set.name = (boost::format(m_frame_name) % m_layer_id % m_frame).str();
     }
-    par_set.params.push_back({"batch", "yes"});
-    if (m_layer_image_name.empty())
-    {
-        par_set.params.push_back({"savename", par_set.name + ".gif"});
-    }
-    else
-    {
-        par_set.params.push_back({"savename", (boost::format(m_layer_image_name) % m_layer_id % m_frame).str()});
-    }
-    par_set.params.push_back({"overwrite", "yes"});
-    par_set.params.push_back({"video", m_video});
     return par_set;
 }
 
