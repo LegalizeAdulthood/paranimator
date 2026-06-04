@@ -1656,6 +1656,161 @@ The intent is not to finish a large subsystem before anything runs. The
 intent is to get a small valid Id animation working quickly, then keep
 that path working while each later feature is added.
 
+### 1. 2D Camera
+
+Extend the camera2d application data type so it can derive the view-up
+vector from an eye point and the evaluated look-at point.
+
+Implement:
+
+- Add an optional point2 `eye` planning track to camera2d.
+- Keep the existing point2 `look-at`, vector2 `view-up`, and scalar
+  `height` tracks.
+- Accept either `view-up` or `eye`; reject a camera2d track that has
+  neither.
+- When `eye` is present, derive `view-up` from
+  `normalize(eye - look-at)`.
+- Treat eye distance as orientation only. It must not change height,
+  magnification, zoom, or corners extent.
+- Reject `eye == look-at` after evaluation because the derived vector has
+  zero length.
+- Continue to map the evaluated camera to both output types:
+  - corners writes rotated 6-value corners with zero skew.
+  - center-mag writes `Xctr/Yctr/Mag[/Xmagfactor/rotation/skew]`
+    with skew defaulted to 0.
+
+Add schema documentation:
+
+- Document camera2d `eye`, including that it is an orientation point, not
+  a zoom control.
+- Document the `view-up` and `eye` alternative.
+- Document the zero-length derived view-up rejection.
+- Add `description` strings to every new schema object, field, enum, and
+  const.
+
+Add unit tests:
+
+- Config deserialization accepts camera2d with `eye` and no `view-up`.
+- Schema validation accepts camera2d `eye` tracks.
+- Schema validation rejects camera2d with neither `eye` nor `view-up`.
+- Resolved animation keeps the typed eye track and output metadata.
+- Interpolant derives view-up from `eye - look-at`.
+- A circular eye path around fixed look-at rotates center-mag through
+  360 degrees without changing magnification.
+- The same circular eye path writes rotated 6-value corners without
+  changing extent.
+- Degenerate `eye == look-at` is rejected.
+
+Add integration tests:
+
+- Add a `camera2d-eye-center-mag` gold fixture that keeps look-at fixed,
+  moves eye on a circle, and checks generated par and batch files.
+- Add a `camera2d-eye-corners` gold fixture with the same path and checks
+  rotated 6-value corners.
+
+### 2. 2D Camera Skew
+
+Extend camera2d with an optional scalar skew track. Id source treats
+6-value corners as three points that define an affine pixel grid, so skew
+is modeled by making the screen basis vectors non-orthogonal.
+
+Implement:
+
+- Add an optional double `skew` planning track to camera2d.
+- Default omitted skew to 0 degrees.
+- Evaluate skew independently from look-at, eye, view-up, and height.
+- Keep eye distance as orientation only; skew must not affect height,
+  magnification, or zoom.
+- For center-mag output, write the evaluated skew as the sixth
+  center-mag value when it is nonzero.
+- For corners output, compute Id-compatible 6-value corners from the
+  evaluated center, height, aspect, Xmagfactor, rotation, and skew.
+- Use the Id `cvt_corners` shape: apply skew with
+  `tan(degrees_to_radians(skew))`, then rotate and translate the
+  top-left, bottom-right, and bottom-left points.
+- Continue to write 4-value corners only when the camera is axis-aligned
+  and skew is 0.
+- Reject skew values that make the computed affine grid degenerate.
+
+Add schema documentation:
+
+- Document camera2d `skew` as degrees matching Id center-mag skew.
+- Document that positive skew follows Id's sign convention.
+- Document that nonzero skew makes corners output use the 6-value form.
+- Add `description` strings to every new schema object, field, enum, and
+  const.
+
+Add unit tests:
+
+- Config deserialization accepts camera2d with a skew track.
+- Schema validation accepts camera2d skew tracks.
+- Schema validation rejects nonnumeric skew values.
+- Resolved animation keeps the typed skew track.
+- Interpolant writes center-mag skew as the sixth value.
+- Interpolant writes skewed 6-value corners using the Id pixel-grid
+  point order.
+- Axis-aligned zero-skew corners still use the compact 4-value form.
+- Nonzero skew with zero rotation writes 6-value corners.
+- Degenerate skewed affine grids are rejected.
+
+Add integration tests:
+
+- Add a `camera2d-skew-center-mag` gold fixture that writes nonzero
+  center-mag skew and checks generated par and batch files.
+- Add a `camera2d-skew-corners` gold fixture that writes skewed 6-value
+  corners and checks generated par and batch files.
+
+### 3. 3D Camera
+
+Add a shared 3D planning camera frame for the existing 3D viewing
+adapters. The planning model uses point3 eye and look-at points plus a
+vector3 view-up direction, then each adapter maps the frame into the Id
+parameters it can support.
+
+Implement:
+
+- Add a typed camera3d planning frame with point3 `eye`, point3
+  `look-at`, and vector3 `view-up` tracks.
+- Compute `forward = normalize(look-at - eye)` for each frame.
+- Normalize view-up for frame construction.
+- Reject `eye == look-at`.
+- Reject view-up that is zero length or parallel to forward.
+- Feed the evaluated frame into id-3d-view when it can be represented by
+  Id rotation, perspective, and shift controls.
+- Feed the evaluated frame into julibrot-view only when it can be
+  represented by Julibrot's geometry, eyes, and from-to parameters.
+- Reject unsupported roll, projection, center-of-interest, or slice
+  requests with clear errors instead of silently approximating.
+
+Add schema documentation:
+
+- Document camera3d `eye`, `look-at`, and `view-up`.
+- Document the degenerate-frame rejection rules.
+- Document the adapter limits for id-3d-view and julibrot-view.
+- Add `description` strings to every new schema object, field, enum, and
+  const.
+
+Add unit tests:
+
+- Config deserialization reads camera3d frame tracks into typed data.
+- Schema validation accepts a documented camera3d frame.
+- Schema validation rejects missing required frame tracks.
+- Frame evaluation computes an orthonormal camera basis.
+- Degenerate eye/look-at and parallel view-up are rejected.
+- id-3d-view maps a simple camera orbit into the expected output tracks.
+- julibrot-view maps a supported frame into the expected output tracks.
+- julibrot-view rejects a frame that cannot be expressed by its existing
+  parameters.
+
+Add integration tests:
+
+- Add an `id-3d-view-camera` gold fixture that writes the generated 3D
+  view parameters and batch file.
+- Add a `julibrot-view-camera` gold fixture that writes the generated
+  Julibrot view parameters and batch file.
+- Include at least one rejected integration fixture or schema/error test
+  for an unsupported Julibrot camera request.
+
 ## Design Boundary
 
 Hard-code:
