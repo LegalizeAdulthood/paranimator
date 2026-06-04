@@ -112,6 +112,25 @@ double source_video_aspect(std::string_view video)
         std::string{video} + "'");
 }
 
+double center_mag_x_mag_factor(std::string_view value)
+{
+    const std::vector<double> values{parse_slash_doubles(value)};
+    if (values.size() < 3U || values.size() > 6U)
+    {
+        throw std::runtime_error("Source center-mag parameter must have 3 through 6 values");
+    }
+    if (values.size() < 4U || values[3] == 0.0)
+    {
+        return 1.0;
+    }
+    return values[3];
+}
+
+double source_center_mag_aspect(std::string_view value, std::string_view video)
+{
+    return source_video_aspect(video) / std::abs(center_mag_x_mag_factor(value));
+}
+
 double source_camera2d_aspect(
     const ParameterMetadata &output_metadata, std::string_view output_value, std::string_view video)
 {
@@ -121,7 +140,7 @@ double source_camera2d_aspect(
     }
     if (output_metadata.type == ParameterType::CENTER_MAG)
     {
-        return source_video_aspect(video);
+        return source_center_mag_aspect(output_value, video);
     }
     throw std::runtime_error(
         "Camera2D output parameter '" + output_metadata.name + "' must have type corners or center-mag");
@@ -333,6 +352,10 @@ ResolvedTrack resolve_camera2d_track(
     const Parameter &output{source_parameter(source, camera.output)};
     ResolvedCamera2DConfig camera2d;
     camera2d.aspect = source_camera2d_aspect(output_metadata, output.value, video);
+    if (output_metadata.type == ParameterType::CENTER_MAG)
+    {
+        camera2d.center_mag_x_mag_factor = center_mag_x_mag_factor(output.value);
+    }
     camera2d.look_at = resolve_camera2d_value_track(camera.look_at, camera.name, "look-at", false);
     camera2d.view_up = resolve_camera2d_value_track(camera.view_up, camera.name, "view-up", true);
     camera2d.height = resolve_camera2d_value_track(camera.height, camera.name, "height", false);

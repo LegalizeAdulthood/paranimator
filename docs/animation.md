@@ -562,9 +562,13 @@ Format the computed points into the corners syntax supported by the
 target renderer.
 
 For output center-mag, the output parameter metadata must have type
-center-mag. Require the camera to be axis-aligned with the normal view-up
-vector. Reject rotated camera2d output to center-mag with a specific
-error rather than silently dropping orientation.
+center-mag. Use the extended center-mag form:
+
+    Xctr/Yctr/Mag[/Xmagfactor/rotation/skew]
+
+`Xmagfactor` preserves the viewport aspect ratio, rotation comes from the
+camera's evaluated view-up vector, and skew is 0 for the camera2d model.
+Write only the optional fields needed for non-default values.
 
 The camera2d track lets the animator plan look-at, view-up, and height as
 independent curves while still writing only normal Iterated Dynamics

@@ -297,6 +297,21 @@ TEST(TestResolvedAnimation, camera2dResolvesCenterMagOutputAndVideoAspect)
     EXPECT_EQ("-0.5/0/1", track.base_value);
     ASSERT_TRUE(track.camera2d);
     EXPECT_DOUBLE_EQ(4.0 / 3.0, track.camera2d->aspect);
+    EXPECT_DOUBLE_EQ(1.0, track.camera2d->center_mag_x_mag_factor);
+}
+
+TEST(TestResolvedAnimation, camera2dCenterMagAspectUsesSourceXMagFactor)
+{
+    ParFile::ParSet source{source_set()};
+    source.params[0].value = "-0.5/0/1/2";
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(camera2d_config_data("center-mag"), catalog_data(), source)};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    ASSERT_TRUE(track.camera2d);
+    EXPECT_DOUBLE_EQ(2.0 / 3.0, track.camera2d->aspect);
+    EXPECT_DOUBLE_EQ(2.0, track.camera2d->center_mag_x_mag_factor);
 }
 
 TEST(TestResolvedAnimation, camera2dCenterMagRejectsUnknownVideoShape)

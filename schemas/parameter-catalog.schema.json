@@ -468,7 +468,7 @@
       "oneOf": [
         {
           "const": "center-mag",
-          "description": "Id center-mag value containing center real, center imaginary, and magnification."
+          "description": "Id center-mag value containing center real, center imaginary, magnification, optional Xmagfactor, optional rotation, and optional skew."
         },
         {
           "const": "color-map",

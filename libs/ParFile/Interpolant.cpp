@@ -906,22 +906,88 @@ struct CenterMag
 
     std::complex<double> center;
     double mag;
+    double x_mag_factor{1.0};
+    double rotation{};
+    double skew{};
 };
 
 CenterMag::CenterMag(const std::string &value)
 {
-    std::vector<std::string> value_text;
-    boost::algorithm::split(value_text, value, [](char c) { return c == '/'; });
-    if (value_text.size() < 3)
+    const std::vector<double> values{parse_slash_doubles(value)};
+    if (values.size() < 3U || values.size() > 6U)
     {
-        throw std::runtime_error("Insufficient values for center-mag parameter; need 3, have " +
-            std::to_string(value_text.size()) + " in '" + value + "'");
+        throw std::runtime_error("Center-mag parameter must have 3 through 6 values; have " +
+            std::to_string(values.size()) + " in '" + value + "'");
     }
-    std::vector<double> values(value_text.size());
-    std::transform(
-        value_text.begin(), value_text.end(), values.begin(), [](const std::string &text) { return std::stod(text); });
     center = std::complex<double>(values[0], values[1]);
     mag = values[2];
+    if (values.size() > 3U && values[3] != 0.0)
+    {
+        x_mag_factor = values[3];
+    }
+    if (values.size() > 4U)
+    {
+        rotation = values[4];
+    }
+    if (values.size() > 5U)
+    {
+        skew = values[5];
+    }
+}
+
+double geometric_or_linear_value_at(const SegmentEvaluator &segment, int step, double from, double to)
+{
+    if (from > 0.0 && to > 0.0)
+    {
+        return segment.geometric_value_at(step, from, to);
+    }
+    return segment.linear_value_at(step, from, to);
+}
+
+bool is_default_value(double value, double default_value)
+{
+    constexpr double TOLERANCE{1.0e-12};
+    return std::abs(value - default_value) < TOLERANCE;
+}
+
+std::string format_center_mag_value(double value, bool precise)
+{
+    if (precise)
+    {
+        return format_double(value);
+    }
+    return (boost::format("%g") % value).str();
+}
+
+std::string format_center_mag(const CenterMag &value, bool precise)
+{
+    std::vector<double> values{
+        value.center.real(), value.center.imag(), value.mag, value.x_mag_factor, value.rotation, value.skew};
+    values = clean_path_components(values);
+    std::size_t count{3};
+    if (!is_default_value(values[5], 0.0))
+    {
+        count = 6;
+    }
+    else if (!is_default_value(values[4], 0.0))
+    {
+        count = 5;
+    }
+    else if (!is_default_value(values[3], 1.0))
+    {
+        count = 4;
+    }
+    values.resize(count);
+    std::string result;
+    for (double item : values)
+    {
+        if (!result.empty())
+        {
+            result += '/';
+        }
+        result += format_center_mag_value(item, precise);
+    }
+    return result;
 }
 
 class CenterMagInterpolant : public Base
@@ -952,18 +1018,13 @@ CenterMagInterpolant::CenterMagInterpolant(
 std::string CenterMagInterpolant::step()
 {
     ++m_step;
-    const std::complex<double> center{m_segment.linear_value_at(m_step, m_from.center, m_to.center)};
-    double mag;
-    if (m_from.mag > 0.0 && m_to.mag > 0.0)
-    {
-        mag = m_segment.geometric_value_at(m_step, m_from.mag, m_to.mag);
-    }
-    else
-    {
-        // Fallback to linear interpolation for non-positive magnifications
-        mag = m_segment.linear_value_at(m_step, m_from.mag, m_to.mag);
-    }
-    return (boost::format("%g/%g/%g") % center.real() % center.imag() % mag).str();
+    CenterMag result;
+    result.center = m_segment.linear_value_at(m_step, m_from.center, m_to.center);
+    result.mag = geometric_or_linear_value_at(m_segment, m_step, m_from.mag, m_to.mag);
+    result.x_mag_factor = geometric_or_linear_value_at(m_segment, m_step, m_from.x_mag_factor, m_to.x_mag_factor);
+    result.rotation = m_segment.linear_value_at(m_step, m_from.rotation, m_to.rotation);
+    result.skew = m_segment.linear_value_at(m_step, m_from.skew, m_to.skew);
+    return format_center_mag(result, false);
 }
 
 struct Corners
@@ -1188,14 +1249,17 @@ std::string format_camera2d_corners(
 }
 
 std::string format_camera2d_center_mag(
-    const std::string &name, double aspect, const Point2D &look, const Point2D &up, double height)
+    double aspect, double x_mag_factor, const Point2D &look, const Point2D &up, double height)
 {
-    if (!is_normal_axis_aligned(up))
-    {
-        throw std::runtime_error("Camera2D track '" + name + "' requires view-up 0/1 for center-mag output");
-    }
+    constexpr double PI{3.141592653589793238462643383279502884};
     const double magnification{4.0 / (aspect * height)};
-    return format_slash_doubles(clean_path_components({look.x, look.y, magnification}));
+    const double rotation{std::atan2(up.x, up.y) * 180.0 / PI};
+    CenterMag value;
+    value.center = {look.x, look.y};
+    value.mag = magnification;
+    value.x_mag_factor = x_mag_factor;
+    value.rotation = rotation;
+    return format_center_mag(value, true);
 }
 
 class Camera2DInterpolant : public Base
@@ -1207,10 +1271,9 @@ public:
     std::string step() override;
 
 private:
-    void validate_center_mag_view_up(const std::string &name, int num_steps) const;
-
     ParameterType m_output_type{};
     double m_aspect{};
+    double m_center_mag_x_mag_factor{1.0};
     Camera2DValueEvaluator m_look_at;
     Camera2DValueEvaluator m_view_up;
     Camera2DValueEvaluator m_height;
@@ -1220,6 +1283,7 @@ Camera2DInterpolant::Camera2DInterpolant(const ResolvedTrack &track, int num_ste
     Base(track.output_parameter, num_steps),
     m_output_type(track.metadata.type),
     m_aspect(camera2d_config(track).aspect),
+    m_center_mag_x_mag_factor(camera2d_config(track).center_mag_x_mag_factor),
     m_look_at(camera2d_config(track).look_at, num_steps, false),
     m_view_up(camera2d_config(track).view_up, num_steps, false),
     m_height(camera2d_config(track).height, num_steps, true)
@@ -1231,22 +1295,6 @@ Camera2DInterpolant::Camera2DInterpolant(const ResolvedTrack &track, int num_ste
     if (m_aspect <= 0.0)
     {
         throw std::runtime_error("Camera2D track '" + track.parameter + "' requires a positive aspect");
-    }
-    if (m_output_type == ParameterType::CENTER_MAG)
-    {
-        validate_center_mag_view_up(track.parameter, num_steps);
-    }
-}
-
-void Camera2DInterpolant::validate_center_mag_view_up(const std::string &name, int num_steps) const
-{
-    for (int frame{}; frame < num_steps; ++frame)
-    {
-        const Point2D up{point2_from_values(m_view_up.value_at(frame), "view-up")};
-        if (!is_normal_axis_aligned(up))
-        {
-            throw std::runtime_error("Camera2D track '" + name + "' requires view-up 0/1 for center-mag output");
-        }
     }
 }
 
@@ -1266,7 +1314,7 @@ std::string Camera2DInterpolant::step()
 
     if (m_output_type == ParameterType::CENTER_MAG)
     {
-        return format_camera2d_center_mag(m_name, m_aspect, look, up, height);
+        return format_camera2d_center_mag(m_aspect, m_center_mag_x_mag_factor, look, up, height);
     }
     return format_camera2d_corners(up, lower_left, lower_right, upper_left);
 }

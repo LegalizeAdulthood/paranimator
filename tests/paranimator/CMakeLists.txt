@@ -54,6 +54,7 @@ function(add_paranimator_schema_test name)
 endfunction()
 
 add_paranimator_test(center-mag)
+add_paranimator_test(extended-center-mag)
 add_paranimator_test(corners)
 add_paranimator_test(maxiter)
 add_paranimator_test(single-layer)

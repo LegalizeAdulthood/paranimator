@@ -22,6 +22,7 @@ struct ResolvedCamera2DValueTrack
 struct ResolvedCamera2DConfig
 {
     double aspect{};
+    double center_mag_x_mag_factor{1.0};
     ResolvedCamera2DValueTrack look_at;
     ResolvedCamera2DValueTrack view_up;
     ResolvedCamera2DValueTrack height;

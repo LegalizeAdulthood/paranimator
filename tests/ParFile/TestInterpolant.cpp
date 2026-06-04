@@ -165,10 +165,11 @@ ParFile::ResolvedCamera2DValueTrack resolved_camera2d_value_track(const std::str
 ParFile::ResolvedTrack resolved_camera2d_track(double aspect, const std::vector<ParFile::KeyframeConfig> &look_at_keys,
     const std::vector<ParFile::KeyframeConfig> &view_up_keys, const std::vector<ParFile::KeyframeConfig> &height_keys,
     ParFile::ParameterType output_type = ParFile::ParameterType::CORNERS,
-    const std::string &output_parameter = "corners")
+    const std::string &output_parameter = "corners", double center_mag_x_mag_factor = 1.0)
 {
     ParFile::ResolvedCamera2DConfig camera2d;
     camera2d.aspect = aspect;
+    camera2d.center_mag_x_mag_factor = center_mag_x_mag_factor;
     camera2d.look_at = resolved_camera2d_value_track("camera.look-at", ParFile::ParameterType::POINT2, look_at_keys);
     camera2d.view_up =
         resolved_camera2d_value_track("camera.view-up", ParFile::ParameterType::VECTOR2, view_up_keys, true);
@@ -312,6 +313,45 @@ TEST(TestInterpolant, centerMagCenterFraction)
     const std::string value{interpolant->step()};
 
     EXPECT_EQ("0/0/1", value);
+}
+
+TEST(TestInterpolant, centerMagExtendedValuesInterpolate)
+{
+    const std::string from{"0/0/1/1/0/0"};
+    const std::string to{"0/0/1/4/90/10"};
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{
+        create_interpolant("center-mag", ParFile::ParameterType::CENTER_MAG, from, to, num_steps)};
+    static_cast<void>(interpolant->step());
+
+    const std::string value{interpolant->step()};
+
+    EXPECT_EQ("0/0/1/2/45/5", value);
+}
+
+TEST(TestInterpolant, centerMagXMagFactorWritesFourValues)
+{
+    const std::string from{"0/0/1/2"};
+    const std::string to{"0/0/1/8"};
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{
+        create_interpolant("center-mag", ParFile::ParameterType::CENTER_MAG, from, to, num_steps)};
+    static_cast<void>(interpolant->step());
+
+    const std::string value{interpolant->step()};
+
+    EXPECT_EQ("0/0/1/4", value);
+}
+
+TEST(TestInterpolant, centerMagInvalidArityRejected)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(create_interpolant("center-mag", ParFile::ParameterType::CENTER_MAG, "0/0", "0/0", num_steps),
+        std::runtime_error);
+    EXPECT_THROW(create_interpolant(
+                     "center-mag", ParFile::ParameterType::CENTER_MAG, "0/0/1/1/0/0/0", "0/0/1/1/0/0/0", num_steps),
+        std::runtime_error);
 }
 
 TEST(TestInterpolant, centerMagTo)
@@ -497,15 +537,28 @@ TEST(TestInterpolant, camera2dCenterMagMagnificationUsesAspect)
     EXPECT_EQ("0/0/0.5", interpolant->step());
 }
 
-TEST(TestInterpolant, camera2dRotatedCenterMagRejected)
+TEST(TestInterpolant, camera2dRotatedWritesCenterMagRotation)
 {
     const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_camera2d_track(4.0 / 3.0, keyframes("0/0", "0/0", num_steps), keyframes("1/0", "1/0", num_steps),
+            keyframes("3", "3", num_steps), ParFile::ParameterType::CENTER_MAG, "center-mag"),
+        num_steps)};
 
-    EXPECT_THROW(ParFile::create_interpolant(resolved_camera2d_track(4.0 / 3.0, keyframes("0/0", "0/0", num_steps),
-                                                 keyframes("1/1", "1/1", num_steps), keyframes("3", "3", num_steps),
-                                                 ParFile::ParameterType::CENTER_MAG, "center-mag"),
-                     num_steps),
-        std::runtime_error);
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("0/0/1/1/90", interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dCenterMagWritesXMagFactor)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_camera2d_track(2.0 / 3.0, keyframes("0/0", "0/0", num_steps), keyframes("0/1", "0/1", num_steps),
+            keyframes("3", "3", num_steps), ParFile::ParameterType::CENTER_MAG, "center-mag", 2.0),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("0/0/2/2", interpolant->step());
 }
 
 TEST(TestInterpolant, integerFrom)
