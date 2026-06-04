@@ -39,7 +39,7 @@ ParFile::Config config_data()
 ParFile::Config parsed_config(std::string_view source_name, int num_frames, const Object &track,
     std::vector<std::string> parameter_catalogs = {TestParFile::CORE_CATALOG_JSON})
 {
-    Object catalogs{Object::array()};
+    Object catalogs = Object::array();
     for (const std::string &catalog : parameter_catalogs)
     {
         catalogs.push_back(catalog);
