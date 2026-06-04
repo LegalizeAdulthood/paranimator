@@ -13,9 +13,9 @@ OutputLayout::OutputLayout(const Config &config) :
     m_directory(config.output.directory),
     m_par(config.output.par),
     m_script(config.output.script),
-    m_frames(config.output.frames.value_or({})),
-    m_layers(config.output.layers.value_or({})),
-    m_compose_script(config.output.compose_script.value_or({}))
+    m_frames(config.output.frames.value_or(std::string{})),
+    m_layers(config.output.layers.value_or(std::string{})),
+    m_compose_script(config.output.compose_script.value_or(std::string{}))
 {
 }
 
