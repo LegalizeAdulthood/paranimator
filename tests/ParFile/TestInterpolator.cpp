@@ -213,6 +213,43 @@ TEST_F(TestInterpolator, id3DViewRejectsIllegalStereoValue)
     EXPECT_THROW(ParFile::Interpolator{config}, std::runtime_error);
 }
 
+TEST_F(TestInterpolator, julibrotViewWritesModeGeometryEyesAndFromTo)
+{
+    const Object track{{"name", "view"}, {"type", "julibrot-view"},
+        {"outputs",
+            Object{{"mode", "3dmode"}, {"geometry", "julibrot3d"}, {"eyes", "julibroteyes"},
+                {"from-to", "julibrotfromto"}}},
+        {"mode",
+            Object{{"type", "enum"},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "monocular"}}, Object{{"frame", 2}, {"value", "lefteye"}}})}}},
+        {"geometry",
+            Object{{"type", "numeric-tuple"}, {"arity", 6},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "128/8/8/7/10/24"}},
+                        Object{{"frame", 2}, {"value", "160/7/6/6/9/20"}}})}}},
+        {"eyes",
+            Object{{"type", "double"},
+                {"keys", Object::array({Object{{"frame", 0}, {"value", 2.5}}, Object{{"frame", 2}, {"value", 1.0}}})}}},
+        {"from-to",
+            Object{{"type", "numeric-tuple"}, {"arity", 4},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "-0.83/-0.83/0.25/-0.25"}},
+                        Object{{"frame", 2}, {"value", "-0.7/-0.9/0.2/-0.2"}}})}}}};
+    const ParFile::Config config{parsed_config("Mandel_Demo", 3, track)};
+    ParFile::Interpolator lerper{config};
+
+    const ParFile::ParSet first{lerper()};
+    EXPECT_EQ("monocular", parameter_value(first, "3dmode"));
+
+    const ParFile::ParSet second{lerper()};
+    EXPECT_EQ("monocular", parameter_value(second, "3dmode"));
+    EXPECT_EQ("144/7.5/7/6.5/9.5/22", parameter_value(second, "julibrot3d"));
+    EXPECT_EQ("1.75", parameter_value(second, "julibroteyes"));
+    EXPECT_EQ("-0.765/-0.865/0.225/-0.225", parameter_value(second, "julibrotfromto"));
+}
+
 TEST_F(TestInterpolator, lastFrameIsTrackEndValue)
 {
     m_config_data.num_frames = 2;

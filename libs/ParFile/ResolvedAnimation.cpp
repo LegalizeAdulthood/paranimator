@@ -438,6 +438,83 @@ std::vector<ResolvedTrack> resolve_id_3d_view_track(
     return result;
 }
 
+std::string julibrot_view_base_value(
+    const ParSet &source, const std::string &output_parameter, const std::vector<KeyframeConfig> &keys)
+{
+    const Parameter *parameter{find_source_parameter(source, output_parameter)};
+    if (parameter != nullptr)
+    {
+        return parameter->value;
+    }
+    if (keys.empty())
+    {
+        throw std::runtime_error("Julibrot view output '" + output_parameter + "' has no keyframes");
+    }
+    return keys[0].value;
+}
+
+void validate_julibrot_view_output_metadata(
+    std::string_view output, const ParameterMetadata &metadata, ParameterType expected_type, int expected_arity)
+{
+    if (metadata.type != expected_type)
+    {
+        throw std::runtime_error("Julibrot view output '" + std::string{output} + "' has the wrong type");
+    }
+    if (expected_arity > 0 && (!metadata.arity || *metadata.arity != expected_arity))
+    {
+        throw std::runtime_error("Julibrot view output '" + std::string{output} + "' has the wrong arity");
+    }
+}
+
+ResolvedTrack resolve_julibrot_view_member(const JulibrotViewConfig &view, const char *member_name,
+    const std::string &output, const JulibrotViewValueTrackConfig &member, const ParameterCatalog &catalog,
+    const ParSet &source, ParameterType expected_type, int expected_arity)
+{
+    const ParameterMetadata &metadata{catalog.metadata(output)};
+    validate_julibrot_view_output_metadata(output, metadata, expected_type, expected_arity);
+
+    ResolvedTrack result;
+    result.parameter = view.name + "." + member_name;
+    result.metadata = metadata;
+    result.base_value = julibrot_view_base_value(source, output, member.keys);
+    result.keys = member.keys;
+    result.output_parameter = output;
+    return result;
+}
+
+void add_julibrot_view_member(std::vector<ResolvedTrack> &tracks, const JulibrotViewConfig &view,
+    const char *member_name, const std::optional<std::string> &output,
+    const std::optional<JulibrotViewValueTrackConfig> &member, const ParameterCatalog &catalog, const ParSet &source,
+    ParameterType expected_type, int expected_arity)
+{
+    if (output && member)
+    {
+        tracks.emplace_back(resolve_julibrot_view_member(
+            view, member_name, *output, *member, catalog, source, expected_type, expected_arity));
+    }
+}
+
+std::vector<ResolvedTrack> resolve_julibrot_view_track(
+    const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source)
+{
+    if (!track.julibrot_view)
+    {
+        throw std::runtime_error("Julibrot view track '" + track.parameter + "' is missing view settings");
+    }
+
+    const JulibrotViewConfig &view{*track.julibrot_view};
+    std::vector<ResolvedTrack> result;
+    add_julibrot_view_member(
+        result, view, "mode", view.outputs.mode, view.mode, catalog, source, ParameterType::ENUM, 0);
+    add_julibrot_view_member(result, view, "geometry", view.outputs.geometry, view.geometry, catalog, source,
+        ParameterType::NUMERIC_TUPLE, 6);
+    add_julibrot_view_member(
+        result, view, "eyes", view.outputs.eyes, view.eyes, catalog, source, ParameterType::DOUBLE, 0);
+    add_julibrot_view_member(
+        result, view, "from-to", view.outputs.from_to, view.from_to, catalog, source, ParameterType::NUMERIC_TUPLE, 4);
+    return result;
+}
+
 ResolvedTrack resolve_track(
     const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source, std::string_view video)
 {
@@ -510,6 +587,11 @@ ResolvedAnimation resolve_animation(const Config &config, const ParameterCatalog
         if (track.kind == TrackKind::ID_3D_VIEW)
         {
             std::vector<ResolvedTrack> tracks{resolve_id_3d_view_track(track, catalog, source)};
+            result.tracks.insert(result.tracks.end(), tracks.begin(), tracks.end());
+        }
+        else if (track.kind == TrackKind::JULIBROT_VIEW)
+        {
+            std::vector<ResolvedTrack> tracks{resolve_julibrot_view_track(track, catalog, source)};
             result.tracks.insert(result.tracks.end(), tracks.begin(), tracks.end());
         }
         else

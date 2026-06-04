@@ -93,6 +93,33 @@
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
+    "3dmode": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "monocular", "lefteye", "righteye", "red-blue" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
+    "julibrot3d": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 6,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "julibroteyes": {
+      "type": "double",
+      "format": "raw",
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
+    "julibrotfromto": {
+      "type": "numeric-tuple",
+      "format": "slash",
+      "arity": 4,
+      "default-curve": "linear",
+      "extrapolate": "clamp"
+    },
     "maxiter": {
       "type": "integer",
       "format": "raw",

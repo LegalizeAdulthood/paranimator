@@ -196,6 +196,31 @@ struct Id3DViewConfig
     std::optional<Id3DViewValueTrackConfig> converge;
 };
 
+struct JulibrotViewValueTrackConfig
+{
+    ParameterType type{};
+    std::optional<int> arity;
+    std::vector<KeyframeConfig> keys;
+};
+
+struct JulibrotViewOutputsConfig
+{
+    std::optional<std::string> mode;
+    std::optional<std::string> geometry;
+    std::optional<std::string> eyes;
+    std::optional<std::string> from_to;
+};
+
+struct JulibrotViewConfig
+{
+    std::string name;
+    JulibrotViewOutputsConfig outputs;
+    std::optional<JulibrotViewValueTrackConfig> mode;
+    std::optional<JulibrotViewValueTrackConfig> geometry;
+    std::optional<JulibrotViewValueTrackConfig> eyes;
+    std::optional<JulibrotViewValueTrackConfig> from_to;
+};
+
 struct TrackConfig
 {
     std::string parameter;
@@ -207,6 +232,7 @@ struct TrackConfig
     std::optional<PathConfig> path;
     std::optional<Camera2DConfig> camera2d;
     std::optional<Id3DViewConfig> id_3d_view;
+    std::optional<JulibrotViewConfig> julibrot_view;
 };
 
 struct Config

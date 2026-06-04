@@ -592,6 +592,114 @@ TEST(TestJsonSchema, id3DViewStereoRejectsInvalidValue)
     })")));
 }
 
+TEST(TestJsonSchema, julibrotViewTrackAccepted)
+{
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "name": "view",
+      "type": "julibrot-view",
+      "outputs": {
+        "mode": "3dmode",
+        "geometry": "julibrot3d",
+        "eyes": "julibroteyes",
+        "from-to": "julibrotfromto"
+      },
+      "mode": {
+        "type": "enum",
+        "keys": [
+          { "frame": 0, "value": "monocular" },
+          { "frame": 2, "value": "lefteye" }
+        ]
+      },
+      "geometry": {
+        "type": "numeric-tuple",
+        "arity": 6,
+        "keys": [
+          { "frame": 0, "value": "128/8/8/7/10/24" },
+          { "frame": 2, "value": "160/7/6/6/9/20" }
+        ]
+      },
+      "eyes": {
+        "type": "double",
+        "keys": [
+          { "frame": 0, "value": 2.5 },
+          { "frame": 2, "value": 1.0 }
+        ]
+      },
+      "from-to": {
+        "type": "numeric-tuple",
+        "arity": 4,
+        "keys": [
+          { "frame": 0, "value": "-0.83/-0.83/0.25/-0.25" },
+          { "frame": 2, "value": "-0.7/-0.9/0.2/-0.2" }
+        ]
+      }
+    })")));
+}
+
+TEST(TestJsonSchema, julibrotViewRejectsInvalidCameraRequests)
+{
+    EXPECT_FALSE(validates_config_text(config_with_track(R"({
+      "name": "view",
+      "type": "julibrot-view",
+      "outputs": {
+        "mode": "3dmode"
+      },
+      "look-at": {
+        "type": "point3",
+        "keys": [
+          { "frame": 0, "value": "0/0/0" },
+          { "frame": 2, "value": "1/1/1" }
+        ]
+      },
+      "mode": {
+        "type": "enum",
+        "keys": [
+          { "frame": 0, "value": "monocular" },
+          { "frame": 2, "value": "lefteye" }
+        ]
+      }
+    })")));
+    EXPECT_FALSE(validates_config_text(config_with_track(R"({
+      "name": "view",
+      "type": "julibrot-view",
+      "outputs": {
+        "mode": "3dmode"
+      },
+      "view-up": {
+        "type": "vector3",
+        "keys": [
+          { "frame": 0, "value": "0/1/0" },
+          { "frame": 2, "value": "0/1/0" }
+        ]
+      },
+      "mode": {
+        "type": "enum",
+        "keys": [
+          { "frame": 0, "value": "monocular" },
+          { "frame": 2, "value": "lefteye" }
+        ]
+      }
+    })")));
+}
+
+TEST(TestJsonSchema, julibrotViewRejectsInvalidMode)
+{
+    EXPECT_FALSE(validates_config_text(config_with_track(R"({
+      "name": "view",
+      "type": "julibrot-view",
+      "outputs": {
+        "mode": "3dmode"
+      },
+      "mode": {
+        "type": "enum",
+        "keys": [
+          { "frame": 0, "value": "left" },
+          { "frame": 2, "value": "right" }
+        ]
+      }
+    })")));
+}
+
 TEST(TestJsonSchema, camera2dTrackRejectsInvalidShape)
 {
     EXPECT_FALSE(validates_config_text(config_with_track(R"({

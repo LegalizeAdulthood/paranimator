@@ -79,7 +79,8 @@
           { "$ref": "#/$defs/pwm-track" },
           { "$ref": "#/$defs/color-map-track" },
           { "$ref": "#/$defs/camera2d-track" },
-          { "$ref": "#/$defs/id-3d-view-track" }
+          { "$ref": "#/$defs/id-3d-view-track" },
+          { "$ref": "#/$defs/julibrot-view-track" }
         ]
       }
     }
@@ -96,6 +97,10 @@
         {
           "const": "id-3d-view",
           "description": "Virtual track that writes Id Euler-style 3D view parameters."
+        },
+        {
+          "const": "julibrot-view",
+          "description": "Virtual track that writes Id Julibrot slice and stereo parameters."
         }
       ]
     },
@@ -775,6 +780,246 @@
         },
         "curve": {
           "description": "Optional interpolation curve ending at this sphere key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
+      }
+    },
+    "julibrot-view-track": {
+      "description": "Virtual Julibrot view track that writes catalog-declared slice and stereo output parameters.",
+      "type": "object",
+      "required": [ "name", "type", "outputs" ],
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "description": "Adapter includes a 3dmode component track.",
+          "required": [ "mode" ]
+        },
+        {
+          "description": "Adapter includes a julibrot3d component track.",
+          "required": [ "geometry" ]
+        },
+        {
+          "description": "Adapter includes a julibroteyes component track.",
+          "required": [ "eyes" ]
+        },
+        {
+          "description": "Adapter includes a julibrotfromto component track.",
+          "required": [ "from-to" ]
+        }
+      ],
+      "properties": {
+        "name": {
+          "description": "Local name used to report julibrot-view validation errors.",
+          "type": "string"
+        },
+        "type": {
+          "const": "julibrot-view",
+          "description": "Selects virtual Julibrot view evaluation."
+        },
+        "outputs": {
+          "description": "Catalog parameter keys that receive computed Julibrot view values.",
+          "$ref": "#/$defs/julibrot-view-outputs"
+        },
+        "mode": {
+          "description": "Keyed Julibrot 3D mode values.",
+          "$ref": "#/$defs/julibrot-view-mode-track"
+        },
+        "geometry": {
+          "description": "Keyed Julibrot z dots, origin, depth, height, width, and distance values.",
+          "$ref": "#/$defs/julibrot-view-geometry-track"
+        },
+        "eyes": {
+          "description": "Keyed Julibrot virtual eye separation values.",
+          "$ref": "#/$defs/julibrot-view-eyes-track"
+        },
+        "from-to": {
+          "description": "Keyed Julibrot slice from/to coordinate values.",
+          "$ref": "#/$defs/julibrot-view-from-to-track"
+        }
+      }
+    },
+    "julibrot-view-outputs": {
+      "description": "Output parameter names for the Julibrot view adapter.",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "description": "Catalog key that receives the 3dmode enum value.",
+          "type": "string"
+        },
+        "geometry": {
+          "description": "Catalog key that receives the julibrot3d tuple.",
+          "type": "string"
+        },
+        "eyes": {
+          "description": "Catalog key that receives the julibroteyes scalar.",
+          "type": "string"
+        },
+        "from-to": {
+          "description": "Catalog key that receives the julibrotfromto tuple.",
+          "type": "string"
+        }
+      }
+    },
+    "julibrot-view-mode-track": {
+      "description": "Julibrot 3D mode component track.",
+      "type": "object",
+      "required": [ "type", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "enum",
+          "description": "Declares an enum value."
+        },
+        "keys": {
+          "description": "Exactly two keyed Julibrot mode values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/julibrot-view-mode-keyframe" }
+        }
+      }
+    },
+    "julibrot-view-geometry-track": {
+      "description": "Julibrot geometry component track.",
+      "type": "object",
+      "required": [ "type", "arity", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "numeric-tuple",
+          "description": "Declares a slash-delimited numeric tuple value."
+        },
+        "arity": {
+          "const": 6,
+          "description": "Julibrot geometry uses z dots, origin, depth, height, width, and distance."
+        },
+        "keys": {
+          "description": "Exactly two keyed Julibrot geometry tuple values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/julibrot-view-tuple-keyframe" }
+        }
+      }
+    },
+    "julibrot-view-eyes-track": {
+      "description": "Julibrot virtual eye separation component track.",
+      "type": "object",
+      "required": [ "type", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "double",
+          "description": "Declares a scalar floating-point value."
+        },
+        "keys": {
+          "description": "Exactly two keyed Julibrot eye separation values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/julibrot-view-double-keyframe" }
+        }
+      }
+    },
+    "julibrot-view-from-to-track": {
+      "description": "Julibrot from-to slice component track.",
+      "type": "object",
+      "required": [ "type", "arity", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "numeric-tuple",
+          "description": "Declares a slash-delimited numeric tuple value."
+        },
+        "arity": {
+          "const": 4,
+          "description": "Julibrot from-to uses x max, x min, y max, and y min."
+        },
+        "keys": {
+          "description": "Exactly two keyed Julibrot from-to tuple values.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/julibrot-view-tuple-keyframe" }
+        }
+      }
+    },
+    "julibrot-view-mode-keyframe": {
+      "description": "One keyed Julibrot 3D mode value.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this Julibrot mode key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Julibrot 3D mode value accepted by Id.",
+          "type": "string",
+          "oneOf": [
+            {
+              "const": "monocular",
+              "description": "Render a single centered Julibrot view."
+            },
+            {
+              "const": "lefteye",
+              "description": "Render the left-eye Julibrot view."
+            },
+            {
+              "const": "righteye",
+              "description": "Render the right-eye Julibrot view."
+            },
+            {
+              "const": "red-blue",
+              "description": "Render Julibrot red-blue stereo output."
+            }
+          ]
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this Julibrot mode key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
+      }
+    },
+    "julibrot-view-tuple-keyframe": {
+      "description": "One keyed Julibrot tuple value.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this Julibrot tuple key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Slash-delimited Julibrot tuple value at this keyframe.",
+          "type": "string"
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this Julibrot tuple key.",
+          "$ref": "#/$defs/scalar-curve"
+        }
+      }
+    },
+    "julibrot-view-double-keyframe": {
+      "description": "One keyed Julibrot scalar value.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this Julibrot scalar key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Floating-point Julibrot value at this keyframe.",
+          "type": "number"
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this Julibrot scalar key.",
           "$ref": "#/$defs/scalar-curve"
         }
       }

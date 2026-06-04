@@ -49,6 +49,14 @@ ParFile::ParameterCatalog catalog_data()
                 ParFile::ExtrapolateMode::CLAMP, {}, {}},
             {"converge", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
                 ParFile::ExtrapolateMode::CLAMP, {}, {}},
+            {"3dmode", ParFile::ParameterType::ENUM, ParFile::ParameterFormat::RAW, ParFile::Curve::HOLD,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}, {"monocular", "lefteye", "righteye", "red-blue"}},
+            {"julibrot3d", ParFile::ParameterType::NUMERIC_TUPLE, ParFile::ParameterFormat::SLASH,
+                ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}, {}, 6},
+            {"julibroteyes", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}},
+            {"julibrotfromto", ParFile::ParameterType::NUMERIC_TUPLE, ParFile::ParameterFormat::SLASH,
+                ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}, {}, 4},
             {"maxiter", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
                 ParFile::ExtrapolateMode::CLAMP, {}, {}}}};
     result.fractal_types.push_back({"julia",
@@ -177,6 +185,32 @@ ParFile::Config id_3d_view_more_config_data()
     track.parameter = "view";
     track.kind = ParFile::TrackKind::ID_3D_VIEW;
     track.id_3d_view = view;
+
+    ParFile::Config result{config_data()};
+    result.tracks = {track};
+    return result;
+}
+
+ParFile::Config julibrot_view_config_data()
+{
+    ParFile::JulibrotViewConfig view;
+    view.name = "view";
+    view.outputs.mode = "3dmode";
+    view.outputs.geometry = "julibrot3d";
+    view.outputs.eyes = "julibroteyes";
+    view.outputs.from_to = "julibrotfromto";
+    view.mode =
+        ParFile::JulibrotViewValueTrackConfig{ParFile::ParameterType::ENUM, {}, {{0, "monocular"}, {2, "lefteye"}}};
+    view.geometry = ParFile::JulibrotViewValueTrackConfig{
+        ParFile::ParameterType::NUMERIC_TUPLE, 6, {{0, "128/8/8/7/10/24"}, {2, "160/7/6/6/9/20"}}};
+    view.eyes = ParFile::JulibrotViewValueTrackConfig{ParFile::ParameterType::DOUBLE, {}, {{0, "2.5"}, {2, "1"}}};
+    view.from_to = ParFile::JulibrotViewValueTrackConfig{
+        ParFile::ParameterType::NUMERIC_TUPLE, 4, {{0, "-0.83/-0.83/0.25/-0.25"}, {2, "-0.7/-0.9/0.2/-0.2"}}};
+
+    ParFile::TrackConfig track;
+    track.parameter = "view";
+    track.kind = ParFile::TrackKind::JULIBROT_VIEW;
+    track.julibrot_view = view;
 
     ParFile::Config result{config_data()};
     result.tracks = {track};
@@ -317,6 +351,41 @@ TEST(TestResolvedAnimation, id3DViewRejectsWrongOutputMetadata)
 {
     ParFile::Config config{id_3d_view_more_config_data()};
     config.tracks[0].id_3d_view->outputs.scalexyz = "maxiter";
+
+    EXPECT_THROW(ParFile::resolve_animation(config, catalog_data(), source_set()), std::runtime_error);
+}
+
+TEST(TestResolvedAnimation, julibrotViewResolvesToOutputTracks)
+{
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(julibrot_view_config_data(), catalog_data(), source_set())};
+
+    ASSERT_EQ(4U, animation.tracks.size());
+    EXPECT_EQ("view.mode", animation.tracks[0].parameter);
+    EXPECT_EQ("3dmode", animation.tracks[0].output_parameter);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, animation.tracks[0].metadata.type);
+    EXPECT_EQ("monocular", animation.tracks[0].base_value);
+    EXPECT_EQ("view.geometry", animation.tracks[1].parameter);
+    EXPECT_EQ("julibrot3d", animation.tracks[1].output_parameter);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, animation.tracks[1].metadata.type);
+    ASSERT_TRUE(animation.tracks[1].metadata.arity);
+    EXPECT_EQ(6, *animation.tracks[1].metadata.arity);
+    EXPECT_EQ("128/8/8/7/10/24", animation.tracks[1].base_value);
+    EXPECT_EQ("view.eyes", animation.tracks[2].parameter);
+    EXPECT_EQ("julibroteyes", animation.tracks[2].output_parameter);
+    EXPECT_EQ(ParFile::ParameterType::DOUBLE, animation.tracks[2].metadata.type);
+    EXPECT_EQ("2.5", animation.tracks[2].base_value);
+    EXPECT_EQ("view.from-to", animation.tracks[3].parameter);
+    EXPECT_EQ("julibrotfromto", animation.tracks[3].output_parameter);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, animation.tracks[3].metadata.type);
+    ASSERT_TRUE(animation.tracks[3].metadata.arity);
+    EXPECT_EQ(4, *animation.tracks[3].metadata.arity);
+}
+
+TEST(TestResolvedAnimation, julibrotViewRejectsWrongOutputMetadata)
+{
+    ParFile::Config config{julibrot_view_config_data()};
+    config.tracks[0].julibrot_view->outputs.geometry = "maxiter";
 
     EXPECT_THROW(ParFile::resolve_animation(config, catalog_data(), source_set()), std::runtime_error);
 }

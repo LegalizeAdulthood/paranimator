@@ -63,7 +63,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
 {
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
-    EXPECT_EQ(18U, catalog.parameters.size());
+    EXPECT_EQ(22U, catalog.parameters.size());
     EXPECT_EQ(1U, catalog.fractal_types.size());
     EXPECT_EQ(1U, catalog.formula_entries.size());
 }
@@ -145,6 +145,29 @@ TEST(TestParameterCatalog, id3DViewMetadataLoads)
     ASSERT_TRUE(stereo.max);
     EXPECT_EQ(0.0, *stereo.min);
     EXPECT_EQ(4.0, *stereo.max);
+}
+
+TEST(TestParameterCatalog, julibrotViewMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &mode{catalog.metadata("3dmode")};
+    const ParFile::ParameterMetadata &geometry{catalog.metadata("julibrot3d")};
+    const ParFile::ParameterMetadata &eyes{catalog.metadata("julibroteyes")};
+    const ParFile::ParameterMetadata &from_to{catalog.metadata("julibrotfromto")};
+
+    EXPECT_EQ(ParFile::ParameterType::ENUM, mode.type);
+    ASSERT_EQ(4U, mode.values.size());
+    EXPECT_EQ("monocular", mode.values[0]);
+    EXPECT_EQ("red-blue", mode.values[3]);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, geometry.type);
+    ASSERT_TRUE(geometry.arity);
+    EXPECT_EQ(6, *geometry.arity);
+    EXPECT_EQ(ParFile::ParameterType::DOUBLE, eyes.type);
+    ASSERT_TRUE(eyes.format);
+    EXPECT_EQ(ParFile::ParameterFormat::RAW, *eyes.format);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, from_to.type);
+    ASSERT_TRUE(from_to.arity);
+    EXPECT_EQ(4, *from_to.arity);
 }
 
 TEST(TestParameterCatalog, maxiterMetadataLoads)

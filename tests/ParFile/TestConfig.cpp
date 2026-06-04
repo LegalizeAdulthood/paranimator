@@ -527,6 +527,83 @@ TEST(TestConfig, jsonDeserializesId3DViewTrack)
     EXPECT_EQ("2", view.stereo->keys[1].value);
 }
 
+TEST(TestConfig, jsonDeserializesJulibrotViewTrack)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"name", "view"}, {"type", "julibrot-view"},
+        {"outputs",
+            Object{{"mode", "3dmode"}, {"geometry", "julibrot3d"}, {"eyes", "julibroteyes"},
+                {"from-to", "julibrotfromto"}}},
+        {"mode",
+            Object{{"type", "enum"},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "monocular"}}, Object{{"frame", 59}, {"value", "lefteye"}}})}}},
+        {"geometry",
+            Object{{"type", "numeric-tuple"}, {"arity", 6},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "128/8/8/7/10/24"}},
+                        Object{{"frame", 59}, {"value", "160/7/6/6/9/20"}}})}}},
+        {"eyes",
+            Object{{"type", "double"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", 2.5}}, Object{{"frame", 59}, {"value", 1.0}}})}}},
+        {"from-to",
+            Object{{"type", "numeric-tuple"}, {"arity", 4},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "-0.83/-0.83/0.25/-0.25"}},
+                        Object{{"frame", 59}, {"value", "-0.7/-0.9/0.2/-0.2"}}})}}}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    EXPECT_EQ("view", config.tracks[0].parameter);
+    EXPECT_EQ(ParFile::TrackKind::JULIBROT_VIEW, config.tracks[0].kind);
+    ASSERT_TRUE(config.tracks[0].julibrot_view);
+    const ParFile::JulibrotViewConfig &view{*config.tracks[0].julibrot_view};
+    EXPECT_EQ("view", view.name);
+    ASSERT_TRUE(view.outputs.mode);
+    ASSERT_TRUE(view.outputs.geometry);
+    ASSERT_TRUE(view.outputs.eyes);
+    ASSERT_TRUE(view.outputs.from_to);
+    EXPECT_EQ("3dmode", *view.outputs.mode);
+    EXPECT_EQ("julibrot3d", *view.outputs.geometry);
+    EXPECT_EQ("julibroteyes", *view.outputs.eyes);
+    EXPECT_EQ("julibrotfromto", *view.outputs.from_to);
+    ASSERT_TRUE(view.mode);
+    ASSERT_TRUE(view.geometry);
+    ASSERT_TRUE(view.eyes);
+    ASSERT_TRUE(view.from_to);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, view.mode->type);
+    EXPECT_EQ("monocular", view.mode->keys[0].value);
+    ASSERT_TRUE(view.geometry->arity);
+    EXPECT_EQ(6, *view.geometry->arity);
+    EXPECT_EQ("128/8/8/7/10/24", view.geometry->keys[0].value);
+    EXPECT_EQ(ParFile::ParameterType::DOUBLE, view.eyes->type);
+    EXPECT_EQ("1", view.eyes->keys[1].value);
+    ASSERT_TRUE(view.from_to->arity);
+    EXPECT_EQ(4, *view.from_to->arity);
+}
+
+TEST(TestConfig, jsonRejectsJulibrotViewCameraRequests)
+{
+    Object track{{"name", "view"}, {"type", "julibrot-view"}, {"outputs", Object{{"mode", "3dmode"}}},
+        {"mode",
+            Object{{"type", "enum"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "monocular"}},
+                        Object{{"frame", 59}, {"value", "lefteye"}}})}}}};
+    Object json = valid_json();
+    track["look-at"] = Object{};
+    json["tracks"] = Object::array({track});
+    expect_invalid(json);
+
+    track.erase("look-at");
+    track["view-up"] = Object{};
+    json["tracks"] = Object::array({track});
+    expect_invalid(json);
+}
+
 TEST(TestConfig, jsonRejectsTrackWithKeysAndPath)
 {
     Object json = valid_json();

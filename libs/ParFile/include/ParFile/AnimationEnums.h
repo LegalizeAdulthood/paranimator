@@ -60,7 +60,8 @@ enum class TrackKind
     PARAMETER,
     CAMERA2D,
     COLOR_MAP,
-    ID_3D_VIEW
+    ID_3D_VIEW,
+    JULIBROT_VIEW
 };
 
 enum class TrackFormat

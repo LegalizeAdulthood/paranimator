@@ -320,7 +320,7 @@ static Camera2DConfig load_camera2d_config(const Object &json)
     return result;
 }
 
-static std::string load_id_3d_view_keyframe_value(const Object &json, ParameterType type)
+static std::string load_view_keyframe_value(const Object &json, ParameterType type)
 {
     const std::string key{"value"};
     if (type == ParameterType::INTEGER)
@@ -331,14 +331,22 @@ static std::string load_id_3d_view_keyframe_value(const Object &json, ParameterT
         }
         return std::to_string(json.at(key).get<int>());
     }
+    if (type == ParameterType::DOUBLE)
+    {
+        if (!json.contains(key) || !json.at(key).is_number())
+        {
+            throw std::runtime_error("Invalid config, missing number 'value'");
+        }
+        return format_config_double(json.at(key).get<double>());
+    }
     return load_string(json, "value");
 }
 
-static KeyframeConfig load_id_3d_view_keyframe_config(const Object &json, ParameterType type)
+static KeyframeConfig load_view_keyframe_config(const Object &json, ParameterType type)
 {
     KeyframeConfig result;
     result.frame = load_int(json, "frame");
-    result.value = load_id_3d_view_keyframe_value(json, type);
+    result.value = load_view_keyframe_value(json, type);
     if (const std::optional<std::string> curve{load_optional_string(json, "curve")})
     {
         result.curve = parse_curve(*curve);
@@ -346,8 +354,7 @@ static KeyframeConfig load_id_3d_view_keyframe_config(const Object &json, Parame
     return result;
 }
 
-static std::vector<KeyframeConfig> load_id_3d_view_keyframes(
-    const Object &json, std::string_view name, ParameterType type)
+static std::vector<KeyframeConfig> load_view_keyframes(const Object &json, std::string_view name, ParameterType type)
 {
     const std::string key{"keys"};
     if (!json.contains(key) || !json.at(key).is_array())
@@ -363,7 +370,7 @@ static std::vector<KeyframeConfig> load_id_3d_view_keyframes(
             throw std::runtime_error(
                 "Invalid config, array '" + std::string{name} + ".keys' contains non-object value");
         }
-        result.emplace_back(load_id_3d_view_keyframe_config(item, type));
+        result.emplace_back(load_view_keyframe_config(item, type));
     }
     return result;
 }
@@ -392,7 +399,7 @@ static std::optional<Id3DViewValueTrackConfig> load_optional_id_3d_view_value_tr
             throw std::runtime_error("Invalid config, id-3d-view '" + std::string{name} + "' has the wrong arity");
         }
     }
-    result.keys = load_id_3d_view_keyframes(track, name, result.type);
+    result.keys = load_view_keyframes(track, name, result.type);
     return result;
 }
 
@@ -463,6 +470,89 @@ static Id3DViewConfig load_id_3d_view_config(const Object &json)
     validate_id_3d_view_member("stereo", result.outputs.stereo, result.stereo);
     validate_id_3d_view_member("interocular", result.outputs.interocular, result.interocular);
     validate_id_3d_view_member("converge", result.outputs.converge, result.converge);
+    return result;
+}
+
+static std::optional<JulibrotViewValueTrackConfig> load_optional_julibrot_view_value_track_config(
+    const Object &json, std::string_view name, ParameterType expected_type, int expected_arity)
+{
+    const std::string key{name};
+    if (!json.contains(key))
+    {
+        return {};
+    }
+
+    const Object &track{load_object(json, name)};
+    JulibrotViewValueTrackConfig result;
+    result.type = parse_parameter_type(load_string(track, name, "type"));
+    if (result.type != expected_type)
+    {
+        throw std::runtime_error("Invalid config, julibrot-view '" + std::string{name} + "' has the wrong type");
+    }
+    if (expected_arity > 0)
+    {
+        result.arity = load_positive_int(track, "arity");
+        if (*result.arity != expected_arity)
+        {
+            throw std::runtime_error("Invalid config, julibrot-view '" + std::string{name} + "' has the wrong arity");
+        }
+    }
+    result.keys = load_view_keyframes(track, name, result.type);
+    return result;
+}
+
+static JulibrotViewOutputsConfig load_julibrot_view_outputs_config(const Object &json)
+{
+    const Object &outputs{load_object(json, "outputs")};
+    JulibrotViewOutputsConfig result;
+    result.mode = load_optional_string(outputs, "mode");
+    result.geometry = load_optional_string(outputs, "geometry");
+    result.eyes = load_optional_string(outputs, "eyes");
+    result.from_to = load_optional_string(outputs, "from-to");
+    if (!result.mode && !result.geometry && !result.eyes && !result.from_to)
+    {
+        throw std::runtime_error("Invalid config, julibrot-view outputs must name at least one output");
+    }
+    return result;
+}
+
+static void validate_julibrot_view_member(const char *name, const std::optional<std::string> &output,
+    const std::optional<JulibrotViewValueTrackConfig> &track)
+{
+    if (output && !track)
+    {
+        throw std::runtime_error("Invalid config, julibrot-view output '" + std::string{name} + "' has no track");
+    }
+    if (!output && track)
+    {
+        throw std::runtime_error("Invalid config, julibrot-view track '" + std::string{name} + "' has no output");
+    }
+}
+
+static void reject_julibrot_camera_field(const Object &json, std::string_view name)
+{
+    if (json.contains(std::string{name}))
+    {
+        throw std::runtime_error("Invalid config, julibrot-view does not support '" + std::string{name} + "'");
+    }
+}
+
+static JulibrotViewConfig load_julibrot_view_config(const Object &json)
+{
+    reject_julibrot_camera_field(json, "look-at");
+    reject_julibrot_camera_field(json, "view-up");
+
+    JulibrotViewConfig result;
+    result.name = load_string(json, "name");
+    result.outputs = load_julibrot_view_outputs_config(json);
+    result.mode = load_optional_julibrot_view_value_track_config(json, "mode", ParameterType::ENUM, 0);
+    result.geometry = load_optional_julibrot_view_value_track_config(json, "geometry", ParameterType::NUMERIC_TUPLE, 6);
+    result.eyes = load_optional_julibrot_view_value_track_config(json, "eyes", ParameterType::DOUBLE, 0);
+    result.from_to = load_optional_julibrot_view_value_track_config(json, "from-to", ParameterType::NUMERIC_TUPLE, 4);
+    validate_julibrot_view_member("mode", result.outputs.mode, result.mode);
+    validate_julibrot_view_member("geometry", result.outputs.geometry, result.geometry);
+    validate_julibrot_view_member("eyes", result.outputs.eyes, result.eyes);
+    validate_julibrot_view_member("from-to", result.outputs.from_to, result.from_to);
     return result;
 }
 
@@ -904,7 +994,6 @@ static TrackConfig load_track_config(const Object &json, int num_frames)
 {
     TrackConfig result;
     result.kind = load_track_kind(json);
-    result.mode = load_track_mode(json);
     if (result.kind == TrackKind::CAMERA2D)
     {
         result.camera2d = load_camera2d_config(json);
@@ -917,7 +1006,14 @@ static TrackConfig load_track_config(const Object &json, int num_frames)
         result.parameter = result.id_3d_view->name;
         return result;
     }
+    if (result.kind == TrackKind::JULIBROT_VIEW)
+    {
+        result.julibrot_view = load_julibrot_view_config(json);
+        result.parameter = result.julibrot_view->name;
+        return result;
+    }
 
+    result.mode = load_track_mode(json);
     result.parameter = load_string(json, "parameter");
     if (result.kind == TrackKind::COLOR_MAP)
     {
