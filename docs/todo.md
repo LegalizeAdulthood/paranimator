@@ -2,10 +2,11 @@
 
 ## Catalogs
 
-- Create complete catalog for all id parameters
+- Create complete catalog for all Id parameters
 - Create complete catalog for all fractal types
   - Include specific interpretation of param or function
 - Create complete catalog for all formulas in id.frm
+- Audit all Id parameters for semantics
 
 ## Color
 
