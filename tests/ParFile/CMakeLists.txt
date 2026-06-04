@@ -75,7 +75,10 @@ add_executable(test-par-file
 source_group("Template Files" REGULAR_EXPRESSION "^.*\\.in$")
 source_group("Data Files" REGULAR_EXPRESSION "^.*\\.(par|json)$")
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
-target_include_directories(test-par-file PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/include")
+target_include_directories(test-par-file
+    PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/include"
+    PRIVATE "${PARFILE_SCRIPT_DIALECT_INCLUDE_DIR}"
+)
 target_link_libraries(test-par-file PUBLIC ParFile GTest::gtest_main nlohmann_json::nlohmann_json)
 target_folder(test-par-file "Tests")
 

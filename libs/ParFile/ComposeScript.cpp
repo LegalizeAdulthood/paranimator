@@ -4,6 +4,7 @@
 
 #include <ParFile/Config.h>
 #include <ParFile/NumberTrack.h>
+#include <ParFile/ScriptDialect.h>
 
 #include <boost/format.hpp>
 
@@ -47,51 +48,27 @@ std::string opacity_text(double opacity)
 
 std::string script_prologue()
 {
-#ifdef _WIN32
-    return "@echo off\n"
-           "pushd \"%~dp0\"\n"
-           "if errorlevel 1 exit /b 1\n";
-#else
-    return "#!/usr/bin/env bash\n"
-           "set -e\n"
-           "pushd \"$(dirname \"$0\")\" >/dev/null\n";
-#endif
+    return std::string{ScriptDialect::PROLOGUE};
 }
 
 std::string script_epilogue()
 {
-#ifdef _WIN32
-    return "popd\n";
-#else
-    return "popd >/dev/null\n";
-#endif
+    return std::string{ScriptDialect::EPILOGUE};
 }
 
 std::string error_check()
 {
-#ifdef _WIN32
-    return "if errorlevel 1 exit /b 1\n";
-#else
-    return {};
-#endif
+    return std::string{ScriptDialect::ERROR_CHECK};
 }
 
 std::string open_group()
 {
-#ifdef _WIN32
-    return "^(";
-#else
-    return "\\(";
-#endif
+    return std::string{ScriptDialect::OPEN_GROUP};
 }
 
 std::string close_group()
 {
-#ifdef _WIN32
-    return "^)";
-#else
-    return "\\)";
-#endif
+    return std::string{ScriptDialect::CLOSE_GROUP};
 }
 
 std::string_view imagemagick_compose_operator(ComposeOperator op)

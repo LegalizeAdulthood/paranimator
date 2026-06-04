@@ -11,6 +11,14 @@ project("${PARANIMATOR_PROJECT_NAME}" CXX)
 
 include(CTest)
 
+if(WIN32)
+    set(PARFILE_SCRIPT_DIALECT "batch")
+else()
+    set(PARFILE_SCRIPT_DIALECT "bash")
+endif()
+set(PARFILE_SCRIPT_DIALECT_INCLUDE_DIR
+    "${CMAKE_SOURCE_DIR}/libs/ParFile/ScriptDialect/${PARFILE_SCRIPT_DIALECT}/include")
+
 function(target_folder target folder)
     set_target_properties(${target} PROPERTIES FOLDER ${folder})
 endfunction()

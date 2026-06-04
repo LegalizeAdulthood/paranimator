@@ -5,8 +5,13 @@
 #include <TestParFile/test.h>
 
 #include <ParFile/Config.h>
+#include <ParFile/ScriptDialect.h>
 
 #include <gtest/gtest.h>
+
+#include <boost/format.hpp>
+
+#include <filesystem>
 
 namespace
 {
@@ -21,6 +26,18 @@ ParFile::Config config_data()
         TestParFile::TEST_VIDEO_MODE,                                         //
         60,                                                                   //
         {}};                                                                  //
+}
+
+std::string script_path(std::filesystem::path path)
+{
+    path.make_preferred();
+    return path.string();
+}
+
+std::string move_command(const std::string &source, const std::string &destination)
+{
+    return (boost::format(std::string{ParFile::ScriptDialect::MOVE_FORMAT}) % source % destination).str() +
+        std::string{ParFile::ScriptDialect::ERROR_CHECK};
 }
 
 } // namespace
@@ -39,18 +56,11 @@ TEST(TestScript, commandForFrame)
 
     const std::string commands{script.commands("frame-0001")};
 
-#ifdef _WIN32
-    EXPECT_EQ(std::string{"start/wait id batch=yes overwrite=yes savename=frame-0001.gif savedir=. librarydirs=. "
-                          "video="} +
-            TestParFile::TEST_VIDEO_MODE + " @" + TestParFile::TEST_OUTPUT_PAR +
-            "/frame-0001\n"
-            "if errorlevel 1 exit /b 1\n",
+    EXPECT_EQ(std::string{ParFile::ScriptDialect::RENDER_EXECUTABLE} +
+            " batch=yes overwrite=yes savename=frame-0001.gif savedir=. librarydirs=. video=" +
+            TestParFile::TEST_VIDEO_MODE + " @" + TestParFile::TEST_OUTPUT_PAR + "/frame-0001\n" +
+            std::string{ParFile::ScriptDialect::ERROR_CHECK},
         commands);
-#else
-    EXPECT_EQ(std::string{"id batch=yes overwrite=yes savename=frame-0001.gif savedir=. librarydirs=. video="} +
-            TestParFile::TEST_VIDEO_MODE + " @" + TestParFile::TEST_OUTPUT_PAR + "/frame-0001\n",
-        commands);
-#endif
 }
 
 TEST(TestScript, commandForLayerMovesSavedImage)
@@ -61,22 +71,14 @@ TEST(TestScript, commandForLayerMovesSavedImage)
 
     const std::string commands{script.layer_commands("layer-base-0001", "base", 0)};
 
-#ifdef _WIN32
-    EXPECT_EQ(std::string{"start/wait id batch=yes overwrite=yes savename=layer-base-0001.gif savedir=. "
-                          "librarydirs=. video="} +
+    EXPECT_EQ(std::string{ParFile::ScriptDialect::RENDER_EXECUTABLE} +
+            " batch=yes overwrite=yes savename=layer-base-0001.gif savedir=. librarydirs=. video=" +
             TestParFile::TEST_VIDEO_MODE + " @" + TestParFile::TEST_OUTPUT_PAR +
             "/layer-base-0001\n"
-            "if errorlevel 1 exit /b 1\n"
-            "move /y \"image\\layer-base-0001.gif\" \"layers\\layer-base-0001.gif\"\n"
-            "if errorlevel 1 exit /b 1\n",
+            + std::string{ParFile::ScriptDialect::ERROR_CHECK} +
+            move_command(script_path(std::filesystem::path{"image"} / "layer-base-0001.gif"),
+                script_path("layers/layer-base-0001.gif")),
         commands);
-#else
-    EXPECT_EQ(std::string{"id batch=yes overwrite=yes savename=layer-base-0001.gif savedir=. librarydirs=. video="} +
-            TestParFile::TEST_VIDEO_MODE + " @" + TestParFile::TEST_OUTPUT_PAR +
-            "/layer-base-0001\n"
-            "mv -f \"image/layer-base-0001.gif\" \"layers/layer-base-0001.gif\"\n",
-        commands);
-#endif
 }
 
 TEST(TestScript, prologueRunsFromScriptDirectory)
@@ -84,19 +86,8 @@ TEST(TestScript, prologueRunsFromScriptDirectory)
     ParFile::Config config{config_data()};
     ParFile::Script script{config};
 
-#ifdef _WIN32
-    EXPECT_EQ("@echo off\n"
-              "pushd \"%~dp0\"\n"
-              "if errorlevel 1 exit /b 1\n",
-        script.prologue());
-    EXPECT_EQ("popd\n", script.epilogue());
-#else
-    EXPECT_EQ("#!/usr/bin/env bash\n"
-              "set -e\n"
-              "pushd \"$(dirname \"$0\")\" >/dev/null\n",
-        script.prologue());
-    EXPECT_EQ("popd >/dev/null\n", script.epilogue());
-#endif
+    EXPECT_EQ(std::string{ParFile::ScriptDialect::PROLOGUE}, script.prologue());
+    EXPECT_EQ(std::string{ParFile::ScriptDialect::EPILOGUE}, script.epilogue());
 }
 
 TEST(TestScript, prologueCreatesLayerDirectory)
@@ -105,18 +96,8 @@ TEST(TestScript, prologueCreatesLayerDirectory)
     config.output.layers = "layers/layer-%s-%04d.gif";
     ParFile::Script script{config};
 
-#ifdef _WIN32
-    EXPECT_EQ("@echo off\n"
-              "pushd \"%~dp0\"\n"
-              "if errorlevel 1 exit /b 1\n"
-              "if not exist \"layers\" mkdir \"layers\"\n"
-              "if errorlevel 1 exit /b 1\n",
+    EXPECT_EQ(std::string{ParFile::ScriptDialect::PROLOGUE} +
+            (boost::format(std::string{ParFile::ScriptDialect::MAKE_DIRECTORY_FORMAT}) % "layers").str() +
+            std::string{ParFile::ScriptDialect::ERROR_CHECK},
         script.prologue());
-#else
-    EXPECT_EQ("#!/usr/bin/env bash\n"
-              "set -e\n"
-              "pushd \"$(dirname \"$0\")\" >/dev/null\n"
-              "mkdir -p \"layers\"\n",
-        script.prologue());
-#endif
 }

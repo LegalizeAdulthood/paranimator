@@ -3,6 +3,7 @@
 #include <ParFile/ComposeScript.h>
 
 #include <ParFile/Config.h>
+#include <ParFile/ScriptDialect.h>
 
 #include <gtest/gtest.h>
 
@@ -43,6 +44,18 @@ ParFile::Config config_data()
     return result;
 }
 
+std::string layer_image(const std::string &file, const std::string &opacity)
+{
+    return std::string{ParFile::ScriptDialect::OPEN_GROUP} + " \"" + file +
+        "\" -alpha set -channel A -evaluate multiply " + opacity + " +channel " +
+        std::string{ParFile::ScriptDialect::CLOSE_GROUP};
+}
+
+std::string error_check()
+{
+    return std::string{ParFile::ScriptDialect::ERROR_CHECK};
+}
+
 } // namespace
 
 TEST(TestComposeScript, commandsComposeLayersInStackOrder)
@@ -52,20 +65,12 @@ TEST(TestComposeScript, commandsComposeLayersInStackOrder)
     config.output.background = "black";
     const ParFile::ComposeScript script{config};
 
-#ifdef _WIN32
-    EXPECT_EQ("magick ^( \"layers/layer-base-0002.gif\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
-              "^( \"layers/layer-detail-0002.gif\" -alpha set -channel A -evaluate multiply 0.5 +channel ^) "
-              "-compose Over -composite -background \"black\" -alpha remove -alpha off "
-              "\"frames/frame0002.png\"\n"
-              "if errorlevel 1 exit /b 1\n",
+    EXPECT_EQ("magick " + layer_image("layers/layer-base-0002.gif", "1") + " " +
+            layer_image("layers/layer-detail-0002.gif", "0.5") +
+            " -compose Over -composite -background \"black\" -alpha remove -alpha off "
+            "\"frames/frame0002.png\"\n" +
+            error_check(),
         script.commands(1));
-#else
-    EXPECT_EQ("magick \\( \"layers/layer-base-0002.gif\" -alpha set -channel A -evaluate multiply 1 +channel \\) "
-              "\\( \"layers/layer-detail-0002.gif\" -alpha set -channel A -evaluate multiply 0.5 +channel \\) "
-              "-compose Over -composite -background \"black\" -alpha remove -alpha off "
-              "\"frames/frame0002.png\"\n",
-        script.commands(1));
-#endif
 }
 
 TEST(TestComposeScript, commandsMapNeutralOperatorsToImagemagickOperators)
@@ -112,16 +117,9 @@ TEST(TestComposeScript, hiddenLayerIsSkipped)
     config.layers[1].opacity = opacity(0.0);
     const ParFile::ComposeScript script{config};
 
-#ifdef _WIN32
-    EXPECT_EQ("magick ^( \"layers/layer-base-0001.gif\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
-              "\"frames/frame0001.png\"\n"
-              "if errorlevel 1 exit /b 1\n",
+    EXPECT_EQ("magick " + layer_image("layers/layer-base-0001.gif", "1") +
+            " \"frames/frame0001.png\"\n" + error_check(),
         script.commands(0));
-#else
-    EXPECT_EQ("magick \\( \"layers/layer-base-0001.gif\" -alpha set -channel A -evaluate multiply 1 +channel \\) "
-              "\"frames/frame0001.png\"\n",
-        script.commands(0));
-#endif
 }
 
 TEST(TestComposeScript, writeWhenHiddenKeepsZeroOpacityLayer)
@@ -131,35 +129,16 @@ TEST(TestComposeScript, writeWhenHiddenKeepsZeroOpacityLayer)
     config.layers[1].write_when_hidden = true;
     const ParFile::ComposeScript script{config};
 
-#ifdef _WIN32
-    EXPECT_EQ("magick ^( \"layers/layer-base-0001.gif\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
-              "^( \"layers/layer-detail-0001.gif\" -alpha set -channel A -evaluate multiply 0 +channel ^) "
-              "-compose Over -composite \"frames/frame0001.png\"\n"
-              "if errorlevel 1 exit /b 1\n",
+    EXPECT_EQ("magick " + layer_image("layers/layer-base-0001.gif", "1") + " " +
+            layer_image("layers/layer-detail-0001.gif", "0") +
+            " -compose Over -composite \"frames/frame0001.png\"\n" + error_check(),
         script.commands(0));
-#else
-    EXPECT_EQ("magick \\( \"layers/layer-base-0001.gif\" -alpha set -channel A -evaluate multiply 1 +channel \\) "
-              "\\( \"layers/layer-detail-0001.gif\" -alpha set -channel A -evaluate multiply 0 +channel \\) "
-              "-compose Over -composite \"frames/frame0001.png\"\n",
-        script.commands(0));
-#endif
 }
 
 TEST(TestComposeScript, prologueRunsFromScriptDirectory)
 {
     const ParFile::ComposeScript script{config_data()};
 
-#ifdef _WIN32
-    EXPECT_EQ("@echo off\n"
-              "pushd \"%~dp0\"\n"
-              "if errorlevel 1 exit /b 1\n",
-        script.prologue());
-    EXPECT_EQ("popd\n", script.epilogue());
-#else
-    EXPECT_EQ("#!/usr/bin/env bash\n"
-              "set -e\n"
-              "pushd \"$(dirname \"$0\")\" >/dev/null\n",
-        script.prologue());
-    EXPECT_EQ("popd >/dev/null\n", script.epilogue());
-#endif
+    EXPECT_EQ(std::string{ParFile::ScriptDialect::PROLOGUE}, script.prologue());
+    EXPECT_EQ(std::string{ParFile::ScriptDialect::EPILOGUE}, script.epilogue());
 }

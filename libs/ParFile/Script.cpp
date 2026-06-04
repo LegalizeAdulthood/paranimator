@@ -3,6 +3,7 @@
 #include <ParFile/Script.h>
 
 #include <ParFile/Config.h>
+#include <ParFile/ScriptDialect.h>
 
 #include <boost/format.hpp>
 
@@ -14,74 +15,42 @@ namespace ParFile
 namespace
 {
 
-std::string batch_path(std::filesystem::path path)
+std::string script_path(std::filesystem::path path)
 {
-#ifdef _WIN32
     path.make_preferred();
-#else
-    path = path.lexically_normal();
-#endif
     return path.string();
 }
 
 std::string script_prologue()
 {
-#ifdef _WIN32
-    return "@echo off\n"
-           "pushd \"%~dp0\"\n"
-           "if errorlevel 1 exit /b 1\n";
-#else
-    return "#!/usr/bin/env bash\n"
-           "set -e\n"
-           "pushd \"$(dirname \"$0\")\" >/dev/null\n";
-#endif
+    return std::string{ScriptDialect::PROLOGUE};
 }
 
 std::string script_epilogue()
 {
-#ifdef _WIN32
-    return "popd\n";
-#else
-    return "popd >/dev/null\n";
-#endif
+    return std::string{ScriptDialect::EPILOGUE};
 }
 
 std::string make_directory_command(const std::string &directory)
 {
-#ifdef _WIN32
-    return "if not exist \"" + directory + "\" mkdir \"" + directory + "\"\n"
-        "if errorlevel 1 exit /b 1\n";
-#else
-    return "mkdir -p \"" + directory + "\"\n";
-#endif
+    return (boost::format(std::string{ScriptDialect::MAKE_DIRECTORY_FORMAT}) % directory).str() +
+        std::string{ScriptDialect::ERROR_CHECK};
 }
 
 std::string move_command(const std::string &source, const std::string &destination)
 {
-#ifdef _WIN32
-    return "move /y \"" + source + "\" \"" + destination + "\"\n"
-        "if errorlevel 1 exit /b 1\n";
-#else
-    return "mv -f \"" + source + "\" \"" + destination + "\"\n";
-#endif
+    return (boost::format(std::string{ScriptDialect::MOVE_FORMAT}) % source % destination).str() +
+        std::string{ScriptDialect::ERROR_CHECK};
 }
 
 std::string error_check()
 {
-#ifdef _WIN32
-    return "if errorlevel 1 exit /b 1\n";
-#else
-    return {};
-#endif
+    return std::string{ScriptDialect::ERROR_CHECK};
 }
 
 std::string render_executable()
 {
-#ifdef _WIN32
-    return "start/wait id";
-#else
-    return "id";
-#endif
+    return std::string{ScriptDialect::RENDER_EXECUTABLE};
 }
 
 } // namespace
@@ -124,7 +93,7 @@ std::string Script::layer_commands(const std::string &par_name, const std::strin
     const std::string save_name{std::filesystem::path{destination}.filename().string()};
     std::string result;
     result += render_command(par_name, save_name);
-    result += move_command(batch_path(std::filesystem::path{"image"} / save_name), batch_path(destination));
+    result += move_command(script_path(std::filesystem::path{"image"} / save_name), script_path(destination));
     return result;
 }
 
@@ -145,7 +114,7 @@ std::string Script::layer_directory() const
     {
         return {};
     }
-    return batch_path(std::filesystem::path{*m_layers}.parent_path());
+    return script_path(std::filesystem::path{*m_layers}.parent_path());
 }
 
 } // namespace ParFile
