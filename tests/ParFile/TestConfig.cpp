@@ -239,6 +239,48 @@ TEST(TestConfig, jsonDeserializesOneTrack)
     EXPECT_EQ(ParFile::Curve::HOLD, *config.tracks[0].keys[1].curve);
 }
 
+TEST(TestConfig, jsonDeserializesSingleLayer)
+{
+    Object json = valid_json();
+    json.erase("source");
+    json.erase("tracks");
+    json["layers"] = Object::array({Object{{"id", "base"}, {"source", Object{{"file", "foo.par"}, {"name", "foo"}}},
+        {"tracks",
+            Object::array({Object{{"parameter", "maxiter"},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "100"}}, Object{{"frame", 59}, {"value", "200"}}})}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.layers.size());
+    EXPECT_EQ("base", config.layers[0].id);
+    EXPECT_EQ("foo.par", config.layers[0].source.file);
+    EXPECT_EQ("foo", config.layers[0].source.name);
+    ASSERT_EQ(1U, config.layers[0].tracks.size());
+    EXPECT_EQ("maxiter", config.layers[0].tracks[0].parameter);
+    EXPECT_EQ("foo.par", config.source.file);
+    EXPECT_EQ("foo", config.source.name);
+    ASSERT_EQ(1U, config.tracks.size());
+    EXPECT_EQ("maxiter", config.tracks[0].parameter);
+}
+
+TEST(TestConfig, jsonRejectsDuplicateLayerIds)
+{
+    Object json = valid_json();
+    json.erase("source");
+    json.erase("tracks");
+    const Object layer{{"id", "base"}, {"source", Object{{"file", "foo.par"}, {"name", "foo"}}},
+        {"tracks",
+            Object::array({Object{{"parameter", "maxiter"},
+                {"keys",
+                    Object::array(
+                        {Object{{"frame", 0}, {"value", "100"}}, Object{{"frame", 59}, {"value", "200"}}})}}})}};
+    json["layers"] = Object::array({layer, layer});
+
+    expect_invalid(json);
+}
+
 TEST(TestConfig, jsonDeserializesConstantPathTrack)
 {
     Object json = valid_json();

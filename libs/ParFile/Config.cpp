@@ -4,6 +4,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <iomanip>
 #include <optional>
@@ -1066,16 +1067,57 @@ static std::vector<TrackConfig> load_tracks(const Object &json, std::string_view
     return result;
 }
 
+static LayerConfig load_layer_config(const Object &json, int num_frames)
+{
+    LayerConfig result;
+    result.id = load_string(json, "id");
+    result.source = load_named_file_par_set(json, "source");
+    result.tracks = load_tracks(json, "tracks", num_frames);
+    return result;
+}
+
+static std::vector<LayerConfig> load_layers(const Object &json, int num_frames)
+{
+    const std::string key{"layers"};
+    if (!json.contains(key) || !json.at(key).is_array())
+    {
+        throw std::runtime_error("Invalid config, missing array 'layers'");
+    }
+
+    std::vector<LayerConfig> result;
+    for (const Object &item : json.at(key))
+    {
+        if (!item.is_object())
+        {
+            throw std::runtime_error("Invalid config, array 'layers' contains non-object value");
+        }
+        LayerConfig layer{load_layer_config(item, num_frames)};
+        const auto is_id{[&](const LayerConfig &other) { return other.id == layer.id; }};
+        if (std::find_if(result.begin(), result.end(), is_id) != result.end())
+        {
+            throw std::runtime_error("Invalid config, duplicate layer id '" + layer.id + "'");
+        }
+        result.emplace_back(layer);
+    }
+    if (result.empty())
+    {
+        throw std::runtime_error("Invalid config, layers must contain at least one layer");
+    }
+    if (result.size() > 1U)
+    {
+        throw std::runtime_error("Invalid config, only one layer is supported");
+    }
+    return result;
+}
+
 Config read_config(std::string_view json_text)
 {
     const Object json = parse_json(json_text);
     Config result;
     result.parameter_catalogs = load_string_array(json, "parameter-catalogs");
-    result.source = load_named_file_par_set(json, "source");
     result.output = load_output_config(json);
     result.video = load_string(json, "video");
     result.num_frames = load_int(json, "num-frames");
-    result.tracks = load_tracks(json, "tracks", result.num_frames);
 
     if (json.contains("parallel"))
     {
@@ -1084,6 +1126,21 @@ Config read_config(std::string_view json_text)
             throw std::runtime_error("Invalid config, 'parallel' is not a number");
         }
         result.parallel = json.at("parallel").get<int>();
+    }
+    if (json.contains("layers"))
+    {
+        if (json.contains("source") || json.contains("tracks"))
+        {
+            throw std::runtime_error("Invalid config, layers cannot be combined with top-level source or tracks");
+        }
+        result.layers = load_layers(json, result.num_frames);
+        result.source = result.layers[0].source;
+        result.tracks = result.layers[0].tracks;
+    }
+    else
+    {
+        result.source = load_named_file_par_set(json, "source");
+        result.tracks = load_tracks(json, "tracks", result.num_frames);
     }
     return result;
 }

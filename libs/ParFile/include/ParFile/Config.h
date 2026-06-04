@@ -235,6 +235,13 @@ struct TrackConfig
     std::optional<JulibrotViewConfig> julibrot_view;
 };
 
+struct LayerConfig
+{
+    std::string id;
+    NamedFileParSet source;
+    std::vector<TrackConfig> tracks;
+};
+
 struct Config
 {
     std::vector<std::string> parameter_catalogs;
@@ -244,6 +251,7 @@ struct Config
     std::string video;
     int num_frames{};
     std::vector<TrackConfig> tracks;
+    std::vector<LayerConfig> layers;
 };
 
 Config read_config(std::string_view json_text);

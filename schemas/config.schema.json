@@ -4,8 +4,25 @@
   "title": "ParAnimator configuration",
   "description": "Describes one animation render using an Id source par entry, output library files, and animated parameter tracks.",
   "type": "object",
-  "required": [ "parameter-catalogs", "source", "output", "video", "num-frames", "tracks" ],
+  "required": [ "parameter-catalogs", "output", "video", "num-frames" ],
   "additionalProperties": false,
+  "oneOf": [
+    {
+      "description": "Single-source animation form with top-level source and tracks.",
+      "required": [ "source", "tracks" ],
+      "not": { "required": [ "layers" ] }
+    },
+    {
+      "description": "Layered animation form with one layer for this implementation slice.",
+      "required": [ "layers" ],
+      "not": {
+        "anyOf": [
+          { "required": [ "source" ] },
+          { "required": [ "tracks" ] }
+        ]
+      }
+    }
+  ],
   "properties": {
     "parameter-catalogs": {
       "description": "Parameter catalog JSON files used to validate and resolve track targets.",
@@ -73,19 +90,66 @@
       "description": "Animated parameter tracks applied to the source par entry.",
       "type": "array",
       "items": {
-        "description": "One animated parameter target and its value source.",
-        "oneOf": [
-          { "$ref": "#/$defs/value-track" },
-          { "$ref": "#/$defs/pwm-track" },
-          { "$ref": "#/$defs/color-map-track" },
-          { "$ref": "#/$defs/camera2d-track" },
-          { "$ref": "#/$defs/id-3d-view-track" },
-          { "$ref": "#/$defs/julibrot-view-track" }
-        ]
+        "$ref": "#/$defs/track"
+      }
+    },
+    "layers": {
+      "description": "Layer stack evaluated from bottom to top.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "$ref": "#/$defs/layer"
       }
     }
   },
   "$defs": {
+    "track": {
+      "description": "One animated parameter target and its value source.",
+      "oneOf": [
+        { "$ref": "#/$defs/value-track" },
+        { "$ref": "#/$defs/pwm-track" },
+        { "$ref": "#/$defs/color-map-track" },
+        { "$ref": "#/$defs/camera2d-track" },
+        { "$ref": "#/$defs/id-3d-view-track" },
+        { "$ref": "#/$defs/julibrot-view-track" }
+      ]
+    },
+    "layer": {
+      "description": "One Id image layer with its own source par entry and scoped tracks.",
+      "type": "object",
+      "required": [ "id", "source", "tracks" ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Stable layer identifier used for naming and validation.",
+          "type": "string"
+        },
+        "source": {
+          "description": "Source Id par entry used as this layer's base frame state.",
+          "type": "object",
+          "required": [ "file", "name" ],
+          "additionalProperties": false,
+          "properties": {
+            "file": {
+              "description": "Source par filename for this layer.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Source entry name inside the layer source par file.",
+              "type": "string"
+            }
+          }
+        },
+        "tracks": {
+          "description": "Animated parameter tracks applied only to this layer.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/track"
+          }
+        }
+      }
+    },
     "track-kind": {
       "description": "Application-level kind of animation track.",
       "type": "string",
