@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace ParFile
@@ -485,13 +486,40 @@ static std::string read_text(const std::filesystem::path &path)
     return {std::istreambuf_iterator<char>{in}, std::istreambuf_iterator<char>{}};
 }
 
+template <typename Item>
+void append_named_catalog_entries(std::vector<Item> &target, std::vector<Item> source, std::string_view entry_kind)
+{
+    for (Item &entry : source)
+    {
+        const auto matches{[&](const Item &candidate) { return candidate.name == entry.name; }};
+        if (std::find_if(target.begin(), target.end(), matches) != target.end())
+        {
+            throw std::runtime_error(
+                "Duplicate " + std::string{entry_kind} + " metadata '" + entry.name + "' in parameter catalogs");
+        }
+        target.push_back(std::move(entry));
+    }
+}
+
+static void append_parameter_catalog(ParameterCatalog &target, ParameterCatalog source)
+{
+    append_named_catalog_entries(target.parameters, std::move(source.parameters), "parameter");
+    append_named_catalog_entries(target.fractal_types, std::move(source.fractal_types), "fractal type");
+    append_named_catalog_entries(target.formula_entries, std::move(source.formula_entries), "formula entry");
+}
+
 static ParameterCatalog load_parameter_catalog(const Config &config)
 {
-    if (config.parameter_catalogs.size() != 1U)
+    if (config.parameter_catalogs.empty())
     {
-        throw std::runtime_error("Expected exactly one parameter catalog");
+        throw std::runtime_error("Expected at least one parameter catalog");
     }
-    return read_parameter_catalog(read_text(config.parameter_catalogs[0]));
+    ParameterCatalog result;
+    for (const std::string &catalog : config.parameter_catalogs)
+    {
+        append_parameter_catalog(result, read_parameter_catalog(read_text(catalog)));
+    }
+    return result;
 }
 
 static ResolvedAnimation load_animation(const Config &config)

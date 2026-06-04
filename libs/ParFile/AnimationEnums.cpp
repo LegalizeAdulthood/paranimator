@@ -15,6 +15,10 @@ ParameterType parse_parameter_type(std::string_view text)
     {
         return ParameterType::CENTER_MAG;
     }
+    if (text == "color-map")
+    {
+        return ParameterType::COLOR_MAP;
+    }
     if (text == "corners")
     {
         return ParameterType::CORNERS;
@@ -186,6 +190,8 @@ std::string_view to_string(ParameterType value)
     {
     case ParameterType::CENTER_MAG:
         return "center-mag";
+    case ParameterType::COLOR_MAP:
+        return "color-map";
     case ParameterType::COMPLEX:
         return "complex";
     case ParameterType::CORNERS:

@@ -27,6 +27,11 @@ ParFile::ParameterCatalog core_catalog()
     return ParFile::read_parameter_catalog(read_text(TestParFile::CORE_CATALOG_JSON));
 }
 
+ParFile::ParameterCatalog coloring_catalog()
+{
+    return ParFile::read_parameter_catalog(read_text(TestParFile::COLORING_CATALOG_JSON));
+}
+
 ParFile::ParameterCatalog typed_catalog()
 {
     return {{{"center-mag", ParFile::ParameterType::CENTER_MAG, ParFile::ParameterFormat::SLASH,
@@ -63,9 +68,42 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
 {
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
-    EXPECT_EQ(22U, catalog.parameters.size());
+    EXPECT_EQ(23U, catalog.parameters.size());
     EXPECT_EQ(1U, catalog.fractal_types.size());
     EXPECT_EQ(1U, catalog.formula_entries.size());
+}
+
+TEST(TestParameterCatalog, typeMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("type")};
+
+    EXPECT_EQ("type", metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, metadata.type);
+    ASSERT_TRUE(metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::RAW, *metadata.format);
+    ASSERT_TRUE(metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *metadata.default_curve);
+    ASSERT_TRUE(metadata.extrapolate);
+    EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "mandel"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "julia"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "formula"));
+}
+
+TEST(TestParameterCatalog, coloringCatalogDeclaresColors)
+{
+    const ParFile::ParameterCatalog catalog{coloring_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("colors")};
+
+    EXPECT_EQ("colors", metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::COLOR_MAP, metadata.type);
+    ASSERT_TRUE(metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::RAW, *metadata.format);
+    ASSERT_TRUE(metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *metadata.default_curve);
+    ASSERT_TRUE(metadata.extrapolate);
+    EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
 }
 
 TEST(TestParameterCatalog, centerMagMetadataLoads)
@@ -351,6 +389,7 @@ TEST(TestParameterCatalog, formulaFunctionMetadataLoads)
 TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
 {
     EXPECT_EQ(ParFile::ParameterType::CENTER_MAG, read_metadata(R"("type":"center-mag")").type);
+    EXPECT_EQ(ParFile::ParameterType::COLOR_MAP, read_metadata(R"("type":"color-map")").type);
     EXPECT_EQ(ParFile::ParameterType::COMPLEX, read_metadata(R"("type":"complex")").type);
     EXPECT_EQ(ParFile::ParameterType::CORNERS, read_metadata(R"("type":"corners")").type);
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, read_metadata(R"("type":"double")").type);

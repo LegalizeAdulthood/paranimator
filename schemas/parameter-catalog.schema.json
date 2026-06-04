@@ -471,6 +471,10 @@
           "description": "Id center-mag value containing center real, center imaginary, and magnification."
         },
         {
+          "const": "color-map",
+          "description": "Id colors= value backed by a generated or referenced color-map file."
+        },
+        {
           "const": "complex",
           "description": "Complex value represented by two numeric components."
         },

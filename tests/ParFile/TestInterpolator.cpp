@@ -124,6 +124,29 @@ TEST_F(TestInterpolator, firstFrameCopiesSource)
     ASSERT_EQ(expected, frame);
 }
 
+TEST_F(TestInterpolator, multipleCatalogFilesLoad)
+{
+    m_config_data.parameter_catalogs = {TestParFile::CORE_CATALOG_JSON, TestParFile::COLORING_CATALOG_JSON};
+    m_lerper = ParFile::Interpolator{m_config_data};
+
+    EXPECT_EQ("frame-0001", m_lerper().name);
+}
+
+TEST_F(TestInterpolator, missingCatalogFileFailsClearly)
+{
+    m_config_data.parameter_catalogs = {"missing-catalog.json"};
+
+    try
+    {
+        m_lerper = ParFile::Interpolator{m_config_data};
+        FAIL() << "Expected missing catalog to throw";
+    }
+    catch (const std::runtime_error &bang)
+    {
+        EXPECT_NE(std::string::npos, std::string{bang.what()}.find("missing-catalog.json"));
+    }
+}
+
 TEST_F(TestInterpolator, id3DViewWritesRotationPerspectiveAndXyshift)
 {
     const Object track{{"name", "view"}, {"type", "id-3d-view"},

@@ -1890,6 +1890,8 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
     case ParameterType::CENTER_MAG:
         validate_full_range(metadata.name, keys, num_steps);
         return std::make_shared<CenterMagInterpolant>(metadata.name, keys[0].value, keys[1].value, num_steps);
+    case ParameterType::COLOR_MAP:
+        throw std::runtime_error("Color-map parameter '" + metadata.name + "' must use a color-map track");
     case ParameterType::COMPLEX:
     {
         validate_full_range(metadata.name, keys, num_steps);

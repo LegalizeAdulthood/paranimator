@@ -1651,22 +1651,7 @@ Every new schema object, field, and enum or const value must include a
 
 
 
-### 1. Add Core Catalog Files
-
-Add default catalogs for core Id parameters and coloring.
-
-Schema work:
-
-- create or update JSON schemas for fields or metadata JSON files added by
-  this slice.
-
-Unit tests:
-
-- core catalog declares type, maxiter, center-mag, and corners.
-- coloring catalog declares colors as color-map.
-- catalog inclusion fails clearly for missing files.
-
-### 2. Add 3D And Formula Catalog Files
+### 1. Add 3D And Formula Catalog Files
 
 Add default catalogs for Id 3D viewing and selected formula families.
 

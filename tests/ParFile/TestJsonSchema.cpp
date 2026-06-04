@@ -434,6 +434,7 @@ TEST(TestJsonSchema, parameterCatalogSchemaPathStable)
 TEST(TestJsonSchema, validParameterCatalogPasses)
 {
     EXPECT_TRUE(validates_parameter_catalog_file(TestParFile::CORE_CATALOG_JSON));
+    EXPECT_TRUE(validates_parameter_catalog_file(TestParFile::COLORING_CATALOG_JSON));
 }
 
 TEST(TestJsonSchema, missingMetadataTypeRejected)
@@ -449,6 +450,38 @@ TEST(TestJsonSchema, unknownMetadataTypeRejected)
 TEST(TestJsonSchema, numericTupleMetadataAccepted)
 {
     EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"numeric-tuple","arity":3)")));
+}
+
+TEST(TestJsonSchema, colorMapMetadataAccepted)
+{
+    EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"color-map","format":"raw")")));
+}
+
+TEST(TestJsonSchema, multipleParameterCatalogsAccepted)
+{
+    const std::string json{R"({
+  "parameter-catalogs": [ "core-catalog.json", "coloring-catalog.json" ],
+  "source": { "file": "source.par", "name": "Mandel_Demo" },
+  "output": {
+    "directory": "output",
+    "par": "frames.par",
+    "entry": "frame-%04d",
+    "script": "frames.bat"
+  },
+  "video": "F6",
+  "num-frames": 3,
+  "tracks": [
+    {
+      "parameter": "maxiter",
+      "keys": [
+        { "frame": 0, "value": "100" },
+        { "frame": 2, "value": "200" }
+      ]
+    }
+  ]
+})"};
+
+    EXPECT_TRUE(validates_config_text(json));
 }
 
 TEST(TestJsonSchema, enumMetadataAccepted)

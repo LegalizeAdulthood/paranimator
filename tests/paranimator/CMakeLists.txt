@@ -25,6 +25,7 @@ function(add_paranimator_test name)
             "-DPARANIMATOR=$<SHELL_PATH:$<TARGET_FILE:paranimator>>"
             "-DTEST_NAME=${name}"
             "-DTEST_SOURCE_DIR=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}>"
+            "-DCOLORING_CATALOG=$<SHELL_PATH:${CMAKE_SOURCE_DIR}/data/coloring-catalog.json>"
             "-DCORE_CATALOG=$<SHELL_PATH:${TEST_CATALOG_PATH}>"
             "-DGOLD_PAR=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/gold-${name}.par>"
             "-DGOLD_SCRIPT=$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/gold-${name}.bat>"

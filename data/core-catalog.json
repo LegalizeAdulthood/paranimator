@@ -1,5 +1,12 @@
 {
   "parameters": {
+    "type": {
+      "type": "enum",
+      "format": "raw",
+      "values": [ "mandel", "julia", "formula" ],
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    },
     "center-mag": {
       "type": "center-mag",
       "format": "slash",

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
-foreach(name PARANIMATOR TEST_NAME TEST_SOURCE_DIR CORE_CATALOG GOLD_PAR GOLD_SCRIPT)
+foreach(name PARANIMATOR TEST_NAME TEST_SOURCE_DIR COLORING_CATALOG CORE_CATALOG GOLD_PAR GOLD_SCRIPT)
     if(NOT DEFINED ${name})
         message(FATAL_ERROR "Missing required variable: ${name}")
     endif()
@@ -24,6 +24,7 @@ foreach(input_file
         "${input_directory}/${input_file}")
 endforeach()
 file(COPY_FILE "${CORE_CATALOG}" "${input_directory}/core-catalog.json")
+file(COPY_FILE "${COLORING_CATALOG}" "${input_directory}/coloring-catalog.json")
 if(DEFINED INDEXED_MAP AND NOT INDEXED_MAP STREQUAL "")
     set(indexed_map "${input_directory}/${INDEXED_MAP}")
     file(WRITE "${indexed_map}" "")

@@ -1,0 +1,10 @@
+{
+  "parameters": {
+    "colors": {
+      "type": "color-map",
+      "format": "raw",
+      "default-curve": "hold",
+      "extrapolate": "clamp"
+    }
+  }
+}

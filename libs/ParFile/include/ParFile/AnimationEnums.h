@@ -10,6 +10,7 @@ namespace ParFile
 enum class ParameterType
 {
     CENTER_MAG,
+    COLOR_MAP,
     COMPLEX,
     CORNERS,
     DOUBLE,
