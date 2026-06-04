@@ -6,7 +6,7 @@
     "entry": "layer-%s-%04d",
     "script": "frames.bat",
     "frames": "frames/frame%04d.png",
-    "layers": "layers/layer-%s-%04d.png",
+    "layers": "layers/layer-%s-%04d.gif",
     "compose-script": "compose.bat"
   },
   "video": "F6",

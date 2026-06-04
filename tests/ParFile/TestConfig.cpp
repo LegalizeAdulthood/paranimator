@@ -191,7 +191,7 @@ TEST(TestConfig, jsonDeserializesComposeOutput)
 {
     Object json = valid_json();
     json.at("output")["frames"] = "frames/frame%04d.png";
-    json.at("output")["layers"] = "layers/layer-%s-%04d.png";
+    json.at("output")["layers"] = "layers/layer-%s-%04d.gif";
     json.at("output")["compose-script"] = "compose.bat";
     json.at("output")["background"] = "black";
 
@@ -200,11 +200,19 @@ TEST(TestConfig, jsonDeserializesComposeOutput)
     ASSERT_TRUE(config.output.frames);
     EXPECT_EQ("frames/frame%04d.png", *config.output.frames);
     ASSERT_TRUE(config.output.layers);
-    EXPECT_EQ("layers/layer-%s-%04d.png", *config.output.layers);
+    EXPECT_EQ("layers/layer-%s-%04d.gif", *config.output.layers);
     ASSERT_TRUE(config.output.compose_script);
     EXPECT_EQ("compose.bat", *config.output.compose_script);
     ASSERT_TRUE(config.output.background);
     EXPECT_EQ("black", *config.output.background);
+}
+
+TEST(TestConfig, jsonRejectsNonGifLayerOutput)
+{
+    Object json = valid_json();
+    json.at("output")["layers"] = "layers/layer-%s-%04d.png";
+
+    expect_invalid(json);
 }
 
 TEST(TestConfig, jsonRejectsComposeScriptWithoutFrameAndLayerOutput)

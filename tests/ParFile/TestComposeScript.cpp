@@ -35,7 +35,7 @@ ParFile::Config config_data()
     result.output.entry = "layer-%s-%04d";
     result.output.script = "frames.bat";
     result.output.frames = "frames/frame%04d.png";
-    result.output.layers = "layers/layer-%s-%04d.png";
+    result.output.layers = "layers/layer-%s-%04d.gif";
     result.output.compose_script = "compose.bat";
     result.video = "F6";
     result.num_frames = 3;
@@ -52,8 +52,8 @@ TEST(TestComposeScript, commandsComposeLayersInStackOrder)
     config.output.background = "black";
     const ParFile::ComposeScript script{config};
 
-    EXPECT_EQ("magick ^( \"layers/layer-base-0002.png\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
-              "^( \"layers/layer-detail-0002.png\" -alpha set -channel A -evaluate multiply 0.5 +channel ^) "
+    EXPECT_EQ("magick ^( \"layers/layer-base-0002.gif\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
+              "^( \"layers/layer-detail-0002.gif\" -alpha set -channel A -evaluate multiply 0.5 +channel ^) "
               "-compose Over -composite -background \"black\" -alpha remove -alpha off "
               "\"frames/frame0002.png\"\n"
               "if errorlevel 1 exit /b 1\n",
@@ -104,7 +104,7 @@ TEST(TestComposeScript, hiddenLayerIsSkipped)
     config.layers[1].opacity = opacity(0.0);
     const ParFile::ComposeScript script{config};
 
-    EXPECT_EQ("magick ^( \"layers/layer-base-0001.png\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
+    EXPECT_EQ("magick ^( \"layers/layer-base-0001.gif\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
               "\"frames/frame0001.png\"\n"
               "if errorlevel 1 exit /b 1\n",
         script.commands(0));
@@ -117,8 +117,8 @@ TEST(TestComposeScript, writeWhenHiddenKeepsZeroOpacityLayer)
     config.layers[1].write_when_hidden = true;
     const ParFile::ComposeScript script{config};
 
-    EXPECT_EQ("magick ^( \"layers/layer-base-0001.png\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
-              "^( \"layers/layer-detail-0001.png\" -alpha set -channel A -evaluate multiply 0 +channel ^) "
+    EXPECT_EQ("magick ^( \"layers/layer-base-0001.gif\" -alpha set -channel A -evaluate multiply 1 +channel ^) "
+              "^( \"layers/layer-detail-0001.gif\" -alpha set -channel A -evaluate multiply 0 +channel ^) "
               "-compose Over -composite \"frames/frame0001.png\"\n"
               "if errorlevel 1 exit /b 1\n",
         script.commands(0));

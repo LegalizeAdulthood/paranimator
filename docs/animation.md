@@ -965,15 +965,16 @@ embed those paths.
 ## Layered Animation Files
 
 An animation may define a layer stack instead of a single source
-parameter set. Each layer renders an Iterated Dynamics image for the
-current frame. The final animation frame is produced by compositing those
-layer images with ImageMagick.
+parameter set. Each layer renders an Id GIF image for the current frame.
+The final animation frame is produced by compositing those layer images
+with ImageMagick.
 
 When output.layers is configured, the render batch invokes Id with a
-filename-only savename. Id writes that image to output-directory/image.
-The batch file then creates the layer output directory if needed and moves
-the generated image into the configured layer image path. ImageMagick
-composition reads layer images after this move step.
+filename-only savename. Id writes that GIF image to
+output-directory/image. The batch file creates the layer output directory
+once in its prologue, then moves each generated image into the configured
+layer image path. ImageMagick composition reads layer images after this
+move step.
 
 Layers are evaluated from bottom to top.
 
@@ -990,7 +991,7 @@ Example:
         "par": "layers.par",
         "entry": "layer-%s-%04d",
         "frames": "frames/frame%04d.png",
-        "layers": "layer-%s-%04d.png",
+        "layers": "layer-%s-%04d.gif",
         "script": "render.bat",
         "compose-script": "compose.bat",
         "background": "black"

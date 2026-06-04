@@ -52,7 +52,7 @@ std::string config_with_layer_compose(std::string_view compose)
     "entry": "layer-%s-%04d",
     "script": "frames.bat",
     "frames": "frames/frame%04d.png",
-    "layers": "layers/layer-%s-%04d.png",
+    "layers": "layers/layer-%s-%04d.gif",
     "compose-script": "compose.bat",
     "background": "black"
   },
@@ -370,6 +370,31 @@ TEST(TestJsonSchema, layerComposeOperatorsAccepted)
     {
         EXPECT_TRUE(validates_config_text(config_with_layer_compose(op))) << op;
     }
+}
+
+TEST(TestJsonSchema, layerOutputRejectsNonGifExtension)
+{
+    EXPECT_FALSE(validates_config_text(R"({
+  "parameter-catalogs": [ "core-catalog.json" ],
+  "output": {
+    "directory": "out",
+    "par": "frames.par",
+    "entry": "layer-%s-%04d",
+    "script": "frames.bat",
+    "frames": "frames/frame%04d.png",
+    "layers": "layers/layer-%s-%04d.png",
+    "compose-script": "compose.bat"
+  },
+  "video": "F6",
+  "num-frames": 1,
+  "layers": [
+    {
+      "id": "base",
+      "source": { "file": "from.par", "name": "Mandel_Demo" },
+      "tracks": []
+    }
+  ]
+})"));
 }
 
 TEST(TestJsonSchema, layerComposeRejectsUnsupportedOperator)

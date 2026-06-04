@@ -82,6 +82,27 @@ static std::optional<std::string> load_optional_string(const Object &json, std::
     return json.at(key).get<std::string>();
 }
 
+static char ascii_lower(char value)
+{
+    if (value >= 'A' && value <= 'Z')
+    {
+        return static_cast<char>(value - 'A' + 'a');
+    }
+    return value;
+}
+
+static bool has_gif_extension(std::string_view text)
+{
+    const std::string_view extension{".gif"};
+    if (text.size() < extension.size())
+    {
+        return false;
+    }
+    const std::string_view suffix{text.substr(text.size() - extension.size())};
+    return std::equal(
+        extension.begin(), extension.end(), suffix.begin(), [](char lhs, char rhs) { return lhs == ascii_lower(rhs); });
+}
+
 static std::optional<bool> load_optional_bool(const Object &json, std::string_view field)
 {
     const std::string key{field};
@@ -138,6 +159,10 @@ static OutputConfig load_output_config(const Object &json)
     result.layers = load_optional_string(output, "layers");
     result.compose_script = load_optional_string(output, "compose-script");
     result.background = load_optional_string(output, "background");
+    if (result.layers && !has_gif_extension(*result.layers))
+    {
+        throw std::runtime_error("Invalid config, output layers must use .gif extension");
+    }
     if (result.compose_script && (!result.frames || !result.layers))
     {
         throw std::runtime_error("Invalid config, compose-script requires output frames and layers");

@@ -76,8 +76,9 @@
           "type": "string"
         },
         "layers": {
-          "description": "Rendered layer image filename pattern.",
-          "type": "string"
+          "description": "Rendered Id GIF layer image filename pattern.",
+          "type": "string",
+          "pattern": "\\.[Gg][Ii][Ff]$"
         },
         "compose-script": {
           "description": "Generated ImageMagick composition batch script filename.",

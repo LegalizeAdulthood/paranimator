@@ -59,7 +59,7 @@ TEST(TestOutputLayout, createLayerAndFrameDirectories)
 {
     ParFile::Config config{config_data()};
     config.output.frames = "frames/frame%04d.png";
-    config.output.layers = "layers/layer-%s-%04d.png";
+    config.output.layers = "layers/layer-%s-%04d.gif";
     ParFile::OutputLayout layout{config};
     std::filesystem::remove_all(layout.directory());
 
