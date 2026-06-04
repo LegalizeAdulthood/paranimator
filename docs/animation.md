@@ -561,17 +561,23 @@ At each frame:
     right = perpendicular clockwise from up
     height = evaluate height track
     width = height * aspect
+    skew = evaluate skew track if present, else 0
 
-    lower_left = look - right * width / 2 - up * height / 2
-    lower_right = look + right * width / 2 - up * height / 2
-    upper_left = look - right * width / 2 + up * height / 2
+    skew_offset = height * tan(degrees_to_radians(skew)) / 2
+
+    top_left = rotate((-width / 2 + skew_offset, height / 2)) + look
+    bottom_right = rotate((width / 2 - skew_offset, -height / 2)) + look
+    bottom_left = rotate((-width / 2 - skew_offset, -height / 2)) + look
 
 The output names a catalog parameter. It is not a hard-coded Iterated
 Dynamics parameter name in the animator.
 
 For output corners, the output parameter metadata must have type corners.
-Format the computed points into the corners syntax supported by the
-target renderer.
+Write the compact 4-value form only when view-up is the normal Y axis
+and skew is zero. Otherwise write Id's 6-value form:
+
+The 6 values are, in order, `top_left.x`, `bottom_right.x`,
+`bottom_right.y`, `top_left.y`, `bottom_left.x`, and `bottom_left.y`.
 
 For output center-mag, the output parameter metadata must have type
 center-mag. Use the extended center-mag form:
@@ -579,12 +585,13 @@ center-mag. Use the extended center-mag form:
     Xctr/Yctr/Mag[/Xmagfactor/rotation/skew]
 
 `Xmagfactor` preserves the viewport aspect ratio, rotation comes from the
-camera's evaluated view-up vector, and skew is 0 for the camera2d model.
-Write only the optional fields needed for non-default values.
+camera's evaluated view-up vector, and skew comes from the optional
+camera2d skew track. Write only the optional fields needed for
+non-default values.
 
-The camera2d track lets the animator plan look-at, view-up, and height as
-independent curves while still writing only normal Iterated Dynamics
-parameters.
+The camera2d track lets the animator plan look-at, view-up, height, and
+skew as independent curves while still writing only normal Iterated
+Dynamics parameters.
 
 ## Id 3D Viewing Adapters
 
@@ -1668,59 +1675,7 @@ The intent is not to finish a large subsystem before anything runs. The
 intent is to get a small valid Id animation working quickly, then keep
 that path working while each later feature is added.
 
-### 1. 2D Camera Skew
-
-Extend camera2d with an optional scalar skew track. Id source treats
-6-value corners as three points that define an affine pixel grid, so skew
-is modeled by making the screen basis vectors non-orthogonal.
-
-Implement:
-
-- Add an optional double `skew` planning track to camera2d.
-- Default omitted skew to 0 degrees.
-- Evaluate skew independently from look-at, eye, view-up, and height.
-- Keep eye distance as orientation only; skew must not affect height,
-  magnification, or zoom.
-- For center-mag output, write the evaluated skew as the sixth
-  center-mag value when it is nonzero.
-- For corners output, compute Id-compatible 6-value corners from the
-  evaluated center, height, aspect, Xmagfactor, rotation, and skew.
-- Use the Id `cvt_corners` shape: apply skew with
-  `tan(degrees_to_radians(skew))`, then rotate and translate the
-  top-left, bottom-right, and bottom-left points.
-- Continue to write 4-value corners only when the camera is axis-aligned
-  and skew is 0.
-- Reject skew values that make the computed affine grid degenerate.
-
-Add schema documentation:
-
-- Document camera2d `skew` as degrees matching Id center-mag skew.
-- Document that positive skew follows Id's sign convention.
-- Document that nonzero skew makes corners output use the 6-value form.
-- Add `description` strings to every new schema object, field, enum, and
-  const.
-
-Add unit tests:
-
-- Config deserialization accepts camera2d with a skew track.
-- Schema validation accepts camera2d skew tracks.
-- Schema validation rejects nonnumeric skew values.
-- Resolved animation keeps the typed skew track.
-- Interpolant writes center-mag skew as the sixth value.
-- Interpolant writes skewed 6-value corners using the Id pixel-grid
-  point order.
-- Axis-aligned zero-skew corners still use the compact 4-value form.
-- Nonzero skew with zero rotation writes 6-value corners.
-- Degenerate skewed affine grids are rejected.
-
-Add integration tests:
-
-- Add a `camera2d-skew-center-mag` gold fixture that writes nonzero
-  center-mag skew and checks generated par and batch files.
-- Add a `camera2d-skew-corners` gold fixture that writes skewed 6-value
-  corners and checks generated par and batch files.
-
-### 2. 3D Camera
+### 1. 3D Camera
 
 Add a shared 3D planning camera frame for the existing 3D viewing
 adapters. The planning model uses point3 eye and look-at points plus a

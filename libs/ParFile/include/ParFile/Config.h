@@ -185,6 +185,7 @@ struct Camera2DConfig
     std::optional<Camera2DValueTrackConfig> view_up;
     std::optional<Camera2DValueTrackConfig> eye;
     Camera2DValueTrackConfig height;
+    std::optional<Camera2DValueTrackConfig> skew;
 };
 
 struct Id3DViewValueTrackConfig

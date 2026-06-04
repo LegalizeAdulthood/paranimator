@@ -28,6 +28,7 @@ struct ResolvedCamera2DConfig
     std::optional<ResolvedCamera2DValueTrack> view_up;
     std::optional<ResolvedCamera2DValueTrack> eye;
     ResolvedCamera2DValueTrack height;
+    std::optional<ResolvedCamera2DValueTrack> skew;
 };
 
 struct ResolvedTrack

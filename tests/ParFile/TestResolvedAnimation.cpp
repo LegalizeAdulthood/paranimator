@@ -285,6 +285,19 @@ TEST(TestResolvedAnimation, camera2dResolvesOutputMetadataAndSourceAspect)
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, track.camera2d->height.metadata.type);
 }
 
+TEST(TestResolvedAnimation, camera2dSourceAspectUsesIdSixValueCorners)
+{
+    ParFile::ParSet source{source_set()};
+    source.params[1].value = "-1/1/-2/2/-1/-2";
+
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(camera2d_config_data(), catalog_data(), source)};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    ASSERT_TRUE(animation.tracks[0].camera2d);
+    EXPECT_DOUBLE_EQ(0.5, animation.tracks[0].camera2d->aspect);
+}
+
 TEST(TestResolvedAnimation, camera2dResolvesEyeTrack)
 {
     ParFile::Config config{camera2d_config_data("center-mag")};
@@ -305,6 +318,26 @@ TEST(TestResolvedAnimation, camera2dResolvesEyeTrack)
     EXPECT_FALSE(track.camera2d->eye->metadata.normalize);
     ASSERT_EQ(2U, track.camera2d->eye->keys.size());
     EXPECT_EQ("1/0", track.camera2d->eye->keys[0].value);
+}
+
+TEST(TestResolvedAnimation, camera2dResolvesSkewTrack)
+{
+    ParFile::Config config{camera2d_config_data("center-mag")};
+    ASSERT_TRUE(config.tracks[0].camera2d);
+    config.tracks[0].camera2d->skew =
+        ParFile::Camera2DValueTrackConfig{ParFile::ParameterType::DOUBLE, false, {{0, "0"}, {2, "10"}}};
+
+    const ParFile::ResolvedAnimation animation{ParFile::resolve_animation(config, catalog_data(), source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    ASSERT_TRUE(track.camera2d);
+    ASSERT_TRUE(track.camera2d->skew);
+    EXPECT_EQ("camera.skew", track.camera2d->skew->metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::DOUBLE, track.camera2d->skew->metadata.type);
+    ASSERT_EQ(2U, track.camera2d->skew->keys.size());
+    EXPECT_EQ("0", track.camera2d->skew->keys[0].value);
+    EXPECT_EQ("10", track.camera2d->skew->keys[1].value);
 }
 
 TEST(TestResolvedAnimation, camera2dResolvesCenterMagOutputAndVideoAspect)

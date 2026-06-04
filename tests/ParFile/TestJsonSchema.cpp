@@ -779,6 +779,45 @@ TEST(TestJsonSchema, camera2dEyeTrackAccepted)
     })")));
 }
 
+TEST(TestJsonSchema, camera2dSkewTrackAccepted)
+{
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "name": "camera",
+      "type": "camera2d",
+      "output": "center-mag",
+      "aspect": "source",
+      "look-at": {
+        "type": "point2",
+        "keys": [
+          { "frame": 0, "value": "0/0" },
+          { "frame": 2, "value": "0/0" }
+        ]
+      },
+      "view-up": {
+        "type": "vector2",
+        "normalize": true,
+        "keys": [
+          { "frame": 0, "value": "0/1" },
+          { "frame": 2, "value": "0/1" }
+        ]
+      },
+      "height": {
+        "type": "double",
+        "keys": [
+          { "frame": 0, "value": 3 },
+          { "frame": 2, "value": 3 }
+        ]
+      },
+      "skew": {
+        "type": "double",
+        "keys": [
+          { "frame": 0, "value": 0 },
+          { "frame": 2, "value": 10 }
+        ]
+      }
+    })")));
+}
+
 TEST(TestJsonSchema, id3DViewTrackAccepted)
 {
     EXPECT_TRUE(validates_config_text(config_with_track(R"({
@@ -1068,6 +1107,45 @@ TEST(TestJsonSchema, camera2dTrackRejectsMissingOrientation)
         "keys": [
           { "frame": 0, "value": 4 },
           { "frame": 2, "value": 4 }
+        ]
+      }
+    })")));
+}
+
+TEST(TestJsonSchema, camera2dSkewTrackRejectsNonnumericValue)
+{
+    EXPECT_FALSE(validates_config_text(config_with_track(R"({
+      "name": "camera",
+      "type": "camera2d",
+      "output": "center-mag",
+      "aspect": "source",
+      "look-at": {
+        "type": "point2",
+        "keys": [
+          { "frame": 0, "value": "0/0" },
+          { "frame": 2, "value": "0/0" }
+        ]
+      },
+      "view-up": {
+        "type": "vector2",
+        "normalize": true,
+        "keys": [
+          { "frame": 0, "value": "0/1" },
+          { "frame": 2, "value": "0/1" }
+        ]
+      },
+      "height": {
+        "type": "double",
+        "keys": [
+          { "frame": 0, "value": 3 },
+          { "frame": 2, "value": 3 }
+        ]
+      },
+      "skew": {
+        "type": "double",
+        "keys": [
+          { "frame": 0, "value": 0 },
+          { "frame": 2, "value": "10" }
         ]
       }
     })")));

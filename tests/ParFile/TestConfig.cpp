@@ -689,6 +689,40 @@ TEST(TestConfig, jsonDeserializesCamera2DEyeTrack)
     EXPECT_TRUE(camera.eye->keys.empty());
 }
 
+TEST(TestConfig, jsonDeserializesCamera2DSkewTrack)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"name", "camera"}, {"type", "camera2d"}, {"output", "center-mag"},
+        {"aspect", "source"},
+        {"look-at",
+            Object{{"type", "point2"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "0/0"}}, Object{{"frame", 59}, {"value", "0/0"}}})}}},
+        {"view-up",
+            Object{{"type", "vector2"}, {"normalize", true},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", "0/1"}}, Object{{"frame", 59}, {"value", "0/1"}}})}}},
+        {"height",
+            Object{{"type", "double"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", 3.0}}, Object{{"frame", 59}, {"value", 3.0}}})}}},
+        {"skew",
+            Object{{"type", "double"},
+                {"keys",
+                    Object::array({Object{{"frame", 0}, {"value", 0.0}}, Object{{"frame", 59}, {"value", 10.0}}})}}}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_TRUE(config.tracks[0].camera2d);
+    const ParFile::Camera2DConfig &camera{*config.tracks[0].camera2d};
+    ASSERT_TRUE(camera.skew);
+    EXPECT_EQ(ParFile::ParameterType::DOUBLE, camera.skew->type);
+    ASSERT_EQ(2U, camera.skew->keys.size());
+    EXPECT_EQ("0", camera.skew->keys[0].value);
+    EXPECT_EQ("10", camera.skew->keys[1].value);
+}
+
 TEST(TestConfig, jsonDeserializesId3DViewTrack)
 {
     Object json = valid_json();

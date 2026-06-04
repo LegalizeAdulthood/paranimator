@@ -87,8 +87,8 @@ double source_corners_aspect(std::string_view value)
     }
     else if (values.size() == 6U)
     {
-        width = point_distance(values[0], values[1], values[2], values[3]);
-        height = point_distance(values[0], values[1], values[4], values[5]);
+        width = point_distance(values[4], values[5], values[1], values[2]);
+        height = point_distance(values[0], values[3], values[4], values[5]);
     }
     else
     {
@@ -371,6 +371,7 @@ ResolvedTrack resolve_camera2d_track(
     camera2d.view_up = resolve_optional_camera2d_value_track(camera.view_up, camera.name, "view-up", true);
     camera2d.eye = resolve_optional_camera2d_value_track(camera.eye, camera.name, "eye", false);
     camera2d.height = resolve_camera2d_value_track(camera.height, camera.name, "height", false);
+    camera2d.skew = resolve_optional_camera2d_value_track(camera.skew, camera.name, "skew", false);
 
     ResolvedTrack result;
     result.parameter = camera.name;

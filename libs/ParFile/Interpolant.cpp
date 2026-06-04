@@ -1314,28 +1314,80 @@ bool is_normal_axis_aligned(const Point2D &up)
     return std::abs(up.x) < TOLERANCE && std::abs(up.y - 1.0) < TOLERANCE;
 }
 
-std::string format_camera2d_corners(
-    const Point2D &up, const Point2D &lower_left, const Point2D &lower_right, const Point2D &upper_left)
+constexpr double CAMERA2D_PI{3.141592653589793238462643383279502884};
+
+double camera2d_rotation(const Point2D &up)
 {
-    if (is_normal_axis_aligned(up))
+    return std::atan2(up.x, up.y) * 180.0 / CAMERA2D_PI;
+}
+
+Point2D rotate_camera2d_point(const Point2D &value, double radians)
+{
+    const double cosine{std::cos(radians)};
+    const double sine{std::sin(radians)};
+    return {value.x * cosine + value.y * sine, -value.x * sine + value.y * cosine};
+}
+
+bool finite_camera2d_point(const Point2D &value)
+{
+    return std::isfinite(value.x) && std::isfinite(value.y);
+}
+
+void validate_camera2d_point(const Point2D &value)
+{
+    if (!finite_camera2d_point(value))
     {
-        return format_slash_doubles(clean_path_components({lower_left.x, lower_right.x, lower_left.y, upper_left.y}));
+        throw std::runtime_error("Camera2D corners output contains a non-finite point");
+    }
+}
+
+std::string format_camera2d_corners(double aspect, const Point2D &look, const Point2D &up, double height, double skew)
+{
+    if (!std::isfinite(skew))
+    {
+        throw std::runtime_error("Camera2D skew must be finite");
+    }
+
+    const double half_height{height / 2.0};
+    const double half_width{height * aspect / 2.0};
+    const double tan_skew{std::tan(degrees_to_radians(skew))};
+    if (!std::isfinite(tan_skew))
+    {
+        throw std::runtime_error("Camera2D skew produces a degenerate affine grid");
+    }
+
+    const double skew_offset{half_height * tan_skew};
+    Point2D top_left{-half_width + skew_offset, half_height};
+    Point2D bottom_right{half_width - skew_offset, -half_height};
+    Point2D bottom_left{-half_width - skew_offset, -half_height};
+
+    const double rotation{camera2d_rotation(up)};
+    const double rotation_radians{degrees_to_radians(rotation)};
+    top_left = rotate_camera2d_point(top_left, rotation_radians) + look;
+    bottom_right = rotate_camera2d_point(bottom_right, rotation_radians) + look;
+    bottom_left = rotate_camera2d_point(bottom_left, rotation_radians) + look;
+    validate_camera2d_point(top_left);
+    validate_camera2d_point(bottom_right);
+    validate_camera2d_point(bottom_left);
+
+    if (is_normal_axis_aligned(up) && is_default_value(skew, 0.0))
+    {
+        return format_slash_doubles(clean_path_components({bottom_left.x, bottom_right.x, bottom_left.y, top_left.y}));
     }
     return format_slash_doubles(
-        clean_path_components({lower_left.x, lower_left.y, lower_right.x, lower_right.y, upper_left.x, upper_left.y}));
+        clean_path_components({top_left.x, bottom_right.x, bottom_right.y, top_left.y, bottom_left.x, bottom_left.y}));
 }
 
 std::string format_camera2d_center_mag(
-    double aspect, double x_mag_factor, const Point2D &look, const Point2D &up, double height)
+    double aspect, double x_mag_factor, const Point2D &look, const Point2D &up, double height, double skew)
 {
-    constexpr double PI{3.141592653589793238462643383279502884};
     const double magnification{4.0 / (aspect * height)};
-    const double rotation{std::atan2(up.x, up.y) * 180.0 / PI};
     CenterMag value;
     value.center = {look.x, look.y};
     value.mag = magnification;
     value.x_mag_factor = x_mag_factor;
-    value.rotation = rotation;
+    value.rotation = camera2d_rotation(up);
+    value.skew = skew;
     return format_center_mag(value, true);
 }
 
@@ -1355,6 +1407,7 @@ private:
     std::optional<Camera2DValueEvaluator> m_view_up;
     std::optional<Camera2DValueEvaluator> m_eye;
     Camera2DValueEvaluator m_height;
+    std::optional<Camera2DValueEvaluator> m_skew;
 };
 
 Camera2DInterpolant::Camera2DInterpolant(const ResolvedTrack &track, int num_steps) :
@@ -1365,7 +1418,8 @@ Camera2DInterpolant::Camera2DInterpolant(const ResolvedTrack &track, int num_ste
     m_look_at(camera2d_config(track).look_at, num_steps, false),
     m_view_up(optional_camera2d_value_evaluator(camera2d_config(track).view_up, num_steps, false)),
     m_eye(optional_camera2d_value_evaluator(camera2d_config(track).eye, num_steps, false)),
-    m_height(camera2d_config(track).height, num_steps, true)
+    m_height(camera2d_config(track).height, num_steps, true),
+    m_skew(optional_camera2d_value_evaluator(camera2d_config(track).skew, num_steps, false))
 {
     if (track.metadata.type != ParameterType::CORNERS && track.metadata.type != ParameterType::CENTER_MAG)
     {
@@ -1398,17 +1452,13 @@ std::string Camera2DInterpolant::step()
         up = point2_from_values(m_view_up->value_at(frame), "view-up");
     }
     const double height{m_height.value_at(frame)[0]};
-    const double width{height * m_aspect};
-    const Point2D right{up.y, -up.x};
-    const Point2D lower_left{look - right * (width / 2.0) - up * (height / 2.0)};
-    const Point2D lower_right{look + right * (width / 2.0) - up * (height / 2.0)};
-    const Point2D upper_left{look - right * (width / 2.0) + up * (height / 2.0)};
+    const double skew{m_skew ? m_skew->value_at(frame)[0] : 0.0};
 
     if (m_output_type == ParameterType::CENTER_MAG)
     {
-        return format_camera2d_center_mag(m_aspect, m_center_mag_x_mag_factor, look, up, height);
+        return format_camera2d_center_mag(m_aspect, m_center_mag_x_mag_factor, look, up, height, skew);
     }
-    return format_camera2d_corners(up, lower_left, lower_right, upper_left);
+    return format_camera2d_corners(m_aspect, look, up, height, skew);
 }
 
 class IntegerInterpolant : public Base

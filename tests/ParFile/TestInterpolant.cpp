@@ -173,7 +173,8 @@ ParFile::ResolvedCamera2DValueTrack resolved_camera2d_path_value_track(
 ParFile::ResolvedTrack resolved_camera2d_track(double aspect, const std::vector<ParFile::KeyframeConfig> &look_at_keys,
     const std::vector<ParFile::KeyframeConfig> &view_up_keys, const std::vector<ParFile::KeyframeConfig> &height_keys,
     ParFile::ParameterType output_type = ParFile::ParameterType::CORNERS,
-    const std::string &output_parameter = "corners", double center_mag_x_mag_factor = 1.0)
+    const std::string &output_parameter = "corners", double center_mag_x_mag_factor = 1.0,
+    std::optional<std::vector<ParFile::KeyframeConfig>> skew_keys = {})
 {
     ParFile::ResolvedCamera2DConfig camera2d;
     camera2d.aspect = aspect;
@@ -182,6 +183,10 @@ ParFile::ResolvedTrack resolved_camera2d_track(double aspect, const std::vector<
     camera2d.view_up =
         resolved_camera2d_value_track("camera.view-up", ParFile::ParameterType::VECTOR2, view_up_keys, true);
     camera2d.height = resolved_camera2d_value_track("camera.height", ParFile::ParameterType::DOUBLE, height_keys);
+    if (skew_keys)
+    {
+        camera2d.skew = resolved_camera2d_value_track("camera.skew", ParFile::ParameterType::DOUBLE, *skew_keys);
+    }
 
     ParFile::ResolvedTrack result;
     result.parameter = "camera";
@@ -532,7 +537,8 @@ TEST(TestInterpolant, camera2dRotatedWritesThirdCorner)
             num_steps)};
 
     ASSERT_TRUE(interpolant);
-    EXPECT_EQ("-2.12132034356/-0.707106781187/-0.707106781187/-2.12132034356/0.707106781187/2.12132034356",
+    EXPECT_EQ("0.707106781187/-0.707106781187/-2.12132034356/2.12132034356/-2.12132034356/"
+              "-0.707106781187",
         interpolant->step());
 }
 
@@ -545,7 +551,7 @@ TEST(TestInterpolant, camera2dEyeDerivesViewUp)
             num_steps)};
 
     ASSERT_TRUE(interpolant);
-    EXPECT_EQ("-2/1/-2/-1/2/1", interpolant->step());
+    EXPECT_EQ("2/-2/-1/1/-2/1", interpolant->step());
 }
 
 TEST(TestInterpolant, camera2dEyeCircleRotatesCenterMag)
@@ -575,9 +581,9 @@ TEST(TestInterpolant, camera2dEyeCircleWritesRotatedCorners)
 
     ASSERT_TRUE(interpolant);
     EXPECT_EQ("-1/1/-1/1", interpolant->step());
-    EXPECT_EQ("1/-1/1/1/-1/-1", interpolant->step());
-    EXPECT_EQ("1/1/-1/1/1/-1", interpolant->step());
-    EXPECT_EQ("-1/1/-1/-1/1/1", interpolant->step());
+    EXPECT_EQ("-1/1/1/-1/1/-1", interpolant->step());
+    EXPECT_EQ("1/-1/1/-1/1/1", interpolant->step());
+    EXPECT_EQ("1/-1/-1/1/-1/1", interpolant->step());
     EXPECT_EQ("-1/1/-1/1", interpolant->step());
 }
 
@@ -668,6 +674,48 @@ TEST(TestInterpolant, camera2dCenterMagWritesXMagFactor)
 
     ASSERT_TRUE(interpolant);
     EXPECT_EQ("0/0/2/2", interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dSkewWritesCenterMag)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_camera2d_track(4.0 / 3.0, keyframes("0/0", "0/0", num_steps), keyframes("0/1", "0/1", num_steps),
+            keyframes("3", "3", num_steps), ParFile::ParameterType::CENTER_MAG, "center-mag", 1.0,
+            std::optional<std::vector<ParFile::KeyframeConfig>>{keyframes("0", "10", num_steps)}),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("0/0/1", interpolant->step());
+    EXPECT_EQ("0/0/1/1/0/5", interpolant->step());
+    EXPECT_EQ("0/0/1/1/0/10", interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dSkewWritesSixValueCorners)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_camera2d_track(0.5, keyframes("0/0", "0/0", num_steps), keyframes("0/1", "0/1", num_steps),
+            keyframes("4", "4", num_steps), ParFile::ParameterType::CORNERS, "corners", 1.0,
+            std::optional<std::vector<ParFile::KeyframeConfig>>{keyframes("0", "10", num_steps)}),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("-1/1/-2/2", interpolant->step());
+    EXPECT_EQ("-0.825022672948/0.825022672948/-2/2/-1.17497732705/-2", interpolant->step());
+    EXPECT_EQ("-0.647346038583/0.647346038583/-2/2/-1.35265396142/-2", interpolant->step());
+}
+
+TEST(TestInterpolant, camera2dInvalidSkewRejected)
+{
+    const int num_steps{3};
+    EXPECT_THROW(
+        ParFile::create_interpolant(
+            resolved_camera2d_track(0.5, keyframes("0/0", "0/0", num_steps), keyframes("0/1", "0/1", num_steps),
+                keyframes("4", "4", num_steps), ParFile::ParameterType::CORNERS, "corners", 1.0,
+                std::optional<std::vector<ParFile::KeyframeConfig>>{keyframes("nan", "nan", num_steps)}),
+            num_steps),
+        std::runtime_error);
 }
 
 TEST(TestInterpolant, integerFrom)

@@ -462,6 +462,7 @@ static Camera2DConfig load_camera2d_config(const Object &json, int num_frames)
         throw std::runtime_error("Invalid config, camera2d requires view-up or eye");
     }
     result.height = load_camera2d_value_track_config(json, "height", ParameterType::DOUBLE, true, num_frames);
+    result.skew = load_optional_camera2d_value_track_config(json, "skew", ParameterType::DOUBLE, true, num_frames);
     return result;
 }
 

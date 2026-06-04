@@ -392,6 +392,10 @@
         "height": {
           "description": "Keyed camera view height in output coordinate units.",
           "$ref": "#/$defs/camera2d-height-track"
+        },
+        "skew": {
+          "description": "Optional keyed camera skew angle in degrees using Id's center-mag sign convention.",
+          "$ref": "#/$defs/camera2d-skew-track"
         }
       }
     },
@@ -472,6 +476,25 @@
         }
       }
     },
+    "camera2d-skew-track": {
+      "description": "Camera2d scalar skew component track.",
+      "type": "object",
+      "required": [ "type", "keys" ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "double",
+          "description": "Declares a scalar floating-point value."
+        },
+        "keys": {
+          "description": "Exactly two keyed skew values in degrees.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/camera2d-skew-keyframe" }
+        }
+      }
+    },
     "camera2d-point2-keyframe": {
       "description": "One keyed camera point2 value.",
       "type": "object",
@@ -529,6 +552,26 @@
         },
         "curve": {
           "description": "Optional interpolation curve ending at this height key.",
+          "$ref": "#/$defs/curve"
+        }
+      }
+    },
+    "camera2d-skew-keyframe": {
+      "description": "One keyed camera skew value.",
+      "type": "object",
+      "required": [ "frame", "value" ],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Zero-based frame index for this camera skew key.",
+          "type": "integer"
+        },
+        "value": {
+          "description": "Camera skew angle in degrees at this keyframe.",
+          "type": "number"
+        },
+        "curve": {
+          "description": "Optional interpolation curve ending at this skew key.",
           "$ref": "#/$defs/curve"
         }
       }
