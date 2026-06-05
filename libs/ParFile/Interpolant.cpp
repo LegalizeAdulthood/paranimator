@@ -5,7 +5,7 @@
 #include <ParFile/Config.h>
 #include <ParFile/ParameterCatalog.h>
 
-#include "StringUtil.h"
+#include <StringUtil.h>
 
 #include <fmt/format.h>
 

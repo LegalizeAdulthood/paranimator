@@ -2,8 +2,9 @@
 //
 #include <ParFile/ParFile.h>
 
+#include <StringUtil.h>
+
 #include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/trim.hpp>
 
 #include <algorithm>
 #include <istream>
@@ -55,12 +56,12 @@ private:
 void get_content_line(std::istream &contents, std::string &line)
 {
     std::getline(contents, line);
-    boost::algorithm::trim(line);
+    line = trim(line);
     while (contents && !line.empty() && line.back() == '\\')
     {
         std::string continuation;
         std::getline(contents, continuation);
-        boost::algorithm::trim(continuation);
+        continuation = trim(continuation);
         line.pop_back();
         line += continuation;
     }
@@ -68,7 +69,7 @@ void get_content_line(std::istream &contents, std::string &line)
     {
         line.erase(semi, std::string::npos);
     }
-    boost::algorithm::trim(line);
+    line = trim(line);
 }
 
 StreamParFile::StreamParFile(std::istream &contents)
@@ -81,7 +82,7 @@ StreamParFile::StreamParFile(std::istream &contents)
         {
             ParSet param_set;
             param_set.name = line.substr(0, line.find_first_of('{') - 1);
-            boost::algorithm::trim(param_set.name);
+            param_set.name = trim(param_set.name);
             while (contents && !line.empty() && line.find_first_of('}') == std::string::npos)
             {
                 get_content_line(contents, line);

@@ -40,7 +40,9 @@ add_library(ParFile
 )
 target_include_directories(ParFile
     PUBLIC include
-    PRIVATE "${PARFILE_SCRIPT_DIALECT_INCLUDE_DIR}"
+    PRIVATE
+        .
+        "${PARFILE_SCRIPT_DIALECT_INCLUDE_DIR}"
 )
 target_link_libraries(
     ParFile

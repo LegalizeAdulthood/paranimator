@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-only
 //
-#include "StringUtil.h"
+#include <StringUtil.h>
 
 #include <cctype>
 #include <cstddef>
 
 namespace ParFile
-{
-
-namespace
 {
 
 std::string trim(std::string_view text)
@@ -26,8 +23,6 @@ std::string trim(std::string_view text)
     }
     return {first, last};
 }
-
-} // namespace
 
 std::vector<std::string> split_slash_values(std::string_view text, TrimSlashValues trim_values)
 {

@@ -2,7 +2,7 @@
 //
 #include <ParFile/ColorSpec.h>
 
-#include "StringUtil.h"
+#include <StringUtil.h>
 
 #include <algorithm>
 #include <array>
@@ -226,22 +226,6 @@ constexpr std::string_view CSS_SPECIAL_COLOR_KEYWORDS[]{
     "windowframe",
     "windowtext",
 };
-
-std::string trim(std::string_view text)
-{
-    const auto is_space = [](unsigned char c) { return std::isspace(c) != 0; };
-    auto first{text.begin()};
-    while (first != text.end() && is_space(static_cast<unsigned char>(*first)))
-    {
-        ++first;
-    }
-    auto last{text.end()};
-    while (last != first && is_space(static_cast<unsigned char>(*(last - 1))))
-    {
-        --last;
-    }
-    return {first, last};
-}
 
 std::string ascii_lower(std::string_view text)
 {

@@ -12,7 +12,7 @@
 #include <ParFile/ParameterCatalog.h>
 #include <ParFile/ResolvedAnimation.h>
 
-#include "StringUtil.h"
+#include <StringUtil.h>
 
 #include <algorithm>
 #include <cmath>
