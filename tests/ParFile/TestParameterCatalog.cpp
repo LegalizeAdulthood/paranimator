@@ -67,6 +67,54 @@ std::string formula_function_catalog_text(std::string_view function)
         "}}}}}";
 }
 
+struct FormulaEntryMetadataCase
+{
+    const char *name;
+};
+
+constexpr FormulaEntryMetadataCase FORMULA_ENTRY_METADATA_CASES[]{
+    {"DAFrm01"},
+    {"DAFrm07"},
+    {"Larry"},
+};
+
+struct FormulaFunctionMetadataCase
+{
+    const char *formula_name;
+    const char *name;
+    int slot;
+};
+
+constexpr FormulaFunctionMetadataCase FORMULA_FUNCTION_METADATA_CASES[]{
+    {"DAFrm01", "fn1", 0},
+    {"DAFrm07", "fn1", 0},
+    {"Larry", "fn1", 0},
+    {"Larry", "fn2", 1},
+};
+
+std::string test_parameter_name(std::string text)
+{
+    for (char &ch : text)
+    {
+        const bool valid{(ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || ch == '_'};
+        if (!valid)
+        {
+            ch = '_';
+        }
+    }
+    return text;
+}
+
+std::string formula_entry_metadata_test_name(const ::testing::TestParamInfo<FormulaEntryMetadataCase> &info)
+{
+    return test_parameter_name(info.param.name);
+}
+
+std::string formula_function_metadata_test_name(const ::testing::TestParamInfo<FormulaFunctionMetadataCase> &info)
+{
+    return test_parameter_name(std::string{info.param.formula_name} + "_" + info.param.name);
+}
+
 ParFile::ParameterMetadata read_metadata(std::string_view metadata)
 {
     return ParFile::read_parameter_catalog(catalog_text(metadata)).metadata("x");
@@ -621,20 +669,25 @@ TEST(TestParameterCatalog, newtonParamsSlotMetadataLoads)
     EXPECT_EQ(2, *slot.metadata.min);
 }
 
-TEST(TestParameterCatalog, formulaCatalogUsesIdFrmEntry)
+class FormulaEntryMetadataTest : public ::testing::TestWithParam<FormulaEntryMetadataCase>
 {
+};
+
+TEST_P(FormulaEntryMetadataTest, formulaCatalogUsesIdFrmEntry)
+{
+    const FormulaEntryMetadataCase &expected{GetParam()};
     const ParFile::ParameterCatalog catalog{formula_catalog()};
 
-    ASSERT_EQ(2U, catalog.formula_entries.size());
+    ASSERT_EQ(std::size(FORMULA_ENTRY_METADATA_CASES), catalog.formula_entries.size());
 
-    const auto contains_formula{[&](std::string_view name) {
-        return std::find_if(catalog.formula_entries.begin(), catalog.formula_entries.end(),
-                   [&](const ParFile::FormulaEntryMetadata &metadata) { return metadata.name == name; }) !=
-            catalog.formula_entries.end();
-    }};
-    EXPECT_TRUE(contains_formula("DAFrm01"));
-    EXPECT_TRUE(contains_formula("Larry"));
+    const auto is_formula{
+        [&](const ParFile::FormulaEntryMetadata &metadata) { return metadata.name == expected.name; }};
+    EXPECT_NE(catalog.formula_entries.end(),
+        std::find_if(catalog.formula_entries.begin(), catalog.formula_entries.end(), is_formula));
 }
+
+INSTANTIATE_TEST_SUITE_P(TestParameterCatalog, FormulaEntryMetadataTest,
+    ::testing::ValuesIn(FORMULA_ENTRY_METADATA_CASES), formula_entry_metadata_test_name);
 
 TEST(TestParameterCatalog, formulaParamsBailoutKnobMetadataLoads)
 {
@@ -676,15 +729,20 @@ TEST(TestParameterCatalog, formulaParamsIntegerKnobMetadataLoads)
     EXPECT_EQ(4, knob.slots[0]);
 }
 
-TEST(TestParameterCatalog, formulaFunctionMetadataLoads)
+class FormulaFunctionMetadataTest : public ::testing::TestWithParam<FormulaFunctionMetadataCase>
 {
-    const ParFile::ParameterCatalog catalog{formula_catalog()};
-    const ParFile::FormulaFunctionMetadata &function{catalog.formula_function("DAFrm01", "fn1")};
+};
 
-    EXPECT_EQ("fn1", function.name);
-    EXPECT_EQ("DAFrm01.fn1", function.metadata.name);
+TEST_P(FormulaFunctionMetadataTest, formulaFunctionMetadataLoads)
+{
+    const FormulaFunctionMetadataCase &expected{GetParam()};
+    const ParFile::ParameterCatalog catalog{formula_catalog()};
+    const ParFile::FormulaFunctionMetadata &function{catalog.formula_function(expected.formula_name, expected.name)};
+
+    EXPECT_EQ(expected.name, function.name);
+    EXPECT_EQ(std::string{expected.formula_name} + "." + expected.name, function.metadata.name);
     EXPECT_EQ(ParFile::ParameterType::ENUM, function.metadata.type);
-    EXPECT_EQ(0, function.slot);
+    EXPECT_EQ(expected.slot, function.slot);
     ASSERT_TRUE(function.metadata.format);
     EXPECT_EQ(ParFile::ParameterFormat::RAW, *function.metadata.format);
     ASSERT_TRUE(function.metadata.default_curve);
@@ -694,6 +752,9 @@ TEST(TestParameterCatalog, formulaFunctionMetadataLoads)
     EXPECT_NE(function.metadata.values.end(),
         std::find(function.metadata.values.begin(), function.metadata.values.end(), "round"));
 }
+
+INSTANTIATE_TEST_SUITE_P(TestParameterCatalog, FormulaFunctionMetadataTest,
+    ::testing::ValuesIn(FORMULA_FUNCTION_METADATA_CASES), formula_function_metadata_test_name);
 
 TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
 {

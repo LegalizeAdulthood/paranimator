@@ -13,9 +13,6 @@ is implemented.
 
 ## Slices
 
-- `DAFrm07`
-  Params: `p1`. Functions: `fn1`.
-
 - `DAFrm09`
   Params: none. Functions: `fn1`.
 
