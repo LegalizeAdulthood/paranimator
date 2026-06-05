@@ -4,8 +4,6 @@
 
 #include <StringUtil.h>
 
-#include <boost/algorithm/string/split.hpp>
-
 #include <algorithm>
 #include <istream>
 #include <memory>
@@ -53,6 +51,34 @@ private:
     std::vector<ParSet> m_param_sets;
 };
 
+std::vector<std::string> split_space_values(std::string_view text)
+{
+    std::vector<std::string> result;
+    std::size_t start{};
+    while (start < text.size())
+    {
+        while (start < text.size() && text[start] == ' ')
+        {
+            ++start;
+        }
+        const std::size_t end{text.find(' ', start)};
+        if (end == std::string_view::npos)
+        {
+            if (start < text.size())
+            {
+                result.emplace_back(text.substr(start));
+            }
+            break;
+        }
+        if (end != start)
+        {
+            result.emplace_back(text.substr(start, end - start));
+        }
+        start = end + 1U;
+    }
+    return result;
+}
+
 void get_content_line(std::istream &contents, std::string &line)
 {
     std::getline(contents, line);
@@ -86,9 +112,7 @@ StreamParFile::StreamParFile(std::istream &contents)
             while (contents && !line.empty() && line.find_first_of('}') == std::string::npos)
             {
                 get_content_line(contents, line);
-                std::vector<std::string> params;
-                split(params, line, [](char c) { return c == ' '; }, boost::algorithm::token_compress_on);
-                for (const std::string &name_value : params)
+                for (const std::string &name_value : split_space_values(line))
                 {
                     if (name_value == "}")
                     {
