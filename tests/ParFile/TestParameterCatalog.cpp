@@ -78,7 +78,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
 {
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
-    EXPECT_EQ(41U, catalog.parameters.size());
+    EXPECT_EQ(42U, catalog.parameters.size());
     EXPECT_EQ(3U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
@@ -124,21 +124,27 @@ TEST(TestParameterCatalog, coloringCatalogIncludesSavedImageParameters)
 {
     const ParFile::ParameterCatalog catalog{coloring_catalog()};
     const ParFile::ParameterMetadata &mode{catalog.metadata("logmode")};
+    const ParFile::ParameterMetadata &decomposition{catalog.metadata("decomp")};
     const ParFile::ParameterMetadata &no_bof{catalog.metadata("nobof")};
+    const ParFile::ParameterMetadata &old_demm_colors{catalog.metadata("olddemmcolors")};
     const ParFile::ParameterMetadata &ranges{catalog.metadata("ranges")};
     const ParFile::ParameterMetadata &distance_estimator{catalog.metadata("distest")};
     const ParFile::ParameterMetadata &true_color{catalog.metadata("truecolor")};
+    const ParFile::ParameterMetadata &true_mode{catalog.metadata("truemode")};
 
     EXPECT_EQ(11U, catalog.parameters.size());
     EXPECT_EQ(ParFile::ParameterType::ENUM, mode.type);
     EXPECT_NE(mode.values.end(), std::find(mode.values.begin(), mode.values.end(), "fly"));
     EXPECT_NE(mode.values.end(), std::find(mode.values.begin(), mode.values.end(), "table"));
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, decomposition.type);
     EXPECT_EQ(ParFile::ParameterType::YES_NO, no_bof.type);
+    EXPECT_EQ(ParFile::ParameterType::YES_NO, old_demm_colors.type);
     EXPECT_EQ(ParFile::ParameterType::STRING, ranges.type);
     EXPECT_EQ(ParFile::ParameterType::INTEGER_TUPLE, distance_estimator.type);
     ASSERT_TRUE(distance_estimator.arity);
     EXPECT_EQ(2, *distance_estimator.arity);
     EXPECT_EQ(ParFile::ParameterType::YES_NO, true_color.type);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, true_mode.type);
 }
 
 TEST(TestParameterCatalog, nonSavedImageControlsAreNotCataloged)
@@ -187,6 +193,21 @@ TEST(TestParameterCatalog, yesNoMetadataLoads)
     ASSERT_TRUE(metadata.extrapolate);
     EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
     EXPECT_TRUE(metadata.values.empty());
+}
+
+TEST(TestParameterCatalog, showdotMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("showdot")};
+
+    EXPECT_EQ("showdot", metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::STRING, metadata.type);
+    ASSERT_TRUE(metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::SLASH, *metadata.format);
+    ASSERT_TRUE(metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *metadata.default_curve);
+    ASSERT_TRUE(metadata.extrapolate);
+    EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
 }
 
 TEST(TestParameterCatalog, cornersMetadataLoads)
@@ -464,6 +485,41 @@ TEST(TestParameterCatalog, distestMetadataLoads)
     EXPECT_EQ(ParFile::ParameterType::INTEGER_TUPLE, metadata.type);
     ASSERT_TRUE(metadata.arity);
     EXPECT_EQ(2, *metadata.arity);
+}
+
+TEST(TestParameterCatalog, decompMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{coloring_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("decomp")};
+
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, metadata.type);
+    ASSERT_TRUE(metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::RAW, *metadata.format);
+    ASSERT_TRUE(metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::LINEAR, *metadata.default_curve);
+    ASSERT_TRUE(metadata.extrapolate);
+    EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
+    ASSERT_TRUE(metadata.min);
+    EXPECT_EQ(2, *metadata.min);
+    ASSERT_TRUE(metadata.max);
+    EXPECT_EQ(256, *metadata.max);
+}
+
+TEST(TestParameterCatalog, truemodeMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{coloring_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("truemode")};
+
+    EXPECT_EQ(ParFile::ParameterType::ENUM, metadata.type);
+    ASSERT_TRUE(metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::RAW, *metadata.format);
+    ASSERT_TRUE(metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *metadata.default_curve);
+    ASSERT_TRUE(metadata.extrapolate);
+    EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
+    ASSERT_EQ(2U, metadata.values.size());
+    EXPECT_EQ("def", metadata.values[0]);
+    EXPECT_EQ("iter", metadata.values[1]);
 }
 
 TEST(TestParameterCatalog, passesMetadataLoads)

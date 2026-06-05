@@ -9,22 +9,8 @@
 
 ### Parameters
 
-- Core catalog:
-  - finattract needs type "yes-no" `bool`: "yes", "y", "no", or "n"
-  - ismand needs type "yes-no"
-  - orbitcorners: not documented
-  - orbitdrawmode: `function` not documented
-  - proximity not documented
-  - screencoords needs type "yes-no"
-  - showdot missing
-  - showorbits needs type "yes-no"
 - Coloring catalog:
   - colors allows encoded spec?
-  - decomp needs type `int`
-  - nobof needs type "yes-no"
-  - olddemmcolors needs type "yes-no"
-  - truecolor needs type "yes-no"
-  - truemode needs type "enum": `def`, `iter`
 - Formula catalog:
   - Only document parameters for formulas in id.frm
 
