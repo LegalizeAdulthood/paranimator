@@ -393,6 +393,7 @@ separate layers or separate animations for those cases.
 
 Minimum useful interpolated track type set:
 
+- `bool`
 - `enum`
 - `inside`
 - `integer`
@@ -1377,7 +1378,7 @@ modifying the default catalog.
 
 ## Discrete Parameters
 
-Enum, inside, and outside parameters are discrete by default.
+Bool, enum, inside, and outside parameters are discrete by default.
 
 Default discrete behavior should be hold or step, not numeric
 interpolation.
@@ -1408,6 +1409,10 @@ Example track:
 
 This produces one legal discrete value per frame. The same track type may
 also hold numeric color-index values such as `0` or `255`.
+
+Bool tracks are the application-level value type for yes-no catalog
+parameters. JSON keyframe values are `true` or `false`; Id par output
+uses the catalog formatter, such as `yes` or `no` for `yes-no`.
 
 ## Discrete PWM
 
@@ -1449,6 +1454,23 @@ The names a and b are preferred over off and on because these are not
 electrical signals. If the PWM analogy should be explicit, off and on are
 acceptable aliases.
 
+Bool tracks may also use PWM. A bool PWM track defaults to `false` as
+the off value and `true` as the on value, so `a`, `b`, `off`, and `on`
+may be omitted. The evaluated frame value is still a bool; a `yes-no`
+parameter serializes that bool to `yes` or `no`.
+
+Bool PWM example:
+
+    {
+      "parameter": "showorbits",
+      "mode": "pwm",
+      "window": 8,
+      "keys": [
+        { "frame": 0,   "duty": 0.0 },
+        { "frame": 120, "duty": 1.0 }
+      ]
+    }
+
 Example with explicit off and on:
 
     {
@@ -1475,6 +1497,10 @@ Validation rules:
 - `duty` must be in the range 0 through 1 unless clamping is
   enabled.
 - `window` must be at least 2.
+
+For bool PWM, omitted off/on values mean `false` and `true`. Explicit
+bool PWM `a`, `b`, `off`, or `on` values must be booleans, not Id
+strings.
 
 Simple evaluation:
 
@@ -1510,6 +1536,7 @@ renderer, not ParAnimator.
 
 PWM works best for:
 
+- boolean toggles whose effect can be temporally dithered
 - coloring mode
 - inside method
 - outside method
@@ -1694,6 +1721,143 @@ The intent is not to finish a large subsystem before anything runs. The
 intent is to get a small valid Id animation working quickly, then keep
 that path working while each later feature is added.
 
+The following parser-audit slices are based on Id `cmdfiles.cpp`
+behavior. Help documentation can clarify user-facing prose, but parser
+behavior is the implementation source of truth for these parameter
+shapes.
+
+### 1. Yes-No Parameter Type
+
+Add a `yes-no` catalog metadata type for Id parameters whose par-file
+parser accepts `yes`, `y`, `no`, or `n`.
+
+JSON animation config values for `yes-no` tracks are booleans, not Id
+strings. Keyframe values use `true` or `false`. Source par values
+deserialize from all Id spellings into the application boolean value.
+Generated par entries serialize `true` as `yes` and `false` as `no`.
+
+Bool tracks may use PWM mode. In PWM mode, omitted off/on values default
+to `false` and `true`, and each generated frame serializes the selected
+bool as `yes` or `no`.
+
+Update the config schema, catalog schema, and schema descriptions. Add
+unit tests for application deserialization from Id spellings, JSON
+boolean keyframes, rejection of string values such as `"yes"` in
+animation JSON, formatting to `yes` or `no`, PWM evaluation with default
+false/true values, and rejection of string PWM values. Add an integration
+test using one audited parameter such as `showorbits`.
+
+### 2. Function-List Parameter Type
+
+Add a `function-list` catalog metadata type for the real Id `function=`
+parameter. The value is a slash-delimited list whose entries are drawn
+from the fixed Id function enum.
+
+JSON config should represent the value as a list of enum strings. The
+writer serializes the list as Id slash syntax. The base par reader
+accepts the slash syntax from Id parameter sets.
+
+Add unit tests for enum validation, par-file parsing, JSON
+deserialization, and formatting. Add catalog tests for the audited
+`function` and `orbitdrawmode` entries where the parser uses this shape.
+
+### 3. Numeric-Or-Enum Scalar Types
+
+Add the small union scalar types found by the audit instead of treating
+them as generic strings. Cover at least these parser shapes:
+
+- `fill-color`: `normal` or an integer color index.
+- `periodicity`: `no`, `show`, or an integer.
+- `logmap`: `yes`, `no`, or an integer.
+- `passes`: one of the parser enum values `1`, `2`, `3`, `g`, `g1`,
+  `g2`, `g3`, `g4`, `g5`, `g6`, `b`, `t`, `s`, `o`, or `p`.
+
+Use JSON strings for enum arms, including numeric-looking enum values
+such as `"1"` for `passes`. Use JSON numbers only for true integer arms.
+Generated par entries preserve the Id spelling required by the parser.
+
+Add app data type tests for each union type, schema tests for accepted
+and rejected JSON values, and catalog tests for `fillcolor`,
+`periodicity`, `logmap`, and `passes`.
+
+### 4. Fixed Slash-Tuple Parameter Types
+
+Add catalog value types for audited parameters whose parser accepts fixed
+slash-delimited numeric tuples or one literal plus a tuple.
+
+Initial coverage:
+
+- `init-orbit`: `pixel` or `double/double`.
+- `invert`: `radius/x/y`.
+- `math-tolerance`: `double/double`.
+- `distest`: `double/double`.
+
+JSON config should use typed application values, not preformatted slash
+strings. Generated par entries serialize to the slash form accepted by
+Id.
+
+Add unit tests for each parser, formatter, and invalid arity. Add schema
+description strings for all new object shapes and fields. Add catalog
+tests for `initorbit`, `invert`, `mathtolerance`, and `distest`.
+
+### 5. Potential And MIIM Parser Types
+
+Add focused parser types for the more specialized audited slash values:
+`potential` and `miim`.
+
+`potential` covers `maxcolor[/slope[/modulus[/16bit]]]]`. `miim` covers
+the parser shape found in `cmdfiles.cpp`, including the leading
+`[bdw][lr]` mode and following numeric fields.
+
+Keep the slice narrow: parse, validate, and format only the parser shapes
+needed for existing Id behavior. Add unit tests from representative
+accepted and rejected parser examples. Add catalog schema descriptions
+and catalog tests for `potential` and `miim`.
+
+### 6. Inside And Outside Numeric Index Audit
+
+Verify the existing `inside` and `outside` application types against the
+audited parser behavior. They should continue to be distinct types, each
+accepting its own method enum set or a colormap index.
+
+Add tests that exercise numeric color indexes for both types, method
+sets that differ between the two types, and invalid values that would be
+accepted by the other type but not this one. Update catalog metadata if
+the audit found missing parser method names or bounds.
+
+### 7. Params Metadata Coverage From Parser Tables
+
+Extend fractal-specific `params` metadata using the parser tables and
+`type_has_param()` behavior audited from Id. Do not add one global
+`params` type.
+
+Add or update catalog entries for built-in fractal types whose params
+slots have stable meanings. Tests should resolve tracks against the
+active `type`, preserve untouched params slots, reject overlapping slot
+writes, and write one `params=` value through the highest required slot.
+
+### 8. Formula Catalog Coverage For id.frm
+
+Create bundled formula metadata only for formula entries in `id.frm`.
+Attach metadata by formula entry name. Formula params metadata names are
+human-readable knob names that map to fixed `p1` through `p4` variables
+or components. Function keys remain fixed `fn1` through `fn4` enum keys.
+
+Add tests that load representative `id.frm` formula metadata, resolve a
+formula-specific knob from `formulaname`, merge it into the generated
+`params=`, and reject invalid variable bindings.
+
+### 9. Complete Catalog Audit Pass
+
+After the supporting value types exist, update the core, coloring, 3D,
+fractal, and formula catalogs to cover the audited Id parser surface.
+
+Add catalog completeness tests driven by the audited parameter list so
+missing entries are visible. Keep omissions explicit for parameters that
+do not affect saved images, color cycling controls, sound controls, and
+runtime UI controls. The test should state the omission reason, not hide
+the parameter.
+
 ## Design Boundary
 
 Hard-code:
@@ -1737,9 +1901,10 @@ The final design is:
   emit `colors=@file`
 - optional layer stacks render Id layer images and compose them with
   backend-neutral operators
-- enum, inside, and outside parameters are discrete by default
+- bool, enum, inside, and outside parameters are discrete by default
 - discrete PWM is an optional temporal dithering mode
-- PWM tracks explicitly choose their `a` and `b` discrete values
+- PWM tracks choose `a` and `b` values, except bool PWM defaults to
+  `false` and `true`
 
 This turns ParAnimator into a data-driven parameter animation sequencer
 rather than a viewport interpolation tool.
