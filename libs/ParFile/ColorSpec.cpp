@@ -2,6 +2,8 @@
 //
 #include <ParFile/ColorSpec.h>
 
+#include "StringUtil.h"
+
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -249,24 +251,6 @@ std::string ascii_lower(std::string_view text)
     return result;
 }
 
-std::vector<std::string> split_slash_values(std::string_view text)
-{
-    std::vector<std::string> result;
-    std::size_t start{};
-    while (start <= text.size())
-    {
-        const std::size_t slash{text.find('/', start)};
-        const std::size_t end{slash == std::string_view::npos ? text.size() : slash};
-        result.emplace_back(trim(text.substr(start, end - start)));
-        if (slash == std::string_view::npos)
-        {
-            break;
-        }
-        start = slash + 1U;
-    }
-    return result;
-}
-
 void require_component_count(const std::vector<std::string> &values, std::string_view type)
 {
     if (values.size() != 3U)
@@ -366,7 +350,7 @@ RgbColor rgb_from_chroma(double hue, double chroma, double match)
 
 RgbColor parse_rgb(std::string_view text)
 {
-    const std::vector<std::string> values{split_slash_values(text)};
+    const std::vector<std::string> values{split_slash_values(text, TrimSlashValues::YES)};
     require_component_count(values, "rgb");
     return {parse_int_component(values[0], "red", 0, 255), parse_int_component(values[1], "green", 0, 255),
         parse_int_component(values[2], "blue", 0, 255)};
@@ -374,7 +358,7 @@ RgbColor parse_rgb(std::string_view text)
 
 RgbColor parse_hsv(std::string_view text)
 {
-    const std::vector<std::string> values{split_slash_values(text)};
+    const std::vector<std::string> values{split_slash_values(text, TrimSlashValues::YES)};
     require_component_count(values, "hsv");
     const double hue{parse_double_component(values[0], "hue", 0.0, 360.0)};
     const double saturation{parse_double_component(values[1], "saturation", 0.0, 1.0)};
@@ -385,7 +369,7 @@ RgbColor parse_hsv(std::string_view text)
 
 RgbColor parse_hsl(std::string_view text)
 {
-    const std::vector<std::string> values{split_slash_values(text)};
+    const std::vector<std::string> values{split_slash_values(text, TrimSlashValues::YES)};
     require_component_count(values, "hsl");
     const double hue{parse_double_component(values[0], "hue", 0.0, 360.0)};
     const double saturation{parse_double_component(values[1], "saturation", 0.0, 1.0)};

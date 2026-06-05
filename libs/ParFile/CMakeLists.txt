@@ -34,6 +34,8 @@ add_library(ParFile
     ParFile.cpp
     ResolvedAnimation.cpp
     Script.cpp
+    StringUtil.cpp
+    StringUtil.h
     "${PARFILE_SCRIPT_DIALECT_INCLUDE_DIR}/ParFile/ScriptDialect.h"
 )
 target_include_directories(ParFile

@@ -3,9 +3,10 @@
 #include <ParFile/Interpolant.h>
 
 #include <ParFile/Config.h>
-#include <ParFile/ParFile.h>
 #include <ParFile/ParameterCatalog.h>
-#include <boost/algorithm/string/split.hpp>
+
+#include "StringUtil.h"
+
 #include <fmt/format.h>
 
 #include <algorithm>
@@ -178,8 +179,7 @@ std::string format_double(double value)
 
 std::vector<double> parse_slash_doubles(const std::string &value)
 {
-    std::vector<std::string> value_text;
-    boost::algorithm::split(value_text, value, [](char c) { return c == '/'; });
+    const std::vector<std::string> value_text{split_slash_values(value)};
 
     std::vector<double> result;
     result.reserve(value_text.size());
@@ -198,13 +198,6 @@ std::string format_slash_doubles(const std::vector<double> &values)
         }
         result += format_double(value);
     }
-    return result;
-}
-
-std::vector<std::string> split_slash_strings(const std::string &value)
-{
-    std::vector<std::string> result;
-    boost::algorithm::split(result, value, [](char c) { return c == '/'; });
     return result;
 }
 
@@ -2279,7 +2272,7 @@ FunctionEnumInterpolant::FunctionEnumInterpolant(const ResolvedTrack &track, Cur
     m_to_frame(track.keys[1].frame),
     m_from(track.keys[0].value),
     m_to(track.keys[1].value),
-    m_base_values(split_slash_strings(track.base_value)),
+    m_base_values(split_slash_values(track.base_value)),
     m_curve(curve)
 {
     if (track.slots.size() != 1U)

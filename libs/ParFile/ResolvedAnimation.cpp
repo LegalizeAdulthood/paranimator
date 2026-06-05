@@ -2,9 +2,12 @@
 //
 #include <ParFile/ResolvedAnimation.h>
 
+#include "StringUtil.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <iterator>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -53,18 +56,9 @@ double parse_double(std::string_view text)
 std::vector<double> parse_slash_doubles(std::string_view text)
 {
     std::vector<double> result;
-    std::size_t start{};
-    while (start <= text.size())
-    {
-        const std::size_t slash{text.find('/', start)};
-        const std::size_t end{slash == std::string_view::npos ? text.size() : slash};
-        result.push_back(parse_double(text.substr(start, end - start)));
-        if (slash == std::string_view::npos)
-        {
-            break;
-        }
-        start = slash + 1U;
-    }
+    const std::vector<std::string> values{split_slash_values(text)};
+    result.reserve(values.size());
+    std::transform(values.begin(), values.end(), std::back_inserter(result), parse_double);
     return result;
 }
 

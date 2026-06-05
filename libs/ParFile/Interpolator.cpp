@@ -12,8 +12,9 @@
 #include <ParFile/ParameterCatalog.h>
 #include <ParFile/ResolvedAnimation.h>
 
+#include "StringUtil.h"
+
 #include <algorithm>
-#include <boost/algorithm/string/split.hpp>
 #include <cmath>
 #include <cstddef>
 #include <filesystem>
@@ -527,13 +528,6 @@ static ResolvedAnimation load_animation(const Config &config)
     const ParSet source{load_par_set(config.source)};
     const ParameterCatalog catalog{load_parameter_catalog(config)};
     return resolve_animation(config, catalog, source);
-}
-
-static std::vector<std::string> split_slash_values(std::string_view value)
-{
-    std::vector<std::string> result;
-    boost::algorithm::split(result, value, [](char c) { return c == '/'; });
-    return result;
 }
 
 static std::string join_slash_values(const std::vector<std::string> &values)
