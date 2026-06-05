@@ -73,8 +73,9 @@
       "extrapolate": "clamp"
     },
     "function": {
-      "type": "string",
+      "type": "function-list",
       "format": "slash-list",
+      "values": "id-functions",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },

@@ -339,23 +339,62 @@ static double load_pwm_mix(const Object &json)
     return load_double(json, has_mix ? "mix" : "duty");
 }
 
-static std::string load_value(const Object &json, bool &value_from_boolean)
+static std::string format_slash_strings(const std::vector<std::string> &values)
+{
+    std::string result;
+    for (const std::string &value : values)
+    {
+        if (!result.empty())
+        {
+            result += '/';
+        }
+        result += value;
+    }
+    return result;
+}
+
+static std::string load_string_array_value(const Object &json)
+{
+    if (json.empty())
+    {
+        throw std::runtime_error("Invalid config, array 'value' is empty");
+    }
+
+    std::vector<std::string> values;
+    values.reserve(json.size());
+    for (const Object &item : json)
+    {
+        if (!item.is_string())
+        {
+            throw std::runtime_error("Invalid config, array 'value' contains non-string value");
+        }
+        values.push_back(item.get<std::string>());
+    }
+    return format_slash_strings(values);
+}
+
+static std::string load_value(const Object &json, bool &value_from_array, bool &value_from_boolean)
 {
     const std::string key{"value"};
     if (!json.contains(key))
     {
-        throw std::runtime_error("Invalid config, missing string or boolean 'value'");
+        throw std::runtime_error("Invalid config, missing string, string array, or boolean 'value'");
     }
     if (json.at(key).is_boolean())
     {
         value_from_boolean = true;
         return bool_text(json.at(key).get<bool>());
     }
+    if (json.at(key).is_array())
+    {
+        value_from_array = true;
+        return load_string_array_value(json.at(key));
+    }
     if (json.at(key).is_string())
     {
         return json.at(key).get<std::string>();
     }
-    throw std::runtime_error("Invalid config, missing string or boolean 'value'");
+    throw std::runtime_error("Invalid config, missing string, string array, or boolean 'value'");
 }
 
 static TrackMode load_track_mode(const Object &json)
@@ -388,7 +427,7 @@ static KeyframeConfig load_keyframe_config(const Object &json, TrackMode mode)
     }
     else
     {
-        result.value = load_value(json, result.value_from_boolean);
+        result.value = load_value(json, result.value_from_array, result.value_from_boolean);
         if (const std::optional<std::string> curve{load_optional_string(json, "curve")})
         {
             result.curve = parse_curve(*curve);

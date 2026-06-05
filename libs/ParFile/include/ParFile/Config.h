@@ -62,6 +62,7 @@ struct KeyframeConfig
     std::string value;
     std::optional<Curve> curve;
     std::optional<double> mix;
+    bool value_from_array{};
     bool value_from_boolean{};
 };
 

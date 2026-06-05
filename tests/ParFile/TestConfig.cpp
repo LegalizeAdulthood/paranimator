@@ -1066,6 +1066,26 @@ TEST(TestConfig, jsonDeserializesBoolKeyframeValues)
     EXPECT_TRUE(config.tracks[0].keys[1].value_from_boolean);
 }
 
+TEST(TestConfig, jsonDeserializesFunctionListKeyframeValues)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"parameter", "function"},
+        {"keys",
+            Object::array({Object{{"frame", 0}, {"value", Object::array({"sin", "cos"})}},
+                Object{{"frame", 59}, {"value", Object::array({"tan", "log"})}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_EQ(2U, config.tracks[0].keys.size());
+    EXPECT_EQ("sin/cos", config.tracks[0].keys[0].value);
+    EXPECT_TRUE(config.tracks[0].keys[0].value_from_array);
+    EXPECT_FALSE(config.tracks[0].keys[0].value_from_boolean);
+    EXPECT_EQ("tan/log", config.tracks[0].keys[1].value);
+    EXPECT_TRUE(config.tracks[0].keys[1].value_from_array);
+    EXPECT_FALSE(config.tracks[0].keys[1].value_from_boolean);
+}
+
 TEST(TestConfig, jsonDeserializesBoolPwmTrackDefaults)
 {
     Object json = valid_json();

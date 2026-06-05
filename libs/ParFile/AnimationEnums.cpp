@@ -35,6 +35,10 @@ ParameterType parse_parameter_type(std::string_view text)
     {
         return ParameterType::ENUM;
     }
+    if (text == "function-list")
+    {
+        return ParameterType::FUNCTION_LIST;
+    }
     if (text == "yes-no")
     {
         return ParameterType::YES_NO;
@@ -208,6 +212,8 @@ std::string_view to_string(ParameterType value)
         return "double";
     case ParameterType::ENUM:
         return "enum";
+    case ParameterType::FUNCTION_LIST:
+        return "function-list";
     case ParameterType::INSIDE:
         return "inside";
     case ParameterType::INTEGER:

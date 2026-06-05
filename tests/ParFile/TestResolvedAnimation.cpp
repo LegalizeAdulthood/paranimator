@@ -62,7 +62,9 @@ ParFile::ParameterCatalog catalog_data()
             {"maxiter", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
                 ParFile::ExtrapolateMode::CLAMP, {}, {}},
             {"showorbit", ParFile::ParameterType::YES_NO, ParFile::ParameterFormat::RAW, ParFile::Curve::HOLD,
-                ParFile::ExtrapolateMode::CLAMP, {}, {}}}};
+                ParFile::ExtrapolateMode::CLAMP, {}, {}},
+            {"function", ParFile::ParameterType::FUNCTION_LIST, ParFile::ParameterFormat::SLASH_LIST,
+                ParFile::Curve::HOLD, ParFile::ExtrapolateMode::CLAMP, {}, {}, id_functions()}}};
     result.fractal_types.push_back({"julia",
         {{{0, "c-real",
               {"params[0]", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
@@ -698,4 +700,40 @@ TEST(TestResolvedAnimation, formulaFunctionKeyResolvesFromActiveFormulaname)
     EXPECT_EQ("function", track.output_parameter);
     ASSERT_EQ(1U, track.slots.size());
     EXPECT_EQ(1, track.slots[0]);
+}
+
+TEST(TestResolvedAnimation, functionSlotResolvesToFunctionOutputSlot)
+{
+    ParFile::Config config{formula_config_data("function[1]")};
+    config.tracks[0].keys = {{0, "tan"}, {2, "log"}};
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(config, catalog_data(), formula_source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    EXPECT_EQ("function[1]", track.parameter);
+    EXPECT_EQ("function[1]", track.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, track.metadata.type);
+    EXPECT_EQ("sin/cos", track.base_value);
+    EXPECT_EQ("function", track.output_parameter);
+    ASSERT_EQ(1U, track.slots.size());
+    EXPECT_EQ(1, track.slots[0]);
+}
+
+TEST(TestResolvedAnimation, functionTrackResolvesWholeList)
+{
+    ParFile::Config config{formula_config_data("function")};
+    config.tracks[0].keys = {{0, "sin/cos"}, {2, "tan/log"}};
+    config.tracks[0].keys[0].value_from_array = true;
+    config.tracks[0].keys[1].value_from_array = true;
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(config, catalog_data(), formula_source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    EXPECT_EQ("function", track.parameter);
+    EXPECT_EQ(ParFile::ParameterType::FUNCTION_LIST, track.metadata.type);
+    EXPECT_EQ("sin/cos", track.base_value);
+    EXPECT_EQ("function", track.output_parameter);
+    EXPECT_TRUE(track.slots.empty());
 }

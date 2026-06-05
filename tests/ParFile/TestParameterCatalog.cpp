@@ -202,6 +202,33 @@ TEST(TestParameterCatalog, cornersMetadataLoads)
     EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
 }
 
+TEST(TestParameterCatalog, functionMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("function")};
+
+    EXPECT_EQ("function", metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::FUNCTION_LIST, metadata.type);
+    ASSERT_TRUE(metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::SLASH_LIST, *metadata.format);
+    ASSERT_TRUE(metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *metadata.default_curve);
+    ASSERT_TRUE(metadata.extrapolate);
+    EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
+    ASSERT_EQ(31U, metadata.values.size());
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "sin"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "round"));
+}
+
+TEST(TestParameterCatalog, orbitdrawmodeFunctionValueIsOrbitModeEnum)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("orbitdrawmode")};
+
+    EXPECT_EQ(ParFile::ParameterType::ENUM, metadata.type);
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "function"));
+}
+
 TEST(TestParameterCatalog, xyshiftMetadataLoads)
 {
     const ParFile::ParameterCatalog catalog{id_3d_catalog()};
@@ -466,6 +493,8 @@ TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
     EXPECT_EQ(ParFile::ParameterType::CORNERS, read_metadata(R"("type":"corners")").type);
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, read_metadata(R"("type":"double")").type);
     EXPECT_EQ(ParFile::ParameterType::ENUM, read_metadata(R"("type":"enum","values":["a"])").type);
+    EXPECT_EQ(
+        ParFile::ParameterType::FUNCTION_LIST, read_metadata(R"("type":"function-list","values":"id-functions")").type);
     EXPECT_EQ(ParFile::ParameterType::YES_NO, read_metadata(R"("type":"yes-no")").type);
     EXPECT_EQ(ParFile::ParameterType::INSIDE, read_metadata(R"("type":"inside","values":["maxiter"])").type);
     EXPECT_EQ(ParFile::ParameterType::INTEGER, read_metadata(R"("type":"integer")").type);
@@ -602,6 +631,15 @@ TEST(TestParameterCatalog, invalidEnumValuesRejected)
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"enum","values":"a")")), std::runtime_error);
     EXPECT_THROW(
         ParFile::read_parameter_catalog(catalog_text(R"("type":"enum","values":["a", 1])")), std::runtime_error);
+}
+
+TEST(TestParameterCatalog, invalidFunctionListValuesRejected)
+{
+    EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"function-list")")), std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"function-list","values":["sin"])")),
+        std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"function-list","values":"unknown")")),
+        std::runtime_error);
 }
 
 TEST(TestParameterCatalog, unknownAnimatedParameterRejected)

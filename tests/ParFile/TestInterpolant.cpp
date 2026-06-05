@@ -345,6 +345,24 @@ ParFile::ParameterMetadata string_metadata(const std::string &name)
     return result;
 }
 
+std::vector<std::string> id_functions();
+
+ParFile::ParameterMetadata function_list_metadata(const std::string &name)
+{
+    ParFile::ParameterMetadata result{name, ParFile::ParameterType::FUNCTION_LIST, ParFile::ParameterFormat::SLASH_LIST,
+        ParFile::Curve::HOLD, ParFile::ExtrapolateMode::CLAMP, {}, {}, id_functions()};
+    return result;
+}
+
+std::vector<ParFile::KeyframeConfig> function_list_keyframes(
+    const std::string &from, const std::string &to, int num_steps)
+{
+    std::vector<ParFile::KeyframeConfig> result{keyframes(from, to, num_steps)};
+    result[0].value_from_array = true;
+    result[1].value_from_array = true;
+    return result;
+}
+
 std::vector<std::string> id_functions()
 {
     return {"sin", "cos", "tan", "cotan", "sinh", "cosh", "tanh", "cotanh", "exp", "log", "sqr", "recip", "ident",
@@ -358,6 +376,15 @@ ParFile::ResolvedTrack resolved_function_track(
     ParFile::ParameterMetadata function_metadata{name, ParFile::ParameterType::ENUM, ParFile::ParameterFormat::RAW,
         ParFile::Curve::HOLD, ParFile::ExtrapolateMode::CLAMP, {}, {}, id_functions()};
     return {name, function_metadata, base_value, keys, "function", {slot}};
+}
+
+ParFile::ResolvedTrack resolved_function_pwm_track(const std::string &name, const std::string &a, const std::string &b,
+    int window, double from, double to, int num_steps, const std::string &base_value, int slot)
+{
+    ParFile::ResolvedTrack result{resolved_function_track(name, pwm_keyframes(from, to, num_steps), base_value, slot)};
+    result.mode = ParFile::TrackMode::PWM;
+    result.pwm = ParFile::PwmConfig{ParFile::PwmEndpointConfig{a}, ParFile::PwmEndpointConfig{b}, window};
+    return result;
 }
 
 ParFile::InterpolantPtr create_interpolant(
@@ -1644,6 +1671,59 @@ TEST(TestInterpolant, formulaFunctionAcceptsLegalIdFunctions)
     EXPECT_EQ(1, interpolant->output_slots()[0]);
     EXPECT_EQ("sin/tan", interpolant->step());
     EXPECT_EQ("sin/tan", interpolant->step());
+    EXPECT_EQ("sin/log", interpolant->step());
+}
+
+TEST(TestInterpolant, functionListAcceptsLegalIdFunctions)
+{
+    const int num_steps{3};
+    const ParFile::ParameterMetadata parameter_metadata{function_list_metadata("function")};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_track(parameter_metadata, function_list_keyframes("sin/cos", "tan/log", num_steps), "sin/cos"),
+        num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("sin/cos", interpolant->step());
+    EXPECT_EQ("sin/cos", interpolant->step());
+    EXPECT_EQ("tan/log", interpolant->step());
+}
+
+TEST(TestInterpolant, functionListRejectsStringKeyframes)
+{
+    const int num_steps{3};
+    const ParFile::ParameterMetadata parameter_metadata{function_list_metadata("function")};
+
+    EXPECT_THROW(
+        ParFile::create_interpolant(
+            resolved_track(parameter_metadata, keyframes("sin/cos", "tan/log", num_steps), "sin/cos"), num_steps),
+        std::runtime_error);
+}
+
+TEST(TestInterpolant, functionListRejectsUnknownIdFunction)
+{
+    const int num_steps{3};
+    const ParFile::ParameterMetadata parameter_metadata{function_list_metadata("function")};
+
+    EXPECT_THROW(
+        ParFile::create_interpolant(
+            resolved_track(parameter_metadata, function_list_keyframes("sin/cos", "tan/unknown", num_steps), "sin/cos"),
+            num_steps),
+        std::runtime_error);
+}
+
+TEST(TestInterpolant, functionSlotPwmWritesSelectedFunction)
+{
+    const int num_steps{4};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_function_pwm_track("function[1]", "tan", "log", 2, 0.0, 1.0, num_steps, "sin/cos", 1), num_steps)};
+
+    ASSERT_TRUE(interpolant);
+    EXPECT_EQ("function", interpolant->name());
+    ASSERT_EQ(1U, interpolant->output_slots().size());
+    EXPECT_EQ(1, interpolant->output_slots()[0]);
+    EXPECT_EQ("sin/tan", interpolant->step());
+    EXPECT_EQ("sin/tan", interpolant->step());
+    EXPECT_EQ("sin/log", interpolant->step());
     EXPECT_EQ("sin/log", interpolant->step());
 }
 

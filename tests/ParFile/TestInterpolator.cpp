@@ -398,6 +398,60 @@ TEST_F(TestInterpolator, formulaFunctionTrackWritesOneFunctionAssignment)
     ASSERT_EQ(expected, frame);
 }
 
+TEST_F(TestInterpolator, functionListTrackWritesOneFunctionAssignment)
+{
+    m_config_data.source.name = "Formula_Demo";
+    m_config_data.num_frames = 3;
+    ParFile::KeyframeConfig first;
+    first.frame = 0;
+    first.value = "sin/cos";
+    first.value_from_array = true;
+    ParFile::KeyframeConfig last;
+    last.frame = 2;
+    last.value = "tan/log";
+    last.value_from_array = true;
+    m_config_data.tracks = {{"function", {first, last}}};
+    m_config = m_config_data;
+    m_lerper = ParFile::Interpolator{m_config};
+    ParFile::ParSet expected{m_lerper.source()};
+    set_param(expected, "function", "sin/cos");
+    expected.name = "frame-0002";
+    ParFile::ParSet frame{m_lerper()};
+
+    frame = m_lerper();
+
+    ASSERT_EQ(expected, frame);
+}
+
+TEST_F(TestInterpolator, functionSlotPwmTrackWritesOneFunctionAssignment)
+{
+    m_config_data.source.name = "Formula_Demo";
+    m_config_data.num_frames = 4;
+    ParFile::TrackConfig track;
+    track.parameter = "function[1]";
+    track.mode = ParFile::TrackMode::PWM;
+    track.pwm = ParFile::PwmConfig{ParFile::PwmEndpointConfig{"tan"}, ParFile::PwmEndpointConfig{"log"}, 2};
+    ParFile::KeyframeConfig first;
+    first.frame = 0;
+    first.mix = 0.0;
+    ParFile::KeyframeConfig last;
+    last.frame = 3;
+    last.mix = 1.0;
+    track.keys = {first, last};
+    m_config_data.tracks = {track};
+    m_config = m_config_data;
+    m_lerper = ParFile::Interpolator{m_config};
+    ParFile::ParSet expected{m_lerper.source()};
+    set_param(expected, "function", "sin/log");
+    expected.name = "frame-0003";
+    ParFile::ParSet frame{m_lerper()};
+
+    frame = m_lerper();
+    frame = m_lerper();
+
+    ASSERT_EQ(expected, frame);
+}
+
 TEST_F(TestInterpolator, multipleTracksHaveIndependentKeys)
 {
     m_config_data.num_frames = 3;

@@ -516,6 +516,12 @@ TEST(TestJsonSchema, enumMetadataAccepted)
     EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"enum","values":["bof60","zmag"])")));
 }
 
+TEST(TestJsonSchema, functionListMetadataAccepted)
+{
+    EXPECT_TRUE(
+        validates_parameter_catalog_text(catalog_with_metadata(R"("type":"function-list","values":"id-functions")")));
+}
+
 TEST(TestJsonSchema, insideAndOutsideMetadataAccepted)
 {
     EXPECT_TRUE(validates_parameter_catalog_text(
@@ -599,6 +605,10 @@ TEST(TestJsonSchema, invalidEnumMetadataRejected)
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"enum")")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"inside")")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"outside")")));
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"function-list")")));
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"function-list","values":["sin"])")));
+    EXPECT_FALSE(
+        validates_parameter_catalog_text(catalog_with_metadata(R"("type":"function-list","values":"unknown")")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"enum","values":"id-functions")")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"enum","values":["a",1])")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","values":["a"])")));
@@ -664,6 +674,17 @@ TEST(TestJsonSchema, pwmTrackAccepted)
     }
   ]
 })"));
+}
+
+TEST(TestJsonSchema, functionListKeyframeAccepted)
+{
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "parameter": "function",
+      "keys": [
+        { "frame": 0, "value": [ "sin", "cos" ] },
+        { "frame": 2, "value": [ "tan", "log" ] }
+      ]
+    })")));
 }
 
 TEST(TestJsonSchema, pathTrackAccepted)

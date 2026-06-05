@@ -1416,7 +1416,9 @@ uses the catalog formatter, such as `yes` or `no` for `yes-no`.
 
 ## Discrete PWM
 
-Discrete values can be temporally dithered using a PWM-like track mode.
+Finite discrete values can be temporally dithered using a PWM-like track
+mode. This includes any catalog target that takes one value from a fixed
+set of strings.
 
 The value itself is not continuous. The choice of emitted value over
 frames becomes a discretized signal whose duty cycle approximates a
@@ -1449,6 +1451,11 @@ Semantics:
 
 The user explicitly specifies which discrete values are used for the PWM
 off/on pair. Do not infer the pair from catalog value order.
+
+Slash-list parameters are not PWM targets as a whole. Address the
+individual scalar slot instead. For example, `function[1]` targets the
+second value in Id's `function=` list and emits one rewritten
+slash-delimited `function=` assignment.
 
 The names a and b are preferred over off and on because these are not
 electrical signals. If the PWM analogy should be explicit, off and on are
@@ -1537,6 +1544,8 @@ renderer, not ParAnimator.
 PWM works best for:
 
 - boolean toggles whose effect can be temporally dithered
+- finite string-valued parameters
+- individual entries in finite string lists such as `function[n]`
 - coloring mode
 - inside method
 - outside method
@@ -1726,21 +1735,7 @@ behavior. Help documentation can clarify user-facing prose, but parser
 behavior is the implementation source of truth for these parameter
 shapes.
 
-### 1. Function-List Parameter Type
-
-Add a `function-list` catalog metadata type for the real Id `function=`
-parameter. The value is a slash-delimited list whose entries are drawn
-from the fixed Id function enum.
-
-JSON config should represent the value as a list of enum strings. The
-writer serializes the list as Id slash syntax. The base par reader
-accepts the slash syntax from Id parameter sets.
-
-Add unit tests for enum validation, par-file parsing, JSON
-deserialization, and formatting. Add catalog tests for the audited
-`function` and `orbitdrawmode` entries where the parser uses this shape.
-
-### 2. Numeric-Or-Enum Scalar Types
+### 1. Numeric-Or-Enum Scalar Types
 
 Add the small union scalar types found by the audit instead of treating
 them as generic strings. Cover at least these parser shapes:
@@ -1759,7 +1754,7 @@ Add app data type tests for each union type, schema tests for accepted
 and rejected JSON values, and catalog tests for `fillcolor`,
 `periodicity`, `logmap`, and `passes`.
 
-### 3. Fixed Slash-Tuple Parameter Types
+### 2. Fixed Slash-Tuple Parameter Types
 
 Add catalog value types for audited parameters whose parser accepts fixed
 slash-delimited numeric tuples or one literal plus a tuple.
@@ -1779,7 +1774,7 @@ Add unit tests for each parser, formatter, and invalid arity. Add schema
 description strings for all new object shapes and fields. Add catalog
 tests for `initorbit`, `invert`, `mathtolerance`, and `distest`.
 
-### 4. Potential And MIIM Parser Types
+### 3. Potential And MIIM Parser Types
 
 Add focused parser types for the more specialized audited slash values:
 `potential` and `miim`.
@@ -1793,7 +1788,7 @@ needed for existing Id behavior. Add unit tests from representative
 accepted and rejected parser examples. Add catalog schema descriptions
 and catalog tests for `potential` and `miim`.
 
-### 5. Inside And Outside Numeric Index Audit
+### 4. Inside And Outside Numeric Index Audit
 
 Verify the existing `inside` and `outside` application types against the
 audited parser behavior. They should continue to be distinct types, each
@@ -1804,7 +1799,7 @@ sets that differ between the two types, and invalid values that would be
 accepted by the other type but not this one. Update catalog metadata if
 the audit found missing parser method names or bounds.
 
-### 6. Params Metadata Coverage From Parser Tables
+### 5. Params Metadata Coverage From Parser Tables
 
 Extend fractal-specific `params` metadata using the parser tables and
 `type_has_param()` behavior audited from Id. Do not add one global
@@ -1815,7 +1810,7 @@ slots have stable meanings. Tests should resolve tracks against the
 active `type`, preserve untouched params slots, reject overlapping slot
 writes, and write one `params=` value through the highest required slot.
 
-### 7. Formula Catalog Coverage For id.frm
+### 6. Formula Catalog Coverage For id.frm
 
 Create bundled formula metadata only for formula entries in `id.frm`.
 Attach metadata by formula entry name. Formula params metadata names are
@@ -1826,7 +1821,7 @@ Add tests that load representative `id.frm` formula metadata, resolve a
 formula-specific knob from `formulaname`, merge it into the generated
 `params=`, and reject invalid variable bindings.
 
-### 8. Complete Catalog Audit Pass
+### 7. Complete Catalog Audit Pass
 
 After the supporting value types exist, update the core, coloring, 3D,
 fractal, and formula catalogs to cover the audited Id parser surface.

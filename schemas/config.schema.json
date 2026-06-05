@@ -1630,6 +1630,15 @@
             {
               "type": "boolean",
               "description": "Boolean parameter value for yes-no target metadata."
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "String list parameter value for function-list target metadata."
             }
           ]
         },
@@ -1690,7 +1699,7 @@
       "oneOf": [
         {
           "type": "string",
-          "description": "String endpoint for enum, inside, or outside PWM tracks."
+          "description": "String endpoint for finite string-valued PWM tracks."
         },
         {
           "type": "boolean",

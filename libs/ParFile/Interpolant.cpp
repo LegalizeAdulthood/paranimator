@@ -313,15 +313,36 @@ void validate_discrete_value(const ParameterMetadata &metadata, const std::strin
     validate_enum_value(metadata, value);
 }
 
-bool is_pwm_type(ParameterType type)
-{
-    return type == ParameterType::ENUM || type == ParameterType::INSIDE || type == ParameterType::OUTSIDE ||
-        type == ParameterType::YES_NO;
-}
-
 bool has_validated_discrete_values(ParameterType type)
 {
     return type == ParameterType::ENUM || type == ParameterType::INSIDE || type == ParameterType::OUTSIDE;
+}
+
+bool is_pwm_type(ParameterType type)
+{
+    return has_validated_discrete_values(type) || type == ParameterType::YES_NO;
+}
+
+void validate_function_list_value(const ParameterMetadata &metadata, const std::string &value)
+{
+    const std::vector<std::string> values{split_slash_values(value)};
+    if (values.empty())
+    {
+        throw std::runtime_error("Function-list parameter '" + metadata.name + "' requires at least one value");
+    }
+    for (const std::string &item : values)
+    {
+        validate_enum_value(metadata, item);
+    }
+}
+
+void validate_function_list_keyframe(const ParameterMetadata &metadata, const KeyframeConfig &key)
+{
+    if (!key.value_from_array)
+    {
+        throw std::runtime_error("Function-list parameter '" + metadata.name + "' requires array keyframe values");
+    }
+    validate_function_list_value(metadata, key.value);
 }
 
 double validate_mix(const std::string &name, const KeyframeConfig &key)
@@ -2201,9 +2222,18 @@ DiscreteInterpolant::DiscreteInterpolant(
         validate_yes_no_keyframe(metadata, keys[0]);
         validate_yes_no_keyframe(metadata, keys[1]);
     }
+    else if (metadata.type == ParameterType::FUNCTION_LIST)
+    {
+        validate_function_list_keyframe(metadata, keys[0]);
+        validate_function_list_keyframe(metadata, keys[1]);
+    }
     else if (keys[0].value_from_boolean || keys[1].value_from_boolean)
     {
         throw std::runtime_error("Boolean keyframe values require a yes-no parameter");
+    }
+    else if (keys[0].value_from_array || keys[1].value_from_array)
+    {
+        throw std::runtime_error("Array keyframe values require a function-list parameter");
     }
     if (has_validated_discrete_values(metadata.type))
     {
@@ -2376,6 +2406,97 @@ std::string FunctionEnumInterpolant::step()
     return format_slash_strings(values);
 }
 
+class FunctionEnumPwmInterpolant : public Base
+{
+public:
+    FunctionEnumPwmInterpolant(const ResolvedTrack &track, int num_steps);
+    ~FunctionEnumPwmInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    int m_from_frame{};
+    int m_to_frame{};
+    int m_slot{};
+    std::string m_a;
+    std::string m_b;
+    std::vector<std::string> m_base_values;
+    int m_window{};
+    double m_from_mix{};
+    double m_to_mix{};
+};
+
+FunctionEnumPwmInterpolant::FunctionEnumPwmInterpolant(const ResolvedTrack &track, int num_steps) :
+    Base(track.output_parameter, num_steps, track.slots),
+    m_from_frame(track.keys[0].frame),
+    m_to_frame(track.keys[1].frame),
+    m_base_values(split_slash_values(track.base_value))
+{
+    if (!track.pwm)
+    {
+        throw std::runtime_error("PWM track '" + track.parameter + "' is missing pwm settings");
+    }
+    if (track.slots.size() != 1U)
+    {
+        throw std::runtime_error("PWM track '" + track.parameter + "' requires exactly one function slot");
+    }
+    m_slot = track.slots[0];
+    if (m_slot < 0)
+    {
+        throw std::runtime_error("PWM track '" + track.parameter + "' has an invalid function slot");
+    }
+    if (track.pwm->window < 2)
+    {
+        throw std::runtime_error("PWM track '" + track.parameter + "' window must be at least 2");
+    }
+    if (!track.pwm->a || !track.pwm->b)
+    {
+        throw std::runtime_error("PWM track '" + track.parameter + "' requires endpoint values");
+    }
+    if (track.pwm->a->value_from_boolean || track.pwm->b->value_from_boolean)
+    {
+        throw std::runtime_error("PWM track '" + track.parameter + "' requires string endpoint values");
+    }
+
+    m_a = track.pwm->a->value;
+    m_b = track.pwm->b->value;
+    validate_enum_value(track.metadata, m_a);
+    validate_enum_value(track.metadata, m_b);
+    if (static_cast<std::size_t>(m_slot) >= m_base_values.size())
+    {
+        m_base_values.resize(static_cast<std::size_t>(m_slot) + 1U, "ident");
+    }
+    m_window = track.pwm->window;
+    m_from_mix = validate_mix(track.parameter, track.keys[0]);
+    m_to_mix = validate_mix(track.parameter, track.keys[1]);
+}
+
+std::string FunctionEnumPwmInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+
+    double mix{m_from_mix};
+    if (frame >= m_to_frame)
+    {
+        mix = m_to_mix;
+    }
+    else if (frame > m_from_frame)
+    {
+        const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        mix = m_from_mix + fraction * (m_to_mix - m_from_mix);
+    }
+
+    const int b_count{static_cast<int>(std::lround(mix * m_window))};
+    const std::string &value{b_count <= 0                            ? m_a
+            : b_count >= m_window                                    ? m_b
+            : positive_mod(frame - m_from_frame, m_window) < b_count ? m_b
+                                                                     : m_a};
+    std::vector<std::string> values{m_base_values};
+    values[static_cast<std::size_t>(m_slot)] = value;
+    return format_slash_strings(values);
+}
+
 } // namespace
 
 static InterpolantPtr create_path_interpolant(const ResolvedTrack &track, int num_steps)
@@ -2445,10 +2566,13 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
     {
         if (!is_pwm_type(metadata.type))
         {
-            throw std::runtime_error(
-                "PWM track '" + track.parameter + "' requires an enum, inside, outside, or yes-no target");
+            throw std::runtime_error("PWM track '" + track.parameter + "' requires a finite discrete target");
         }
         validate_full_range(metadata.name, keys, num_steps);
+        if (track.output_parameter == "function" && metadata.type == ParameterType::ENUM && !track.slots.empty())
+        {
+            return std::make_shared<FunctionEnumPwmInterpolant>(track, num_steps);
+        }
         return std::make_shared<DiscretePwmInterpolant>(track, num_steps);
     }
     switch (metadata.type)
@@ -2505,6 +2629,7 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
     }
     case ParameterType::INSIDE:
     case ParameterType::OUTSIDE:
+    case ParameterType::FUNCTION_LIST:
     case ParameterType::YES_NO:
     {
         validate_full_range(metadata.name, keys, num_steps);

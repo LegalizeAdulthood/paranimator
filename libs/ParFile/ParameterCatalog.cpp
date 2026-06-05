@@ -24,6 +24,8 @@ constexpr std::array<std::string_view, 31> ID_FUNCTIONS{"sin", "cos", "tan", "co
     "exp", "log", "sqr", "recip", "ident", "cosxx", "flip", "conj", "zero", "one", "asin", "asinh", "acos", "acosh",
     "atan", "atanh", "sqrt", "abs", "cabs", "floor", "ceil", "trunc", "round"};
 
+std::vector<std::string> id_function_values();
+
 Object parse_json(std::string_view json_text)
 {
     try
@@ -68,7 +70,7 @@ std::string load_required_id_function_values(const Object &json, std::string_vie
     if (value_set != "id-functions")
     {
         throw std::runtime_error(
-            "Invalid formula function metadata '" + std::string{parameter} + "', unknown values '" + value_set + "'");
+            "Invalid function metadata '" + std::string{parameter} + "', unknown values '" + value_set + "'");
     }
     return value_set;
 }
@@ -201,7 +203,8 @@ void apply_tuple_alias_metadata(ParameterMetadata &metadata)
 
 bool needs_discrete_values(ParameterType type)
 {
-    return type == ParameterType::ENUM || type == ParameterType::INSIDE || type == ParameterType::OUTSIDE;
+    return type == ParameterType::ENUM || type == ParameterType::FUNCTION_LIST || type == ParameterType::INSIDE ||
+        type == ParameterType::OUTSIDE;
 }
 
 void validate_discrete_values_metadata(const ParameterMetadata &metadata)
@@ -218,6 +221,16 @@ void validate_discrete_values_metadata(const ParameterMetadata &metadata)
     {
         throw std::runtime_error("Invalid parameter metadata '" + metadata.name + "', values require discrete type");
     }
+}
+
+std::vector<std::string> load_parameter_values(std::string_view name, ParameterType type, const Object &json)
+{
+    if (type == ParameterType::FUNCTION_LIST)
+    {
+        load_required_id_function_values(json, name);
+        return id_function_values();
+    }
+    return load_optional_string_array(json, "values");
 }
 
 ParameterMetadata load_metadata(std::string_view name, const Object &json)
@@ -244,7 +257,7 @@ ParameterMetadata load_metadata(std::string_view name, const Object &json)
     }
     result.min = load_optional_number(json, "min");
     result.max = load_optional_number(json, "max");
-    result.values = load_optional_string_array(json, "values");
+    result.values = load_parameter_values(name, result.type, json);
     result.arity = load_optional_positive_int(json, "arity");
     result.normalize = load_optional_bool(json, "normalize").value_or(false);
     apply_tuple_alias_metadata(result);

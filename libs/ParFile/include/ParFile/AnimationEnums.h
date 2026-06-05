@@ -15,6 +15,7 @@ enum class ParameterType
     CORNERS,
     DOUBLE,
     ENUM,
+    FUNCTION_LIST,
     INSIDE,
     INTEGER,
     NUMERIC_TUPLE,

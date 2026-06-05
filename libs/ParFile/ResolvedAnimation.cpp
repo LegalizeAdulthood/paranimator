@@ -282,6 +282,34 @@ int parse_params_slot(std::string_view parameter)
     }
 }
 
+int parse_function_slot(std::string_view parameter)
+{
+    if (!starts_with(parameter, "function[") || parameter.back() != ']')
+    {
+        throw std::runtime_error("Invalid function slot track '" + std::string{parameter} + "'");
+    }
+
+    const std::string slot_text{parameter.substr(9, parameter.size() - 10)};
+    try
+    {
+        std::size_t length{};
+        const int slot{std::stoi(slot_text, &length)};
+        if (length != slot_text.size() || slot < 0)
+        {
+            throw std::runtime_error("Invalid function slot track '" + std::string{parameter} + "'");
+        }
+        return slot;
+    }
+    catch (const std::invalid_argument &)
+    {
+        throw std::runtime_error("Invalid function slot track '" + std::string{parameter} + "'");
+    }
+    catch (const std::out_of_range &)
+    {
+        throw std::runtime_error("Function slot out of range in track '" + std::string{parameter} + "'");
+    }
+}
+
 std::optional<std::string> formula_member_name(std::string_view track, std::string_view formula_name)
 {
     const std::string dotted_prefix{std::string{formula_name} + "."};
@@ -329,6 +357,33 @@ ResolvedTrack resolve_params_group(
     const ParamsGroupMetadata &group_metadata{catalog.params_group(fractal_type, group)};
     const Parameter &params{source_parameter(source, "params")};
     return make_resolved_track(track, group_metadata.metadata, params.value, "params", group_metadata.slots);
+}
+
+ParameterMetadata function_slot_metadata(const ParameterMetadata &function_metadata, const std::string &parameter)
+{
+    if (function_metadata.type != ParameterType::FUNCTION_LIST)
+    {
+        throw std::runtime_error("Parameter 'function' must use function-list metadata");
+    }
+
+    ParameterMetadata result;
+    result.name = parameter;
+    result.type = ParameterType::ENUM;
+    result.format = ParameterFormat::RAW;
+    result.default_curve = function_metadata.default_curve.value_or(Curve::HOLD);
+    result.extrapolate = function_metadata.extrapolate.value_or(ExtrapolateMode::CLAMP);
+    result.values = function_metadata.values;
+    return result;
+}
+
+ResolvedTrack resolve_function_slot(const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source)
+{
+    const int slot{parse_function_slot(track.parameter)};
+    const ParameterMetadata &function_metadata{catalog.metadata("function")};
+    const Parameter *function{find_source_parameter(source, "function")};
+    const std::string base_value{function == nullptr ? default_function_value(slot) : function->value};
+    return make_resolved_track(
+        track, function_slot_metadata(function_metadata, track.parameter), base_value, "function", {slot});
 }
 
 ResolvedTrack resolve_formula_params_knob(
@@ -731,6 +786,10 @@ ResolvedTrack resolve_track(
     if (track.kind == TrackKind::CAMERA2D)
     {
         return resolve_camera2d_track(track, catalog, source, video);
+    }
+    if (starts_with(track.parameter, "function["))
+    {
+        return resolve_function_slot(track, catalog, source);
     }
     if (source_is_formula(source))
     {

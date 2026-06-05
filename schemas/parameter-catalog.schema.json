@@ -84,8 +84,8 @@
           "type": "number"
         },
         "values": {
-          "description": "Legal values for enum parameters.",
-          "$ref": "#/$defs/enum-values"
+          "description": "Legal values for finite discrete parameters.",
+          "$ref": "#/$defs/metadata-values"
         },
         "arity": {
           "description": "Required component count for tuple-like values.",
@@ -144,8 +144,8 @@
           "type": "number"
         },
         "values": {
-          "description": "Legal values for enum params= slot values.",
-          "$ref": "#/$defs/enum-values"
+          "description": "Legal values for finite discrete params= slot values.",
+          "$ref": "#/$defs/metadata-values"
         },
         "arity": {
           "description": "Required component count for tuple-like slot values.",
@@ -195,8 +195,8 @@
           "type": "number"
         },
         "values": {
-          "description": "Legal values for enum params= group values.",
-          "$ref": "#/$defs/enum-values"
+          "description": "Legal values for finite discrete params= group values.",
+          "$ref": "#/$defs/metadata-values"
         },
         "arity": {
           "description": "Required component count for tuple-like group values.",
@@ -235,42 +235,110 @@
         "minLength": 1
       }
     },
+    "id-function-values": {
+      "description": "Declared use of Id's fixed function name list.",
+      "const": "id-functions"
+    },
+    "metadata-values": {
+      "description": "Declared value set for finite discrete metadata.",
+      "oneOf": [
+        { "$ref": "#/$defs/enum-values" },
+        { "$ref": "#/$defs/id-function-values" }
+      ]
+    },
     "enum-values-rule": {
-      "description": "Requires values only for regular discrete metadata.",
-      "if": {
-        "description": "Metadata whose type uses declared discrete values.",
-        "properties": {
-          "type": {
-            "description": "Regular discrete metadata type.",
-            "oneOf": [
-              {
-                "const": "enum",
-                "description": "String-only enum metadata."
-              },
-              {
-                "const": "inside",
-                "description": "Inside coloring method or color index metadata."
-              },
-              {
-                "const": "outside",
-                "description": "Outside coloring method or color index metadata."
+      "description": "Requires values only for finite discrete metadata.",
+      "allOf": [
+        {
+          "if": {
+            "description": "Metadata whose type uses inline discrete values.",
+            "properties": {
+              "type": {
+                "description": "Inline discrete metadata type.",
+                "oneOf": [
+                  {
+                    "const": "enum",
+                    "description": "String-only enum metadata."
+                  },
+                  {
+                    "const": "inside",
+                    "description": "Inside coloring method or color index metadata."
+                  },
+                  {
+                    "const": "outside",
+                    "description": "Outside coloring method or color index metadata."
+                  }
+                ]
               }
-            ]
+            },
+            "required": [ "type" ]
+          },
+          "then": {
+            "description": "Inline discrete metadata must declare legal string values.",
+            "required": [ "values" ],
+            "properties": {
+              "values": { "$ref": "#/$defs/enum-values" }
+            }
           }
         },
-        "required": [ "type" ]
-      },
-      "then": {
-        "description": "Discrete metadata must declare legal string values.",
-        "required": [ "values" ]
-      },
-      "else": {
-        "description": "Non-discrete metadata must not declare values.",
-        "not": {
-          "description": "A values field on non-discrete metadata.",
-          "required": [ "values" ]
+        {
+          "if": {
+            "description": "Metadata whose type uses the fixed Id function value set.",
+            "properties": {
+              "type": {
+                "const": "function-list",
+                "description": "Slash-list of Id function enum values."
+              }
+            },
+            "required": [ "type" ]
+          },
+          "then": {
+            "description": "Function-list metadata must name the Id function value set.",
+            "required": [ "values" ],
+            "properties": {
+              "values": { "$ref": "#/$defs/id-function-values" }
+            }
+          }
+        },
+        {
+          "if": {
+            "description": "Metadata whose type does not use declared values.",
+            "properties": {
+              "type": {
+                "not": {
+                  "description": "Finite discrete metadata type.",
+                  "oneOf": [
+                    {
+                      "const": "enum",
+                      "description": "String-only enum metadata."
+                    },
+                    {
+                      "const": "function-list",
+                      "description": "Slash-list of Id function enum values."
+                    },
+                    {
+                      "const": "inside",
+                      "description": "Inside coloring method or color index metadata."
+                    },
+                    {
+                      "const": "outside",
+                      "description": "Outside coloring method or color index metadata."
+                    }
+                  ]
+                }
+              }
+            },
+            "required": [ "type" ]
+          },
+          "then": {
+            "description": "Non-discrete metadata must not declare values.",
+            "not": {
+              "description": "A values field on non-discrete metadata.",
+              "required": [ "values" ]
+            }
+          }
         }
-      }
+      ]
     },
     "formula-entry-metadata": {
       "description": "Metadata for one formula entry name.",
@@ -489,6 +557,10 @@
         {
           "const": "enum",
           "description": "Discrete string value selected from a declared value set."
+        },
+        {
+          "const": "function-list",
+          "description": "Slash-list of Id function names represented in JSON as an array of enum strings."
         },
         {
           "const": "yes-no",
