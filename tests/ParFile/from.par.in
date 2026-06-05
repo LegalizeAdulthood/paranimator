@@ -11,8 +11,8 @@ Julia_Demo        { ; PAR for initialization of Julia demo
 }
 
 Formula_Demo        { ; PAR for initialization of formula demo
-   reset type=formula formulaname=MandelbrotMix4 function=sin/cos
-   center-mag=-0.5/0/1 params=0.05/3/-1.5/-2/0/0 inside=0
+   reset type=formula formulaname=Larry function=sin/cos
+   center-mag=-0.5/0/1 params=0.5/0/4/0 inside=0
    sound=no maxiter=678
 }
 

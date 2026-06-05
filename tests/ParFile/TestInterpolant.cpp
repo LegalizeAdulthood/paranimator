@@ -1948,8 +1948,7 @@ TEST(TestInterpolant, paramsIntegerInterpolatesAndRoundsSlot)
     const int num_steps{4};
     const std::vector<ParFile::KeyframeConfig> keys{{0, "0"}, {3, "2"}};
     ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
-        resolved_params_track("MandelbrotMix4.iterations", ParFile::ParameterType::INTEGER, keys, "0/1/0", {2}),
-        num_steps)};
+        resolved_params_track("params[2]", ParFile::ParameterType::INTEGER, keys, "0/1/0", {2}), num_steps)};
 
     ASSERT_TRUE(interpolant);
     EXPECT_EQ("params", interpolant->name());
@@ -1964,7 +1963,7 @@ TEST(TestInterpolant, formulaFunctionAcceptsLegalIdFunctions)
     const int num_steps{3};
     const std::vector<ParFile::KeyframeConfig> keys{{0, "tan"}, {2, "log"}};
     ParFile::InterpolantPtr interpolant{
-        ParFile::create_interpolant(resolved_function_track("MandelbrotMix4.fn2", keys, "sin/cos", 1), num_steps)};
+        ParFile::create_interpolant(resolved_function_track("Larry.fn2", keys, "sin/cos", 1), num_steps)};
 
     ASSERT_TRUE(interpolant);
     EXPECT_EQ("function", interpolant->name());
@@ -2033,7 +2032,6 @@ TEST(TestInterpolant, formulaFunctionRejectsUnknownIdFunction)
     const int num_steps{3};
     const std::vector<ParFile::KeyframeConfig> keys{{0, "tan"}, {2, "unknown"}};
 
-    EXPECT_THROW(
-        ParFile::create_interpolant(resolved_function_track("MandelbrotMix4.fn2", keys, "sin/cos", 1), num_steps),
+    EXPECT_THROW(ParFile::create_interpolant(resolved_function_track("Larry.fn2", keys, "sin/cos", 1), num_steps),
         std::runtime_error);
 }

@@ -303,38 +303,32 @@ human-readable names that describe how the formula entry uses the fixed
 
     {
       "formula-entries": {
-        "MandelbrotMix4": {
+        "Larry": {
           "params": {
             "knobs": {
+              "fractal parameter": {
+                "type": "complex",
+                "variable": "p1"
+              },
               "bailout": {
                 "type": "real",
-                "variable": "p1.real"
-              },
-              "scale factor": {
-                "type": "real",
-                "variable": "p1.imag"
-              },
-              "c": {
-                "type": "complex",
-                "variable": "p2"
+                "variable": "p2.real"
               }
             }
           },
           "functions": {
             "fn1": { "type": "enum", "values": "id-functions" },
-            "fn2": { "type": "enum", "values": "id-functions" },
-            "fn3": { "type": "enum", "values": "id-functions" },
-            "fn4": { "type": "enum", "values": "id-functions" }
+            "fn2": { "type": "enum", "values": "id-functions" }
           }
         }
       }
     }
 
-Tracks may target formula-entry knobs such as `MandelbrotMix4.bailout`,
-`MandelbrotMix4["scale factor"]`, or `MandelbrotMix4.c`. These names are
-ParAnimator metadata describing the formula entry's use of fixed Id
-variables. Id never sees them, and the formula source still refers only to
-`p1`, `p2`, `p3`, and `p4`.
+Tracks may target formula-entry knobs such as `Larry.bailout` or
+`Larry["fractal parameter"]`. These names are ParAnimator metadata
+describing the formula entry's use of fixed Id variables. Id never sees
+them, and the formula source still refers only to `p1`, `p2`, `p3`, and
+`p4`.
 
 Each formula params knob is keyed by its human-readable name and declares:
 
@@ -364,11 +358,11 @@ value.
 Formula entry metadata may also expose fixed function keys backed by
 `function=fn1/fn2/fn3/fn4`. The key names are always `fn1`, `fn2`, `fn3`,
 and `fn4`; formula metadata cannot rename them. Tracks target formula
-entry keys such as `MandelbrotMix4.fn1`. Each function key is an enum
-using the fixed `id-functions` value set. The writer starts from the
-source par entry or Id reset defaults, applies function key updates, and
-emits one slash-delimited `function=` assignment through the highest
-required function key.
+entry keys such as `Larry.fn1`. Each function key is an enum using the
+fixed `id-functions` value set. The writer starts from the source par
+entry or Id reset defaults, applies function key updates, and emits one
+slash-delimited `function=` assignment through the highest required
+function key.
 
 The fixed `id-functions` enum contains the function names recognized by
 Id: `sin`, `cos`, `tan`, `cotan`, `sinh`, `cosh`, `tanh`, `cotanh`,
@@ -1744,18 +1738,7 @@ behavior. Help documentation can clarify user-facing prose, but parser
 behavior is the implementation source of truth for these parameter
 shapes.
 
-### 1. Formula Catalog Coverage For id.frm
-
-Create bundled formula metadata only for formula entries in `id.frm`.
-Attach metadata by formula entry name. Formula params metadata names are
-human-readable knob names that map to fixed `p1` through `p4` variables
-or components. Function keys remain fixed `fn1` through `fn4` enum keys.
-
-Add tests that load representative `id.frm` formula metadata, resolve a
-formula-specific knob from `formulaname`, merge it into the generated
-`params=`, and reject invalid variable bindings.
-
-### 2. Complete Catalog Audit Pass
+### 1. Complete Catalog Audit Pass
 
 After the supporting value types exist, update the core, coloring, 3D,
 fractal, and formula catalogs to cover the audited Id parser surface.

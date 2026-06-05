@@ -16,8 +16,8 @@ Julia_Demo         { ; PAR for initialization of Julia demo
 }
 
 Function_Demo      { ; PAR for function list tests
-   reset type=formula formulaname=MandelbrotMix4 function=sin/cos
-   params=0.05/3/-1.5/-2/0/0 inside=0 sound=no maxiter=678
+   reset type=formula formulaname=Larry function=sin/cos
+   params=0.5/0/4/0 inside=0 sound=no maxiter=678
 }
 
 Corners_Demo       { ; PAR for corners interpolation test

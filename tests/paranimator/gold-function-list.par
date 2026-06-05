@@ -1,9 +1,9 @@
 frame-0001 {
     reset
     type=formula
-    formulaname=MandelbrotMix4
+    formulaname=Larry
     function=sin/cos
-    params=0.05/3/-1.5/-2/0/0
+    params=0.5/0/4/0
     inside=0
     sound=no
     maxiter=678
@@ -12,9 +12,9 @@ frame-0001 {
 frame-0002 {
     reset
     type=formula
-    formulaname=MandelbrotMix4
+    formulaname=Larry
     function=sin/cos
-    params=0.05/3/-1.5/-2/0/0
+    params=0.5/0/4/0
     inside=0
     sound=no
     maxiter=678
@@ -23,9 +23,9 @@ frame-0002 {
 frame-0003 {
     reset
     type=formula
-    formulaname=MandelbrotMix4
+    formulaname=Larry
     function=tan/log
-    params=0.05/3/-1.5/-2/0/0
+    params=0.5/0/4/0
     inside=0
     sound=no
     maxiter=678

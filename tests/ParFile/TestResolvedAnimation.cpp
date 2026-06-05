@@ -92,30 +92,26 @@ ParFile::ParameterCatalog catalog_data()
              {"params[0]", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
                  ParFile::ExtrapolateMode::CLAMP, 2.0, {}}}},
             {}}});
-    result.formula_entries.push_back({"MandelbrotMix4",
+    result.formula_entries.push_back({"Larry",
         {{{"bailout",
-              {"MandelbrotMix4.bailout", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW,
-                  ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
-              {0}},
+              {"Larry.bailout", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                  ParFile::ExtrapolateMode::CLAMP, {}, {}},
+              {2}},
             {"bailout-copy",
-                {"MandelbrotMix4.bailout-copy", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW,
+                {"Larry.bailout-copy", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW,
                     ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
-                {0}},
-            {"scale factor",
-                {"MandelbrotMix4.scale factor", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW,
+                {2}},
+            {"fractal parameter",
+                {"Larry.fractal parameter", ParFile::ParameterType::COMPLEX, ParFile::ParameterFormat::SLASH_PAIR,
                     ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
-                {1}},
-            {"c",
-                {"MandelbrotMix4.c", ParFile::ParameterType::COMPLEX, ParFile::ParameterFormat::SLASH_PAIR,
-                    ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
-                {2, 3}}}},
+                {0, 1}}}},
         {{{"fn1",
-              {"MandelbrotMix4.fn1", ParFile::ParameterType::ENUM, ParFile::ParameterFormat::RAW, ParFile::Curve::HOLD,
+              {"Larry.fn1", ParFile::ParameterType::ENUM, ParFile::ParameterFormat::RAW, ParFile::Curve::HOLD,
                   ParFile::ExtrapolateMode::CLAMP, {}, {}, id_functions()},
               0},
             {"fn2",
-                {"MandelbrotMix4.fn2", ParFile::ParameterType::ENUM, ParFile::ParameterFormat::RAW,
-                    ParFile::Curve::HOLD, ParFile::ExtrapolateMode::CLAMP, {}, {}, id_functions()},
+                {"Larry.fn2", ParFile::ParameterType::ENUM, ParFile::ParameterFormat::RAW, ParFile::Curve::HOLD,
+                    ParFile::ExtrapolateMode::CLAMP, {}, {}, id_functions()},
                 1}}}});
     return result;
 }
@@ -321,9 +317,8 @@ ParFile::ParSet julibrot_source_set()
 
 ParFile::ParSet formula_source_set()
 {
-    return {"source",
-        {{"type", "formula"}, {"formulaname", "MandelbrotMix4"}, {"function", "sin/cos"},
-            {"params", "0.05/3/-1.5/-2/0/0"}}};
+    return {
+        "source", {{"type", "formula"}, {"formulaname", "Larry"}, {"function", "sin/cos"}, {"params", "0.5/0/4/0"}}};
 }
 
 } // namespace
@@ -707,36 +702,37 @@ TEST(TestResolvedAnimation, overlappingParamsSlotsRejected)
 
 TEST(TestResolvedAnimation, formulaParamsKnobResolvesFromActiveFormulaname)
 {
-    const ParFile::ResolvedAnimation animation{ParFile::resolve_animation(
-        formula_config_data("MandelbrotMix4.bailout"), catalog_data(), formula_source_set())};
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(formula_config_data("Larry.bailout"), catalog_data(), formula_source_set())};
 
     ASSERT_EQ(1U, animation.tracks.size());
     const ParFile::ResolvedTrack &track{animation.tracks[0]};
-    EXPECT_EQ("MandelbrotMix4.bailout", track.parameter);
-    EXPECT_EQ("MandelbrotMix4.bailout", track.metadata.name);
+    EXPECT_EQ("Larry.bailout", track.parameter);
+    EXPECT_EQ("Larry.bailout", track.metadata.name);
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, track.metadata.type);
-    EXPECT_EQ("0.05/3/-1.5/-2/0/0", track.base_value);
+    EXPECT_EQ("0.5/0/4/0", track.base_value);
     EXPECT_EQ("params", track.output_parameter);
     ASSERT_EQ(1U, track.slots.size());
-    EXPECT_EQ(0, track.slots[0]);
+    EXPECT_EQ(2, track.slots[0]);
 }
 
 TEST(TestResolvedAnimation, formulaParamsKnobWithSpacesResolvesFromActiveFormulaname)
 {
     const ParFile::ResolvedAnimation animation{ParFile::resolve_animation(
-        formula_config_data("MandelbrotMix4[\"scale factor\"]"), catalog_data(), formula_source_set())};
+        formula_config_data("Larry[\"fractal parameter\"]"), catalog_data(), formula_source_set())};
 
     ASSERT_EQ(1U, animation.tracks.size());
     const ParFile::ResolvedTrack &track{animation.tracks[0]};
-    EXPECT_EQ("MandelbrotMix4.scale factor", track.metadata.name);
-    ASSERT_EQ(1U, track.slots.size());
-    EXPECT_EQ(1, track.slots[0]);
+    EXPECT_EQ("Larry.fractal parameter", track.metadata.name);
+    ASSERT_EQ(2U, track.slots.size());
+    EXPECT_EQ(0, track.slots[0]);
+    EXPECT_EQ(1, track.slots[1]);
 }
 
 TEST(TestResolvedAnimation, formulaParamsComplexKnobResolvesToPNSlots)
 {
-    ParFile::Config config{formula_config_data("MandelbrotMix4.c")};
-    config.tracks[0].keys = {{0, "-1/-2"}, {2, "-3/-4"}};
+    ParFile::Config config{formula_config_data("Larry[\"fractal parameter\"]")};
+    config.tracks[0].keys = {{0, "1/2"}, {2, "3/4"}};
     const ParFile::ResolvedAnimation animation{
         ParFile::resolve_animation(config, catalog_data(), formula_source_set())};
 
@@ -744,29 +740,29 @@ TEST(TestResolvedAnimation, formulaParamsComplexKnobResolvesToPNSlots)
     const ParFile::ResolvedTrack &track{animation.tracks[0]};
     EXPECT_EQ(ParFile::ParameterType::COMPLEX, track.metadata.type);
     ASSERT_EQ(2U, track.slots.size());
-    EXPECT_EQ(2, track.slots[0]);
-    EXPECT_EQ(3, track.slots[1]);
+    EXPECT_EQ(0, track.slots[0]);
+    EXPECT_EQ(1, track.slots[1]);
 }
 
 TEST(TestResolvedAnimation, overlappingFormulaParamsKnobsRejected)
 {
-    ParFile::Config config{formula_config_data("MandelbrotMix4.bailout")};
-    config.tracks.push_back({"MandelbrotMix4.bailout-copy", {{0, "11"}, {2, "21"}}});
+    ParFile::Config config{formula_config_data("Larry.bailout")};
+    config.tracks.push_back({"Larry.bailout-copy", {{0, "11"}, {2, "21"}}});
 
     EXPECT_THROW(ParFile::resolve_animation(config, catalog_data(), formula_source_set()), std::runtime_error);
 }
 
 TEST(TestResolvedAnimation, formulaFunctionKeyResolvesFromActiveFormulaname)
 {
-    ParFile::Config config{formula_config_data("MandelbrotMix4.fn2")};
+    ParFile::Config config{formula_config_data("Larry.fn2")};
     config.tracks[0].keys = {{0, "tan"}, {2, "log"}};
     const ParFile::ResolvedAnimation animation{
         ParFile::resolve_animation(config, catalog_data(), formula_source_set())};
 
     ASSERT_EQ(1U, animation.tracks.size());
     const ParFile::ResolvedTrack &track{animation.tracks[0]};
-    EXPECT_EQ("MandelbrotMix4.fn2", track.parameter);
-    EXPECT_EQ("MandelbrotMix4.fn2", track.metadata.name);
+    EXPECT_EQ("Larry.fn2", track.parameter);
+    EXPECT_EQ("Larry.fn2", track.metadata.name);
     EXPECT_EQ(ParFile::ParameterType::ENUM, track.metadata.type);
     EXPECT_EQ("sin/cos", track.base_value);
     EXPECT_EQ("function", track.output_parameter);

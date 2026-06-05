@@ -383,11 +383,11 @@ TEST_F(TestInterpolator, formulaParamsTracksMergeOneParamsAssignment)
     m_config_data.parameter_catalogs = {TestParFile::CORE_CATALOG_JSON, TestParFile::FORMULA_CATALOG_JSON};
     m_config_data.num_frames = 3;
     m_config_data.tracks = {
-        {"MandelbrotMix4.bailout", {{0, "10"}, {2, "20"}}}, {"MandelbrotMix4.c", {{0, "-1/-2"}, {2, "-3/-4"}}}};
+        {"Larry.bailout", {{0, "10"}, {2, "20"}}}, {"Larry[\"fractal parameter\"]", {{0, "0/0"}, {2, "2/4"}}}};
     m_config = m_config_data;
     m_lerper = ParFile::Interpolator{m_config};
     ParFile::ParSet expected{m_lerper.source()};
-    set_param(expected, "params", "15/3/-2/-3/0/0");
+    set_param(expected, "params", "1/2/15/0");
     expected.name = "frame-0002";
     ParFile::ParSet frame{m_lerper()};
 
@@ -401,7 +401,7 @@ TEST_F(TestInterpolator, formulaFunctionTrackWritesOneFunctionAssignment)
     m_config_data.source.name = "Formula_Demo";
     m_config_data.parameter_catalogs = {TestParFile::CORE_CATALOG_JSON, TestParFile::FORMULA_CATALOG_JSON};
     m_config_data.num_frames = 3;
-    m_config_data.tracks = {{"MandelbrotMix4.fn2", {{0, "tan"}, {2, "log"}}}};
+    m_config_data.tracks = {{"Larry.fn2", {{0, "tan"}, {2, "log"}}}};
     m_config = m_config_data;
     m_lerper = ParFile::Interpolator{m_config};
     ParFile::ParSet expected{m_lerper.source()};

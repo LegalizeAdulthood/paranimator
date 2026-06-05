@@ -565,51 +565,48 @@ TEST(TestParameterCatalog, newtonParamsSlotMetadataLoads)
     EXPECT_EQ(2, *slot.metadata.min);
 }
 
+TEST(TestParameterCatalog, formulaCatalogUsesIdFrmEntry)
+{
+    const ParFile::ParameterCatalog catalog{formula_catalog()};
+
+    ASSERT_EQ(1U, catalog.formula_entries.size());
+    EXPECT_EQ("Larry", catalog.formula_entries[0].name);
+}
+
 TEST(TestParameterCatalog, formulaParamsBailoutKnobMetadataLoads)
 {
     const ParFile::ParameterCatalog catalog{formula_catalog()};
-    const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("MandelbrotMix4", "bailout")};
+    const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("Larry", "bailout")};
 
     EXPECT_EQ("bailout", knob.name);
-    EXPECT_EQ("MandelbrotMix4.bailout", knob.metadata.name);
+    EXPECT_EQ("Larry.bailout", knob.metadata.name);
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, knob.metadata.type);
     ASSERT_TRUE(knob.metadata.format);
     EXPECT_EQ(ParFile::ParameterFormat::RAW, *knob.metadata.format);
     ASSERT_EQ(1U, knob.slots.size());
-    EXPECT_EQ(0, knob.slots[0]);
-}
-
-TEST(TestParameterCatalog, formulaParamsScaleFactorKnobMetadataLoads)
-{
-    const ParFile::ParameterCatalog catalog{formula_catalog()};
-    const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("MandelbrotMix4", "scale factor")};
-
-    EXPECT_EQ("scale factor", knob.name);
-    EXPECT_EQ("MandelbrotMix4.scale factor", knob.metadata.name);
-    EXPECT_EQ(ParFile::ParameterType::DOUBLE, knob.metadata.type);
-    ASSERT_EQ(1U, knob.slots.size());
-    EXPECT_EQ(1, knob.slots[0]);
+    EXPECT_EQ(2, knob.slots[0]);
 }
 
 TEST(TestParameterCatalog, formulaParamsComplexKnobMetadataLoads)
 {
     const ParFile::ParameterCatalog catalog{formula_catalog()};
-    const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("MandelbrotMix4", "c")};
+    const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("Larry", "fractal parameter")};
 
-    EXPECT_EQ("c", knob.name);
-    EXPECT_EQ("MandelbrotMix4.c", knob.metadata.name);
+    EXPECT_EQ("fractal parameter", knob.name);
+    EXPECT_EQ("Larry.fractal parameter", knob.metadata.name);
     EXPECT_EQ(ParFile::ParameterType::COMPLEX, knob.metadata.type);
     ASSERT_TRUE(knob.metadata.format);
     EXPECT_EQ(ParFile::ParameterFormat::SLASH_PAIR, *knob.metadata.format);
     ASSERT_EQ(2U, knob.slots.size());
-    EXPECT_EQ(2, knob.slots[0]);
-    EXPECT_EQ(3, knob.slots[1]);
+    EXPECT_EQ(0, knob.slots[0]);
+    EXPECT_EQ(1, knob.slots[1]);
 }
 
 TEST(TestParameterCatalog, formulaParamsIntegerKnobMetadataLoads)
 {
-    const ParFile::ParameterCatalog catalog{formula_catalog()};
-    const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("MandelbrotMix4", "iterations")};
+    const ParFile::ParameterCatalog catalog{
+        ParFile::read_parameter_catalog(formula_catalog_text(R"("type":"integer","variable":"p3.real")"))};
+    const ParFile::FormulaParamsKnobMetadata &knob{catalog.formula_params_knob("foo", "x")};
 
     EXPECT_EQ(ParFile::ParameterType::INTEGER, knob.metadata.type);
     ASSERT_EQ(1U, knob.slots.size());
@@ -619,10 +616,10 @@ TEST(TestParameterCatalog, formulaParamsIntegerKnobMetadataLoads)
 TEST(TestParameterCatalog, formulaFunctionMetadataLoads)
 {
     const ParFile::ParameterCatalog catalog{formula_catalog()};
-    const ParFile::FormulaFunctionMetadata &function{catalog.formula_function("MandelbrotMix4", "fn1")};
+    const ParFile::FormulaFunctionMetadata &function{catalog.formula_function("Larry", "fn1")};
 
     EXPECT_EQ("fn1", function.name);
-    EXPECT_EQ("MandelbrotMix4.fn1", function.metadata.name);
+    EXPECT_EQ("Larry.fn1", function.metadata.name);
     EXPECT_EQ(ParFile::ParameterType::ENUM, function.metadata.type);
     EXPECT_EQ(0, function.slot);
     ASSERT_TRUE(function.metadata.format);
@@ -819,12 +816,12 @@ TEST(TestParameterCatalog, unknownParamsGroupRejected)
 
 TEST(TestParameterCatalog, unknownFormulaParamsKnobRejected)
 {
-    EXPECT_THROW(formula_catalog().formula_params_knob("MandelbrotMix4", "unknown"), std::runtime_error);
+    EXPECT_THROW(formula_catalog().formula_params_knob("Larry", "unknown"), std::runtime_error);
 }
 
 TEST(TestParameterCatalog, unknownFormulaFunctionRejected)
 {
-    EXPECT_THROW(formula_catalog().formula_function("MandelbrotMix4", "fn5"), std::runtime_error);
+    EXPECT_THROW(formula_catalog().formula_function("Larry", "fn5"), std::runtime_error);
 }
 
 TEST(TestParameterCatalog, unknownFormulaFunctionValuesRejected)
