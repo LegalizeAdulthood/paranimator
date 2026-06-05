@@ -50,6 +50,7 @@ add_executable(test-par-file
     TestResolvedAnimation.cpp
     TestScript.cpp
 
+    include/TestParFile/TestOutputDirectory.h
     from.par.in
     invalid-missing-metadata-type.json
     invalid-output-directory-type.json
@@ -78,6 +79,7 @@ source_group("Data Files" REGULAR_EXPRESSION "^.*\\.(par|json)$")
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
 target_include_directories(test-par-file
     PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/include"
+    PRIVATE "include"
     PRIVATE "${PARFILE_SCRIPT_DIALECT_INCLUDE_DIR}"
 )
 target_link_libraries(test-par-file PUBLIC ParFile GTest::gtest_main fmt::fmt-header-only nlohmann_json::nlohmann_json)

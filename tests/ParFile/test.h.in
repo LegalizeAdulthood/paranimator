@@ -7,23 +7,15 @@ namespace TestParFile
 
 constexpr const char *const FROM_PAR{"@CMAKE_CURRENT_BINARY_DIR@/from.par"};
 constexpr const char *const TO_PAR{"@CMAKE_CURRENT_BINARY_DIR@/to.par"};
-constexpr const char *const CORE_CATALOG_JSON{
-    "@CMAKE_SOURCE_DIR@/data/core-catalog.json"};
-constexpr const char *const COLORING_CATALOG_JSON{
-    "@CMAKE_SOURCE_DIR@/data/coloring-catalog.json"};
-constexpr const char *const ID_3D_CATALOG_JSON{
-    "@CMAKE_SOURCE_DIR@/data/id-3d-catalog.json"};
-constexpr const char *const FORMULA_CATALOG_JSON{
-    "@CMAKE_SOURCE_DIR@/data/formula-catalog.json"};
-constexpr const char *const CENTER_MAG_CONFIG_JSON{
-    "@CMAKE_CURRENT_BINARY_DIR@/center-mag.json"};
-constexpr const char *const CORNERS_CONFIG_JSON{
-    "@CMAKE_CURRENT_BINARY_DIR@/corners.json"};
-constexpr const char *const MAXITER_CONFIG_JSON{
-    "@CMAKE_CURRENT_BINARY_DIR@/maxiter.json"};
+constexpr const char *const CORE_CATALOG_JSON{"@CMAKE_SOURCE_DIR@/data/core-catalog.json"};
+constexpr const char *const COLORING_CATALOG_JSON{"@CMAKE_SOURCE_DIR@/data/coloring-catalog.json"};
+constexpr const char *const ID_3D_CATALOG_JSON{"@CMAKE_SOURCE_DIR@/data/id-3d-catalog.json"};
+constexpr const char *const FORMULA_CATALOG_JSON{"@CMAKE_SOURCE_DIR@/data/formula-catalog.json"};
+constexpr const char *const CENTER_MAG_CONFIG_JSON{"@CMAKE_CURRENT_BINARY_DIR@/center-mag.json"};
+constexpr const char *const CORNERS_CONFIG_JSON{"@CMAKE_CURRENT_BINARY_DIR@/corners.json"};
+constexpr const char *const MAXITER_CONFIG_JSON{"@CMAKE_CURRENT_BINARY_DIR@/maxiter.json"};
 constexpr const char *const CONFIG_SCHEMA_JSON{"@CMAKE_SOURCE_DIR@/schemas/config.schema.json"};
-constexpr const char *const PARAMETER_CATALOG_SCHEMA_JSON{
-    "@CMAKE_SOURCE_DIR@/schemas/parameter-catalog.schema.json"};
+constexpr const char *const PARAMETER_CATALOG_SCHEMA_JSON{"@CMAKE_SOURCE_DIR@/schemas/parameter-catalog.schema.json"};
 constexpr const char *const DATA_CONFIG_JSON{"@CMAKE_SOURCE_DIR@/data/config.json"};
 constexpr const char *const INVALID_OUTPUT_DIRECTORY_CONFIG_JSON{
     "@CMAKE_CURRENT_SOURCE_DIR@/invalid-output-directory-type.json"};

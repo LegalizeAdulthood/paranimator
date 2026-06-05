@@ -2,6 +2,7 @@
 //
 #include <ParFile/Script.h>
 
+#include <TestParFile/TestOutputDirectory.h>
 #include <TestParFile/test.h>
 
 #include <ParFile/Config.h>
@@ -18,14 +19,14 @@ namespace
 
 ParFile::Config config_data()
 {
-    return {{TestParFile::CORE_CATALOG_JSON},                                 //
-        {TestParFile::FROM_PAR, "Mandel_Demo"},                               //
-        {TestParFile::TEST_OUTPUT_DIRECTORY, TestParFile::TEST_OUTPUT_PAR,    //
-            TestParFile::TEST_OUTPUT_ENTRY, TestParFile::TEST_OUTPUT_SCRIPT}, //
-        1,                                                                    //
-        TestParFile::TEST_VIDEO_MODE,                                         //
-        60,                                                                   //
-        {}};                                                                  //
+    return {{TestParFile::CORE_CATALOG_JSON},                                         //
+        {TestParFile::FROM_PAR, "Mandel_Demo"},                                       //
+        {TestParFile::test_output_directory().string(), TestParFile::TEST_OUTPUT_PAR, //
+            TestParFile::TEST_OUTPUT_ENTRY, TestParFile::TEST_OUTPUT_SCRIPT},         //
+        1,                                                                            //
+        TestParFile::TEST_VIDEO_MODE,                                                 //
+        60,                                                                           //
+        {}};                                                                          //
 }
 
 std::string script_path(std::filesystem::path path)

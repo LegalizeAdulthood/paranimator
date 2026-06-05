@@ -2,6 +2,7 @@
 //
 #include <ParFile/Interpolator.h>
 
+#include <TestParFile/TestOutputDirectory.h>
 #include <TestParFile/test.h>
 
 #include <ParFile/ColorMap.h>
@@ -26,14 +27,14 @@ using Object = nlohmann::json;
 
 ParFile::Config config_data()
 {
-    return {{TestParFile::CORE_CATALOG_JSON},                                 //
-        {TestParFile::FROM_PAR, "Mandel_Demo"},                               //
-        {TestParFile::TEST_OUTPUT_DIRECTORY, TestParFile::TEST_OUTPUT_PAR,    //
-            TestParFile::TEST_OUTPUT_ENTRY, TestParFile::TEST_OUTPUT_SCRIPT}, //
-        1,                                                                    //
-        TestParFile::TEST_VIDEO_MODE,                                         //
-        60,                                                                   //
-        {{"center-mag", {{0, "-0.5/0/1"}, {59, "-0.5/0/10"}}}}};              //
+    return {{TestParFile::CORE_CATALOG_JSON},                                         //
+        {TestParFile::FROM_PAR, "Mandel_Demo"},                                       //
+        {TestParFile::test_output_directory().string(), TestParFile::TEST_OUTPUT_PAR, //
+            TestParFile::TEST_OUTPUT_ENTRY, TestParFile::TEST_OUTPUT_SCRIPT},         //
+        1,                                                                            //
+        TestParFile::TEST_VIDEO_MODE,                                                 //
+        60,                                                                           //
+        {{"center-mag", {{0, "-0.5/0/1"}, {59, "-0.5/0/10"}}}}};                      //
 }
 
 ParFile::Config parsed_config(std::string_view source_name, int num_frames, const Object &track,
@@ -48,7 +49,7 @@ ParFile::Config parsed_config(std::string_view source_name, int num_frames, cons
     const Object json{{"parameter-catalogs", catalogs},
         {"source", Object{{"file", TestParFile::FROM_PAR}, {"name", std::string{source_name}}}},
         {"output",
-            Object{{"directory", TestParFile::TEST_OUTPUT_DIRECTORY}, {"par", TestParFile::TEST_OUTPUT_PAR},
+            Object{{"directory", TestParFile::test_output_directory().string()}, {"par", TestParFile::TEST_OUTPUT_PAR},
                 {"entry", TestParFile::TEST_OUTPUT_ENTRY}, {"script", TestParFile::TEST_OUTPUT_SCRIPT}}},
         {"video", TestParFile::TEST_VIDEO_MODE}, {"num-frames", num_frames}, {"tracks", Object::array({track})}};
     return ParFile::read_config(json.dump());
@@ -486,7 +487,7 @@ TEST_F(TestInterpolator, multipleTracksHaveIndependentKeys)
 
 TEST_F(TestInterpolator, colorMapTrackWritesGeneratedMapsAndAtFileValues)
 {
-    const std::filesystem::path root{std::filesystem::path{TestParFile::TEST_OUTPUT_DIRECTORY} / "color-map-track"};
+    const std::filesystem::path root{TestParFile::test_output_directory()};
     const std::filesystem::path output{root / "output"};
     const std::filesystem::path warm_map{root / "input" / "warm.map"};
     const std::filesystem::path cool_map{root / "input" / "cool.map"};
@@ -535,7 +536,7 @@ TEST_F(TestInterpolator, colorMapTrackWritesGeneratedMapsAndAtFileValues)
 
 TEST_F(TestInterpolator, colorMapEffectTrackWritesGeneratedMapsAndAtFileValues)
 {
-    const std::filesystem::path root{std::filesystem::path{TestParFile::TEST_OUTPUT_DIRECTORY} / "color-map-effects"};
+    const std::filesystem::path root{TestParFile::test_output_directory()};
     const std::filesystem::path output{root / "output"};
     const std::filesystem::path base_map{root / "input" / "base.map"};
     std::filesystem::remove_all(root);
@@ -587,7 +588,7 @@ TEST_F(TestInterpolator, colorMapEffectTrackWritesGeneratedMapsAndAtFileValues)
 
 TEST_F(TestInterpolator, colorMapGradientSourceWritesGeneratedMap)
 {
-    const std::filesystem::path root{std::filesystem::path{TestParFile::TEST_OUTPUT_DIRECTORY} / "color-map-gradient"};
+    const std::filesystem::path root{TestParFile::test_output_directory()};
     const std::filesystem::path output{root / "output"};
     std::filesystem::remove_all(root);
     ParFile::ColorMapConfig color_map;
@@ -616,8 +617,7 @@ TEST_F(TestInterpolator, colorMapGradientSourceWritesGeneratedMap)
 
 TEST_F(TestInterpolator, colorMapBrightnessEffectWritesGeneratedMap)
 {
-    const std::filesystem::path root{
-        std::filesystem::path{TestParFile::TEST_OUTPUT_DIRECTORY} / "color-map-brightness"};
+    const std::filesystem::path root{TestParFile::test_output_directory()};
     const std::filesystem::path output{root / "output"};
     const std::filesystem::path base_map{root / "input" / "base.map"};
     std::filesystem::remove_all(root);
@@ -652,8 +652,7 @@ TEST_F(TestInterpolator, colorMapBrightnessEffectWritesGeneratedMap)
 
 TEST_F(TestInterpolator, colorMapAdjustmentEffectsWriteGeneratedMap)
 {
-    const std::filesystem::path root{
-        std::filesystem::path{TestParFile::TEST_OUTPUT_DIRECTORY} / "color-map-adjustments"};
+    const std::filesystem::path root{TestParFile::test_output_directory()};
     const std::filesystem::path output{root / "output"};
     const std::filesystem::path base_map{root / "input" / "base.map"};
     std::filesystem::remove_all(root);
@@ -697,7 +696,7 @@ TEST_F(TestInterpolator, colorMapAdjustmentEffectsWriteGeneratedMap)
 
 TEST_F(TestInterpolator, colorMapMaskedEffectsWriteGeneratedMap)
 {
-    const std::filesystem::path root{std::filesystem::path{TestParFile::TEST_OUTPUT_DIRECTORY} / "color-map-masked"};
+    const std::filesystem::path root{TestParFile::test_output_directory()};
     const std::filesystem::path output{root / "output"};
     const std::filesystem::path base_map{root / "input" / "base.map"};
     const std::filesystem::path mask_map{root / "input" / "mask.map"};
