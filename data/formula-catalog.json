@@ -1,6 +1,17 @@
 {
   "parameters": {},
   "formula-entries": {
+    "DAFrm01": {
+      "functions": {
+        "fn1": {
+          "type": "enum",
+          "values": "id-functions",
+          "format": "raw",
+          "default-curve": "hold",
+          "extrapolate": "clamp"
+        }
+      }
+    },
     "Larry": {
       "params": {
         "knobs": {

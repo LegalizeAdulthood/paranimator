@@ -625,8 +625,15 @@ TEST(TestParameterCatalog, formulaCatalogUsesIdFrmEntry)
 {
     const ParFile::ParameterCatalog catalog{formula_catalog()};
 
-    ASSERT_EQ(1U, catalog.formula_entries.size());
-    EXPECT_EQ("Larry", catalog.formula_entries[0].name);
+    ASSERT_EQ(2U, catalog.formula_entries.size());
+
+    const auto contains_formula{[&](std::string_view name) {
+        return std::find_if(catalog.formula_entries.begin(), catalog.formula_entries.end(),
+                   [&](const ParFile::FormulaEntryMetadata &metadata) { return metadata.name == name; }) !=
+            catalog.formula_entries.end();
+    }};
+    EXPECT_TRUE(contains_formula("DAFrm01"));
+    EXPECT_TRUE(contains_formula("Larry"));
 }
 
 TEST(TestParameterCatalog, formulaParamsBailoutKnobMetadataLoads)
@@ -672,10 +679,10 @@ TEST(TestParameterCatalog, formulaParamsIntegerKnobMetadataLoads)
 TEST(TestParameterCatalog, formulaFunctionMetadataLoads)
 {
     const ParFile::ParameterCatalog catalog{formula_catalog()};
-    const ParFile::FormulaFunctionMetadata &function{catalog.formula_function("Larry", "fn1")};
+    const ParFile::FormulaFunctionMetadata &function{catalog.formula_function("DAFrm01", "fn1")};
 
     EXPECT_EQ("fn1", function.name);
-    EXPECT_EQ("Larry.fn1", function.metadata.name);
+    EXPECT_EQ("DAFrm01.fn1", function.metadata.name);
     EXPECT_EQ(ParFile::ParameterType::ENUM, function.metadata.type);
     EXPECT_EQ(0, function.slot);
     ASSERT_TRUE(function.metadata.format);
