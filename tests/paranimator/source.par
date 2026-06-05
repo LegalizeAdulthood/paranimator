@@ -5,6 +5,11 @@ Mandel_Demo        { ; PAR for initialization of Fractint demo
    sound=no maxiter=678
 }
 
+YesNo_Demo         { ; PAR for yes-no PWM test
+   reset type=mandel center-mag=-0.5/0/1 params=0/0 inside=0
+   showorbit=n sound=no maxiter=678
+}
+
 Julia_Demo         { ; PAR for initialization of Julia demo
    reset type=julia center-mag=-0.5/0/1 params=0/1 inside=0
    sound=no maxiter=678

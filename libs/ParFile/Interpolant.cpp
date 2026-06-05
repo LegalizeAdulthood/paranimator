@@ -252,6 +252,38 @@ bool is_coloring_type(ParameterType type)
     return type == ParameterType::INSIDE || type == ParameterType::OUTSIDE;
 }
 
+bool parse_yes_no_value(const std::string &value, const std::string &name)
+{
+    if (value == "true")
+    {
+        return true;
+    }
+    if (value == "false")
+    {
+        return false;
+    }
+    throw std::runtime_error("Invalid yes-no value '" + value + "' for parameter '" + name + "'");
+}
+
+std::string format_yes_no_value(bool value)
+{
+    return value ? "yes" : "no";
+}
+
+std::string format_yes_no_value(const std::string &value, const std::string &name)
+{
+    return format_yes_no_value(parse_yes_no_value(value, name));
+}
+
+void validate_yes_no_keyframe(const ParameterMetadata &metadata, const KeyframeConfig &key)
+{
+    if (!key.value_from_boolean)
+    {
+        throw std::runtime_error("Yes-no parameter '" + metadata.name + "' requires boolean keyframe values");
+    }
+    parse_yes_no_value(key.value, metadata.name);
+}
+
 void validate_coloring_value(const ParameterMetadata &metadata, const std::string &value)
 {
     const auto enum_it{std::find(metadata.values.begin(), metadata.values.end(), value)};
@@ -283,7 +315,8 @@ void validate_discrete_value(const ParameterMetadata &metadata, const std::strin
 
 bool is_pwm_type(ParameterType type)
 {
-    return type == ParameterType::ENUM || type == ParameterType::INSIDE || type == ParameterType::OUTSIDE;
+    return type == ParameterType::ENUM || type == ParameterType::INSIDE || type == ParameterType::OUTSIDE ||
+        type == ParameterType::YES_NO;
 }
 
 bool has_validated_discrete_values(ParameterType type)
@@ -2149,6 +2182,7 @@ private:
     int m_to_frame{};
     std::string m_from;
     std::string m_to;
+    ParameterType m_type{};
     Curve m_curve{};
 };
 
@@ -2158,9 +2192,19 @@ DiscreteInterpolant::DiscreteInterpolant(
     m_to_frame(keys[1].frame),
     m_from(keys[0].value),
     m_to(keys[1].value),
+    m_type(metadata.type),
     m_curve(curve)
 {
     validate_discrete_curve(to_string(metadata.type), m_curve);
+    if (metadata.type == ParameterType::YES_NO)
+    {
+        validate_yes_no_keyframe(metadata, keys[0]);
+        validate_yes_no_keyframe(metadata, keys[1]);
+    }
+    else if (keys[0].value_from_boolean || keys[1].value_from_boolean)
+    {
+        throw std::runtime_error("Boolean keyframe values require a yes-no parameter");
+    }
     if (has_validated_discrete_values(metadata.type))
     {
         validate_discrete_value(metadata, m_from);
@@ -2172,7 +2216,12 @@ std::string DiscreteInterpolant::step()
 {
     const int frame{m_step};
     ++m_step;
-    return frame >= m_to_frame ? m_to : m_from;
+    const std::string &value{frame >= m_to_frame ? m_to : m_from};
+    if (m_type == ParameterType::YES_NO)
+    {
+        return format_yes_no_value(value, m_name);
+    }
+    return value;
 }
 
 class DiscretePwmInterpolant : public Base
@@ -2211,13 +2260,37 @@ DiscretePwmInterpolant::DiscretePwmInterpolant(const ResolvedTrack &track, int n
         throw std::runtime_error("PWM track '" + track.parameter + "' window must be at least 2");
     }
 
-    m_a = track.pwm->a;
-    m_b = track.pwm->b;
+    if (track.metadata.type == ParameterType::YES_NO)
+    {
+        if (track.pwm->a && !track.pwm->a->value_from_boolean)
+        {
+            throw std::runtime_error("PWM yes-no track '" + track.parameter + "' requires boolean endpoint a");
+        }
+        if (track.pwm->b && !track.pwm->b->value_from_boolean)
+        {
+            throw std::runtime_error("PWM yes-no track '" + track.parameter + "' requires boolean endpoint b");
+        }
+        m_a = track.pwm->a ? format_yes_no_value(track.pwm->a->value, track.parameter) : format_yes_no_value(false);
+        m_b = track.pwm->b ? format_yes_no_value(track.pwm->b->value, track.parameter) : format_yes_no_value(true);
+    }
+    else
+    {
+        if (!track.pwm->a || !track.pwm->b)
+        {
+            throw std::runtime_error("PWM track '" + track.parameter + "' requires endpoint values");
+        }
+        if (track.pwm->a->value_from_boolean || track.pwm->b->value_from_boolean)
+        {
+            throw std::runtime_error("PWM track '" + track.parameter + "' requires string endpoint values");
+        }
+        m_a = track.pwm->a->value;
+        m_b = track.pwm->b->value;
+        validate_discrete_value(track.metadata, m_a);
+        validate_discrete_value(track.metadata, m_b);
+    }
     m_window = track.pwm->window;
     m_from_mix = validate_mix(track.parameter, track.keys[0]);
     m_to_mix = validate_mix(track.parameter, track.keys[1]);
-    validate_discrete_value(track.metadata, m_a);
-    validate_discrete_value(track.metadata, m_b);
 }
 
 std::string DiscretePwmInterpolant::step()
@@ -2372,7 +2445,8 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
     {
         if (!is_pwm_type(metadata.type))
         {
-            throw std::runtime_error("PWM track '" + track.parameter + "' requires an enum, inside, or outside target");
+            throw std::runtime_error(
+                "PWM track '" + track.parameter + "' requires an enum, inside, outside, or yes-no target");
         }
         validate_full_range(metadata.name, keys, num_steps);
         return std::make_shared<DiscretePwmInterpolant>(track, num_steps);
@@ -2431,6 +2505,7 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
     }
     case ParameterType::INSIDE:
     case ParameterType::OUTSIDE:
+    case ParameterType::YES_NO:
     {
         validate_full_range(metadata.name, keys, num_steps);
         Curve curve{default_curve(metadata)};

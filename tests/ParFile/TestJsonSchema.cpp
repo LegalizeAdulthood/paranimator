@@ -909,10 +909,10 @@ TEST(TestJsonSchema, id3DViewMoreOutputsAccepted)
         ]
       },
       "sphere": {
-        "type": "enum",
+        "type": "yes-no",
         "keys": [
-          { "frame": 0, "value": "no" },
-          { "frame": 2, "value": "yes" }
+          { "frame": 0, "value": false },
+          { "frame": 2, "value": true }
         ]
       },
       "longitude": {

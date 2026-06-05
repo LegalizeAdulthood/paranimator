@@ -33,6 +33,20 @@ std::vector<ParFile::KeyframeConfig> keyframes(
     return {{0, from}, {num_steps - 1, to, curve}};
 }
 
+ParFile::KeyframeConfig bool_keyframe(int frame, bool value)
+{
+    ParFile::KeyframeConfig result;
+    result.frame = frame;
+    result.value = value ? "true" : "false";
+    result.value_from_boolean = true;
+    return result;
+}
+
+std::vector<ParFile::KeyframeConfig> bool_keyframes(bool from, bool to, int num_steps)
+{
+    return {bool_keyframe(0, from), bool_keyframe(num_steps - 1, to)};
+}
+
 ParFile::KeyframeConfig pwm_keyframe(int frame, double mix)
 {
     ParFile::KeyframeConfig result;
@@ -150,7 +164,17 @@ ParFile::ResolvedTrack resolved_pwm_track(const ParFile::ParameterMetadata &para
 {
     ParFile::ResolvedTrack result{resolved_track(parameter_metadata, pwm_keyframes(from, to, num_steps), a)};
     result.mode = ParFile::TrackMode::PWM;
-    result.pwm = ParFile::PwmConfig{a, b, window};
+    result.pwm = ParFile::PwmConfig{ParFile::PwmEndpointConfig{a}, ParFile::PwmEndpointConfig{b}, window};
+    return result;
+}
+
+ParFile::ResolvedTrack resolved_bool_pwm_track(const ParFile::ParameterMetadata &parameter_metadata,
+    std::optional<ParFile::PwmEndpointConfig> a, std::optional<ParFile::PwmEndpointConfig> b, int window, double from,
+    double to, int num_steps)
+{
+    ParFile::ResolvedTrack result{resolved_track(parameter_metadata, pwm_keyframes(from, to, num_steps), "false")};
+    result.mode = ParFile::TrackMode::PWM;
+    result.pwm = ParFile::PwmConfig{std::move(a), std::move(b), window};
     return result;
 }
 
@@ -302,6 +326,14 @@ ParFile::ParameterMetadata outside_metadata(const std::string &name)
         name, ParFile::ParameterType::OUTSIDE, 0.0, 255.0, ParFile::ExtrapolateMode::CLAMP, ParFile::Curve::HOLD)};
     result.format = ParFile::ParameterFormat::RAW;
     result.values = {"iter", "real", "imag", "mult", "summ", "atan", "fmod", "tdis"};
+    return result;
+}
+
+ParFile::ParameterMetadata yes_no_metadata(const std::string &name)
+{
+    ParFile::ParameterMetadata result{
+        metadata(name, ParFile::ParameterType::YES_NO, {}, {}, ParFile::ExtrapolateMode::CLAMP, ParFile::Curve::HOLD)};
+    result.format = ParFile::ParameterFormat::RAW;
     return result;
 }
 
@@ -1189,6 +1221,38 @@ TEST(TestInterpolant, stringLinearCurveRejected)
         std::runtime_error);
 }
 
+TEST(TestInterpolant, stringBooleanKeyframesRejected)
+{
+    const int num_steps{3};
+    const ParFile::ParameterMetadata parameter_metadata{string_metadata("formulaname")};
+
+    EXPECT_THROW(ParFile::create_interpolant(
+                     resolved_track(parameter_metadata, bool_keyframes(false, true, num_steps), "false"), num_steps),
+        std::runtime_error);
+}
+
+TEST(TestInterpolant, yesNoFormatsBooleanKeyframesAsIdValues)
+{
+    const int num_steps{3};
+    const ParFile::ParameterMetadata parameter_metadata{yes_no_metadata("showorbit")};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_track(parameter_metadata, bool_keyframes(false, true, num_steps), "false"), num_steps)};
+
+    EXPECT_EQ("no", interpolant->step());
+    EXPECT_EQ("no", interpolant->step());
+    EXPECT_EQ("yes", interpolant->step());
+}
+
+TEST(TestInterpolant, yesNoStringKeyframesRejected)
+{
+    const int num_steps{3};
+    const ParFile::ParameterMetadata parameter_metadata{yes_no_metadata("showorbit")};
+
+    EXPECT_THROW(ParFile::create_interpolant(
+                     resolved_track(parameter_metadata, keyframes("no", "yes", num_steps), "false"), num_steps),
+        std::runtime_error);
+}
+
 TEST(TestInterpolant, enumPwmMixZeroEmitsA)
 {
     const int num_steps{4};
@@ -1255,6 +1319,31 @@ TEST(TestInterpolant, insidePwmMixOneEmitsB)
     EXPECT_EQ("zmag", interpolant->step());
     EXPECT_EQ("zmag", interpolant->step());
     EXPECT_EQ("zmag", interpolant->step());
+}
+
+TEST(TestInterpolant, yesNoPwmDefaultsToFalseTrue)
+{
+    const int num_steps{4};
+    ParFile::InterpolantPtr off_interpolant{ParFile::create_interpolant(
+        resolved_bool_pwm_track(yes_no_metadata("showorbit"), {}, {}, 2, 0.0, 0.0, num_steps), num_steps)};
+    ParFile::InterpolantPtr on_interpolant{ParFile::create_interpolant(
+        resolved_bool_pwm_track(yes_no_metadata("showorbit"), {}, {}, 2, 1.0, 1.0, num_steps), num_steps)};
+
+    EXPECT_EQ("no", off_interpolant->step());
+    EXPECT_EQ("no", off_interpolant->step());
+    EXPECT_EQ("yes", on_interpolant->step());
+    EXPECT_EQ("yes", on_interpolant->step());
+}
+
+TEST(TestInterpolant, yesNoPwmStringEndpointsRejected)
+{
+    const int num_steps{4};
+    const ParFile::PwmEndpointConfig off{"no"};
+    const ParFile::PwmEndpointConfig on{"yes"};
+
+    EXPECT_THROW(ParFile::create_interpolant(
+                     resolved_bool_pwm_track(yes_no_metadata("showorbit"), off, on, 2, 0.0, 1.0, num_steps), num_steps),
+        std::runtime_error);
 }
 
 TEST(TestInterpolant, outsidePwmWindowBelowTwoRejected)

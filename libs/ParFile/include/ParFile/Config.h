@@ -62,6 +62,7 @@ struct KeyframeConfig
     std::string value;
     std::optional<Curve> curve;
     std::optional<double> mix;
+    bool value_from_boolean{};
 };
 
 enum class PathKind
@@ -95,10 +96,16 @@ struct PathConfig
     std::vector<std::string> control_points;
 };
 
+struct PwmEndpointConfig
+{
+    std::string value;
+    bool value_from_boolean{};
+};
+
 struct PwmConfig
 {
-    std::string a;
-    std::string b;
+    std::optional<PwmEndpointConfig> a;
+    std::optional<PwmEndpointConfig> b;
     int window{};
 };
 

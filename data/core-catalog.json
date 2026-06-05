@@ -55,9 +55,8 @@
       "extrapolate": "clamp"
     },
     "finattract": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
@@ -129,9 +128,8 @@
       "extrapolate": "clamp"
     },
     "ismand": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
@@ -261,16 +259,14 @@
       "extrapolate": "clamp"
     },
     "screencoords": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "showorbit": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },

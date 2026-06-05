@@ -30,9 +30,8 @@
       "extrapolate": "clamp"
     },
     "brief": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
@@ -77,9 +76,8 @@
       "extrapolate": "clamp"
     },
     "fullcolor": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
@@ -151,9 +149,8 @@
       "extrapolate": "clamp"
     },
     "preview": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
@@ -211,9 +208,8 @@
       "extrapolate": "clamp"
     },
     "showbox": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
@@ -225,9 +221,8 @@
       "min": 0
     },
     "sphere": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
@@ -246,9 +241,8 @@
       "extrapolate": "clamp"
     },
     "targa_overlay": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
@@ -259,9 +253,8 @@
       "extrapolate": "clamp"
     },
     "usegrayscale": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },

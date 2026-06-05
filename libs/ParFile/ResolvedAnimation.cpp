@@ -162,6 +162,47 @@ const Parameter &source_parameter(const ParSet &source, std::string_view name)
     return *param;
 }
 
+char ascii_lower(char value)
+{
+    if (value >= 'A' && value <= 'Z')
+    {
+        return static_cast<char>(value - 'A' + 'a');
+    }
+    return value;
+}
+
+std::string lower_ascii(std::string_view text)
+{
+    std::string result{text};
+    std::transform(result.begin(), result.end(), result.begin(), ascii_lower);
+    return result;
+}
+
+std::string canonical_yes_no_value(std::string_view parameter, std::string_view value)
+{
+    const std::string lowered{lower_ascii(value)};
+    if (lowered == "yes" || lowered == "y" || lowered == "true")
+    {
+        return "true";
+    }
+    if (lowered == "no" || lowered == "n" || lowered == "false")
+    {
+        return "false";
+    }
+    throw std::runtime_error(
+        "Invalid yes-no source value '" + std::string{value} + "' for parameter '" + std::string{parameter} + "'");
+}
+
+std::string canonical_base_value(
+    const ParameterMetadata &metadata, std::string_view parameter, const std::string &base_value)
+{
+    if (metadata.type == ParameterType::YES_NO)
+    {
+        return canonical_yes_no_value(parameter, base_value);
+    }
+    return base_value;
+}
+
 std::string source_type(const ParSet &source)
 {
     return source_parameter(source, "type").value;
@@ -322,7 +363,8 @@ ResolvedTrack resolve_regular_track(const TrackConfig &track, const ParameterCat
 {
     const ParameterMetadata &metadata{catalog.metadata(track.parameter)};
     const Parameter &parameter{source_parameter(source, track.parameter)};
-    return make_resolved_track(track, metadata, parameter.value, track.parameter, {});
+    return make_resolved_track(
+        track, metadata, canonical_base_value(metadata, track.parameter, parameter.value), track.parameter, {});
 }
 
 ParameterMetadata camera2d_value_metadata(
@@ -485,7 +527,7 @@ ResolvedTrack resolve_id_3d_view_member(const Id3DViewConfig &view, const char *
     ResolvedTrack result;
     result.parameter = view.name + "." + member_name;
     result.metadata = metadata;
-    result.base_value = id_3d_view_base_value(source, output, member.keys);
+    result.base_value = canonical_base_value(metadata, output, id_3d_view_base_value(source, output, member.keys));
     result.keys = member.keys;
     result.output_parameter = output;
     return result;
@@ -518,7 +560,7 @@ void add_id_3d_view_camera_member(std::vector<ResolvedTrack> &tracks, const Id3D
     ResolvedTrack result;
     result.parameter = view.name + "." + member_name;
     result.metadata = metadata;
-    result.base_value = id_3d_view_base_value(source, *output, output_kind);
+    result.base_value = canonical_base_value(metadata, *output, id_3d_view_base_value(source, *output, output_kind));
     result.output_parameter = *output;
     result.camera3d = resolve_camera3d_config(*view.camera3d, view.name, output_kind);
     tracks.emplace_back(result);
@@ -551,7 +593,7 @@ std::vector<ResolvedTrack> resolve_id_3d_view_track(
     add_id_3d_view_member(
         result, view, "roughness", view.outputs.roughness, view.roughness, catalog, source, ParameterType::INTEGER, 0);
     add_id_3d_view_member(
-        result, view, "sphere", view.outputs.sphere, view.sphere, catalog, source, ParameterType::ENUM, 0);
+        result, view, "sphere", view.outputs.sphere, view.sphere, catalog, source, ParameterType::YES_NO, 0);
     add_id_3d_view_member(result, view, "longitude", view.outputs.longitude, view.longitude, catalog, source,
         ParameterType::NUMERIC_TUPLE, 2);
     add_id_3d_view_member(result, view, "latitude", view.outputs.latitude, view.latitude, catalog, source,

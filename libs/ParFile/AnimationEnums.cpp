@@ -35,6 +35,10 @@ ParameterType parse_parameter_type(std::string_view text)
     {
         return ParameterType::ENUM;
     }
+    if (text == "yes-no")
+    {
+        return ParameterType::YES_NO;
+    }
     if (text == "inside")
     {
         return ParameterType::INSIDE;
@@ -222,6 +226,8 @@ std::string_view to_string(ParameterType value)
         return "vector2";
     case ParameterType::VECTOR3:
         return "vector3";
+    case ParameterType::YES_NO:
+        return "yes-no";
     }
     return {};
 }

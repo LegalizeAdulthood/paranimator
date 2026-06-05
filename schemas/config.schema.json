@@ -730,7 +730,7 @@
           "type": "string"
         },
         "sphere": {
-          "description": "Catalog key that receives the sphere enum value.",
+          "description": "Catalog key that receives the sphere yes-no value.",
           "type": "string"
         },
         "longitude": {
@@ -938,8 +938,8 @@
       "additionalProperties": false,
       "properties": {
         "type": {
-          "const": "enum",
-          "description": "Declares an enum value."
+          "const": "yes-no",
+          "description": "Declares a boolean yes-no value."
         },
         "keys": {
           "description": "Exactly two keyed sphere flag values.",
@@ -1023,26 +1023,8 @@
           "type": "integer"
         },
         "value": {
-          "description": "Sphere projection flag value accepted by Id.",
-          "type": "string",
-          "oneOf": [
-            {
-              "const": "yes",
-              "description": "Enable sphere projection."
-            },
-            {
-              "const": "no",
-              "description": "Disable sphere projection."
-            },
-            {
-              "const": "y",
-              "description": "Short form that enables sphere projection."
-            },
-            {
-              "const": "n",
-              "description": "Short form that disables sphere projection."
-            }
-          ]
+          "description": "Sphere projection flag value represented as a JSON boolean.",
+          "type": "boolean"
         },
         "curve": {
           "description": "Optional interpolation curve ending at this sphere key.",
@@ -1639,8 +1621,17 @@
           "type": "integer"
         },
         "value": {
-          "description": "Parameter value text in the format required by the target metadata.",
-          "type": "string"
+          "description": "Parameter value in the application type required by the target metadata.",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Text parameter value for non-boolean target metadata."
+            },
+            {
+              "type": "boolean",
+              "description": "Boolean parameter value for yes-no target metadata."
+            }
+          ]
         },
         "curve": {
           "description": "Optional interpolation curve override ending at this key.",
@@ -1651,7 +1642,7 @@
     "pwm-track": {
       "description": "Discrete track that temporally dithers between two explicit values.",
       "type": "object",
-      "required": [ "parameter", "mode", "a", "b", "window", "keys" ],
+      "required": [ "parameter", "mode", "window", "keys" ],
       "additionalProperties": false,
       "properties": {
         "parameter": {
@@ -1664,11 +1655,19 @@
         },
         "a": {
           "description": "Discrete value emitted when the evaluated mix selects the first endpoint.",
-          "type": "string"
+          "$ref": "#/$defs/discrete-endpoint"
         },
         "b": {
           "description": "Discrete value emitted when the evaluated mix selects the second endpoint.",
-          "type": "string"
+          "$ref": "#/$defs/discrete-endpoint"
+        },
+        "off": {
+          "description": "Alias for endpoint a, useful for boolean yes-no PWM tracks.",
+          "$ref": "#/$defs/discrete-endpoint"
+        },
+        "on": {
+          "description": "Alias for endpoint b, useful for boolean yes-no PWM tracks.",
+          "$ref": "#/$defs/discrete-endpoint"
         },
         "window": {
           "description": "Number of frames in each PWM decision window.",
@@ -1686,11 +1685,35 @@
         }
       }
     },
+    "discrete-endpoint": {
+      "description": "Discrete PWM endpoint value.",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "String endpoint for enum, inside, or outside PWM tracks."
+        },
+        {
+          "type": "boolean",
+          "description": "Boolean endpoint for yes-no PWM tracks."
+        }
+      ]
+    },
     "pwm-keyframe": {
       "description": "One keyed PWM mix value at an animation frame.",
       "type": "object",
-      "required": [ "frame", "mix" ],
       "additionalProperties": false,
+      "oneOf": [
+        {
+          "description": "PWM key using the neutral mix field.",
+          "required": [ "frame", "mix" ],
+          "not": { "required": [ "duty" ] }
+        },
+        {
+          "description": "PWM key using the duty alias.",
+          "required": [ "frame", "duty" ],
+          "not": { "required": [ "mix" ] }
+        }
+      ],
       "properties": {
         "frame": {
           "description": "Zero-based frame index for this key.",
@@ -1698,6 +1721,12 @@
         },
         "mix": {
           "description": "Fraction of the PWM window assigned to value b.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "duty": {
+          "description": "Alias for mix; fraction of the PWM window assigned to value b.",
           "type": "number",
           "minimum": 0,
           "maximum": 1

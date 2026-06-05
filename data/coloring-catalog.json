@@ -38,16 +38,14 @@
       "extrapolate": "clamp"
     },
     "nobof": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "olddemmcolors": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
@@ -58,9 +56,8 @@
       "extrapolate": "clamp"
     },
     "truecolor": {
-      "type": "enum",
+      "type": "yes-no",
       "format": "raw",
-      "values": [ "yes", "no", "y", "n" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },

@@ -762,9 +762,9 @@ TEST(TestConfig, jsonDeserializesId3DViewTrack)
             Object{{"type", "integer"},
                 {"keys", Object::array({Object{{"frame", 0}, {"value", 30}}, Object{{"frame", 59}, {"value", 40}}})}}},
         {"sphere",
-            Object{{"type", "enum"},
+            Object{{"type", "yes-no"},
                 {"keys",
-                    Object::array({Object{{"frame", 0}, {"value", "no"}}, Object{{"frame", 59}, {"value", "yes"}}})}}},
+                    Object::array({Object{{"frame", 0}, {"value", false}}, Object{{"frame", 59}, {"value", true}}})}}},
         {"longitude",
             Object{{"type", "numeric-tuple"}, {"arity", 2},
                 {"keys",
@@ -826,8 +826,9 @@ TEST(TestConfig, jsonDeserializesId3DViewTrack)
     EXPECT_EQ(2, *view.xyshift->arity);
     ASSERT_TRUE(view.scalexyz->arity);
     EXPECT_EQ(3, *view.scalexyz->arity);
-    EXPECT_EQ(ParFile::ParameterType::ENUM, view.sphere->type);
-    EXPECT_EQ("yes", view.sphere->keys[1].value);
+    EXPECT_EQ(ParFile::ParameterType::YES_NO, view.sphere->type);
+    EXPECT_EQ("true", view.sphere->keys[1].value);
+    EXPECT_TRUE(view.sphere->keys[1].value_from_boolean);
     EXPECT_EQ(ParFile::ParameterType::INTEGER, view.stereo->type);
     EXPECT_EQ("2", view.stereo->keys[1].value);
 }
@@ -1035,14 +1036,72 @@ TEST(TestConfig, jsonDeserializesPwmTrack)
     EXPECT_EQ("inside", config.tracks[0].parameter);
     EXPECT_EQ(ParFile::TrackMode::PWM, config.tracks[0].mode);
     ASSERT_TRUE(config.tracks[0].pwm);
-    EXPECT_EQ("bof60", config.tracks[0].pwm->a);
-    EXPECT_EQ("zmag", config.tracks[0].pwm->b);
+    ASSERT_TRUE(config.tracks[0].pwm->a);
+    ASSERT_TRUE(config.tracks[0].pwm->b);
+    EXPECT_EQ("bof60", config.tracks[0].pwm->a->value);
+    EXPECT_FALSE(config.tracks[0].pwm->a->value_from_boolean);
+    EXPECT_EQ("zmag", config.tracks[0].pwm->b->value);
+    EXPECT_FALSE(config.tracks[0].pwm->b->value_from_boolean);
     EXPECT_EQ(8, config.tracks[0].pwm->window);
     ASSERT_EQ(2U, config.tracks[0].keys.size());
     ASSERT_TRUE(config.tracks[0].keys[0].mix);
     ASSERT_TRUE(config.tracks[0].keys[1].mix);
     EXPECT_DOUBLE_EQ(0.0, *config.tracks[0].keys[0].mix);
     EXPECT_DOUBLE_EQ(1.0, *config.tracks[0].keys[1].mix);
+}
+
+TEST(TestConfig, jsonDeserializesBoolKeyframeValues)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"parameter", "showorbit"},
+        {"keys", Object::array({Object{{"frame", 0}, {"value", false}}, Object{{"frame", 59}, {"value", true}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_EQ(2U, config.tracks[0].keys.size());
+    EXPECT_EQ("false", config.tracks[0].keys[0].value);
+    EXPECT_TRUE(config.tracks[0].keys[0].value_from_boolean);
+    EXPECT_EQ("true", config.tracks[0].keys[1].value);
+    EXPECT_TRUE(config.tracks[0].keys[1].value_from_boolean);
+}
+
+TEST(TestConfig, jsonDeserializesBoolPwmTrackDefaults)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"parameter", "showorbit"}, {"mode", "pwm"}, {"window", 4},
+        {"keys", Object::array({Object{{"frame", 0}, {"duty", 0.0}}, Object{{"frame", 59}, {"duty", 1.0}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_TRUE(config.tracks[0].pwm);
+    EXPECT_FALSE(config.tracks[0].pwm->a);
+    EXPECT_FALSE(config.tracks[0].pwm->b);
+    EXPECT_EQ(4, config.tracks[0].pwm->window);
+    ASSERT_TRUE(config.tracks[0].keys[0].mix);
+    ASSERT_TRUE(config.tracks[0].keys[1].mix);
+    EXPECT_DOUBLE_EQ(0.0, *config.tracks[0].keys[0].mix);
+    EXPECT_DOUBLE_EQ(1.0, *config.tracks[0].keys[1].mix);
+}
+
+TEST(TestConfig, jsonDeserializesBoolPwmTrackEndpoints)
+{
+    Object json = valid_json();
+    json["tracks"] =
+        Object::array({Object{{"parameter", "showorbit"}, {"mode", "pwm"}, {"off", false}, {"on", true}, {"window", 4},
+            {"keys", Object::array({Object{{"frame", 0}, {"mix", 0.0}}, Object{{"frame", 59}, {"mix", 1.0}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_TRUE(config.tracks[0].pwm);
+    ASSERT_TRUE(config.tracks[0].pwm->a);
+    ASSERT_TRUE(config.tracks[0].pwm->b);
+    EXPECT_EQ("false", config.tracks[0].pwm->a->value);
+    EXPECT_TRUE(config.tracks[0].pwm->a->value_from_boolean);
+    EXPECT_EQ("true", config.tracks[0].pwm->b->value);
+    EXPECT_TRUE(config.tracks[0].pwm->b->value_from_boolean);
 }
 
 TEST(TestConfig, jsonDeserializesColorMapTrack)

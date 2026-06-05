@@ -491,6 +491,10 @@
           "description": "Discrete string value selected from a declared value set."
         },
         {
+          "const": "yes-no",
+          "description": "Id yes/no value represented as a JSON boolean in animation configs and written as yes or no."
+        },
+        {
           "const": "inside",
           "description": "Id inside= value: a named inside method or integer color-map index."
         },

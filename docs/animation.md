@@ -1726,28 +1726,7 @@ behavior. Help documentation can clarify user-facing prose, but parser
 behavior is the implementation source of truth for these parameter
 shapes.
 
-### 1. Yes-No Parameter Type
-
-Add a `yes-no` catalog metadata type for Id parameters whose par-file
-parser accepts `yes`, `y`, `no`, or `n`.
-
-JSON animation config values for `yes-no` tracks are booleans, not Id
-strings. Keyframe values use `true` or `false`. Source par values
-deserialize from all Id spellings into the application boolean value.
-Generated par entries serialize `true` as `yes` and `false` as `no`.
-
-Bool tracks may use PWM mode. In PWM mode, omitted off/on values default
-to `false` and `true`, and each generated frame serializes the selected
-bool as `yes` or `no`.
-
-Update the config schema, catalog schema, and schema descriptions. Add
-unit tests for application deserialization from Id spellings, JSON
-boolean keyframes, rejection of string values such as `"yes"` in
-animation JSON, formatting to `yes` or `no`, PWM evaluation with default
-false/true values, and rejection of string PWM values. Add an integration
-test using one audited parameter such as `showorbits`.
-
-### 2. Function-List Parameter Type
+### 1. Function-List Parameter Type
 
 Add a `function-list` catalog metadata type for the real Id `function=`
 parameter. The value is a slash-delimited list whose entries are drawn
@@ -1761,7 +1740,7 @@ Add unit tests for enum validation, par-file parsing, JSON
 deserialization, and formatting. Add catalog tests for the audited
 `function` and `orbitdrawmode` entries where the parser uses this shape.
 
-### 3. Numeric-Or-Enum Scalar Types
+### 2. Numeric-Or-Enum Scalar Types
 
 Add the small union scalar types found by the audit instead of treating
 them as generic strings. Cover at least these parser shapes:
@@ -1780,7 +1759,7 @@ Add app data type tests for each union type, schema tests for accepted
 and rejected JSON values, and catalog tests for `fillcolor`,
 `periodicity`, `logmap`, and `passes`.
 
-### 4. Fixed Slash-Tuple Parameter Types
+### 3. Fixed Slash-Tuple Parameter Types
 
 Add catalog value types for audited parameters whose parser accepts fixed
 slash-delimited numeric tuples or one literal plus a tuple.
@@ -1800,7 +1779,7 @@ Add unit tests for each parser, formatter, and invalid arity. Add schema
 description strings for all new object shapes and fields. Add catalog
 tests for `initorbit`, `invert`, `mathtolerance`, and `distest`.
 
-### 5. Potential And MIIM Parser Types
+### 4. Potential And MIIM Parser Types
 
 Add focused parser types for the more specialized audited slash values:
 `potential` and `miim`.
@@ -1814,7 +1793,7 @@ needed for existing Id behavior. Add unit tests from representative
 accepted and rejected parser examples. Add catalog schema descriptions
 and catalog tests for `potential` and `miim`.
 
-### 6. Inside And Outside Numeric Index Audit
+### 5. Inside And Outside Numeric Index Audit
 
 Verify the existing `inside` and `outside` application types against the
 audited parser behavior. They should continue to be distinct types, each
@@ -1825,7 +1804,7 @@ sets that differ between the two types, and invalid values that would be
 accepted by the other type but not this one. Update catalog metadata if
 the audit found missing parser method names or bounds.
 
-### 7. Params Metadata Coverage From Parser Tables
+### 6. Params Metadata Coverage From Parser Tables
 
 Extend fractal-specific `params` metadata using the parser tables and
 `type_has_param()` behavior audited from Id. Do not add one global
@@ -1836,7 +1815,7 @@ slots have stable meanings. Tests should resolve tracks against the
 active `type`, preserve untouched params slots, reject overlapping slot
 writes, and write one `params=` value through the highest required slot.
 
-### 8. Formula Catalog Coverage For id.frm
+### 7. Formula Catalog Coverage For id.frm
 
 Create bundled formula metadata only for formula entries in `id.frm`.
 Attach metadata by formula entry name. Formula params metadata names are
@@ -1847,7 +1826,7 @@ Add tests that load representative `id.frm` formula metadata, resolve a
 formula-specific knob from `formulaname`, merge it into the generated
 `params=`, and reject invalid variable bindings.
 
-### 9. Complete Catalog Audit Pass
+### 8. Complete Catalog Audit Pass
 
 After the supporting value types exist, update the core, coloring, 3D,
 fractal, and formula catalogs to cover the audited Id parser surface.

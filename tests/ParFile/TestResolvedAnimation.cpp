@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 namespace
 {
@@ -35,8 +37,8 @@ ParFile::ParameterCatalog catalog_data()
                 ParFile::ExtrapolateMode::CLAMP, {}, {}, {}, 3},
             {"roughness", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
                 ParFile::ExtrapolateMode::CLAMP, {}, {}},
-            {"sphere", ParFile::ParameterType::ENUM, ParFile::ParameterFormat::RAW, ParFile::Curve::HOLD,
-                ParFile::ExtrapolateMode::CLAMP, {}, {}, {"yes", "no", "y", "n"}},
+            {"sphere", ParFile::ParameterType::YES_NO, ParFile::ParameterFormat::RAW, ParFile::Curve::HOLD,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}},
             {"longitude", ParFile::ParameterType::NUMERIC_TUPLE, ParFile::ParameterFormat::SLASH,
                 ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}, {}, 2},
             {"latitude", ParFile::ParameterType::NUMERIC_TUPLE, ParFile::ParameterFormat::SLASH, ParFile::Curve::LINEAR,
@@ -58,6 +60,8 @@ ParFile::ParameterCatalog catalog_data()
             {"julibrotfromto", ParFile::ParameterType::NUMERIC_TUPLE, ParFile::ParameterFormat::SLASH,
                 ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}, {}, 4},
             {"maxiter", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}},
+            {"showorbit", ParFile::ParameterType::YES_NO, ParFile::ParameterFormat::RAW, ParFile::Curve::HOLD,
                 ParFile::ExtrapolateMode::CLAMP, {}, {}}}};
     result.fractal_types.push_back({"julia",
         {{{0, "c-real",
@@ -104,9 +108,18 @@ ParFile::Config config_data()
         {{"center-mag", {{0, "-0.5/0/1"}, {2, "-0.5/0/10"}}}}};
 }
 
+ParFile::KeyframeConfig bool_keyframe(int frame, bool value)
+{
+    ParFile::KeyframeConfig result;
+    result.frame = frame;
+    result.value = value ? "true" : "false";
+    result.value_from_boolean = true;
+    return result;
+}
+
 ParFile::ParSet source_set()
 {
-    return {"source", {{"center-mag", "-0.5/0/1"}, {"corners", "-3/-1/-2/2"}, {"maxiter", "100"}}};
+    return {"source", {{"center-mag", "-0.5/0/1"}, {"corners", "-3/-1/-2/2"}, {"maxiter", "100"}, {"showorbit", "n"}}};
 }
 
 ParFile::Config julia_config_data(std::string_view parameter)
@@ -317,6 +330,25 @@ TEST(TestResolvedAnimation, resolvedTrackCarriesParameterMetadataBaseValueAndKey
     EXPECT_EQ("-0.5/0/1", track.keys[0].value);
     EXPECT_EQ(2, track.keys[1].frame);
     EXPECT_EQ("-0.5/0/10", track.keys[1].value);
+}
+
+TEST(TestResolvedAnimation, yesNoSourceParSpellingsResolveToBooleanBaseValue)
+{
+    const std::vector<std::pair<std::string, std::string>> cases{
+        {"yes", "true"}, {"y", "true"}, {"no", "false"}, {"n", "false"}};
+
+    for (const auto &[source_value, expected] : cases)
+    {
+        ParFile::Config config{config_data()};
+        config.tracks = {{"showorbit", {bool_keyframe(0, false), bool_keyframe(2, true)}}};
+        ParFile::ParSet source{source_set()};
+        source.params.back().value = source_value;
+
+        const ParFile::ResolvedAnimation animation{ParFile::resolve_animation(config, catalog_data(), source)};
+
+        ASSERT_EQ(1U, animation.tracks.size());
+        EXPECT_EQ(expected, animation.tracks[0].base_value);
+    }
 }
 
 TEST(TestResolvedAnimation, camera2dResolvesOutputMetadataAndSourceAspect)

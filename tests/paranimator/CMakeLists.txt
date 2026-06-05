@@ -79,6 +79,7 @@ add_paranimator_test(maxiter-ping-pong CATALOG maxiter-ping-pong-catalog.json FR
 add_paranimator_test(maxiter-hold FRAMES 4)
 add_paranimator_test(maxiter-step FRAMES 4)
 add_paranimator_test(inside-hold)
+add_paranimator_test(yes-no-pwm FRAMES 4)
 add_paranimator_test(path-generators)
 add_paranimator_test(ellipse-path FRAMES 5)
 add_paranimator_test(lissajous-path FRAMES 5)

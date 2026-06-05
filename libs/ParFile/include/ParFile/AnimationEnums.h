@@ -23,7 +23,8 @@ enum class ParameterType
     POINT3,
     STRING,
     VECTOR2,
-    VECTOR3
+    VECTOR3,
+    YES_NO
 };
 
 enum class ParameterFormat

@@ -117,6 +117,11 @@ static std::optional<bool> load_optional_bool(const Object &json, std::string_vi
     return json.at(key).get<bool>();
 }
 
+static std::string bool_text(bool value)
+{
+    return value ? "true" : "false";
+}
+
 static std::vector<std::string> load_string_array(const Object &json, std::string_view name)
 {
     const std::string key{name};
@@ -319,6 +324,40 @@ static double load_optional_double(const Object &json, std::string_view name, do
     return json.at(key).get<double>();
 }
 
+static double load_pwm_mix(const Object &json)
+{
+    const bool has_mix{json.contains("mix")};
+    const bool has_duty{json.contains("duty")};
+    if (has_mix && has_duty)
+    {
+        throw std::runtime_error("Invalid config, PWM keyframe cannot contain both mix and duty");
+    }
+    if (!has_mix && !has_duty)
+    {
+        throw std::runtime_error("Invalid config, PWM keyframe is missing mix");
+    }
+    return load_double(json, has_mix ? "mix" : "duty");
+}
+
+static std::string load_value(const Object &json, bool &value_from_boolean)
+{
+    const std::string key{"value"};
+    if (!json.contains(key))
+    {
+        throw std::runtime_error("Invalid config, missing string or boolean 'value'");
+    }
+    if (json.at(key).is_boolean())
+    {
+        value_from_boolean = true;
+        return bool_text(json.at(key).get<bool>());
+    }
+    if (json.at(key).is_string())
+    {
+        return json.at(key).get<std::string>();
+    }
+    throw std::runtime_error("Invalid config, missing string or boolean 'value'");
+}
+
 static TrackMode load_track_mode(const Object &json)
 {
     const std::optional<std::string> mode{load_optional_string(json, "mode")};
@@ -345,11 +384,11 @@ static KeyframeConfig load_keyframe_config(const Object &json, TrackMode mode)
     result.frame = load_int(json, "frame");
     if (mode == TrackMode::PWM)
     {
-        result.mix = load_double(json, "mix");
+        result.mix = load_pwm_mix(json);
     }
     else
     {
-        result.value = load_string(json, "value");
+        result.value = load_value(json, result.value_from_boolean);
         if (const std::optional<std::string> curve{load_optional_string(json, "curve")})
         {
             result.curve = parse_curve(*curve);
@@ -491,7 +530,7 @@ static Camera2DConfig load_camera2d_config(const Object &json, int num_frames)
     return result;
 }
 
-static std::string load_view_keyframe_value(const Object &json, ParameterType type)
+static std::string load_view_keyframe_value(const Object &json, ParameterType type, bool &value_from_boolean)
 {
     const std::string key{"value"};
     if (type == ParameterType::INTEGER)
@@ -510,6 +549,15 @@ static std::string load_view_keyframe_value(const Object &json, ParameterType ty
         }
         return format_config_double(json.at(key).get<double>());
     }
+    if (type == ParameterType::YES_NO)
+    {
+        if (!json.contains(key) || !json.at(key).is_boolean())
+        {
+            throw std::runtime_error("Invalid config, missing boolean 'value'");
+        }
+        value_from_boolean = true;
+        return bool_text(json.at(key).get<bool>());
+    }
     return load_string(json, "value");
 }
 
@@ -517,7 +565,7 @@ static KeyframeConfig load_view_keyframe_config(const Object &json, ParameterTyp
 {
     KeyframeConfig result;
     result.frame = load_int(json, "frame");
-    result.value = load_view_keyframe_value(json, type);
+    result.value = load_view_keyframe_value(json, type, result.value_from_boolean);
     if (const std::optional<std::string> curve{load_optional_string(json, "curve")})
     {
         result.curve = parse_curve(*curve);
@@ -657,7 +705,7 @@ static Id3DViewConfig load_id_3d_view_config(const Object &json)
     result.xyshift = load_optional_id_3d_view_value_track_config(json, "xyshift", ParameterType::NUMERIC_TUPLE, 2);
     result.scalexyz = load_optional_id_3d_view_value_track_config(json, "scalexyz", ParameterType::NUMERIC_TUPLE, 3);
     result.roughness = load_optional_id_3d_view_value_track_config(json, "roughness", ParameterType::INTEGER, 0);
-    result.sphere = load_optional_id_3d_view_value_track_config(json, "sphere", ParameterType::ENUM, 0);
+    result.sphere = load_optional_id_3d_view_value_track_config(json, "sphere", ParameterType::YES_NO, 0);
     result.longitude = load_optional_id_3d_view_value_track_config(json, "longitude", ParameterType::NUMERIC_TUPLE, 2);
     result.latitude = load_optional_id_3d_view_value_track_config(json, "latitude", ParameterType::NUMERIC_TUPLE, 2);
     result.radius = load_optional_id_3d_view_value_track_config(json, "radius", ParameterType::INTEGER, 0);
@@ -1205,11 +1253,47 @@ static std::vector<ColorMapEffectConfig> load_color_map_effects(const Object &js
     return result;
 }
 
+static PwmEndpointConfig load_pwm_endpoint(const Object &json, std::string_view field)
+{
+    const std::string key{field};
+    if (json.at(key).is_boolean())
+    {
+        return {bool_text(json.at(key).get<bool>()), true};
+    }
+    if (json.at(key).is_string())
+    {
+        return {json.at(key).get<std::string>()};
+    }
+    throw std::runtime_error("Invalid config, field '" + std::string{field} + "' is not a string or boolean");
+}
+
+static std::optional<PwmEndpointConfig> load_optional_pwm_endpoint(
+    const Object &json, std::string_view primary, std::string_view alias)
+{
+    const std::string primary_key{primary};
+    const std::string alias_key{alias};
+    const bool has_primary{json.contains(primary_key)};
+    const bool has_alias{json.contains(alias_key)};
+    if (has_primary && has_alias)
+    {
+        throw std::runtime_error("Invalid config, PWM endpoint has both '" + primary_key + "' and '" + alias_key + "'");
+    }
+    if (has_primary)
+    {
+        return load_pwm_endpoint(json, primary);
+    }
+    if (has_alias)
+    {
+        return load_pwm_endpoint(json, alias);
+    }
+    return {};
+}
+
 static PwmConfig load_pwm_config(const Object &json)
 {
     PwmConfig result;
-    result.a = load_string(json, "a");
-    result.b = load_string(json, "b");
+    result.a = load_optional_pwm_endpoint(json, "a", "off");
+    result.b = load_optional_pwm_endpoint(json, "b", "on");
     result.window = load_int(json, "window");
     if (result.window < 2)
     {

@@ -124,15 +124,19 @@ TEST(TestParameterCatalog, coloringCatalogIncludesSavedImageParameters)
 {
     const ParFile::ParameterCatalog catalog{coloring_catalog()};
     const ParFile::ParameterMetadata &mode{catalog.metadata("logmode")};
+    const ParFile::ParameterMetadata &no_bof{catalog.metadata("nobof")};
     const ParFile::ParameterMetadata &ranges{catalog.metadata("ranges")};
     const ParFile::ParameterMetadata &distance_estimator{catalog.metadata("distest")};
+    const ParFile::ParameterMetadata &true_color{catalog.metadata("truecolor")};
 
     EXPECT_EQ(11U, catalog.parameters.size());
     EXPECT_EQ(ParFile::ParameterType::ENUM, mode.type);
     EXPECT_NE(mode.values.end(), std::find(mode.values.begin(), mode.values.end(), "fly"));
     EXPECT_NE(mode.values.end(), std::find(mode.values.begin(), mode.values.end(), "table"));
+    EXPECT_EQ(ParFile::ParameterType::YES_NO, no_bof.type);
     EXPECT_EQ(ParFile::ParameterType::STRING, ranges.type);
     EXPECT_EQ(ParFile::ParameterType::STRING, distance_estimator.type);
+    EXPECT_EQ(ParFile::ParameterType::YES_NO, true_color.type);
 }
 
 TEST(TestParameterCatalog, nonSavedImageControlsAreNotCataloged)
@@ -165,6 +169,22 @@ TEST(TestParameterCatalog, centerMagMetadataLoads)
     EXPECT_EQ(ParFile::Curve::GEOMETRIC, *metadata.default_curve);
     ASSERT_TRUE(metadata.extrapolate);
     EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
+}
+
+TEST(TestParameterCatalog, yesNoMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("showorbit")};
+
+    EXPECT_EQ("showorbit", metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::YES_NO, metadata.type);
+    ASSERT_TRUE(metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::RAW, *metadata.format);
+    ASSERT_TRUE(metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *metadata.default_curve);
+    ASSERT_TRUE(metadata.extrapolate);
+    EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
+    EXPECT_TRUE(metadata.values.empty());
 }
 
 TEST(TestParameterCatalog, cornersMetadataLoads)
@@ -221,9 +241,8 @@ TEST(TestParameterCatalog, id3DViewMetadataLoads)
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, scalexyz.type);
     ASSERT_TRUE(scalexyz.arity);
     EXPECT_EQ(3, *scalexyz.arity);
-    EXPECT_EQ(ParFile::ParameterType::ENUM, sphere.type);
-    ASSERT_EQ(4U, sphere.values.size());
-    EXPECT_EQ("yes", sphere.values[0]);
+    EXPECT_EQ(ParFile::ParameterType::YES_NO, sphere.type);
+    EXPECT_TRUE(sphere.values.empty());
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, longitude.type);
     ASSERT_TRUE(longitude.arity);
     EXPECT_EQ(2, *longitude.arity);
@@ -447,6 +466,7 @@ TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
     EXPECT_EQ(ParFile::ParameterType::CORNERS, read_metadata(R"("type":"corners")").type);
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, read_metadata(R"("type":"double")").type);
     EXPECT_EQ(ParFile::ParameterType::ENUM, read_metadata(R"("type":"enum","values":["a"])").type);
+    EXPECT_EQ(ParFile::ParameterType::YES_NO, read_metadata(R"("type":"yes-no")").type);
     EXPECT_EQ(ParFile::ParameterType::INSIDE, read_metadata(R"("type":"inside","values":["maxiter"])").type);
     EXPECT_EQ(ParFile::ParameterType::INTEGER, read_metadata(R"("type":"integer")").type);
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, read_metadata(R"("type":"numeric-tuple")").type);
@@ -565,6 +585,7 @@ TEST(TestParameterCatalog, enumMissingValuesRejected)
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"enum")")), std::runtime_error);
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"inside")")), std::runtime_error);
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"outside")")), std::runtime_error);
+    EXPECT_NO_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"yes-no")")));
     EXPECT_NO_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"string")")));
 }
 
@@ -572,6 +593,8 @@ TEST(TestParameterCatalog, valuesRequireDiscreteType)
 {
     EXPECT_THROW(
         ParFile::read_parameter_catalog(catalog_text(R"("type":"integer","values":["a"])")), std::runtime_error);
+    EXPECT_THROW(
+        ParFile::read_parameter_catalog(catalog_text(R"("type":"yes-no","values":["yes"])")), std::runtime_error);
 }
 
 TEST(TestParameterCatalog, invalidEnumValuesRejected)
