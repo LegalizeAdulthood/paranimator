@@ -480,6 +480,8 @@ TEST(TestJsonSchema, numericTupleMetadataAccepted)
     EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer-tuple","arity":2)")));
     EXPECT_TRUE(validates_parameter_catalog_text(
         catalog_with_metadata(R"("type":"numeric-tuple-or-enum","arity":2,"values":["pixel"])")));
+    EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"miim")")));
+    EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"potential")")));
 }
 
 TEST(TestJsonSchema, colorMapMetadataAccepted)

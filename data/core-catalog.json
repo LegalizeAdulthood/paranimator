@@ -168,7 +168,7 @@
       "min": 2
     },
     "miim": {
-      "type": "string",
+      "type": "miim",
       "format": "slash",
       "default-curve": "hold",
       "extrapolate": "clamp"
@@ -248,9 +248,9 @@
       "max": 255
     },
     "potential": {
-      "type": "string",
+      "type": "potential",
       "format": "slash",
-      "default-curve": "hold",
+      "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "proximity": {

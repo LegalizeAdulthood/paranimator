@@ -269,6 +269,147 @@ std::vector<double> rounded_tuple_values(const ParameterMetadata &metadata, std:
     return values;
 }
 
+std::string require_string_value(const ParameterMetadata &metadata, const KeyframeConfig::Value &value)
+{
+    if (!keyframe_value_is_string(value))
+    {
+        throw std::runtime_error("Parameter '" + metadata.name + "' requires string keyframe values for type '" +
+            std::string{to_string(metadata.type)} + "'");
+    }
+    return keyframe_value_text(value);
+}
+
+struct PotentialValue
+{
+    std::vector<double> numbers;
+    bool store_16bit{};
+};
+
+PotentialValue parse_potential_value(const ParameterMetadata &metadata, const KeyframeConfig::Value &value)
+{
+    std::vector<std::string> parts{split_slash_values(require_string_value(metadata, value))};
+    if (!parts.empty() && parts.back() == "16bit")
+    {
+        parts.pop_back();
+        if (parts.size() != 3U)
+        {
+            throw std::runtime_error("Potential parameter '" + metadata.name + "' requires modulus before 16bit");
+        }
+        PotentialValue result;
+        result.store_16bit = true;
+        result.numbers.reserve(parts.size());
+        for (std::size_t i = 0; i < parts.size(); ++i)
+        {
+            result.numbers.push_back(i == 1U ? parse_double(parts[i]) : parse_integer(parts[i]));
+        }
+        return result;
+    }
+    if (parts.empty() || parts.size() > 3U)
+    {
+        throw std::runtime_error("Potential parameter '" + metadata.name + "' requires 1 through 3 numeric fields");
+    }
+
+    PotentialValue result;
+    result.numbers.reserve(parts.size());
+    for (std::size_t i = 0; i < parts.size(); ++i)
+    {
+        result.numbers.push_back(i == 1U ? parse_double(parts[i]) : parse_integer(parts[i]));
+    }
+    return result;
+}
+
+std::string format_potential_value(const PotentialValue &value)
+{
+    std::string result;
+    for (std::size_t i = 0; i < value.numbers.size(); ++i)
+    {
+        if (!result.empty())
+        {
+            result += '/';
+        }
+        if (i == 1U)
+        {
+            result += format_double(value.numbers[i]);
+        }
+        else
+        {
+            result += std::to_string(static_cast<int>(std::lround(value.numbers[i])));
+        }
+    }
+    if (value.store_16bit)
+    {
+        result += "/16bit";
+    }
+    return result;
+}
+
+std::string parse_miim_major(const std::string &value, const std::string &name)
+{
+    if (value == "b" || value == "breadth")
+    {
+        return "breadth";
+    }
+    if (value == "d" || value == "depth")
+    {
+        return "depth";
+    }
+    if (value == "w" || value == "walk")
+    {
+        return "walk";
+    }
+    throw std::runtime_error("MIIM parameter '" + name + "' has invalid major method '" + value + "'");
+}
+
+std::string parse_miim_minor(const std::string &value, const std::string &name)
+{
+    if (value == "l" || value == "left")
+    {
+        return "left";
+    }
+    if (value == "r" || value == "right")
+    {
+        return "right";
+    }
+    throw std::runtime_error("MIIM parameter '" + name + "' has invalid minor method '" + value + "'");
+}
+
+struct MiimValue
+{
+    std::string major;
+    std::string minor;
+    std::vector<double> numbers;
+};
+
+MiimValue parse_miim_value(const ParameterMetadata &metadata, const KeyframeConfig::Value &value)
+{
+    const std::vector<std::string> parts{split_slash_values(require_string_value(metadata, value))};
+    if (parts.size() < 2U || parts.size() > 6U)
+    {
+        throw std::runtime_error("MIIM parameter '" + metadata.name + "' requires 2 through 6 fields");
+    }
+
+    MiimValue result;
+    result.major = parse_miim_major(parts[0], metadata.name);
+    result.minor = parse_miim_minor(parts[1], metadata.name);
+    result.numbers.reserve(parts.size() - 2U);
+    for (std::size_t i = 2; i < parts.size(); ++i)
+    {
+        result.numbers.push_back(parse_double(parts[i]));
+    }
+    return result;
+}
+
+std::string format_miim_value(const MiimValue &value)
+{
+    std::string result{value.major + "/" + value.minor};
+    for (double number : value.numbers)
+    {
+        result += '/';
+        result += format_double(number);
+    }
+    return result;
+}
+
 void validate_enum_value(const ParameterMetadata &metadata, const std::string &value)
 {
     const auto it{std::find(metadata.values.begin(), metadata.values.end(), value)};
@@ -2428,6 +2569,114 @@ std::string NumericTupleOrEnumInterpolant::step()
     return format_slash_doubles(values);
 }
 
+class PotentialInterpolant : public Base
+{
+public:
+    PotentialInterpolant(
+        const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve, int num_steps);
+    ~PotentialInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    int m_from_frame{};
+    int m_to_frame{};
+    PotentialValue m_from;
+    PotentialValue m_to;
+    Curve m_curve{};
+};
+
+PotentialInterpolant::PotentialInterpolant(
+    const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve, int num_steps) :
+    Base(metadata.name, num_steps),
+    m_from_frame(keys[0].frame),
+    m_to_frame(keys[1].frame),
+    m_from(parse_potential_value(metadata, keys[0].value)),
+    m_to(parse_potential_value(metadata, keys[1].value)),
+    m_curve(curve)
+{
+    if (m_from.numbers.size() != m_to.numbers.size())
+    {
+        throw std::runtime_error("Potential parameter '" + metadata.name + "' requires matching keyframe arity");
+    }
+    validate_scalar_curve(to_string(metadata.type), m_curve);
+}
+
+std::string PotentialInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+
+    PotentialValue value{m_from};
+    if (frame >= m_to_frame)
+    {
+        value = m_to;
+    }
+    else if (frame > m_from_frame && m_curve != Curve::HOLD && m_curve != Curve::STEP)
+    {
+        const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        for (std::size_t i = 0; i < value.numbers.size(); ++i)
+        {
+            value.numbers[i] = m_from.numbers[i] + fraction * (m_to.numbers[i] - m_from.numbers[i]);
+        }
+    }
+    return format_potential_value(value);
+}
+
+class MiimInterpolant : public Base
+{
+public:
+    MiimInterpolant(
+        const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve, int num_steps);
+    ~MiimInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    int m_from_frame{};
+    int m_to_frame{};
+    MiimValue m_from;
+    MiimValue m_to;
+    Curve m_curve{};
+};
+
+MiimInterpolant::MiimInterpolant(
+    const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve, int num_steps) :
+    Base(metadata.name, num_steps),
+    m_from_frame(keys[0].frame),
+    m_to_frame(keys[1].frame),
+    m_from(parse_miim_value(metadata, keys[0].value)),
+    m_to(parse_miim_value(metadata, keys[1].value)),
+    m_curve(curve)
+{
+    if (m_from.numbers.size() != m_to.numbers.size())
+    {
+        throw std::runtime_error("MIIM parameter '" + metadata.name + "' requires matching keyframe arity");
+    }
+    validate_scalar_curve(to_string(metadata.type), m_curve);
+}
+
+std::string MiimInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+
+    MiimValue value{m_from};
+    if (frame >= m_to_frame)
+    {
+        value = m_to;
+    }
+    else if (frame > m_from_frame && m_curve != Curve::HOLD && m_curve != Curve::STEP)
+    {
+        const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        for (std::size_t i = 0; i < value.numbers.size(); ++i)
+        {
+            value.numbers[i] = m_from.numbers[i] + fraction * (m_to.numbers[i] - m_from.numbers[i]);
+        }
+    }
+    return format_miim_value(value);
+}
+
 class DiscreteInterpolant : public Base
 {
 public:
@@ -2928,6 +3177,26 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
             curve = *keys[1].curve;
         }
         return std::make_shared<NumericTupleOrEnumInterpolant>(metadata, keys, curve, num_steps);
+    }
+    case ParameterType::MIIM:
+    {
+        validate_full_range(metadata.name, keys, num_steps);
+        Curve curve{default_curve(metadata)};
+        if (keys[1].curve)
+        {
+            curve = *keys[1].curve;
+        }
+        return std::make_shared<MiimInterpolant>(metadata, keys, curve, num_steps);
+    }
+    case ParameterType::POTENTIAL:
+    {
+        validate_full_range(metadata.name, keys, num_steps);
+        Curve curve{default_curve(metadata)};
+        if (keys[1].curve)
+        {
+            curve = *keys[1].curve;
+        }
+        return std::make_shared<PotentialInterpolant>(metadata, keys, curve, num_steps);
     }
     case ParameterType::STRING:
     {

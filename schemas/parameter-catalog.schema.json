@@ -599,6 +599,10 @@
           "description": "Fixed-arity tuple of integral numeric components."
         },
         {
+          "const": "miim",
+          "description": "Id MIIM value with major method, minor method, and optional numeric params."
+        },
+        {
           "const": "outside",
           "description": "Id outside= value: a named outside method or integer color-map index."
         },
@@ -617,6 +621,10 @@
         {
           "const": "point3",
           "description": "Three-component point alias over numeric-tuple."
+        },
+        {
+          "const": "potential",
+          "description": "Id continuous potential value with numeric fields and optional 16bit flag."
         },
         {
           "const": "string",

@@ -59,6 +59,10 @@ ParameterType parse_parameter_type(std::string_view text)
     {
         return ParameterType::INTEGER_TUPLE;
     }
+    if (text == "miim")
+    {
+        return ParameterType::MIIM;
+    }
     if (text == "numeric-tuple")
     {
         return ParameterType::NUMERIC_TUPLE;
@@ -78,6 +82,10 @@ ParameterType parse_parameter_type(std::string_view text)
     if (text == "point3")
     {
         return ParameterType::POINT3;
+    }
+    if (text == "potential")
+    {
+        return ParameterType::POTENTIAL;
     }
     if (text == "string")
     {
@@ -234,6 +242,8 @@ std::string_view to_string(ParameterType value)
         return "integer-or-enum";
     case ParameterType::INTEGER_TUPLE:
         return "integer-tuple";
+    case ParameterType::MIIM:
+        return "miim";
     case ParameterType::NUMERIC_TUPLE:
         return "numeric-tuple";
     case ParameterType::NUMERIC_TUPLE_OR_ENUM:
@@ -244,6 +254,8 @@ std::string_view to_string(ParameterType value)
         return "point2";
     case ParameterType::POINT3:
         return "point3";
+    case ParameterType::POTENTIAL:
+        return "potential";
     case ParameterType::STRING:
         return "string";
     case ParameterType::VECTOR2:

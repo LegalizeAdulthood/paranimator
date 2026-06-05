@@ -425,6 +425,30 @@ TEST(TestParameterCatalog, mathtoleranceMetadataLoads)
     EXPECT_EQ(2, *metadata.arity);
 }
 
+TEST(TestParameterCatalog, miimMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("miim")};
+
+    EXPECT_EQ(ParFile::ParameterType::MIIM, metadata.type);
+    ASSERT_TRUE(metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::SLASH, *metadata.format);
+    ASSERT_TRUE(metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *metadata.default_curve);
+}
+
+TEST(TestParameterCatalog, potentialMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("potential")};
+
+    EXPECT_EQ(ParFile::ParameterType::POTENTIAL, metadata.type);
+    ASSERT_TRUE(metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::SLASH, *metadata.format);
+    ASSERT_TRUE(metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::LINEAR, *metadata.default_curve);
+}
+
 TEST(TestParameterCatalog, distestMetadataLoads)
 {
     const ParFile::ParameterCatalog catalog{coloring_catalog()};
@@ -594,12 +618,14 @@ TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
     EXPECT_EQ(
         ParFile::ParameterType::INTEGER_OR_ENUM, read_metadata(R"("type":"integer-or-enum","values":["a"])").type);
     EXPECT_EQ(ParFile::ParameterType::INTEGER_TUPLE, read_metadata(R"("type":"integer-tuple")").type);
+    EXPECT_EQ(ParFile::ParameterType::MIIM, read_metadata(R"("type":"miim")").type);
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, read_metadata(R"("type":"numeric-tuple")").type);
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE_OR_ENUM,
         read_metadata(R"("type":"numeric-tuple-or-enum","values":["a"])").type);
     EXPECT_EQ(ParFile::ParameterType::OUTSIDE, read_metadata(R"("type":"outside","values":["iter"])").type);
     EXPECT_EQ(ParFile::ParameterType::POINT2, read_metadata(R"("type":"point2")").type);
     EXPECT_EQ(ParFile::ParameterType::POINT3, read_metadata(R"("type":"point3")").type);
+    EXPECT_EQ(ParFile::ParameterType::POTENTIAL, read_metadata(R"("type":"potential")").type);
     EXPECT_EQ(ParFile::ParameterType::STRING, read_metadata(R"("type":"string")").type);
     EXPECT_EQ(ParFile::ParameterType::VECTOR2, read_metadata(R"("type":"vector2")").type);
     EXPECT_EQ(ParFile::ParameterType::VECTOR3, read_metadata(R"("type":"vector3")").type);

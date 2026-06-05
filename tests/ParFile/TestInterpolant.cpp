@@ -404,6 +404,22 @@ ParFile::ParameterMetadata string_metadata(const std::string &name)
     return result;
 }
 
+ParFile::ParameterMetadata miim_metadata()
+{
+    ParFile::ParameterMetadata result{
+        metadata("miim", ParFile::ParameterType::MIIM, {}, {}, ParFile::ExtrapolateMode::CLAMP, ParFile::Curve::HOLD)};
+    result.format = ParFile::ParameterFormat::SLASH;
+    return result;
+}
+
+ParFile::ParameterMetadata potential_metadata()
+{
+    ParFile::ParameterMetadata result{metadata("potential", ParFile::ParameterType::POTENTIAL, {}, {},
+        ParFile::ExtrapolateMode::CLAMP, ParFile::Curve::LINEAR)};
+    result.format = ParFile::ParameterFormat::SLASH;
+    return result;
+}
+
 std::vector<std::string> id_functions();
 
 ParFile::ParameterMetadata function_list_metadata(const std::string &name)
@@ -1270,6 +1286,65 @@ TEST(TestInterpolant, numericTupleOrEnumRejectsStringNumericTuple)
 
     EXPECT_THROW(
         create_interpolant(tuple_or_enum_metadata("initorbit", 2), "0/0", "pixel", num_steps), std::runtime_error);
+}
+
+TEST(TestInterpolant, potentialInterpolatesNumericFields)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_interpolant(
+        potential_metadata(), "240/1000/500/16bit", "120/2000/1000/16bit", ParFile::Curve::LINEAR, num_steps)};
+
+    EXPECT_EQ("240/1000/500/16bit", interpolant->step());
+    EXPECT_EQ("180/1500/750/16bit", interpolant->step());
+    EXPECT_EQ("120/2000/1000/16bit", interpolant->step());
+}
+
+TEST(TestInterpolant, potentialRejectsInvalidParserShapes)
+{
+    const int num_steps{3};
+    const ParFile::ParameterMetadata parameter_metadata{potential_metadata()};
+
+    EXPECT_THROW(
+        create_interpolant(parameter_metadata, "240/1000", "120/2000/1000/16bit", num_steps), std::runtime_error);
+    EXPECT_THROW(
+        create_interpolant(parameter_metadata, "240/1000/16bit", "120/2000/16bit", num_steps), std::runtime_error);
+    EXPECT_THROW(create_interpolant(parameter_metadata, "240/bad/500", "120/2000/1000", num_steps), std::runtime_error);
+}
+
+TEST(TestInterpolant, miimInterpolatesNumericFieldsAndHoldsMethods)
+{
+    const int num_steps{3};
+    ParFile::ParameterMetadata parameter_metadata{miim_metadata()};
+    parameter_metadata.default_curve = ParFile::Curve::LINEAR;
+    ParFile::InterpolantPtr interpolant{create_interpolant(
+        parameter_metadata, "breadth/left/0/10/20/30", "depth/right/10/20/30/40", ParFile::Curve::LINEAR, num_steps)};
+
+    EXPECT_EQ("breadth/left/0/10/20/30", interpolant->step());
+    EXPECT_EQ("breadth/left/5/15/25/35", interpolant->step());
+    EXPECT_EQ("depth/right/10/20/30/40", interpolant->step());
+}
+
+TEST(TestInterpolant, miimCanonicalizesMethodAbbreviations)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_interpolant(miim_metadata(), "b/l", "w/r", num_steps)};
+
+    EXPECT_EQ("breadth/left", interpolant->step());
+    EXPECT_EQ("breadth/left", interpolant->step());
+    EXPECT_EQ("walk/right", interpolant->step());
+}
+
+TEST(TestInterpolant, miimRejectsInvalidParserShapes)
+{
+    const int num_steps{3};
+    const ParFile::ParameterMetadata parameter_metadata{miim_metadata()};
+
+    EXPECT_THROW(create_interpolant(parameter_metadata, "breadth", "depth/right", num_steps), std::runtime_error);
+    EXPECT_THROW(create_interpolant(parameter_metadata, "bad/left", "depth/right", num_steps), std::runtime_error);
+    EXPECT_THROW(
+        create_interpolant(parameter_metadata, "breadth/left/nope", "depth/right/1", num_steps), std::runtime_error);
+    EXPECT_THROW(create_interpolant(parameter_metadata, "breadth/left/1/2/3/4/5", "depth/right/1/2/3/4/5", num_steps),
+        std::runtime_error);
 }
 
 TEST(TestInterpolant, point3WritesThreeValueTuple)

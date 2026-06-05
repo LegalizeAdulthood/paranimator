@@ -218,6 +218,7 @@ Possible formats:
 | --- | --- |
 | `integer` | `raw` |
 | `integer-tuple` | `slash` |
+| `miim` | `slash` |
 | `double` | `raw` |
 | `complex` | `slash-pair` |
 | `numeric-tuple` | `slash` |
@@ -226,6 +227,7 @@ Possible formats:
 | `vector2` | `slash` |
 | `point3` | `slash` |
 | `vector3` | `slash` |
+| `potential` | `slash` |
 | `color` | `color-spec` |
 | `color-map` | `at-file` |
 | `angle` | `degrees` |
@@ -401,6 +403,7 @@ Minimum useful interpolated track type set:
 - `integer`
 - `integer-or-enum`
 - `integer-tuple`
+- `miim`
 - `double`
 - `complex`
 - `numeric-tuple`
@@ -416,6 +419,7 @@ Minimum useful interpolated track type set:
 - `color-map`
 - `center-mag`
 - `corners`
+- `potential`
 - `color`
 - `angle`
 
@@ -1740,21 +1744,7 @@ behavior. Help documentation can clarify user-facing prose, but parser
 behavior is the implementation source of truth for these parameter
 shapes.
 
-### 1. Potential And MIIM Parser Types
-
-Add focused parser types for the more specialized audited slash values:
-`potential` and `miim`.
-
-`potential` covers `maxcolor[/slope[/modulus[/16bit]]]]`. `miim` covers
-the parser shape found in `cmdfiles.cpp`, including the leading
-`[bdw][lr]` mode and following numeric fields.
-
-Keep the slice narrow: parse, validate, and format only the parser shapes
-needed for existing Id behavior. Add unit tests from representative
-accepted and rejected parser examples. Add catalog schema descriptions
-and catalog tests for `potential` and `miim`.
-
-### 2. Inside And Outside Numeric Index Audit
+### 1. Inside And Outside Numeric Index Audit
 
 Verify the existing `inside` and `outside` application types against the
 audited parser behavior. They should continue to be distinct types, each
@@ -1765,7 +1755,7 @@ sets that differ between the two types, and invalid values that would be
 accepted by the other type but not this one. Update catalog metadata if
 the audit found missing parser method names or bounds.
 
-### 3. Params Metadata Coverage From Parser Tables
+### 2. Params Metadata Coverage From Parser Tables
 
 Extend fractal-specific `params` metadata using the parser tables and
 `type_has_param()` behavior audited from Id. Do not add one global
@@ -1776,7 +1766,7 @@ slots have stable meanings. Tests should resolve tracks against the
 active `type`, preserve untouched params slots, reject overlapping slot
 writes, and write one `params=` value through the highest required slot.
 
-### 4. Formula Catalog Coverage For id.frm
+### 3. Formula Catalog Coverage For id.frm
 
 Create bundled formula metadata only for formula entries in `id.frm`.
 Attach metadata by formula entry name. Formula params metadata names are
@@ -1787,7 +1777,7 @@ Add tests that load representative `id.frm` formula metadata, resolve a
 formula-specific knob from `formulaname`, merge it into the generated
 `params=`, and reject invalid variable bindings.
 
-### 5. Complete Catalog Audit Pass
+### 4. Complete Catalog Audit Pass
 
 After the supporting value types exist, update the core, coloring, 3D,
 fractal, and formula catalogs to cover the audited Id parser surface.
