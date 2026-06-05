@@ -361,8 +361,10 @@ TEST(TestParameterCatalog, insideMetadataLoads)
     EXPECT_EQ(0, *metadata.min);
     EXPECT_EQ(255, *metadata.max);
     ASSERT_EQ(9U, metadata.values.size());
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "maxiter"));
     EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "bof60"));
     EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "epsiloncross"));
+    EXPECT_EQ(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "real"));
 }
 
 TEST(TestParameterCatalog, outsideMetadataLoads)
@@ -376,9 +378,14 @@ TEST(TestParameterCatalog, outsideMetadataLoads)
     EXPECT_EQ(ParFile::ParameterFormat::RAW, *metadata.format);
     ASSERT_TRUE(metadata.default_curve);
     EXPECT_EQ(ParFile::Curve::HOLD, *metadata.default_curve);
+    ASSERT_TRUE(metadata.min);
+    ASSERT_TRUE(metadata.max);
+    EXPECT_EQ(0, *metadata.min);
+    EXPECT_EQ(255, *metadata.max);
     ASSERT_EQ(8U, metadata.values.size());
     EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "iter"));
     EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "tdis"));
+    EXPECT_EQ(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "maxiter"));
 }
 
 TEST(TestParameterCatalog, fillcolorMetadataLoads)

@@ -1744,18 +1744,7 @@ behavior. Help documentation can clarify user-facing prose, but parser
 behavior is the implementation source of truth for these parameter
 shapes.
 
-### 1. Inside And Outside Numeric Index Audit
-
-Verify the existing `inside` and `outside` application types against the
-audited parser behavior. They should continue to be distinct types, each
-accepting its own method enum set or a colormap index.
-
-Add tests that exercise numeric color indexes for both types, method
-sets that differ between the two types, and invalid values that would be
-accepted by the other type but not this one. Update catalog metadata if
-the audit found missing parser method names or bounds.
-
-### 2. Params Metadata Coverage From Parser Tables
+### 1. Params Metadata Coverage From Parser Tables
 
 Extend fractal-specific `params` metadata using the parser tables and
 `type_has_param()` behavior audited from Id. Do not add one global
@@ -1766,7 +1755,7 @@ slots have stable meanings. Tests should resolve tracks against the
 active `type`, preserve untouched params slots, reject overlapping slot
 writes, and write one `params=` value through the highest required slot.
 
-### 3. Formula Catalog Coverage For id.frm
+### 2. Formula Catalog Coverage For id.frm
 
 Create bundled formula metadata only for formula entries in `id.frm`.
 Attach metadata by formula entry name. Formula params metadata names are
@@ -1777,7 +1766,7 @@ Add tests that load representative `id.frm` formula metadata, resolve a
 formula-specific knob from `formulaname`, merge it into the generated
 `params=`, and reject invalid variable bindings.
 
-### 4. Complete Catalog Audit Pass
+### 3. Complete Catalog Audit Pass
 
 After the supporting value types exist, update the core, coloring, 3D,
 fractal, and formula catalogs to cover the audited Id parser surface.

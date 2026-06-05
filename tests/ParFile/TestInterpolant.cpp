@@ -1604,6 +1604,20 @@ TEST(TestInterpolant, outsideMethodStep)
     EXPECT_EQ("tdis", interpolant->step());
 }
 
+TEST(TestInterpolant, insideRejectsOutsideMethod)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(create_interpolant(inside_metadata("inside"), "real", "zmag", num_steps), std::runtime_error);
+}
+
+TEST(TestInterpolant, outsideRejectsInsideMethod)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(create_interpolant(outside_metadata("outside"), "iter", "maxiter", num_steps), std::runtime_error);
+}
+
 TEST(TestInterpolant, insidePwmMixOneEmitsB)
 {
     const int num_steps{4};
@@ -1661,6 +1675,16 @@ TEST(TestInterpolant, insideColorIndexHold)
     EXPECT_EQ("255", interpolant->step());
 }
 
+TEST(TestInterpolant, outsideColorIndexHold)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_interpolant(outside_metadata("outside"), "0", "255", num_steps)};
+
+    EXPECT_EQ("0", interpolant->step());
+    EXPECT_EQ("0", interpolant->step());
+    EXPECT_EQ("255", interpolant->step());
+}
+
 TEST(TestInterpolant, insideUnknownStringRejected)
 {
     const int num_steps{3};
@@ -1673,6 +1697,15 @@ TEST(TestInterpolant, insideColorIndexOutOfRangeRejected)
     const int num_steps{3};
 
     EXPECT_THROW(create_interpolant(inside_metadata("inside"), "0", "256", num_steps), std::runtime_error);
+    EXPECT_THROW(create_interpolant(inside_metadata("inside"), "-1", "255", num_steps), std::runtime_error);
+}
+
+TEST(TestInterpolant, outsideColorIndexOutOfRangeRejected)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(create_interpolant(outside_metadata("outside"), "0", "256", num_steps), std::runtime_error);
+    EXPECT_THROW(create_interpolant(outside_metadata("outside"), "-1", "255", num_steps), std::runtime_error);
 }
 
 TEST(TestInterpolant, insideLinearCurveRejected)
