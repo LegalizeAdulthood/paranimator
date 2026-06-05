@@ -354,6 +354,27 @@ static std::string format_slash_strings(const std::vector<std::string> &values)
     return result;
 }
 
+static std::string format_number(double value)
+{
+    std::ostringstream stream;
+    stream << std::setprecision(12) << value;
+    return stream.str();
+}
+
+static std::string format_slash_numbers(const std::vector<double> &values)
+{
+    std::string result;
+    for (double value : values)
+    {
+        if (!result.empty())
+        {
+            result += '/';
+        }
+        result += format_number(value);
+    }
+    return result;
+}
+
 KeyframeConfig::Value::Value() :
     data(std::string{})
 {
@@ -371,6 +392,11 @@ KeyframeConfig::Value::Value(std::string text) :
 
 KeyframeConfig::Value::Value(Array text) :
     data(std::move(text))
+{
+}
+
+KeyframeConfig::Value::Value(NumberArray numbers) :
+    data(std::move(numbers))
 {
 }
 
@@ -402,6 +428,12 @@ KeyframeConfig::Value &KeyframeConfig::Value::operator=(Array text)
     return *this;
 }
 
+KeyframeConfig::Value &KeyframeConfig::Value::operator=(NumberArray numbers)
+{
+    data = std::move(numbers);
+    return *this;
+}
+
 KeyframeConfig::Value &KeyframeConfig::Value::operator=(bool boolean)
 {
     data = boolean;
@@ -429,6 +461,10 @@ std::string keyframe_value_text(const KeyframeConfig::Value &value)
     {
         return format_slash_strings(*array);
     }
+    if (const auto *array{std::get_if<KeyframeConfig::Value::NumberArray>(&value.data)}; array != nullptr)
+    {
+        return format_slash_numbers(*array);
+    }
     if (const auto *boolean{std::get_if<bool>(&value.data)}; boolean != nullptr)
     {
         return bool_text(*boolean);
@@ -451,6 +487,11 @@ bool keyframe_value_is_integer(const KeyframeConfig::Value &value)
     return std::holds_alternative<int>(value.data);
 }
 
+bool keyframe_value_is_number_array(const KeyframeConfig::Value &value)
+{
+    return std::holds_alternative<KeyframeConfig::Value::NumberArray>(value.data);
+}
+
 bool keyframe_value_is_string(const KeyframeConfig::Value &value)
 {
     return std::holds_alternative<std::string>(value.data);
@@ -461,14 +502,21 @@ int keyframe_value_integer(const KeyframeConfig::Value &value)
     return std::get<int>(value.data);
 }
 
+const KeyframeConfig::Value::NumberArray &keyframe_value_numbers(const KeyframeConfig::Value &value)
+{
+    return std::get<KeyframeConfig::Value::NumberArray>(value.data);
+}
+
 bool operator==(const KeyframeConfig::Value &lhs, std::string_view rhs)
 {
-    return keyframe_value_text(lhs) == rhs;
+    const std::string text{keyframe_value_text(lhs)};
+    return std::string_view{text.data(), text.size()} == rhs;
 }
 
 bool operator==(std::string_view lhs, const KeyframeConfig::Value &rhs)
 {
-    return rhs == lhs;
+    const std::string text{keyframe_value_text(rhs)};
+    return lhs == std::string_view{text.data(), text.size()};
 }
 
 bool operator==(const KeyframeConfig::Value &lhs, const char *rhs)
@@ -511,12 +559,32 @@ static KeyframeConfig::Value::Array load_string_array_value(const Object &json)
     return values;
 }
 
+static KeyframeConfig::Value::NumberArray load_number_array_value(const Object &json)
+{
+    if (json.empty())
+    {
+        throw std::runtime_error("Invalid config, array 'value' is empty");
+    }
+
+    std::vector<double> values;
+    values.reserve(json.size());
+    for (const Object &item : json)
+    {
+        if (!item.is_number())
+        {
+            throw std::runtime_error("Invalid config, array 'value' contains non-number value");
+        }
+        values.push_back(item.get<double>());
+    }
+    return values;
+}
+
 static KeyframeConfig::Value load_value(const Object &json)
 {
     const std::string key{"value"};
     if (!json.contains(key))
     {
-        throw std::runtime_error("Invalid config, missing string, string array, boolean, or integer 'value'");
+        throw std::runtime_error("Invalid config, missing string, array, boolean, or integer 'value'");
     }
     if (json.at(key).is_boolean())
     {
@@ -524,7 +592,19 @@ static KeyframeConfig::Value load_value(const Object &json)
     }
     if (json.at(key).is_array())
     {
-        return load_string_array_value(json.at(key));
+        if (json.at(key).empty())
+        {
+            throw std::runtime_error("Invalid config, array 'value' is empty");
+        }
+        if (json.at(key).at(0).is_string())
+        {
+            return load_string_array_value(json.at(key));
+        }
+        if (json.at(key).at(0).is_number())
+        {
+            return load_number_array_value(json.at(key));
+        }
+        throw std::runtime_error("Invalid config, array 'value' must contain strings or numbers");
     }
     if (json.at(key).is_number_integer())
     {
@@ -534,7 +614,7 @@ static KeyframeConfig::Value load_value(const Object &json)
     {
         return json.at(key).get<std::string>();
     }
-    throw std::runtime_error("Invalid config, missing string, string array, boolean, or integer 'value'");
+    throw std::runtime_error("Invalid config, missing string, array, boolean, or integer 'value'");
 }
 
 static TrackMode load_track_mode(const Object &json)
@@ -735,6 +815,14 @@ static KeyframeConfig::Value load_view_keyframe_value(const Object &json, Parame
             throw std::runtime_error("Invalid config, missing boolean 'value'");
         }
         return json.at(key).get<bool>();
+    }
+    if (type == ParameterType::NUMERIC_TUPLE || type == ParameterType::INTEGER_TUPLE)
+    {
+        if (!json.contains(key) || !json.at(key).is_array())
+        {
+            throw std::runtime_error("Invalid config, missing number array 'value'");
+        }
+        return load_number_array_value(json.at(key));
     }
     return load_string(json, "value");
 }

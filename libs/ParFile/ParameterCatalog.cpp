@@ -204,7 +204,8 @@ void apply_tuple_alias_metadata(ParameterMetadata &metadata)
 bool needs_discrete_values(ParameterType type)
 {
     return type == ParameterType::ENUM || type == ParameterType::FUNCTION_LIST || type == ParameterType::INSIDE ||
-        type == ParameterType::INTEGER_OR_ENUM || type == ParameterType::OUTSIDE;
+        type == ParameterType::INTEGER_OR_ENUM || type == ParameterType::NUMERIC_TUPLE_OR_ENUM ||
+        type == ParameterType::OUTSIDE;
 }
 
 void validate_discrete_values_metadata(const ParameterMetadata &metadata)

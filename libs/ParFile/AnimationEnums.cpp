@@ -55,9 +55,17 @@ ParameterType parse_parameter_type(std::string_view text)
     {
         return ParameterType::INTEGER_OR_ENUM;
     }
+    if (text == "integer-tuple")
+    {
+        return ParameterType::INTEGER_TUPLE;
+    }
     if (text == "numeric-tuple")
     {
         return ParameterType::NUMERIC_TUPLE;
+    }
+    if (text == "numeric-tuple-or-enum")
+    {
+        return ParameterType::NUMERIC_TUPLE_OR_ENUM;
     }
     if (text == "outside")
     {
@@ -224,8 +232,12 @@ std::string_view to_string(ParameterType value)
         return "integer";
     case ParameterType::INTEGER_OR_ENUM:
         return "integer-or-enum";
+    case ParameterType::INTEGER_TUPLE:
+        return "integer-tuple";
     case ParameterType::NUMERIC_TUPLE:
         return "numeric-tuple";
+    case ParameterType::NUMERIC_TUPLE_OR_ENUM:
+        return "numeric-tuple-or-enum";
     case ParameterType::OUTSIDE:
         return "outside";
     case ParameterType::POINT2:

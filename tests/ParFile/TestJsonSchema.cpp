@@ -477,6 +477,9 @@ TEST(TestJsonSchema, unknownMetadataTypeRejected)
 TEST(TestJsonSchema, numericTupleMetadataAccepted)
 {
     EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"numeric-tuple","arity":3)")));
+    EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer-tuple","arity":2)")));
+    EXPECT_TRUE(validates_parameter_catalog_text(
+        catalog_with_metadata(R"("type":"numeric-tuple-or-enum","arity":2,"values":["pixel"])")));
 }
 
 TEST(TestJsonSchema, colorMapMetadataAccepted)
@@ -604,6 +607,8 @@ TEST(TestJsonSchema, invalidEnumMetadataRejected)
 {
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"enum")")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"inside")")));
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer-or-enum")")));
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"numeric-tuple-or-enum")")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"outside")")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"function-list")")));
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"function-list","values":["sin"])")));
@@ -683,6 +688,17 @@ TEST(TestJsonSchema, functionListKeyframeAccepted)
       "keys": [
         { "frame": 0, "value": [ "sin", "cos" ] },
         { "frame": 2, "value": [ "tan", "log" ] }
+      ]
+    })")));
+}
+
+TEST(TestJsonSchema, numericArrayKeyframeAccepted)
+{
+    EXPECT_TRUE(validates_config_text(config_with_track(R"({
+      "parameter": "invert",
+      "keys": [
+        { "frame": 0, "value": [ 1, 2.5, 3 ] },
+        { "frame": 2, "value": [ 4, 5.5, 6 ] }
       ]
     })")));
 }

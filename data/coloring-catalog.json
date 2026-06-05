@@ -13,10 +13,11 @@
       "extrapolate": "clamp"
     },
     "distest": {
-      "type": "string",
+      "type": "integer-tuple",
       "format": "slash",
       "default-curve": "hold",
-      "extrapolate": "clamp"
+      "extrapolate": "clamp",
+      "arity": 2
     },
     "logmap": {
       "type": "integer-or-enum",

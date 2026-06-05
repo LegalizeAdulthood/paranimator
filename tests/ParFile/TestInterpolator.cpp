@@ -162,16 +162,16 @@ TEST_F(TestInterpolator, id3DViewWritesRotationPerspectiveAndXyshift)
         {"rotation",
             Object{{"type", "numeric-tuple"}, {"arity", 3},
                 {"keys",
-                    Object::array(
-                        {Object{{"frame", 0}, {"value", "60/30/0"}}, Object{{"frame", 2}, {"value", "70/50/10"}}})}}},
+                    Object::array({Object{{"frame", 0}, {"value", Object::array({60, 30, 0})}},
+                        Object{{"frame", 2}, {"value", Object::array({70, 50, 10})}}})}}},
         {"perspective",
             Object{{"type", "integer"},
                 {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 2}, {"value", 100}}})}}},
         {"xyshift",
             Object{{"type", "numeric-tuple"}, {"arity", 2},
                 {"keys",
-                    Object::array(
-                        {Object{{"frame", 0}, {"value", "0/0"}}, Object{{"frame", 2}, {"value", "20/-10"}}})}}}};
+                    Object::array({Object{{"frame", 0}, {"value", Object::array({0, 0})}},
+                        Object{{"frame", 2}, {"value", Object::array({20, -10})}}})}}}};
     const ParFile::Config config{
         parsed_config("Mandel_Demo", 3, track, {TestParFile::CORE_CATALOG_JSON, TestParFile::ID_3D_CATALOG_JSON})};
     ParFile::Interpolator lerper{config};
@@ -196,8 +196,8 @@ TEST_F(TestInterpolator, id3DViewWritesScaleSphereAndStereoControls)
         {"scalexyz",
             Object{{"type", "numeric-tuple"}, {"arity", 3},
                 {"keys",
-                    Object::array({Object{{"frame", 0}, {"value", "90/90/30"}},
-                        Object{{"frame", 2}, {"value", "100/100/40"}}})}}},
+                    Object::array({Object{{"frame", 0}, {"value", Object::array({90, 90, 30})}},
+                        Object{{"frame", 2}, {"value", Object::array({100, 100, 40})}}})}}},
         {"sphere",
             Object{{"type", "yes-no"},
                 {"keys",
@@ -250,16 +250,16 @@ TEST_F(TestInterpolator, julibrotViewWritesModeGeometryEyesAndFromTo)
         {"geometry",
             Object{{"type", "numeric-tuple"}, {"arity", 6},
                 {"keys",
-                    Object::array({Object{{"frame", 0}, {"value", "128/8/8/7/10/24"}},
-                        Object{{"frame", 2}, {"value", "160/7/6/6/9/20"}}})}}},
+                    Object::array({Object{{"frame", 0}, {"value", Object::array({128, 8, 8, 7, 10, 24})}},
+                        Object{{"frame", 2}, {"value", Object::array({160, 7, 6, 6, 9, 20})}}})}}},
         {"eyes",
             Object{{"type", "double"},
                 {"keys", Object::array({Object{{"frame", 0}, {"value", 2.5}}, Object{{"frame", 2}, {"value", 1.0}}})}}},
         {"from-to",
             Object{{"type", "numeric-tuple"}, {"arity", 4},
                 {"keys",
-                    Object::array({Object{{"frame", 0}, {"value", "-0.83/-0.83/0.25/-0.25"}},
-                        Object{{"frame", 2}, {"value", "-0.7/-0.9/0.2/-0.2"}}})}}}};
+                    Object::array({Object{{"frame", 0}, {"value", Object::array({-0.83, -0.83, 0.25, -0.25})}},
+                        Object{{"frame", 2}, {"value", Object::array({-0.7, -0.9, 0.2, -0.2})}}})}}}};
     const ParFile::Config config{
         parsed_config("Mandel_Demo", 3, track, {TestParFile::CORE_CATALOG_JSON, TestParFile::ID_3D_CATALOG_JSON})};
     ParFile::Interpolator lerper{config};

@@ -135,7 +135,9 @@ TEST(TestParameterCatalog, coloringCatalogIncludesSavedImageParameters)
     EXPECT_NE(mode.values.end(), std::find(mode.values.begin(), mode.values.end(), "table"));
     EXPECT_EQ(ParFile::ParameterType::YES_NO, no_bof.type);
     EXPECT_EQ(ParFile::ParameterType::STRING, ranges.type);
-    EXPECT_EQ(ParFile::ParameterType::STRING, distance_estimator.type);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER_TUPLE, distance_estimator.type);
+    ASSERT_TRUE(distance_estimator.arity);
+    EXPECT_EQ(2, *distance_estimator.arity);
     EXPECT_EQ(ParFile::ParameterType::YES_NO, true_color.type);
 }
 
@@ -391,6 +393,48 @@ TEST(TestParameterCatalog, fillcolorMetadataLoads)
     EXPECT_EQ("normal", metadata.values[0]);
 }
 
+TEST(TestParameterCatalog, initorbitMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("initorbit")};
+
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE_OR_ENUM, metadata.type);
+    ASSERT_TRUE(metadata.arity);
+    EXPECT_EQ(2, *metadata.arity);
+    ASSERT_EQ(1U, metadata.values.size());
+    EXPECT_EQ("pixel", metadata.values[0]);
+}
+
+TEST(TestParameterCatalog, invertMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("invert")};
+
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, metadata.type);
+    ASSERT_TRUE(metadata.arity);
+    EXPECT_EQ(3, *metadata.arity);
+}
+
+TEST(TestParameterCatalog, mathtoleranceMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("mathtolerance")};
+
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, metadata.type);
+    ASSERT_TRUE(metadata.arity);
+    EXPECT_EQ(2, *metadata.arity);
+}
+
+TEST(TestParameterCatalog, distestMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{coloring_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("distest")};
+
+    EXPECT_EQ(ParFile::ParameterType::INTEGER_TUPLE, metadata.type);
+    ASSERT_TRUE(metadata.arity);
+    EXPECT_EQ(2, *metadata.arity);
+}
+
 TEST(TestParameterCatalog, passesMetadataLoads)
 {
     const ParFile::ParameterCatalog catalog{core_catalog()};
@@ -549,7 +593,10 @@ TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
     EXPECT_EQ(ParFile::ParameterType::INTEGER, read_metadata(R"("type":"integer")").type);
     EXPECT_EQ(
         ParFile::ParameterType::INTEGER_OR_ENUM, read_metadata(R"("type":"integer-or-enum","values":["a"])").type);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER_TUPLE, read_metadata(R"("type":"integer-tuple")").type);
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, read_metadata(R"("type":"numeric-tuple")").type);
+    EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE_OR_ENUM,
+        read_metadata(R"("type":"numeric-tuple-or-enum","values":["a"])").type);
     EXPECT_EQ(ParFile::ParameterType::OUTSIDE, read_metadata(R"("type":"outside","values":["iter"])").type);
     EXPECT_EQ(ParFile::ParameterType::POINT2, read_metadata(R"("type":"point2")").type);
     EXPECT_EQ(ParFile::ParameterType::POINT3, read_metadata(R"("type":"point3")").type);
@@ -665,6 +712,8 @@ TEST(TestParameterCatalog, enumMissingValuesRejected)
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"enum")")), std::runtime_error);
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"inside")")), std::runtime_error);
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"integer-or-enum")")), std::runtime_error);
+    EXPECT_THROW(
+        ParFile::read_parameter_catalog(catalog_text(R"("type":"numeric-tuple-or-enum")")), std::runtime_error);
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"outside")")), std::runtime_error);
     EXPECT_NO_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"yes-no")")));
     EXPECT_NO_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"string")")));

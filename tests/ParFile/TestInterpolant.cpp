@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 
+#include <initializer_list>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -38,6 +39,14 @@ std::vector<ParFile::KeyframeConfig> keyframes(
 std::vector<ParFile::KeyframeConfig> integer_keyframes(int from, int to, ParFile::Curve curve, int num_steps)
 {
     return {{0, from}, {num_steps - 1, to, curve}};
+}
+
+std::vector<ParFile::KeyframeConfig> number_array_keyframes(
+    std::initializer_list<double> from, std::initializer_list<double> to, ParFile::Curve curve, int num_steps)
+{
+    using NumberArray = ParFile::KeyframeConfig::Value::NumberArray;
+
+    return {{0, NumberArray{from.begin(), from.end()}}, {num_steps - 1, NumberArray{to.begin(), to.end()}, curve}};
 }
 
 ParFile::KeyframeConfig::Value::Array slash_array(std::string_view text)
@@ -326,6 +335,23 @@ ParFile::ParameterMetadata tuple_metadata(const std::string &name, int arity)
     return result;
 }
 
+ParFile::ParameterMetadata integer_tuple_metadata(const std::string &name, int arity)
+{
+    ParFile::ParameterMetadata result{metadata(name, ParFile::ParameterType::INTEGER_TUPLE)};
+    result.arity = arity;
+    return result;
+}
+
+ParFile::ParameterMetadata tuple_or_enum_metadata(const std::string &name, int arity)
+{
+    ParFile::ParameterMetadata result{metadata(name, ParFile::ParameterType::NUMERIC_TUPLE_OR_ENUM, {}, {},
+        ParFile::ExtrapolateMode::CLAMP, ParFile::Curve::HOLD)};
+    result.format = ParFile::ParameterFormat::SLASH;
+    result.arity = arity;
+    result.values = {"pixel"};
+    return result;
+}
+
 ParFile::ParameterMetadata enum_metadata(const std::string &name)
 {
     ParFile::ParameterMetadata result{
@@ -355,8 +381,8 @@ ParFile::ParameterMetadata outside_metadata(const std::string &name)
 
 ParFile::ParameterMetadata integer_or_enum_metadata(const std::string &name)
 {
-    ParFile::ParameterMetadata result{metadata(
-        name, ParFile::ParameterType::INTEGER_OR_ENUM, 0.0, 255.0, ParFile::ExtrapolateMode::CLAMP, ParFile::Curve::HOLD)};
+    ParFile::ParameterMetadata result{metadata(name, ParFile::ParameterType::INTEGER_OR_ENUM, 0.0, 255.0,
+        ParFile::ExtrapolateMode::CLAMP, ParFile::Curve::HOLD)};
     result.format = ParFile::ParameterFormat::RAW;
     result.values = {"normal", "show", "yes", "no"};
     return result;
@@ -444,6 +470,14 @@ ParFile::InterpolantPtr create_interpolant(const ParFile::ParameterMetadata &par
 {
     const std::vector<ParFile::KeyframeConfig> keys{keyframes(from, to, curve, num_steps)};
     return ParFile::create_interpolant(resolved_track(parameter_metadata, keys, from), num_steps);
+}
+
+ParFile::InterpolantPtr create_tuple_interpolant(const ParFile::ParameterMetadata &parameter_metadata,
+    std::initializer_list<double> from, std::initializer_list<double> to, ParFile::Curve curve, int num_steps)
+{
+    const std::vector<ParFile::KeyframeConfig> keys{number_array_keyframes(from, to, curve, num_steps)};
+    return ParFile::create_interpolant(
+        resolved_track(parameter_metadata, keys, ParFile::keyframe_value_text(keys[0].value)), num_steps);
 }
 
 } // namespace
@@ -1139,7 +1173,8 @@ TEST(TestInterpolant, doublePingPongExtrapolation)
 TEST(TestInterpolant, numericTupleTwoValueFraction)
 {
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{create_interpolant(tuple_metadata("xyshift", 2), "0/1", "10/11", num_steps)};
+    ParFile::InterpolantPtr interpolant{create_tuple_interpolant(
+        tuple_metadata("xyshift", 2), {0.0, 1.0}, {10.0, 11.0}, ParFile::Curve::LINEAR, num_steps)};
 
     EXPECT_EQ("0/1", interpolant->step());
     EXPECT_EQ("5/6", interpolant->step());
@@ -1149,8 +1184,8 @@ TEST(TestInterpolant, numericTupleTwoValueFraction)
 TEST(TestInterpolant, numericTupleThreeValueFraction)
 {
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{
-        create_interpolant(tuple_metadata("lightsource", 3), "0/10/20", "10/20/30", num_steps)};
+    ParFile::InterpolantPtr interpolant{create_tuple_interpolant(
+        tuple_metadata("lightsource", 3), {0.0, 10.0, 20.0}, {10.0, 20.0, 30.0}, ParFile::Curve::LINEAR, num_steps)};
 
     EXPECT_EQ("0/10/20", interpolant->step());
     EXPECT_EQ("5/15/25", interpolant->step());
@@ -1161,7 +1196,9 @@ TEST(TestInterpolant, numericTupleWrongArityRejected)
 {
     const int num_steps{3};
 
-    EXPECT_THROW(create_interpolant(tuple_metadata("xyshift", 3), "0/1", "10/11", num_steps), std::runtime_error);
+    EXPECT_THROW(create_tuple_interpolant(
+                     tuple_metadata("xyshift", 3), {0.0, 1.0}, {10.0, 11.0}, ParFile::Curve::LINEAR, num_steps),
+        std::runtime_error);
 }
 
 TEST(TestInterpolant, numericTupleMissingArityRejected)
@@ -1169,14 +1206,78 @@ TEST(TestInterpolant, numericTupleMissingArityRejected)
     const int num_steps{3};
     const ParFile::ParameterMetadata parameter_metadata{metadata("xyshift", ParFile::ParameterType::NUMERIC_TUPLE)};
 
-    EXPECT_THROW(create_interpolant(parameter_metadata, "0/1", "10/11", num_steps), std::runtime_error);
+    EXPECT_THROW(
+        create_tuple_interpolant(parameter_metadata, {0.0, 1.0}, {10.0, 11.0}, ParFile::Curve::LINEAR, num_steps),
+        std::runtime_error);
+}
+
+TEST(TestInterpolant, numericTupleStringKeyframesRejected)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(create_interpolant(tuple_metadata("xyshift", 2), "0/1", "10/11", num_steps), std::runtime_error);
+}
+
+TEST(TestInterpolant, integerTupleRoundsComponents)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{create_tuple_interpolant(
+        integer_tuple_metadata("distest", 2), {0.0, 10.0}, {1.0, 12.0}, ParFile::Curve::LINEAR, num_steps)};
+
+    EXPECT_EQ("0/10", interpolant->step());
+    EXPECT_EQ("1/11", interpolant->step());
+    EXPECT_EQ("1/12", interpolant->step());
+}
+
+TEST(TestInterpolant, integerTupleRejectsFractionalEndpoint)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(create_tuple_interpolant(
+                     integer_tuple_metadata("distest", 2), {0.5, 10.0}, {1.0, 12.0}, ParFile::Curve::LINEAR, num_steps),
+        std::runtime_error);
+}
+
+TEST(TestInterpolant, numericTupleOrEnumInterpolatesTupleArms)
+{
+    const int num_steps{3};
+    ParFile::ParameterMetadata parameter_metadata{tuple_or_enum_metadata("initorbit", 2)};
+    parameter_metadata.default_curve = ParFile::Curve::LINEAR;
+    ParFile::InterpolantPtr interpolant{
+        create_tuple_interpolant(parameter_metadata, {0.0, 0.0}, {2.0, 4.0}, ParFile::Curve::LINEAR, num_steps)};
+
+    EXPECT_EQ("0/0", interpolant->step());
+    EXPECT_EQ("1/2", interpolant->step());
+    EXPECT_EQ("2/4", interpolant->step());
+}
+
+TEST(TestInterpolant, numericTupleOrEnumHoldsMixedArms)
+{
+    const int num_steps{3};
+    using NumberArray = ParFile::KeyframeConfig::Value::NumberArray;
+    std::vector<ParFile::KeyframeConfig> keys{{0, "pixel"}, {2, NumberArray{0.0, 0.0}}};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(resolved_track(tuple_or_enum_metadata("initorbit", 2), keys, "pixel"), num_steps)};
+
+    EXPECT_EQ("pixel", interpolant->step());
+    EXPECT_EQ("pixel", interpolant->step());
+    EXPECT_EQ("0/0", interpolant->step());
+}
+
+TEST(TestInterpolant, numericTupleOrEnumRejectsStringNumericTuple)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(
+        create_interpolant(tuple_or_enum_metadata("initorbit", 2), "0/0", "pixel", num_steps), std::runtime_error);
 }
 
 TEST(TestInterpolant, point3WritesThreeValueTuple)
 {
     const int num_steps{3};
     ParFile::InterpolantPtr interpolant{
-        create_interpolant(metadata("lightsource", ParFile::ParameterType::POINT3), "0/10/20", "10/20/30", num_steps)};
+        create_tuple_interpolant(metadata("lightsource", ParFile::ParameterType::POINT3), {0.0, 10.0, 20.0},
+            {10.0, 20.0, 30.0}, ParFile::Curve::LINEAR, num_steps)};
 
     EXPECT_EQ("0/10/20", interpolant->step());
     EXPECT_EQ("5/15/25", interpolant->step());
@@ -1188,7 +1289,8 @@ TEST(TestInterpolant, vector3NormalizesWhenRequested)
     const int num_steps{3};
     ParFile::ParameterMetadata parameter_metadata{metadata("view-up", ParFile::ParameterType::VECTOR3)};
     parameter_metadata.normalize = true;
-    ParFile::InterpolantPtr interpolant{create_interpolant(parameter_metadata, "10/0/0", "0/10/0", num_steps)};
+    ParFile::InterpolantPtr interpolant{create_tuple_interpolant(
+        parameter_metadata, {10.0, 0.0, 0.0}, {0.0, 10.0, 0.0}, ParFile::Curve::LINEAR, num_steps)};
 
     EXPECT_EQ("1/0/0", interpolant->step());
     EXPECT_EQ("0.707106781187/0.707106781187/0", interpolant->step());
@@ -1200,7 +1302,8 @@ TEST(TestInterpolant, point3DoesNotNormalize)
     const int num_steps{3};
     ParFile::ParameterMetadata parameter_metadata{metadata("look-at", ParFile::ParameterType::POINT3)};
     parameter_metadata.normalize = true;
-    ParFile::InterpolantPtr interpolant{create_interpolant(parameter_metadata, "10/0/0", "0/10/0", num_steps)};
+    ParFile::InterpolantPtr interpolant{create_tuple_interpolant(
+        parameter_metadata, {10.0, 0.0, 0.0}, {0.0, 10.0, 0.0}, ParFile::Curve::LINEAR, num_steps)};
 
     EXPECT_EQ("10/0/0", interpolant->step());
     EXPECT_EQ("5/5/0", interpolant->step());
@@ -1266,20 +1369,19 @@ TEST(TestInterpolant, passesIntegerKeyframesRejected)
     ParFile::ParameterMetadata parameter_metadata{enum_metadata("passes")};
     parameter_metadata.values = {"1", "2", "3"};
 
-    EXPECT_THROW(
-        ParFile::create_interpolant(
-            resolved_track(parameter_metadata, integer_keyframes(1, 2, ParFile::Curve::HOLD, num_steps), "1"),
-            num_steps),
+    EXPECT_THROW(ParFile::create_interpolant(
+                     resolved_track(parameter_metadata, integer_keyframes(1, 2, ParFile::Curve::HOLD, num_steps), "1"),
+                     num_steps),
         std::runtime_error);
 }
 
 TEST(TestInterpolant, integerOrEnumInterpolatesIntegerArms)
 {
     const int num_steps{3};
-    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
-        resolved_track(integer_or_enum_metadata("fillcolor"), integer_keyframes(0, 10, ParFile::Curve::LINEAR, num_steps),
-            "normal"),
-        num_steps)};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(resolved_track(integer_or_enum_metadata("fillcolor"),
+                                        integer_keyframes(0, 10, ParFile::Curve::LINEAR, num_steps), "normal"),
+            num_steps)};
 
     EXPECT_EQ("0", interpolant->step());
     EXPECT_EQ("5", interpolant->step());
@@ -1302,8 +1404,8 @@ TEST(TestInterpolant, integerOrEnumRejectsStringNumericValue)
 {
     const int num_steps{3};
 
-    EXPECT_THROW(create_interpolant(integer_or_enum_metadata("fillcolor"), "1", "normal", num_steps),
-        std::runtime_error);
+    EXPECT_THROW(
+        create_interpolant(integer_or_enum_metadata("fillcolor"), "1", "normal", num_steps), std::runtime_error);
 }
 
 TEST(TestInterpolant, stringHold)

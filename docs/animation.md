@@ -217,9 +217,11 @@ Possible formats:
 | Type | Format |
 | --- | --- |
 | `integer` | `raw` |
+| `integer-tuple` | `slash` |
 | `double` | `raw` |
 | `complex` | `slash-pair` |
 | `numeric-tuple` | `slash` |
+| `numeric-tuple-or-enum` | `slash` |
 | `point2` | `slash` |
 | `vector2` | `slash` |
 | `point3` | `slash` |
@@ -397,9 +399,12 @@ Minimum useful interpolated track type set:
 - `enum`
 - `inside`
 - `integer`
+- `integer-or-enum`
+- `integer-tuple`
 - `double`
 - `complex`
 - `numeric-tuple`
+- `numeric-tuple-or-enum`
 - `outside`
 - `point2`
 - `vector2`
@@ -1735,46 +1740,7 @@ behavior. Help documentation can clarify user-facing prose, but parser
 behavior is the implementation source of truth for these parameter
 shapes.
 
-### 1. Numeric-Or-Enum Scalar Types
-
-Add the small variant-backed scalar types found by the audit instead of
-treating them as generic strings. Cover at least these parser shapes:
-
-- `fill-color`: `normal` or an integer color index.
-- `periodicity`: `no`, `show`, or an integer.
-- `logmap`: `yes`, `no`, or an integer.
-- `passes`: one of the parser enum values `1`, `2`, `3`, `g`, `g1`,
-  `g2`, `g3`, `g4`, `g5`, `g6`, `b`, `t`, `s`, `o`, or `p`.
-
-Use JSON strings for enum arms, including numeric-looking enum values
-such as `"1"` for `passes`. Use JSON numbers only for true integer arms.
-Generated par entries preserve the Id spelling required by the parser.
-
-Add app data type tests for each variant-backed type, schema tests for
-accepted and rejected JSON values, and catalog tests for `fillcolor`,
-`periodicity`, `logmap`, and `passes`.
-
-### 2. Fixed Slash-Tuple Parameter Types
-
-Add catalog value types for audited parameters whose parser accepts fixed
-slash-delimited numeric tuples or one literal plus a tuple.
-
-Initial coverage:
-
-- `init-orbit`: `pixel` or `double/double`.
-- `invert`: `radius/x/y`.
-- `math-tolerance`: `double/double`.
-- `distest`: `double/double`.
-
-JSON config should use typed application values, not preformatted slash
-strings. Generated par entries serialize to the slash form accepted by
-Id.
-
-Add unit tests for each parser, formatter, and invalid arity. Add schema
-description strings for all new object shapes and fields. Add catalog
-tests for `initorbit`, `invert`, `mathtolerance`, and `distest`.
-
-### 3. Potential And MIIM Parser Types
+### 1. Potential And MIIM Parser Types
 
 Add focused parser types for the more specialized audited slash values:
 `potential` and `miim`.
@@ -1788,7 +1754,7 @@ needed for existing Id behavior. Add unit tests from representative
 accepted and rejected parser examples. Add catalog schema descriptions
 and catalog tests for `potential` and `miim`.
 
-### 4. Inside And Outside Numeric Index Audit
+### 2. Inside And Outside Numeric Index Audit
 
 Verify the existing `inside` and `outside` application types against the
 audited parser behavior. They should continue to be distinct types, each
@@ -1799,7 +1765,7 @@ sets that differ between the two types, and invalid values that would be
 accepted by the other type but not this one. Update catalog metadata if
 the audit found missing parser method names or bounds.
 
-### 5. Params Metadata Coverage From Parser Tables
+### 3. Params Metadata Coverage From Parser Tables
 
 Extend fractal-specific `params` metadata using the parser tables and
 `type_has_param()` behavior audited from Id. Do not add one global
@@ -1810,7 +1776,7 @@ slots have stable meanings. Tests should resolve tracks against the
 active `type`, preserve untouched params slots, reject overlapping slot
 writes, and write one `params=` value through the highest required slot.
 
-### 6. Formula Catalog Coverage For id.frm
+### 4. Formula Catalog Coverage For id.frm
 
 Create bundled formula metadata only for formula entries in `id.frm`.
 Attach metadata by formula entry name. Formula params metadata names are
@@ -1821,7 +1787,7 @@ Add tests that load representative `id.frm` formula metadata, resolve a
 formula-specific knob from `formulaname`, merge it into the generated
 `params=`, and reject invalid variable bindings.
 
-### 7. Complete Catalog Audit Pass
+### 5. Complete Catalog Audit Pass
 
 After the supporting value types exist, update the core, coloring, 3D,
 fractal, and formula catalogs to cover the audited Id parser surface.

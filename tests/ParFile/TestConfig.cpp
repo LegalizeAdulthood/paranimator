@@ -743,21 +743,21 @@ TEST(TestConfig, jsonDeserializesId3DViewTrack)
         {"rotation",
             Object{{"type", "numeric-tuple"}, {"arity", 3},
                 {"keys",
-                    Object::array(
-                        {Object{{"frame", 0}, {"value", "60/30/0"}}, Object{{"frame", 59}, {"value", "70/50/10"}}})}}},
+                    Object::array({Object{{"frame", 0}, {"value", Object::array({60.0, 30.0, 0.0})}},
+                        Object{{"frame", 59}, {"value", Object::array({70.0, 50.0, 10.0})}}})}}},
         {"perspective",
             Object{{"type", "integer"},
                 {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 59}, {"value", 100}}})}}},
         {"xyshift",
             Object{{"type", "numeric-tuple"}, {"arity", 2},
                 {"keys",
-                    Object::array(
-                        {Object{{"frame", 0}, {"value", "0/0"}}, Object{{"frame", 59}, {"value", "20/-10"}}})}}},
+                    Object::array({Object{{"frame", 0}, {"value", Object::array({0.0, 0.0})}},
+                        Object{{"frame", 59}, {"value", Object::array({20.0, -10.0})}}})}}},
         {"scalexyz",
             Object{{"type", "numeric-tuple"}, {"arity", 3},
                 {"keys",
-                    Object::array({Object{{"frame", 0}, {"value", "90/90/30"}},
-                        Object{{"frame", 59}, {"value", "100/100/40"}}})}}},
+                    Object::array({Object{{"frame", 0}, {"value", Object::array({90.0, 90.0, 30.0})}},
+                        Object{{"frame", 59}, {"value", Object::array({100.0, 100.0, 40.0})}}})}}},
         {"roughness",
             Object{{"type", "integer"},
                 {"keys", Object::array({Object{{"frame", 0}, {"value", 30}}, Object{{"frame", 59}, {"value", 40}}})}}},
@@ -768,13 +768,13 @@ TEST(TestConfig, jsonDeserializesId3DViewTrack)
         {"longitude",
             Object{{"type", "numeric-tuple"}, {"arity", 2},
                 {"keys",
-                    Object::array(
-                        {Object{{"frame", 0}, {"value", "180/0"}}, Object{{"frame", 59}, {"value", "270/-90"}}})}}},
+                    Object::array({Object{{"frame", 0}, {"value", Object::array({180.0, 0.0})}},
+                        Object{{"frame", 59}, {"value", Object::array({270.0, -90.0})}}})}}},
         {"latitude",
             Object{{"type", "numeric-tuple"}, {"arity", 2},
                 {"keys",
-                    Object::array(
-                        {Object{{"frame", 0}, {"value", "-90/90"}}, Object{{"frame", 59}, {"value", "-45/45"}}})}}},
+                    Object::array({Object{{"frame", 0}, {"value", Object::array({-90.0, 90.0})}},
+                        Object{{"frame", 59}, {"value", Object::array({-45.0, 45.0})}}})}}},
         {"radius",
             Object{{"type", "integer"},
                 {"keys",
@@ -885,8 +885,8 @@ TEST(TestConfig, jsonDeserializesJulibrotViewTrack)
         {"geometry",
             Object{{"type", "numeric-tuple"}, {"arity", 6},
                 {"keys",
-                    Object::array({Object{{"frame", 0}, {"value", "128/8/8/7/10/24"}},
-                        Object{{"frame", 59}, {"value", "160/7/6/6/9/20"}}})}}},
+                    Object::array({Object{{"frame", 0}, {"value", Object::array({128.0, 8.0, 8.0, 7.0, 10.0, 24.0})}},
+                        Object{{"frame", 59}, {"value", Object::array({160.0, 7.0, 6.0, 6.0, 9.0, 20.0})}}})}}},
         {"eyes",
             Object{{"type", "double"},
                 {"keys",
@@ -894,8 +894,8 @@ TEST(TestConfig, jsonDeserializesJulibrotViewTrack)
         {"from-to",
             Object{{"type", "numeric-tuple"}, {"arity", 4},
                 {"keys",
-                    Object::array({Object{{"frame", 0}, {"value", "-0.83/-0.83/0.25/-0.25"}},
-                        Object{{"frame", 59}, {"value", "-0.7/-0.9/0.2/-0.2"}}})}}}}});
+                    Object::array({Object{{"frame", 0}, {"value", Object::array({-0.83, -0.83, 0.25, -0.25})}},
+                        Object{{"frame", 59}, {"value", Object::array({-0.7, -0.9, 0.2, -0.2})}}})}}}}});
 
     const ParFile::Config config{ParFile::read_config(json.dump())};
 
@@ -1079,6 +1079,26 @@ TEST(TestConfig, jsonDeserializesIntegerKeyframeValues)
     EXPECT_EQ("0", config.tracks[0].keys[0].value);
     EXPECT_TRUE(ParFile::keyframe_value_is_integer(config.tracks[0].keys[0].value));
     EXPECT_EQ(12, ParFile::keyframe_value_integer(config.tracks[0].keys[1].value));
+}
+
+TEST(TestConfig, jsonDeserializesNumericArrayKeyframeValues)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"parameter", "invert"},
+        {"keys",
+            Object::array({Object{{"frame", 0}, {"value", Object::array({1.0, 2.5, 3.0})}},
+                Object{{"frame", 59}, {"value", Object::array({4.0, 5.5, 6.0})}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_EQ(2U, config.tracks[0].keys.size());
+    EXPECT_EQ("1/2.5/3", config.tracks[0].keys[0].value);
+    EXPECT_TRUE(ParFile::keyframe_value_is_number_array(config.tracks[0].keys[0].value));
+    const ParFile::KeyframeConfig::Value::NumberArray &numbers{
+        ParFile::keyframe_value_numbers(config.tracks[0].keys[1].value)};
+    ASSERT_EQ(3U, numbers.size());
+    EXPECT_DOUBLE_EQ(5.5, numbers[1]);
 }
 
 TEST(TestConfig, jsonDeserializesFunctionListKeyframeValues)

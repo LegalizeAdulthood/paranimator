@@ -63,18 +63,21 @@ struct KeyframeConfig
     struct Value
     {
         using Array = std::vector<std::string>;
-        using Variant = std::variant<std::string, Array, bool, int>;
+        using NumberArray = std::vector<double>;
+        using Variant = std::variant<std::string, Array, NumberArray, bool, int>;
 
         Value();
         Value(const char *text);
         Value(std::string text);
         Value(Array text);
+        Value(NumberArray numbers);
         Value(bool boolean);
         Value(int integer);
 
         Value &operator=(const char *text);
         Value &operator=(std::string text);
         Value &operator=(Array text);
+        Value &operator=(NumberArray numbers);
         Value &operator=(bool boolean);
         Value &operator=(int integer);
 
@@ -92,8 +95,10 @@ std::string keyframe_value_text(const KeyframeConfig::Value &value);
 bool keyframe_value_is_array(const KeyframeConfig::Value &value);
 bool keyframe_value_is_boolean(const KeyframeConfig::Value &value);
 bool keyframe_value_is_integer(const KeyframeConfig::Value &value);
+bool keyframe_value_is_number_array(const KeyframeConfig::Value &value);
 bool keyframe_value_is_string(const KeyframeConfig::Value &value);
 int keyframe_value_integer(const KeyframeConfig::Value &value);
+const KeyframeConfig::Value::NumberArray &keyframe_value_numbers(const KeyframeConfig::Value &value);
 bool operator==(const KeyframeConfig::Value &lhs, const char *rhs);
 bool operator==(const char *lhs, const KeyframeConfig::Value &rhs);
 bool operator==(const KeyframeConfig::Value &lhs, const std::string &rhs);

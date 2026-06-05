@@ -226,6 +226,49 @@ std::complex<double> parse_slash_pair(const std::string &value)
     return {values[0], values[1]};
 }
 
+void validate_bounds(const ParameterMetadata &metadata, double value);
+
+std::vector<double> numeric_tuple_value(const ParameterMetadata &metadata, const KeyframeConfig::Value &value)
+{
+    if (keyframe_value_is_number_array(value))
+    {
+        return keyframe_value_numbers(value);
+    }
+    throw std::runtime_error("Numeric tuple parameter '" + metadata.name + "' requires numeric array keyframe values");
+}
+
+void validate_integer_tuple_component(const ParameterMetadata &metadata, double value)
+{
+    if (std::trunc(value) != value)
+    {
+        throw std::runtime_error("Integer tuple parameter '" + metadata.name + "' requires integer components");
+    }
+}
+
+void validate_tuple_bounds(const ParameterMetadata &metadata, const std::vector<double> &values)
+{
+    for (double value : values)
+    {
+        validate_bounds(metadata, value);
+        if (metadata.type == ParameterType::INTEGER_TUPLE)
+        {
+            validate_integer_tuple_component(metadata, value);
+        }
+    }
+}
+
+std::vector<double> rounded_tuple_values(const ParameterMetadata &metadata, std::vector<double> values)
+{
+    if (metadata.type == ParameterType::INTEGER_TUPLE)
+    {
+        for (double &value : values)
+        {
+            value = static_cast<double>(std::lround(value));
+        }
+    }
+    return values;
+}
+
 void validate_enum_value(const ParameterMetadata &metadata, const std::string &value)
 {
     const auto it{std::find(metadata.values.begin(), metadata.values.end(), value)};
@@ -2249,8 +2292,8 @@ NumericTupleInterpolant::NumericTupleInterpolant(
     Base(metadata.name, num_steps),
     m_from_frame(keys[0].frame),
     m_to_frame(keys[1].frame),
-    m_from(parse_slash_doubles(keys[0].value)),
-    m_to(parse_slash_doubles(keys[1].value)),
+    m_from(numeric_tuple_value(metadata, keys[0].value)),
+    m_to(numeric_tuple_value(metadata, keys[1].value)),
     m_curve(curve),
     m_metadata(metadata)
 {
@@ -2260,15 +2303,9 @@ NumericTupleInterpolant::NumericTupleInterpolant(
         throw std::runtime_error(
             "Numeric tuple parameter '" + metadata.name + "' requires " + std::to_string(arity) + " values");
     }
-    validate_scalar_curve("numeric-tuple", m_curve);
-    for (double value : m_from)
-    {
-        validate_bounds(metadata, value);
-    }
-    for (double value : m_to)
-    {
-        validate_bounds(metadata, value);
-    }
+    validate_scalar_curve(to_string(metadata.type), m_curve);
+    validate_tuple_bounds(metadata, m_from);
+    validate_tuple_bounds(metadata, m_to);
 }
 
 std::string NumericTupleInterpolant::step()
@@ -2289,7 +2326,105 @@ std::string NumericTupleInterpolant::step()
             values[i] = m_from[i] + fraction * (m_to[i] - m_from[i]);
         }
     }
+    values = rounded_tuple_values(m_metadata, values);
     normalize_vector(m_metadata, values);
+    return format_slash_doubles(values);
+}
+
+class NumericTupleOrEnumInterpolant : public Base
+{
+public:
+    NumericTupleOrEnumInterpolant(
+        const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve, int num_steps);
+    ~NumericTupleOrEnumInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    void validate_keyframe(const KeyframeConfig &key) const;
+
+    int m_from_frame{};
+    int m_to_frame{};
+    std::vector<double> m_from_tuple;
+    std::vector<double> m_to_tuple;
+    std::string m_from;
+    std::string m_to;
+    bool m_tuple_pair{};
+    Curve m_curve{};
+    ParameterMetadata m_metadata;
+};
+
+NumericTupleOrEnumInterpolant::NumericTupleOrEnumInterpolant(
+    const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve, int num_steps) :
+    Base(metadata.name, num_steps),
+    m_from_frame(keys[0].frame),
+    m_to_frame(keys[1].frame),
+    m_from(keyframe_value_text(keys[0].value)),
+    m_to(keyframe_value_text(keys[1].value)),
+    m_tuple_pair(keyframe_value_is_number_array(keys[0].value) && keyframe_value_is_number_array(keys[1].value)),
+    m_curve(curve),
+    m_metadata(metadata)
+{
+    validate_keyframe(keys[0]);
+    validate_keyframe(keys[1]);
+    if (m_tuple_pair)
+    {
+        validate_scalar_curve(to_string(metadata.type), m_curve);
+        m_from_tuple = numeric_tuple_value(metadata, keys[0].value);
+        m_to_tuple = numeric_tuple_value(metadata, keys[1].value);
+    }
+    else
+    {
+        validate_discrete_curve(to_string(metadata.type), m_curve);
+    }
+}
+
+void NumericTupleOrEnumInterpolant::validate_keyframe(const KeyframeConfig &key) const
+{
+    if (keyframe_value_is_number_array(key.value))
+    {
+        const std::vector<double> value{numeric_tuple_value(m_metadata, key.value)};
+        const std::size_t arity{static_cast<std::size_t>(tuple_arity(m_metadata))};
+        if (value.size() != arity)
+        {
+            throw std::runtime_error(
+                "Numeric tuple parameter '" + m_metadata.name + "' requires " + std::to_string(arity) + " values");
+        }
+        validate_tuple_bounds(m_metadata, value);
+        return;
+    }
+    if (keyframe_value_is_string(key.value))
+    {
+        validate_enum_value(m_metadata, key.value);
+        return;
+    }
+    throw std::runtime_error(
+        "Numeric tuple-or-enum parameter '" + m_metadata.name + "' requires string or numeric array keyframe values");
+}
+
+std::string NumericTupleOrEnumInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+
+    if (!m_tuple_pair)
+    {
+        return frame >= m_to_frame ? m_to : m_from;
+    }
+
+    std::vector<double> values{m_from_tuple};
+    if (frame >= m_to_frame)
+    {
+        values = m_to_tuple;
+    }
+    else if (frame > m_from_frame && m_curve != Curve::HOLD && m_curve != Curve::STEP)
+    {
+        const double fraction{(frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        for (std::size_t i = 0; i < values.size(); ++i)
+        {
+            values[i] = m_from_tuple[i] + fraction * (m_to_tuple[i] - m_from_tuple[i]);
+        }
+    }
     return format_slash_doubles(values);
 }
 
@@ -2337,6 +2472,10 @@ DiscreteInterpolant::DiscreteInterpolant(
     else if (keyframe_value_is_array(keys[0].value) || keyframe_value_is_array(keys[1].value))
     {
         throw std::runtime_error("Array keyframe values require a function-list parameter");
+    }
+    else if (keyframe_value_is_number_array(keys[0].value) || keyframe_value_is_number_array(keys[1].value))
+    {
+        throw std::runtime_error("Numeric array keyframe values require a tuple parameter");
     }
     else if ((keyframe_value_is_integer(keys[0].value) || keyframe_value_is_integer(keys[1].value)) &&
         !is_coloring_type(metadata.type))
@@ -2765,6 +2904,7 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
         }
         return std::make_shared<DiscreteInterpolant>(metadata, keys, curve, num_steps);
     }
+    case ParameterType::INTEGER_TUPLE:
     case ParameterType::NUMERIC_TUPLE:
     case ParameterType::POINT2:
     case ParameterType::POINT3:
@@ -2778,6 +2918,16 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
             curve = *keys[1].curve;
         }
         return std::make_shared<NumericTupleInterpolant>(metadata, keys, curve, num_steps);
+    }
+    case ParameterType::NUMERIC_TUPLE_OR_ENUM:
+    {
+        validate_full_range(metadata.name, keys, num_steps);
+        Curve curve{default_curve(metadata)};
+        if (keys[1].curve)
+        {
+            curve = *keys[1].curve;
+        }
+        return std::make_shared<NumericTupleOrEnumInterpolant>(metadata, keys, curve, num_steps);
     }
     case ParameterType::STRING:
     {

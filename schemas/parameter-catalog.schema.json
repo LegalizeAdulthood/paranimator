@@ -269,6 +269,10 @@
                     "description": "Integer value or string enum metadata."
                   },
                   {
+                    "const": "numeric-tuple-or-enum",
+                    "description": "Numeric tuple value or string enum metadata."
+                  },
+                  {
                     "const": "outside",
                     "description": "Outside coloring method or color index metadata."
                   }
@@ -327,6 +331,10 @@
                     {
                       "const": "integer-or-enum",
                       "description": "Integer value or string enum metadata."
+                    },
+                    {
+                      "const": "numeric-tuple-or-enum",
+                      "description": "Numeric tuple value or string enum metadata."
                     },
                     {
                       "const": "outside",
@@ -587,12 +595,20 @@
           "description": "Integral numeric value or discrete string selected from declared values."
         },
         {
+          "const": "integer-tuple",
+          "description": "Fixed-arity tuple of integral numeric components."
+        },
+        {
           "const": "outside",
           "description": "Id outside= value: a named outside method or integer color-map index."
         },
         {
           "const": "numeric-tuple",
           "description": "Fixed-arity tuple of floating-point numeric components."
+        },
+        {
+          "const": "numeric-tuple-or-enum",
+          "description": "Fixed-arity tuple of floating-point numeric components or a declared discrete string."
         },
         {
           "const": "point2",
