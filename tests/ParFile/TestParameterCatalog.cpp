@@ -79,7 +79,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(41U, catalog.parameters.size());
-    EXPECT_EQ(1U, catalog.fractal_types.size());
+    EXPECT_EQ(3U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
@@ -537,6 +537,32 @@ TEST(TestParameterCatalog, juliaParamsGroupMetadataLoads)
     ASSERT_EQ(2U, group.slots.size());
     EXPECT_EQ(0, group.slots[0]);
     EXPECT_EQ(1, group.slots[1]);
+}
+
+TEST(TestParameterCatalog, mandelParamsGroupMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParamsGroupMetadata &group{catalog.params_group("mandel", "z0")};
+
+    EXPECT_EQ("z0", group.name);
+    EXPECT_EQ("params.z0", group.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::COMPLEX, group.metadata.type);
+    ASSERT_EQ(2U, group.slots.size());
+    EXPECT_EQ(0, group.slots[0]);
+    EXPECT_EQ(1, group.slots[1]);
+}
+
+TEST(TestParameterCatalog, newtonParamsSlotMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParamsSlotMetadata &slot{catalog.params_slot("newton", 0)};
+
+    EXPECT_EQ(0, slot.index);
+    EXPECT_EQ("degree", slot.name);
+    EXPECT_EQ("params[0]", slot.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, slot.metadata.type);
+    ASSERT_TRUE(slot.metadata.min);
+    EXPECT_EQ(2, *slot.metadata.min);
 }
 
 TEST(TestParameterCatalog, formulaParamsBailoutKnobMetadataLoads)

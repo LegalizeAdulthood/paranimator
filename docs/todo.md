@@ -14,7 +14,6 @@
   - ismand needs type "yes-no"
   - orbitcorners: not documented
   - orbitdrawmode: `function` not documented
-  - params: needs type?
   - proximity not documented
   - screencoords needs type "yes-no"
   - showdot missing

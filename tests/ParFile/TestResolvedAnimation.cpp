@@ -76,6 +76,22 @@ ParFile::ParameterCatalog catalog_data()
                 {"params.c", ParFile::ParameterType::COMPLEX, ParFile::ParameterFormat::SLASH_PAIR,
                     ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
                 {0, 1}}}}});
+    result.fractal_types.push_back({"mandel",
+        {{{0, "z0-real",
+              {"params[0]", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                  ParFile::ExtrapolateMode::CLAMP, {}, {}}},
+             {1, "z0-imag",
+                 {"params[1]", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                     ParFile::ExtrapolateMode::CLAMP, {}, {}}}},
+            {{"z0",
+                {"params.z0", ParFile::ParameterType::COMPLEX, ParFile::ParameterFormat::SLASH_PAIR,
+                    ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
+                {0, 1}}}}});
+    result.fractal_types.push_back({"newton",
+        {{{0, "degree",
+             {"params[0]", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                 ParFile::ExtrapolateMode::CLAMP, 2.0, {}}}},
+            {}}});
     result.formula_entries.push_back({"MandelbrotMix4",
         {{{"bailout",
               {"MandelbrotMix4.bailout", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW,
@@ -133,6 +149,23 @@ ParFile::Config julia_config_data(std::string_view parameter)
 ParFile::ParSet julia_source_set()
 {
     return {"source", {{"type", "julia"}, {"params", "0/1/52"}}};
+}
+
+ParFile::Config newton_config_data()
+{
+    ParFile::Config result{config_data()};
+    result.tracks = {{"params[0]", {{0, "3"}, {2, "5"}}}};
+    return result;
+}
+
+ParFile::ParSet newton_source_set()
+{
+    return {"source", {{"type", "newton"}, {"params", "3"}}};
+}
+
+ParFile::ParSet mandel_source_set()
+{
+    return {"source", {{"type", "mandel"}, {"params", "0/1/52"}}};
 }
 
 ParFile::Config formula_config_data(std::string_view parameter)
@@ -632,6 +665,46 @@ TEST(TestResolvedAnimation, juliaParamsSlot2Rejected)
         std::runtime_error);
 }
 
+TEST(TestResolvedAnimation, mandelParamsGroupResolvesFromActiveType)
+{
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(julia_config_data("params.z0"), catalog_data(), mandel_source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    EXPECT_EQ("params.z0", track.parameter);
+    EXPECT_EQ("params.z0", track.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::COMPLEX, track.metadata.type);
+    EXPECT_EQ("0/1/52", track.base_value);
+    EXPECT_EQ("params", track.output_parameter);
+    ASSERT_EQ(2U, track.slots.size());
+    EXPECT_EQ(0, track.slots[0]);
+    EXPECT_EQ(1, track.slots[1]);
+}
+
+TEST(TestResolvedAnimation, newtonParamsSlotResolvesFromActiveType)
+{
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(newton_config_data(), catalog_data(), newton_source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    EXPECT_EQ("params[0]", track.parameter);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, track.metadata.type);
+    EXPECT_EQ("3", track.base_value);
+    EXPECT_EQ("params", track.output_parameter);
+    ASSERT_EQ(1U, track.slots.size());
+    EXPECT_EQ(0, track.slots[0]);
+}
+
+TEST(TestResolvedAnimation, overlappingParamsSlotsRejected)
+{
+    ParFile::Config config{julia_config_data("params.z0")};
+    config.tracks.push_back({"params[0]", {{0, "1"}, {2, "2"}}});
+
+    EXPECT_THROW(ParFile::resolve_animation(config, catalog_data(), mandel_source_set()), std::runtime_error);
+}
+
 TEST(TestResolvedAnimation, formulaParamsKnobResolvesFromActiveFormulaname)
 {
     const ParFile::ResolvedAnimation animation{ParFile::resolve_animation(
@@ -722,8 +795,7 @@ TEST(TestResolvedAnimation, functionSlotResolvesToFunctionOutputSlot)
 TEST(TestResolvedAnimation, functionTrackResolvesWholeList)
 {
     ParFile::Config config{formula_config_data("function")};
-    config.tracks[0].keys = {
-        {0, ParFile::KeyframeConfig::Value::Array{"sin", "cos"}},
+    config.tracks[0].keys = {{0, ParFile::KeyframeConfig::Value::Array{"sin", "cos"}},
         {2, ParFile::KeyframeConfig::Value::Array{"tan", "log"}}};
     const ParFile::ResolvedAnimation animation{
         ParFile::resolve_animation(config, catalog_data(), formula_source_set())};

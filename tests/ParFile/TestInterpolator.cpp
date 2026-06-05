@@ -361,6 +361,22 @@ TEST_F(TestInterpolator, paramsTrackWritesOneParamsAssignment)
     ASSERT_EQ(expected, frame);
 }
 
+TEST_F(TestInterpolator, mandelParamsGroupWritesOneParamsAssignment)
+{
+    m_config_data.num_frames = 3;
+    m_config_data.tracks = {{"params.z0", {{0, "0/0"}, {2, "2/4"}}}};
+    m_config = m_config_data;
+    m_lerper = ParFile::Interpolator{m_config};
+    ParFile::ParSet expected{m_lerper.source()};
+    set_param(expected, "params", "1/2");
+    expected.name = "frame-0002";
+    ParFile::ParSet frame{m_lerper()};
+
+    frame = m_lerper();
+
+    ASSERT_EQ(expected, frame);
+}
+
 TEST_F(TestInterpolator, formulaParamsTracksMergeOneParamsAssignment)
 {
     m_config_data.source.name = "Formula_Demo";
