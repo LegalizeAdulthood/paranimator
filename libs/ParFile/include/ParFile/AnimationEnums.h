@@ -18,6 +18,7 @@ enum class ParameterType
     FUNCTION_LIST,
     INSIDE,
     INTEGER,
+    INTEGER_OR_ENUM,
     NUMERIC_TUPLE,
     OUTSIDE,
     POINT2,

@@ -277,7 +277,7 @@ std::string format_yes_no_value(const std::string &value, const std::string &nam
 
 void validate_yes_no_keyframe(const ParameterMetadata &metadata, const KeyframeConfig &key)
 {
-    if (!key.value_from_boolean)
+    if (!keyframe_value_is_boolean(key.value))
     {
         throw std::runtime_error("Yes-no parameter '" + metadata.name + "' requires boolean keyframe values");
     }
@@ -315,7 +315,8 @@ void validate_discrete_value(const ParameterMetadata &metadata, const std::strin
 
 bool has_validated_discrete_values(ParameterType type)
 {
-    return type == ParameterType::ENUM || type == ParameterType::INSIDE || type == ParameterType::OUTSIDE;
+    return type == ParameterType::ENUM || type == ParameterType::INSIDE || type == ParameterType::INTEGER_OR_ENUM ||
+        type == ParameterType::OUTSIDE;
 }
 
 bool is_pwm_type(ParameterType type)
@@ -338,11 +339,26 @@ void validate_function_list_value(const ParameterMetadata &metadata, const std::
 
 void validate_function_list_keyframe(const ParameterMetadata &metadata, const KeyframeConfig &key)
 {
-    if (!key.value_from_array)
+    if (!keyframe_value_is_array(key.value))
     {
         throw std::runtime_error("Function-list parameter '" + metadata.name + "' requires array keyframe values");
     }
     validate_function_list_value(metadata, key.value);
+}
+
+void validate_integer_or_enum_keyframe(const ParameterMetadata &metadata, const KeyframeConfig &key)
+{
+    if (keyframe_value_is_integer(key.value))
+    {
+        validate_bounds(metadata, keyframe_value_integer(key.value));
+        return;
+    }
+    if (keyframe_value_is_string(key.value))
+    {
+        validate_enum_value(metadata, key.value);
+        return;
+    }
+    throw std::runtime_error("Integer-or-enum parameter '" + metadata.name + "' requires integer or string values");
 }
 
 double validate_mix(const std::string &name, const KeyframeConfig &key)
@@ -1880,6 +1896,93 @@ std::string IntegerInterpolant::step()
     return std::to_string(static_cast<int>(std::lround(value)));
 }
 
+class IntegerOrEnumInterpolant : public Base
+{
+public:
+    IntegerOrEnumInterpolant(const ParameterMetadata &metadata, const std::vector<KeyframeConfig> &keys, Curve curve,
+        std::string_view base_value, int num_steps);
+    ~IntegerOrEnumInterpolant() override = default;
+
+    std::string step() override;
+
+private:
+    int m_from_frame{};
+    int m_to_frame{};
+    std::string m_from;
+    std::string m_to;
+    int m_from_integer{};
+    int m_to_integer{};
+    std::string m_base;
+    bool m_integer_pair{};
+    Curve m_curve{};
+    ExtrapolateMode m_extrapolate{};
+};
+
+IntegerOrEnumInterpolant::IntegerOrEnumInterpolant(const ParameterMetadata &metadata,
+    const std::vector<KeyframeConfig> &keys, Curve curve, std::string_view base_value, int num_steps) :
+    Base(metadata.name, num_steps),
+    m_from_frame(keys[0].frame),
+    m_to_frame(keys[1].frame),
+    m_from(keys[0].value),
+    m_to(keys[1].value),
+    m_base(base_value),
+    m_integer_pair(keyframe_value_is_integer(keys[0].value) && keyframe_value_is_integer(keys[1].value)),
+    m_curve(curve),
+    m_extrapolate(extrapolate_mode(metadata))
+{
+    validate_integer_or_enum_keyframe(metadata, keys[0]);
+    validate_integer_or_enum_keyframe(metadata, keys[1]);
+    if (m_integer_pair)
+    {
+        validate_scalar_curve("integer-or-enum", m_curve);
+        m_from_integer = keyframe_value_integer(keys[0].value);
+        m_to_integer = keyframe_value_integer(keys[1].value);
+    }
+    else
+    {
+        validate_discrete_curve("integer-or-enum", m_curve);
+    }
+}
+
+std::string IntegerOrEnumInterpolant::step()
+{
+    const int frame{m_step};
+    ++m_step;
+    m_has_value = true;
+    if (m_integer_pair)
+    {
+        if (frame < m_from_frame || frame > m_to_frame)
+        {
+            if (m_extrapolate == ExtrapolateMode::BASE)
+            {
+                return m_base;
+            }
+            if (m_extrapolate == ExtrapolateMode::OMIT)
+            {
+                m_has_value = false;
+                return {};
+            }
+        }
+        const int sample_frame{extrapolated_frame(frame, m_from_frame, m_to_frame, m_extrapolate)};
+        if (sample_frame <= m_from_frame)
+        {
+            return std::to_string(m_from_integer);
+        }
+        if (sample_frame >= m_to_frame)
+        {
+            return std::to_string(m_to_integer);
+        }
+        if (m_curve == Curve::HOLD || m_curve == Curve::STEP)
+        {
+            return std::to_string(m_from_integer);
+        }
+        const double fraction{(sample_frame - m_from_frame) / static_cast<double>(m_to_frame - m_from_frame)};
+        const double value{m_from_integer + fraction * (m_to_integer - m_from_integer)};
+        return std::to_string(static_cast<int>(std::lround(value)));
+    }
+    return frame >= m_to_frame ? m_to : m_from;
+}
+
 class DoubleInterpolant : public Base
 {
 public:
@@ -2227,13 +2330,18 @@ DiscreteInterpolant::DiscreteInterpolant(
         validate_function_list_keyframe(metadata, keys[0]);
         validate_function_list_keyframe(metadata, keys[1]);
     }
-    else if (keys[0].value_from_boolean || keys[1].value_from_boolean)
+    else if (keyframe_value_is_boolean(keys[0].value) || keyframe_value_is_boolean(keys[1].value))
     {
         throw std::runtime_error("Boolean keyframe values require a yes-no parameter");
     }
-    else if (keys[0].value_from_array || keys[1].value_from_array)
+    else if (keyframe_value_is_array(keys[0].value) || keyframe_value_is_array(keys[1].value))
     {
         throw std::runtime_error("Array keyframe values require a function-list parameter");
+    }
+    else if ((keyframe_value_is_integer(keys[0].value) || keyframe_value_is_integer(keys[1].value)) &&
+        !is_coloring_type(metadata.type))
+    {
+        throw std::runtime_error("Integer keyframe values require an integer-capable parameter");
     }
     if (has_validated_discrete_values(metadata.type))
     {
@@ -2292,11 +2400,11 @@ DiscretePwmInterpolant::DiscretePwmInterpolant(const ResolvedTrack &track, int n
 
     if (track.metadata.type == ParameterType::YES_NO)
     {
-        if (track.pwm->a && !track.pwm->a->value_from_boolean)
+        if (track.pwm->a && !keyframe_value_is_boolean(track.pwm->a->value))
         {
             throw std::runtime_error("PWM yes-no track '" + track.parameter + "' requires boolean endpoint a");
         }
-        if (track.pwm->b && !track.pwm->b->value_from_boolean)
+        if (track.pwm->b && !keyframe_value_is_boolean(track.pwm->b->value))
         {
             throw std::runtime_error("PWM yes-no track '" + track.parameter + "' requires boolean endpoint b");
         }
@@ -2309,7 +2417,7 @@ DiscretePwmInterpolant::DiscretePwmInterpolant(const ResolvedTrack &track, int n
         {
             throw std::runtime_error("PWM track '" + track.parameter + "' requires endpoint values");
         }
-        if (track.pwm->a->value_from_boolean || track.pwm->b->value_from_boolean)
+        if (!keyframe_value_is_string(track.pwm->a->value) || !keyframe_value_is_string(track.pwm->b->value))
         {
             throw std::runtime_error("PWM track '" + track.parameter + "' requires string endpoint values");
         }
@@ -2384,6 +2492,10 @@ FunctionEnumInterpolant::FunctionEnumInterpolant(const ResolvedTrack &track, Cur
     }
     m_slot = track.slots[0];
     validate_discrete_curve("enum", m_curve);
+    if (!keyframe_value_is_string(track.keys[0].value) || !keyframe_value_is_string(track.keys[1].value))
+    {
+        throw std::runtime_error("Function enum track '" + track.parameter + "' requires string keyframe values");
+    }
     validate_enum_value(track.metadata, m_from);
     validate_enum_value(track.metadata, m_to);
     if (m_slot < 0)
@@ -2453,7 +2565,7 @@ FunctionEnumPwmInterpolant::FunctionEnumPwmInterpolant(const ResolvedTrack &trac
     {
         throw std::runtime_error("PWM track '" + track.parameter + "' requires endpoint values");
     }
-    if (track.pwm->a->value_from_boolean || track.pwm->b->value_from_boolean)
+    if (!keyframe_value_is_string(track.pwm->a->value) || !keyframe_value_is_string(track.pwm->b->value))
     {
         throw std::runtime_error("PWM track '" + track.parameter + "' requires string endpoint values");
     }
@@ -2612,6 +2724,19 @@ InterpolantPtr create_interpolant(const ResolvedTrack &track, int num_steps)
             return std::make_shared<ParamsIntegerInterpolant>(track, curve, num_steps);
         }
         return std::make_shared<IntegerInterpolant>(metadata, keys, curve, track.base_value, num_steps);
+    }
+    case ParameterType::INTEGER_OR_ENUM:
+    {
+        Curve curve{default_curve(metadata)};
+        if (keys[1].curve)
+        {
+            curve = *keys[1].curve;
+        }
+        if (!keyframe_value_is_integer(keys[0].value) || !keyframe_value_is_integer(keys[1].value))
+        {
+            validate_full_range(metadata.name, keys, num_steps);
+        }
+        return std::make_shared<IntegerOrEnumInterpolant>(metadata, keys, curve, track.base_value, num_steps);
     }
     case ParameterType::DOUBLE:
     {

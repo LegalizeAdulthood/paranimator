@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace ParFile
@@ -353,7 +354,144 @@ static std::string format_slash_strings(const std::vector<std::string> &values)
     return result;
 }
 
-static std::string load_string_array_value(const Object &json)
+KeyframeConfig::Value::Value() :
+    data(std::string{})
+{
+}
+
+KeyframeConfig::Value::Value(const char *text) :
+    data(std::string{text})
+{
+}
+
+KeyframeConfig::Value::Value(std::string text) :
+    data(std::move(text))
+{
+}
+
+KeyframeConfig::Value::Value(Array text) :
+    data(std::move(text))
+{
+}
+
+KeyframeConfig::Value::Value(bool boolean) :
+    data(boolean)
+{
+}
+
+KeyframeConfig::Value::Value(int integer) :
+    data(integer)
+{
+}
+
+KeyframeConfig::Value &KeyframeConfig::Value::operator=(const char *text)
+{
+    data = std::string{text};
+    return *this;
+}
+
+KeyframeConfig::Value &KeyframeConfig::Value::operator=(std::string text)
+{
+    data = std::move(text);
+    return *this;
+}
+
+KeyframeConfig::Value &KeyframeConfig::Value::operator=(Array text)
+{
+    data = std::move(text);
+    return *this;
+}
+
+KeyframeConfig::Value &KeyframeConfig::Value::operator=(bool boolean)
+{
+    data = boolean;
+    return *this;
+}
+
+KeyframeConfig::Value &KeyframeConfig::Value::operator=(int integer)
+{
+    data = integer;
+    return *this;
+}
+
+KeyframeConfig::Value::operator std::string() const
+{
+    return keyframe_value_text(*this);
+}
+
+std::string keyframe_value_text(const KeyframeConfig::Value &value)
+{
+    if (const auto *text{std::get_if<std::string>(&value.data)}; text != nullptr)
+    {
+        return *text;
+    }
+    if (const auto *array{std::get_if<KeyframeConfig::Value::Array>(&value.data)}; array != nullptr)
+    {
+        return format_slash_strings(*array);
+    }
+    if (const auto *boolean{std::get_if<bool>(&value.data)}; boolean != nullptr)
+    {
+        return bool_text(*boolean);
+    }
+    return std::to_string(std::get<int>(value.data));
+}
+
+bool keyframe_value_is_array(const KeyframeConfig::Value &value)
+{
+    return std::holds_alternative<KeyframeConfig::Value::Array>(value.data);
+}
+
+bool keyframe_value_is_boolean(const KeyframeConfig::Value &value)
+{
+    return std::holds_alternative<bool>(value.data);
+}
+
+bool keyframe_value_is_integer(const KeyframeConfig::Value &value)
+{
+    return std::holds_alternative<int>(value.data);
+}
+
+bool keyframe_value_is_string(const KeyframeConfig::Value &value)
+{
+    return std::holds_alternative<std::string>(value.data);
+}
+
+int keyframe_value_integer(const KeyframeConfig::Value &value)
+{
+    return std::get<int>(value.data);
+}
+
+bool operator==(const KeyframeConfig::Value &lhs, std::string_view rhs)
+{
+    return keyframe_value_text(lhs) == rhs;
+}
+
+bool operator==(std::string_view lhs, const KeyframeConfig::Value &rhs)
+{
+    return rhs == lhs;
+}
+
+bool operator==(const KeyframeConfig::Value &lhs, const char *rhs)
+{
+    return lhs == std::string_view{rhs};
+}
+
+bool operator==(const char *lhs, const KeyframeConfig::Value &rhs)
+{
+    return std::string_view{lhs} == rhs;
+}
+
+bool operator==(const KeyframeConfig::Value &lhs, const std::string &rhs)
+{
+    return lhs == std::string_view{rhs.data(), rhs.size()};
+}
+
+bool operator==(const std::string &lhs, const KeyframeConfig::Value &rhs)
+{
+    return std::string_view{lhs.data(), lhs.size()} == rhs;
+}
+
+static KeyframeConfig::Value::Array load_string_array_value(const Object &json)
 {
     if (json.empty())
     {
@@ -370,31 +508,33 @@ static std::string load_string_array_value(const Object &json)
         }
         values.push_back(item.get<std::string>());
     }
-    return format_slash_strings(values);
+    return values;
 }
 
-static std::string load_value(const Object &json, bool &value_from_array, bool &value_from_boolean)
+static KeyframeConfig::Value load_value(const Object &json)
 {
     const std::string key{"value"};
     if (!json.contains(key))
     {
-        throw std::runtime_error("Invalid config, missing string, string array, or boolean 'value'");
+        throw std::runtime_error("Invalid config, missing string, string array, boolean, or integer 'value'");
     }
     if (json.at(key).is_boolean())
     {
-        value_from_boolean = true;
-        return bool_text(json.at(key).get<bool>());
+        return json.at(key).get<bool>();
     }
     if (json.at(key).is_array())
     {
-        value_from_array = true;
         return load_string_array_value(json.at(key));
+    }
+    if (json.at(key).is_number_integer())
+    {
+        return json.at(key).get<int>();
     }
     if (json.at(key).is_string())
     {
         return json.at(key).get<std::string>();
     }
-    throw std::runtime_error("Invalid config, missing string, string array, or boolean 'value'");
+    throw std::runtime_error("Invalid config, missing string, string array, boolean, or integer 'value'");
 }
 
 static TrackMode load_track_mode(const Object &json)
@@ -427,7 +567,7 @@ static KeyframeConfig load_keyframe_config(const Object &json, TrackMode mode)
     }
     else
     {
-        result.value = load_value(json, result.value_from_array, result.value_from_boolean);
+        result.value = load_value(json);
         if (const std::optional<std::string> curve{load_optional_string(json, "curve")})
         {
             result.curve = parse_curve(*curve);
@@ -455,7 +595,7 @@ static std::vector<KeyframeConfig> load_keyframes(const Object &json, TrackMode 
     return result;
 }
 
-static std::string load_camera_keyframe_value(const Object &json, bool number_value)
+static KeyframeConfig::Value load_camera_keyframe_value(const Object &json, bool number_value)
 {
     const std::string key{"value"};
     if (number_value)
@@ -569,7 +709,7 @@ static Camera2DConfig load_camera2d_config(const Object &json, int num_frames)
     return result;
 }
 
-static std::string load_view_keyframe_value(const Object &json, ParameterType type, bool &value_from_boolean)
+static KeyframeConfig::Value load_view_keyframe_value(const Object &json, ParameterType type)
 {
     const std::string key{"value"};
     if (type == ParameterType::INTEGER)
@@ -578,7 +718,7 @@ static std::string load_view_keyframe_value(const Object &json, ParameterType ty
         {
             throw std::runtime_error("Invalid config, missing integer 'value'");
         }
-        return std::to_string(json.at(key).get<int>());
+        return json.at(key).get<int>();
     }
     if (type == ParameterType::DOUBLE)
     {
@@ -594,8 +734,7 @@ static std::string load_view_keyframe_value(const Object &json, ParameterType ty
         {
             throw std::runtime_error("Invalid config, missing boolean 'value'");
         }
-        value_from_boolean = true;
-        return bool_text(json.at(key).get<bool>());
+        return json.at(key).get<bool>();
     }
     return load_string(json, "value");
 }
@@ -604,7 +743,7 @@ static KeyframeConfig load_view_keyframe_config(const Object &json, ParameterTyp
 {
     KeyframeConfig result;
     result.frame = load_int(json, "frame");
-    result.value = load_view_keyframe_value(json, type, result.value_from_boolean);
+    result.value = load_view_keyframe_value(json, type);
     if (const std::optional<std::string> curve{load_optional_string(json, "curve")})
     {
         result.curve = parse_curve(*curve);
@@ -1297,7 +1436,7 @@ static PwmEndpointConfig load_pwm_endpoint(const Object &json, std::string_view 
     const std::string key{field};
     if (json.at(key).is_boolean())
     {
-        return {bool_text(json.at(key).get<bool>()), true};
+        return {json.at(key).get<bool>()};
     }
     if (json.at(key).is_string())
     {

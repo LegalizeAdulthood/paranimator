@@ -7,6 +7,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace ParFile
@@ -59,12 +60,46 @@ enum class ComposeOperator
 struct KeyframeConfig
 {
     int frame{};
-    std::string value;
+    struct Value
+    {
+        using Array = std::vector<std::string>;
+        using Variant = std::variant<std::string, Array, bool, int>;
+
+        Value();
+        Value(const char *text);
+        Value(std::string text);
+        Value(Array text);
+        Value(bool boolean);
+        Value(int integer);
+
+        Value &operator=(const char *text);
+        Value &operator=(std::string text);
+        Value &operator=(Array text);
+        Value &operator=(bool boolean);
+        Value &operator=(int integer);
+
+        operator std::string() const;
+
+        Variant data;
+    };
+
+    Value value;
     std::optional<Curve> curve;
     std::optional<double> mix;
-    bool value_from_array{};
-    bool value_from_boolean{};
 };
+
+std::string keyframe_value_text(const KeyframeConfig::Value &value);
+bool keyframe_value_is_array(const KeyframeConfig::Value &value);
+bool keyframe_value_is_boolean(const KeyframeConfig::Value &value);
+bool keyframe_value_is_integer(const KeyframeConfig::Value &value);
+bool keyframe_value_is_string(const KeyframeConfig::Value &value);
+int keyframe_value_integer(const KeyframeConfig::Value &value);
+bool operator==(const KeyframeConfig::Value &lhs, const char *rhs);
+bool operator==(const char *lhs, const KeyframeConfig::Value &rhs);
+bool operator==(const KeyframeConfig::Value &lhs, const std::string &rhs);
+bool operator==(const std::string &lhs, const KeyframeConfig::Value &rhs);
+bool operator==(const KeyframeConfig::Value &lhs, std::string_view rhs);
+bool operator==(std::string_view lhs, const KeyframeConfig::Value &rhs);
 
 enum class PathKind
 {
@@ -99,8 +134,7 @@ struct PathConfig
 
 struct PwmEndpointConfig
 {
-    std::string value;
-    bool value_from_boolean{};
+    KeyframeConfig::Value value;
 };
 
 struct PwmConfig

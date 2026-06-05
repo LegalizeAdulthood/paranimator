@@ -114,8 +114,7 @@ ParFile::KeyframeConfig bool_keyframe(int frame, bool value)
 {
     ParFile::KeyframeConfig result;
     result.frame = frame;
-    result.value = value ? "true" : "false";
-    result.value_from_boolean = true;
+    result.value = value;
     return result;
 }
 
@@ -723,9 +722,9 @@ TEST(TestResolvedAnimation, functionSlotResolvesToFunctionOutputSlot)
 TEST(TestResolvedAnimation, functionTrackResolvesWholeList)
 {
     ParFile::Config config{formula_config_data("function")};
-    config.tracks[0].keys = {{0, "sin/cos"}, {2, "tan/log"}};
-    config.tracks[0].keys[0].value_from_array = true;
-    config.tracks[0].keys[1].value_from_array = true;
+    config.tracks[0].keys = {
+        {0, ParFile::KeyframeConfig::Value::Array{"sin", "cos"}},
+        {2, ParFile::KeyframeConfig::Value::Array{"tan", "log"}}};
     const ParFile::ResolvedAnimation animation{
         ParFile::resolve_animation(config, catalog_data(), formula_source_set())};
 

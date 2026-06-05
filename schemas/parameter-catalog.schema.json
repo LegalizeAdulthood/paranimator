@@ -265,6 +265,10 @@
                     "description": "Inside coloring method or color index metadata."
                   },
                   {
+                    "const": "integer-or-enum",
+                    "description": "Integer value or string enum metadata."
+                  },
+                  {
                     "const": "outside",
                     "description": "Outside coloring method or color index metadata."
                   }
@@ -319,6 +323,10 @@
                     {
                       "const": "inside",
                       "description": "Inside coloring method or color index metadata."
+                    },
+                    {
+                      "const": "integer-or-enum",
+                      "description": "Integer value or string enum metadata."
                     },
                     {
                       "const": "outside",
@@ -573,6 +581,10 @@
         {
           "const": "integer",
           "description": "Integral numeric value."
+        },
+        {
+          "const": "integer-or-enum",
+          "description": "Integral numeric value or discrete string selected from declared values."
         },
         {
           "const": "outside",

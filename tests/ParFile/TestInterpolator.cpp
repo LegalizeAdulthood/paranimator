@@ -404,12 +404,10 @@ TEST_F(TestInterpolator, functionListTrackWritesOneFunctionAssignment)
     m_config_data.num_frames = 3;
     ParFile::KeyframeConfig first;
     first.frame = 0;
-    first.value = "sin/cos";
-    first.value_from_array = true;
+    first.value = ParFile::KeyframeConfig::Value::Array{"sin", "cos"};
     ParFile::KeyframeConfig last;
     last.frame = 2;
-    last.value = "tan/log";
-    last.value_from_array = true;
+    last.value = ParFile::KeyframeConfig::Value::Array{"tan", "log"};
     m_config_data.tracks = {{"function", {first, last}}};
     m_config = m_config_data;
     m_lerper = ParFile::Interpolator{m_config};

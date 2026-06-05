@@ -49,10 +49,12 @@
       "extrapolate": "clamp"
     },
     "fillcolor": {
-      "type": "string",
+      "type": "integer-or-enum",
       "format": "raw",
+      "values": [ "normal" ],
       "default-curve": "hold",
-      "extrapolate": "clamp"
+      "extrapolate": "clamp",
+      "min": 0
     },
     "finattract": {
       "type": "yes-no",
@@ -224,16 +226,20 @@
       "extrapolate": "clamp"
     },
     "passes": {
-      "type": "string",
+      "type": "enum",
       "format": "raw",
+      "values": [ "1", "2", "3", "b", "d", "g", "g0", "g1", "g2", "g3", "g4", "g5", "g6", "o", "p", "s", "t" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "periodicity": {
-      "type": "string",
+      "type": "integer-or-enum",
       "format": "raw",
+      "values": [ "no", "show", "yes" ],
       "default-curve": "hold",
-      "extrapolate": "clamp"
+      "extrapolate": "clamp",
+      "min": -255,
+      "max": 255
     },
     "potential": {
       "type": "string",

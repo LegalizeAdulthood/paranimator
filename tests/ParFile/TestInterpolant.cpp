@@ -8,6 +8,8 @@
 #include <gtest/gtest.h>
 
 #include <optional>
+#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -33,12 +35,34 @@ std::vector<ParFile::KeyframeConfig> keyframes(
     return {{0, from}, {num_steps - 1, to, curve}};
 }
 
+std::vector<ParFile::KeyframeConfig> integer_keyframes(int from, int to, ParFile::Curve curve, int num_steps)
+{
+    return {{0, from}, {num_steps - 1, to, curve}};
+}
+
+ParFile::KeyframeConfig::Value::Array slash_array(std::string_view text)
+{
+    ParFile::KeyframeConfig::Value::Array result;
+    std::size_t first{};
+    while (first <= text.size())
+    {
+        const std::size_t next{text.find('/', first)};
+        const std::size_t last{next == std::string_view::npos ? text.size() : next};
+        result.emplace_back(text.substr(first, last - first));
+        if (next == std::string_view::npos)
+        {
+            break;
+        }
+        first = next + 1U;
+    }
+    return result;
+}
+
 ParFile::KeyframeConfig bool_keyframe(int frame, bool value)
 {
     ParFile::KeyframeConfig result;
     result.frame = frame;
-    result.value = value ? "true" : "false";
-    result.value_from_boolean = true;
+    result.value = value;
     return result;
 }
 
@@ -329,6 +353,15 @@ ParFile::ParameterMetadata outside_metadata(const std::string &name)
     return result;
 }
 
+ParFile::ParameterMetadata integer_or_enum_metadata(const std::string &name)
+{
+    ParFile::ParameterMetadata result{metadata(
+        name, ParFile::ParameterType::INTEGER_OR_ENUM, 0.0, 255.0, ParFile::ExtrapolateMode::CLAMP, ParFile::Curve::HOLD)};
+    result.format = ParFile::ParameterFormat::RAW;
+    result.values = {"normal", "show", "yes", "no"};
+    return result;
+}
+
 ParFile::ParameterMetadata yes_no_metadata(const std::string &name)
 {
     ParFile::ParameterMetadata result{
@@ -358,8 +391,8 @@ std::vector<ParFile::KeyframeConfig> function_list_keyframes(
     const std::string &from, const std::string &to, int num_steps)
 {
     std::vector<ParFile::KeyframeConfig> result{keyframes(from, to, num_steps)};
-    result[0].value_from_array = true;
-    result[1].value_from_array = true;
+    result[0].value = slash_array(from);
+    result[1].value = slash_array(to);
     return result;
 }
 
@@ -1212,6 +1245,64 @@ TEST(TestInterpolant, enumLinearCurveRejected)
         ParFile::create_interpolant(
             resolved_track(parameter_metadata, keyframes("bof60", "zmag", ParFile::Curve::LINEAR, num_steps), "bof60"),
             num_steps),
+        std::runtime_error);
+}
+
+TEST(TestInterpolant, passesDigitStringsAreEnumValues)
+{
+    const int num_steps{3};
+    ParFile::ParameterMetadata parameter_metadata{enum_metadata("passes")};
+    parameter_metadata.values = {"1", "2", "3", "g", "g6", "b", "d", "t", "s", "o", "p"};
+    ParFile::InterpolantPtr interpolant{create_interpolant(parameter_metadata, "1", "g6", num_steps)};
+
+    EXPECT_EQ("1", interpolant->step());
+    EXPECT_EQ("1", interpolant->step());
+    EXPECT_EQ("g6", interpolant->step());
+}
+
+TEST(TestInterpolant, passesIntegerKeyframesRejected)
+{
+    const int num_steps{3};
+    ParFile::ParameterMetadata parameter_metadata{enum_metadata("passes")};
+    parameter_metadata.values = {"1", "2", "3"};
+
+    EXPECT_THROW(
+        ParFile::create_interpolant(
+            resolved_track(parameter_metadata, integer_keyframes(1, 2, ParFile::Curve::HOLD, num_steps), "1"),
+            num_steps),
+        std::runtime_error);
+}
+
+TEST(TestInterpolant, integerOrEnumInterpolatesIntegerArms)
+{
+    const int num_steps{3};
+    ParFile::InterpolantPtr interpolant{ParFile::create_interpolant(
+        resolved_track(integer_or_enum_metadata("fillcolor"), integer_keyframes(0, 10, ParFile::Curve::LINEAR, num_steps),
+            "normal"),
+        num_steps)};
+
+    EXPECT_EQ("0", interpolant->step());
+    EXPECT_EQ("5", interpolant->step());
+    EXPECT_EQ("10", interpolant->step());
+}
+
+TEST(TestInterpolant, integerOrEnumHoldsMixedArms)
+{
+    const int num_steps{3};
+    std::vector<ParFile::KeyframeConfig> keys{{0, "normal"}, {2, 10}};
+    ParFile::InterpolantPtr interpolant{
+        ParFile::create_interpolant(resolved_track(integer_or_enum_metadata("fillcolor"), keys, "normal"), num_steps)};
+
+    EXPECT_EQ("normal", interpolant->step());
+    EXPECT_EQ("normal", interpolant->step());
+    EXPECT_EQ("10", interpolant->step());
+}
+
+TEST(TestInterpolant, integerOrEnumRejectsStringNumericValue)
+{
+    const int num_steps{3};
+
+    EXPECT_THROW(create_interpolant(integer_or_enum_metadata("fillcolor"), "1", "normal", num_steps),
         std::runtime_error);
 }
 

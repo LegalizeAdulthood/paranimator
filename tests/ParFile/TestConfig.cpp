@@ -828,7 +828,7 @@ TEST(TestConfig, jsonDeserializesId3DViewTrack)
     EXPECT_EQ(3, *view.scalexyz->arity);
     EXPECT_EQ(ParFile::ParameterType::YES_NO, view.sphere->type);
     EXPECT_EQ("true", view.sphere->keys[1].value);
-    EXPECT_TRUE(view.sphere->keys[1].value_from_boolean);
+    EXPECT_TRUE(ParFile::keyframe_value_is_boolean(view.sphere->keys[1].value));
     EXPECT_EQ(ParFile::ParameterType::INTEGER, view.stereo->type);
     EXPECT_EQ("2", view.stereo->keys[1].value);
 }
@@ -1039,9 +1039,9 @@ TEST(TestConfig, jsonDeserializesPwmTrack)
     ASSERT_TRUE(config.tracks[0].pwm->a);
     ASSERT_TRUE(config.tracks[0].pwm->b);
     EXPECT_EQ("bof60", config.tracks[0].pwm->a->value);
-    EXPECT_FALSE(config.tracks[0].pwm->a->value_from_boolean);
+    EXPECT_TRUE(ParFile::keyframe_value_is_string(config.tracks[0].pwm->a->value));
     EXPECT_EQ("zmag", config.tracks[0].pwm->b->value);
-    EXPECT_FALSE(config.tracks[0].pwm->b->value_from_boolean);
+    EXPECT_TRUE(ParFile::keyframe_value_is_string(config.tracks[0].pwm->b->value));
     EXPECT_EQ(8, config.tracks[0].pwm->window);
     ASSERT_EQ(2U, config.tracks[0].keys.size());
     ASSERT_TRUE(config.tracks[0].keys[0].mix);
@@ -1061,9 +1061,24 @@ TEST(TestConfig, jsonDeserializesBoolKeyframeValues)
     ASSERT_EQ(1U, config.tracks.size());
     ASSERT_EQ(2U, config.tracks[0].keys.size());
     EXPECT_EQ("false", config.tracks[0].keys[0].value);
-    EXPECT_TRUE(config.tracks[0].keys[0].value_from_boolean);
+    EXPECT_TRUE(ParFile::keyframe_value_is_boolean(config.tracks[0].keys[0].value));
     EXPECT_EQ("true", config.tracks[0].keys[1].value);
-    EXPECT_TRUE(config.tracks[0].keys[1].value_from_boolean);
+    EXPECT_TRUE(ParFile::keyframe_value_is_boolean(config.tracks[0].keys[1].value));
+}
+
+TEST(TestConfig, jsonDeserializesIntegerKeyframeValues)
+{
+    Object json = valid_json();
+    json["tracks"] = Object::array({Object{{"parameter", "fillcolor"},
+        {"keys", Object::array({Object{{"frame", 0}, {"value", 0}}, Object{{"frame", 59}, {"value", 12}}})}}});
+
+    const ParFile::Config config{ParFile::read_config(json.dump())};
+
+    ASSERT_EQ(1U, config.tracks.size());
+    ASSERT_EQ(2U, config.tracks[0].keys.size());
+    EXPECT_EQ("0", config.tracks[0].keys[0].value);
+    EXPECT_TRUE(ParFile::keyframe_value_is_integer(config.tracks[0].keys[0].value));
+    EXPECT_EQ(12, ParFile::keyframe_value_integer(config.tracks[0].keys[1].value));
 }
 
 TEST(TestConfig, jsonDeserializesFunctionListKeyframeValues)
@@ -1079,11 +1094,11 @@ TEST(TestConfig, jsonDeserializesFunctionListKeyframeValues)
     ASSERT_EQ(1U, config.tracks.size());
     ASSERT_EQ(2U, config.tracks[0].keys.size());
     EXPECT_EQ("sin/cos", config.tracks[0].keys[0].value);
-    EXPECT_TRUE(config.tracks[0].keys[0].value_from_array);
-    EXPECT_FALSE(config.tracks[0].keys[0].value_from_boolean);
+    EXPECT_TRUE(ParFile::keyframe_value_is_array(config.tracks[0].keys[0].value));
+    EXPECT_FALSE(ParFile::keyframe_value_is_boolean(config.tracks[0].keys[0].value));
     EXPECT_EQ("tan/log", config.tracks[0].keys[1].value);
-    EXPECT_TRUE(config.tracks[0].keys[1].value_from_array);
-    EXPECT_FALSE(config.tracks[0].keys[1].value_from_boolean);
+    EXPECT_TRUE(ParFile::keyframe_value_is_array(config.tracks[0].keys[1].value));
+    EXPECT_FALSE(ParFile::keyframe_value_is_boolean(config.tracks[0].keys[1].value));
 }
 
 TEST(TestConfig, jsonDeserializesBoolPwmTrackDefaults)
@@ -1119,9 +1134,9 @@ TEST(TestConfig, jsonDeserializesBoolPwmTrackEndpoints)
     ASSERT_TRUE(config.tracks[0].pwm->a);
     ASSERT_TRUE(config.tracks[0].pwm->b);
     EXPECT_EQ("false", config.tracks[0].pwm->a->value);
-    EXPECT_TRUE(config.tracks[0].pwm->a->value_from_boolean);
+    EXPECT_TRUE(ParFile::keyframe_value_is_boolean(config.tracks[0].pwm->a->value));
     EXPECT_EQ("true", config.tracks[0].pwm->b->value);
-    EXPECT_TRUE(config.tracks[0].pwm->b->value_from_boolean);
+    EXPECT_TRUE(ParFile::keyframe_value_is_boolean(config.tracks[0].pwm->b->value));
 }
 
 TEST(TestConfig, jsonDeserializesColorMapTrack)

@@ -379,6 +379,55 @@ TEST(TestParameterCatalog, outsideMetadataLoads)
     EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "tdis"));
 }
 
+TEST(TestParameterCatalog, fillcolorMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("fillcolor")};
+
+    EXPECT_EQ(ParFile::ParameterType::INTEGER_OR_ENUM, metadata.type);
+    ASSERT_TRUE(metadata.min);
+    EXPECT_EQ(0, *metadata.min);
+    ASSERT_EQ(1U, metadata.values.size());
+    EXPECT_EQ("normal", metadata.values[0]);
+}
+
+TEST(TestParameterCatalog, passesMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("passes")};
+
+    EXPECT_EQ(ParFile::ParameterType::ENUM, metadata.type);
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "1"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "d"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "g6"));
+}
+
+TEST(TestParameterCatalog, periodicityMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("periodicity")};
+
+    EXPECT_EQ(ParFile::ParameterType::INTEGER_OR_ENUM, metadata.type);
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "no"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "show"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "yes"));
+    ASSERT_TRUE(metadata.min);
+    EXPECT_EQ(-255, *metadata.min);
+    ASSERT_TRUE(metadata.max);
+    EXPECT_EQ(255, *metadata.max);
+}
+
+TEST(TestParameterCatalog, logmapMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{coloring_catalog()};
+    const ParFile::ParameterMetadata &metadata{catalog.metadata("logmap")};
+
+    EXPECT_EQ(ParFile::ParameterType::INTEGER_OR_ENUM, metadata.type);
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "no"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "old"));
+    EXPECT_NE(metadata.values.end(), std::find(metadata.values.begin(), metadata.values.end(), "yes"));
+}
+
 TEST(TestParameterCatalog, typedCatalogFindsMetadataByName)
 {
     const ParFile::ParameterCatalog catalog{typed_catalog()};
@@ -498,6 +547,8 @@ TEST(TestParameterCatalog, legalParameterTypeStringsDecode)
     EXPECT_EQ(ParFile::ParameterType::YES_NO, read_metadata(R"("type":"yes-no")").type);
     EXPECT_EQ(ParFile::ParameterType::INSIDE, read_metadata(R"("type":"inside","values":["maxiter"])").type);
     EXPECT_EQ(ParFile::ParameterType::INTEGER, read_metadata(R"("type":"integer")").type);
+    EXPECT_EQ(
+        ParFile::ParameterType::INTEGER_OR_ENUM, read_metadata(R"("type":"integer-or-enum","values":["a"])").type);
     EXPECT_EQ(ParFile::ParameterType::NUMERIC_TUPLE, read_metadata(R"("type":"numeric-tuple")").type);
     EXPECT_EQ(ParFile::ParameterType::OUTSIDE, read_metadata(R"("type":"outside","values":["iter"])").type);
     EXPECT_EQ(ParFile::ParameterType::POINT2, read_metadata(R"("type":"point2")").type);
@@ -613,6 +664,7 @@ TEST(TestParameterCatalog, enumMissingValuesRejected)
 {
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"enum")")), std::runtime_error);
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"inside")")), std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"integer-or-enum")")), std::runtime_error);
     EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"outside")")), std::runtime_error);
     EXPECT_NO_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"yes-no")")));
     EXPECT_NO_THROW(ParFile::read_parameter_catalog(catalog_text(R"("type":"string")")));

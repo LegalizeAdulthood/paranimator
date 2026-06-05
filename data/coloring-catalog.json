@@ -19,8 +19,9 @@
       "extrapolate": "clamp"
     },
     "logmap": {
-      "type": "string",
+      "type": "integer-or-enum",
       "format": "raw",
+      "values": [ "no", "old", "yes" ],
       "default-curve": "hold",
       "extrapolate": "clamp"
     },

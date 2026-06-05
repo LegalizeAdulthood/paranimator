@@ -1737,8 +1737,8 @@ shapes.
 
 ### 1. Numeric-Or-Enum Scalar Types
 
-Add the small union scalar types found by the audit instead of treating
-them as generic strings. Cover at least these parser shapes:
+Add the small variant-backed scalar types found by the audit instead of
+treating them as generic strings. Cover at least these parser shapes:
 
 - `fill-color`: `normal` or an integer color index.
 - `periodicity`: `no`, `show`, or an integer.
@@ -1750,8 +1750,8 @@ Use JSON strings for enum arms, including numeric-looking enum values
 such as `"1"` for `passes`. Use JSON numbers only for true integer arms.
 Generated par entries preserve the Id spelling required by the parser.
 
-Add app data type tests for each union type, schema tests for accepted
-and rejected JSON values, and catalog tests for `fillcolor`,
+Add app data type tests for each variant-backed type, schema tests for
+accepted and rejected JSON values, and catalog tests for `fillcolor`,
 `periodicity`, `logmap`, and `passes`.
 
 ### 2. Fixed Slash-Tuple Parameter Types

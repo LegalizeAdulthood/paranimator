@@ -1632,6 +1632,10 @@
               "description": "Boolean parameter value for yes-no target metadata."
             },
             {
+              "type": "integer",
+              "description": "Integer parameter value for integer-capable target metadata."
+            },
+            {
               "type": "array",
               "minItems": 1,
               "items": {
