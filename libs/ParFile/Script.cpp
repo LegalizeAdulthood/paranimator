@@ -5,7 +5,8 @@
 #include <ParFile/Config.h>
 #include <ParFile/ScriptDialect.h>
 
-#include <boost/format.hpp>
+#include <fmt/format.h>
+#include <fmt/printf.h>
 
 #include <filesystem>
 
@@ -33,13 +34,13 @@ std::string script_epilogue()
 
 std::string make_directory_command(const std::string &directory)
 {
-    return (boost::format(std::string{ScriptDialect::MAKE_DIRECTORY_FORMAT}) % directory).str() +
+    return fmt::format(fmt::runtime(std::string{ScriptDialect::MAKE_DIRECTORY_FORMAT}), directory) +
         std::string{ScriptDialect::ERROR_CHECK};
 }
 
 std::string move_command(const std::string &source, const std::string &destination)
 {
-    return (boost::format(std::string{ScriptDialect::MOVE_FORMAT}) % source % destination).str() +
+    return fmt::format(fmt::runtime(std::string{ScriptDialect::MOVE_FORMAT}), source, destination) +
         std::string{ScriptDialect::ERROR_CHECK};
 }
 
@@ -105,7 +106,7 @@ std::string Script::render_command(const std::string &par_name, const std::strin
 
 std::string Script::layer_file(const std::string &layer_id, int frame) const
 {
-    return (boost::format(*m_layers) % layer_id % (frame + 1)).str();
+    return fmt::sprintf(*m_layers, layer_id, frame + 1);
 }
 
 std::string Script::layer_directory() const

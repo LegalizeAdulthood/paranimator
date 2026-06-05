@@ -14,10 +14,10 @@
 
 #include <algorithm>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/format.hpp>
 #include <cmath>
 #include <cstddef>
 #include <filesystem>
+#include <fmt/printf.h>
 #include <fstream>
 #include <iterator>
 #include <memory>
@@ -420,7 +420,7 @@ ColorMap ColorMapInterpolant::load_gradient_map(const ColorMapGradientConfig &gr
 
 std::string ColorMapInterpolant::output_filename(int frame) const
 {
-    const std::string formatted{(boost::format(m_output) % (frame + 1)).str()};
+    const std::string formatted{fmt::sprintf(m_output, frame + 1)};
     const std::filesystem::path filename{formatted};
     if (filename.has_parent_path())
     {
@@ -651,11 +651,11 @@ ParSet Interpolator::operator()()
     }
     if (m_layer_id.empty())
     {
-        par_set.name = (boost::format(m_frame_name) % m_frame).str();
+        par_set.name = fmt::sprintf(m_frame_name, m_frame);
     }
     else
     {
-        par_set.name = (boost::format(m_frame_name) % m_layer_id % m_frame).str();
+        par_set.name = fmt::sprintf(m_frame_name, m_layer_id, m_frame);
     }
     return par_set;
 }

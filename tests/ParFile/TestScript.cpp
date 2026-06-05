@@ -9,7 +9,7 @@
 
 #include <gtest/gtest.h>
 
-#include <boost/format.hpp>
+#include <fmt/format.h>
 
 #include <filesystem>
 
@@ -34,9 +34,15 @@ std::string script_path(std::filesystem::path path)
     return path.string();
 }
 
+std::string make_directory_command(const std::string &directory)
+{
+    return fmt::format(fmt::runtime(std::string{ParFile::ScriptDialect::MAKE_DIRECTORY_FORMAT}), directory) +
+        std::string{ParFile::ScriptDialect::ERROR_CHECK};
+}
+
 std::string move_command(const std::string &source, const std::string &destination)
 {
-    return (boost::format(std::string{ParFile::ScriptDialect::MOVE_FORMAT}) % source % destination).str() +
+    return fmt::format(fmt::runtime(std::string{ParFile::ScriptDialect::MOVE_FORMAT}), source, destination) +
         std::string{ParFile::ScriptDialect::ERROR_CHECK};
 }
 
@@ -73,9 +79,8 @@ TEST(TestScript, commandForLayerMovesSavedImage)
 
     EXPECT_EQ(std::string{ParFile::ScriptDialect::RENDER_EXECUTABLE} +
             " batch=yes overwrite=yes savename=layer-base-0001.gif savedir=. librarydirs=. video=" +
-            TestParFile::TEST_VIDEO_MODE + " @" + TestParFile::TEST_OUTPUT_PAR +
-            "/layer-base-0001\n"
-            + std::string{ParFile::ScriptDialect::ERROR_CHECK} +
+            TestParFile::TEST_VIDEO_MODE + " @" + TestParFile::TEST_OUTPUT_PAR + "/layer-base-0001\n" +
+            std::string{ParFile::ScriptDialect::ERROR_CHECK} +
             move_command(script_path(std::filesystem::path{"image"} / "layer-base-0001.gif"),
                 script_path("layers/layer-base-0001.gif")),
         commands);
@@ -96,8 +101,5 @@ TEST(TestScript, prologueCreatesLayerDirectory)
     config.output.layers = "layers/layer-%s-%04d.gif";
     ParFile::Script script{config};
 
-    EXPECT_EQ(std::string{ParFile::ScriptDialect::PROLOGUE} +
-            (boost::format(std::string{ParFile::ScriptDialect::MAKE_DIRECTORY_FORMAT}) % "layers").str() +
-            std::string{ParFile::ScriptDialect::ERROR_CHECK},
-        script.prologue());
+    EXPECT_EQ(std::string{ParFile::ScriptDialect::PROLOGUE} + make_directory_command("layers"), script.prologue());
 }

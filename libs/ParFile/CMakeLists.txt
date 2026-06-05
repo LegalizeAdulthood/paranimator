@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
 find_package(boost_algorithm REQUIRED CONFIG)
-find_package(boost_format REQUIRED CONFIG)
+find_package(fmt REQUIRED CONFIG)
 find_package(nlohmann_json REQUIRED CONFIG)
 find_package(nlohmann_json_schema_validator REQUIRED CONFIG)
 
@@ -44,8 +44,8 @@ target_link_libraries(
     ParFile
     PUBLIC
         Boost::algorithm
-        Boost::format
     PRIVATE
+        fmt::fmt-header-only
         nlohmann_json::nlohmann_json
         nlohmann_json_schema_validator::validator
 )

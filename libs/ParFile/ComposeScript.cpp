@@ -6,7 +6,7 @@
 #include <ParFile/NumberTrack.h>
 #include <ParFile/ScriptDialect.h>
 
-#include <boost/format.hpp>
+#include <fmt/printf.h>
 
 #include <iomanip>
 #include <sstream>
@@ -178,12 +178,12 @@ std::string ComposeScript::commands(int frame) const
 
 std::string ComposeScript::frame_file(int frame) const
 {
-    return output_path((boost::format(*m_config.output.frames) % (frame + 1)).str());
+    return output_path(fmt::sprintf(*m_config.output.frames, frame + 1));
 }
 
 std::string ComposeScript::layer_file(const LayerConfig &layer, int frame) const
 {
-    return output_path((boost::format(*m_config.output.layers) % layer.id % (frame + 1)).str());
+    return output_path(fmt::sprintf(*m_config.output.layers, layer.id, frame + 1));
 }
 
 std::string ComposeScript::layer_image(const LayerConfig &layer, int frame) const

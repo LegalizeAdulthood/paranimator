@@ -6,7 +6,7 @@
 #include <ParFile/ParFile.h>
 #include <ParFile/ParameterCatalog.h>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/format.hpp>
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <cmath>
@@ -173,7 +173,7 @@ double parse_double(const std::string &text)
 
 std::string format_double(double value)
 {
-    return (boost::format("%.12g") % value).str();
+    return fmt::format("{:.12g}", value);
 }
 
 std::vector<double> parse_slash_doubles(const std::string &value)
@@ -962,7 +962,7 @@ std::string format_center_mag_value(double value, bool precise)
     {
         return format_double(value);
     }
-    return (boost::format("%g") % value).str();
+    return fmt::format("{:g}", value);
 }
 
 std::string format_center_mag(const CenterMag &value, bool precise)

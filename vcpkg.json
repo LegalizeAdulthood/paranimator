@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "dependencies": [
     "boost-algorithm",
-    "boost-format",
+    "fmt",
     "gtest",
     "json-schema-validator",
     "nlohmann-json"

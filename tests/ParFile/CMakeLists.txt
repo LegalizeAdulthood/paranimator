@@ -3,6 +3,7 @@
 include(GoogleTest)
 
 find_package(GTest CONFIG REQUIRED)
+find_package(fmt REQUIRED CONFIG)
 find_package(nlohmann_json CONFIG REQUIRED)
 
 set(TEST_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/output")
@@ -79,7 +80,7 @@ target_include_directories(test-par-file
     PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/include"
     PRIVATE "${PARFILE_SCRIPT_DIALECT_INCLUDE_DIR}"
 )
-target_link_libraries(test-par-file PUBLIC ParFile GTest::gtest_main nlohmann_json::nlohmann_json)
+target_link_libraries(test-par-file PUBLIC ParFile GTest::gtest_main fmt::fmt-header-only nlohmann_json::nlohmann_json)
 target_folder(test-par-file "Tests")
 
 gtest_discover_tests(test-par-file)
