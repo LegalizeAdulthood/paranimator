@@ -519,6 +519,53 @@
           }
         }
       }
+    },
+    "plasma": {
+      "params": {
+        "format": "slash-list",
+        "slots": [
+          {
+            "index": 0,
+            "name": "graininess",
+            "type": "double",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "index": 1,
+            "name": "algorithm",
+            "type": "integer",
+            "format": "raw",
+            "default-curve": "hold",
+            "extrapolate": "clamp",
+            "min": 0,
+            "max": 1
+          },
+          {
+            "index": 2,
+            "name": "random-seed-mode",
+            "type": "integer",
+            "format": "raw",
+            "default-curve": "hold",
+            "extrapolate": "clamp",
+            "min": 0,
+            "max": 1
+          },
+          {
+            "index": 3,
+            "name": "save-pot-file",
+            "type": "integer",
+            "format": "raw",
+            "default-curve": "hold",
+            "extrapolate": "clamp",
+            "min": 0,
+            "max": 1
+          }
+        ]
+      }
     }
   }
 }

@@ -127,7 +127,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(4U, catalog.fractal_types.size());
+    EXPECT_EQ(5U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
@@ -688,6 +688,52 @@ TEST(TestParameterCatalog, newtbasinParamsSlotMetadataLoads)
     EXPECT_EQ(ParFile::ParameterType::DOUBLE, stripes.metadata.type);
     ASSERT_TRUE(stripes.metadata.default_curve);
     EXPECT_EQ(ParFile::Curve::HOLD, *stripes.metadata.default_curve);
+}
+
+TEST(TestParameterCatalog, plasmaParamsSlotMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParamsSlotMetadata &graininess{catalog.params_slot("plasma", 0)};
+    const ParFile::ParamsSlotMetadata &algorithm{catalog.params_slot("plasma", 1)};
+    const ParFile::ParamsSlotMetadata &seed_mode{catalog.params_slot("plasma", 2)};
+    const ParFile::ParamsSlotMetadata &save_pot{catalog.params_slot("plasma", 3)};
+
+    EXPECT_EQ("graininess", graininess.name);
+    EXPECT_EQ("params[0]", graininess.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::DOUBLE, graininess.metadata.type);
+    ASSERT_TRUE(graininess.metadata.min);
+    EXPECT_EQ(0, *graininess.metadata.min);
+    ASSERT_TRUE(graininess.metadata.max);
+    EXPECT_EQ(100, *graininess.metadata.max);
+
+    EXPECT_EQ(1, algorithm.index);
+    EXPECT_EQ("algorithm", algorithm.name);
+    EXPECT_EQ("params[1]", algorithm.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, algorithm.metadata.type);
+    ASSERT_TRUE(algorithm.metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *algorithm.metadata.default_curve);
+    ASSERT_TRUE(algorithm.metadata.min);
+    EXPECT_EQ(0, *algorithm.metadata.min);
+    ASSERT_TRUE(algorithm.metadata.max);
+    EXPECT_EQ(1, *algorithm.metadata.max);
+
+    EXPECT_EQ(2, seed_mode.index);
+    EXPECT_EQ("random-seed-mode", seed_mode.name);
+    EXPECT_EQ("params[2]", seed_mode.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, seed_mode.metadata.type);
+    ASSERT_TRUE(seed_mode.metadata.min);
+    EXPECT_EQ(0, *seed_mode.metadata.min);
+    ASSERT_TRUE(seed_mode.metadata.max);
+    EXPECT_EQ(1, *seed_mode.metadata.max);
+
+    EXPECT_EQ(3, save_pot.index);
+    EXPECT_EQ("save-pot-file", save_pot.name);
+    EXPECT_EQ("params[3]", save_pot.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, save_pot.metadata.type);
+    ASSERT_TRUE(save_pot.metadata.min);
+    EXPECT_EQ(0, *save_pot.metadata.min);
+    ASSERT_TRUE(save_pot.metadata.max);
+    EXPECT_EQ(1, *save_pot.metadata.max);
 }
 
 class FormulaEntryMetadataTest : public ::testing::TestWithParam<FormulaEntryMetadataCase>

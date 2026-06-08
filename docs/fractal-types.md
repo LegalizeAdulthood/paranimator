@@ -43,29 +43,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `mandel` (`MANDEL`)
-  - `params[0]`: Real Perturbation of Z(0); default `0`.
-  - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
-  - `function=`: none.
-
-- `newton` (`NEWTON`)
-  - `params[0]`: +Polynomial Degree (>= 2); default `3`.
-  - `function=`: none.
-
-- `julia` (`JULIA`)
-  - `params[0]`: Real Part of Parameter; default `0.3`.
-  - `params[1]`: Imaginary Part of Parameter; default `0.6`.
-  - `function=`: none.
-
-- `plasma` (`PLASMA`)
-  - `params[0]`: Graininess Factor (0 or 0.125 to 100, default is 2);
-    default `2`.
-  - `params[1]`: +Algorithm (0 = original, 1 = new); default `0`.
-  - `params[2]`: +Random Seed Value (0 = Random, 1 = Reuse Last); default
-    `0`.
-  - `params[3]`: +Save as Pot File? (0 = No,     1 = Yes); default `0`.
-  - `function=`: none.
-
 - `mandelfn` (`MANDEL_FN`)
   - `params[0]`: Real Perturbation of Z(0); default `0`.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
