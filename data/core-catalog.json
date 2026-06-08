@@ -1028,6 +1028,44 @@
         }
       }
     },
+    "julfn+exp": {
+      "params": {
+        "format": "slash-list",
+        "slots": [
+          {
+            "index": 0,
+            "name": "c-real",
+            "type": "double",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          },
+          {
+            "index": 1,
+            "name": "c-imag",
+            "type": "double",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          }
+        ],
+        "groups": {
+          "c": {
+            "type": "complex",
+            "format": "slash-pair",
+            "default-curve": "linear",
+            "extrapolate": "clamp",
+            "slots": [ 0, 1 ]
+          }
+        }
+      },
+      "functions": {
+        "fn1": {
+          "type": "enum",
+          "values": "id-functions"
+        }
+      }
+    },
     "julfn+zsqrd": {
       "params": {
         "format": "slash-list",
