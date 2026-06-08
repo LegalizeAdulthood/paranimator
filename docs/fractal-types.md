@@ -45,14 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `ifs` (`IFS`)
-  - `params[0]`: +Coloring method (0,1); default `0`.
-  - `function=`: none.
-
-- `ifs3d` (`IFS_3D`)
-  - `params[0]`: +Coloring method (0,1); default `0`.
-  - `function=`: none.
-
 - `bifurcation` (`BIFURCATION`)
   - `params[0]`: +Filter Cycles; default `1000.0`.
   - `params[1]`: Seed Population; default `0.66`.
