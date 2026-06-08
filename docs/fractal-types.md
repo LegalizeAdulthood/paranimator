@@ -45,20 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `kamtorus` (`KAM`)
-  - `params[0]`: Angle (radians); default `1.3`.
-  - `params[1]`: Step size; default `.05`.
-  - `params[2]`: Stop value; default `1.5`.
-  - `params[3]`: +Points per orbit; default `150`.
-  - `function=`: none.
-
-- `kamtorus3d` (`KAM_3D`)
-  - `params[0]`: Angle (radians); default `1.3`.
-  - `params[1]`: Step size; default `.05`.
-  - `params[2]`: Stop value; default `1.5`.
-  - `params[3]`: +Points per orbit; default `150`.
-  - `function=`: none.
-
 - `manfn+zsqrd` (`MANDEL_FN_PLUS_Z_SQRD`)
   - `params[0]`: Real Perturbation of Z(0); default `0`.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
