@@ -233,6 +233,12 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"complexnewton", 3, "root-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"cmplxmarksjul", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"cmplxmarksjul", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"cmplxmarksjul", 2, "exponent-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"cmplxmarksjul", 3, "exponent-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"julia", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"julia", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"julzpower", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -283,6 +289,8 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"complexbasin", "root", "params.root", 2, 3},
     {"complexnewton", "degree", "params.degree", 0, 1},
     {"complexnewton", "root", "params.root", 2, 3},
+    {"cmplxmarksjul", "c", "params.c", 0, 1},
+    {"cmplxmarksjul", "exponent", "params.exponent", 2, 3},
     {"julfn+exp", "c", "params.c", 0, 1},
     {"julfn+zsqrd", "c", "params.c", 0, 1},
     {"julia", "c", "params.c", 0, 1},
@@ -356,7 +364,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(33U, catalog.fractal_types.size());
+    EXPECT_EQ(34U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
