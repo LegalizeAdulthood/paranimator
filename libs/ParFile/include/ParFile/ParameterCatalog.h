@@ -46,10 +46,23 @@ struct FractalParamsMetadata
     std::vector<ParamsGroupMetadata> groups;
 };
 
+struct FunctionSlotMetadata
+{
+    std::string name;
+    ParameterMetadata metadata;
+    int slot{};
+};
+
+struct FunctionSlotsMetadata
+{
+    std::vector<FunctionSlotMetadata> keys;
+};
+
 struct FractalTypeMetadata
 {
     std::string name;
     FractalParamsMetadata params;
+    FunctionSlotsMetadata functions;
 };
 
 struct FormulaParamsKnobMetadata
@@ -64,17 +77,8 @@ struct FormulaParamsMetadata
     std::vector<FormulaParamsKnobMetadata> knobs;
 };
 
-struct FormulaFunctionMetadata
-{
-    std::string name;
-    ParameterMetadata metadata;
-    int slot{};
-};
-
-struct FormulaFunctionsMetadata
-{
-    std::vector<FormulaFunctionMetadata> keys;
-};
+using FormulaFunctionMetadata = FunctionSlotMetadata;
+using FormulaFunctionsMetadata = FunctionSlotsMetadata;
 
 struct FormulaEntryMetadata
 {
@@ -88,6 +92,7 @@ struct ParameterCatalog
     const ParameterMetadata &metadata(std::string_view name) const;
     const ParamsSlotMetadata &params_slot(std::string_view fractal_type, int slot) const;
     const ParamsGroupMetadata &params_group(std::string_view fractal_type, std::string_view group) const;
+    const FunctionSlotMetadata &function_slot(std::string_view fractal_type, int slot) const;
     const FormulaParamsKnobMetadata &formula_params_knob(std::string_view formula_name, std::string_view knob) const;
     const FormulaFunctionMetadata &formula_function(std::string_view formula_name, std::string_view name) const;
 

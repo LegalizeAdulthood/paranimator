@@ -96,6 +96,12 @@ std::string catalog_with_formula_function(std::string_view metadata)
         "}}}}}";
 }
 
+std::string catalog_with_fractal_function(std::string_view metadata)
+{
+    return "{\"parameters\":{},\"fractal-types\":{\"foo\":{\"functions\":{\"fn1\":{" + std::string{metadata} +
+        "}}}}}";
+}
+
 std::string config_with_gradient_stop_color(std::string_view color)
 {
     return R"({
@@ -527,6 +533,12 @@ TEST(TestJsonSchema, functionListMetadataAccepted)
         validates_parameter_catalog_text(catalog_with_metadata(R"("type":"function-list","values":"id-functions")")));
 }
 
+TEST(TestJsonSchema, fractalFunctionMetadataAccepted)
+{
+    EXPECT_TRUE(
+        validates_parameter_catalog_text(catalog_with_fractal_function(R"("type":"enum","values":"id-functions")")));
+}
+
 TEST(TestJsonSchema, insideAndOutsideMetadataAccepted)
 {
     EXPECT_TRUE(validates_parameter_catalog_text(
@@ -635,11 +647,31 @@ TEST(TestJsonSchema, invalidFormulaFunctionValuesRejected)
         validates_parameter_catalog_text(catalog_with_formula_function(R"("type":"enum","values":"unknown")")));
 }
 
+TEST(TestJsonSchema, invalidFractalFunctionValuesRejected)
+{
+    EXPECT_FALSE(
+        validates_parameter_catalog_text(catalog_with_fractal_function(R"("type":"enum","values":"unknown")")));
+}
+
 TEST(TestJsonSchema, invalidFormulaFunctionNameRejected)
 {
     EXPECT_FALSE(validates_parameter_catalog_text(R"({
   "parameters": {},
   "formula-entries": {
+    "foo": {
+      "functions": {
+        "fn5": { "type": "enum", "values": "id-functions" }
+      }
+    }
+  }
+})"));
+}
+
+TEST(TestJsonSchema, invalidFractalFunctionNameRejected)
+{
+    EXPECT_FALSE(validates_parameter_catalog_text(R"({
+  "parameters": {},
+  "fractal-types": {
     "foo": {
       "functions": {
         "fn5": { "type": "enum", "values": "id-functions" }

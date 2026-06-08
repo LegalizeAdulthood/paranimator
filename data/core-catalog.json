@@ -448,6 +448,44 @@
         }
       }
     },
+    "mandelfn": {
+      "params": {
+        "format": "slash-list",
+        "slots": [
+          {
+            "index": 0,
+            "name": "z0-real",
+            "type": "double",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          },
+          {
+            "index": 1,
+            "name": "z0-imag",
+            "type": "double",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          }
+        ],
+        "groups": {
+          "z0": {
+            "type": "complex",
+            "format": "slash-pair",
+            "default-curve": "linear",
+            "extrapolate": "clamp",
+            "slots": [ 0, 1 ]
+          }
+        }
+      },
+      "functions": {
+        "fn1": {
+          "type": "enum",
+          "values": "id-functions"
+        }
+      }
+    },
     "newtbasin": {
       "params": {
         "format": "slash-list",

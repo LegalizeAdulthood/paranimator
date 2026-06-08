@@ -379,11 +379,14 @@ ParameterMetadata function_slot_metadata(const ParameterMetadata &function_metad
 ResolvedTrack resolve_function_slot(const TrackConfig &track, const ParameterCatalog &catalog, const ParSet &source)
 {
     const int slot{parse_function_slot(track.parameter)};
-    const ParameterMetadata &function_metadata{catalog.metadata("function")};
+    const bool formula{source_is_formula(source)};
+    const ParameterMetadata &function_metadata{
+        formula ? catalog.metadata("function") : catalog.function_slot(source_type(source), slot).metadata};
     const Parameter *function{find_source_parameter(source, "function")};
     const std::string base_value{function == nullptr ? default_function_value(slot) : function->value};
-    return make_resolved_track(
-        track, function_slot_metadata(function_metadata, track.parameter), base_value, "function", {slot});
+    const ParameterMetadata metadata{
+        formula ? function_slot_metadata(function_metadata, track.parameter) : function_metadata};
+    return make_resolved_track(track, metadata, base_value, "function", {slot});
 }
 
 ResolvedTrack resolve_formula_params_knob(

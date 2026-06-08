@@ -68,6 +68,12 @@ std::string formula_function_catalog_text(std::string_view function)
         "}}}}}";
 }
 
+std::string fractal_function_catalog_text(std::string_view function)
+{
+    return "{\"parameters\":{},\"fractal-types\":{\"foo\":{\"functions\":{\"fn1\":{" + std::string{function} +
+        "}}}}}";
+}
+
 struct FormulaEntryMetadataCase
 {
     const char *name;
@@ -97,6 +103,13 @@ struct ParamsSlotMetadataCase
     std::optional<double> max;
 };
 
+struct FunctionSlotMetadataCase
+{
+    const char *fractal_type;
+    int slot;
+    const char *name;
+};
+
 constexpr FormulaFunctionMetadataCase FORMULA_FUNCTION_METADATA_CASES[]{
     {"DAFrm01", "fn1", 0},
     {"DAFrm07", "fn1", 0},
@@ -107,6 +120,8 @@ constexpr FormulaFunctionMetadataCase FORMULA_FUNCTION_METADATA_CASES[]{
 const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"mandel", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"mandel", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"mandelfn", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"mandelfn", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"newtbasin", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
     {"newtbasin", 1, "stripes", ParFile::ParameterType::DOUBLE, ParFile::Curve::HOLD, std::nullopt, std::nullopt},
     {"newton", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
@@ -116,6 +131,10 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"plasma", 1, "algorithm", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
     {"plasma", 2, "random-seed-mode", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
     {"plasma", 3, "save-pot-file", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
+};
+
+constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
+    {"mandelfn", 0, "fn1"},
 };
 
 std::string test_parameter_name(std::string text)
@@ -142,6 +161,12 @@ std::string params_slot_metadata_test_name(const ::testing::TestParamInfo<Params
         info.param.name);
 }
 
+std::string function_slot_metadata_test_name(const ::testing::TestParamInfo<FunctionSlotMetadataCase> &info)
+{
+    return test_parameter_name(std::string{info.param.fractal_type} + "_" + std::to_string(info.param.slot) + "_" +
+        info.param.name);
+}
+
 std::string formula_function_metadata_test_name(const ::testing::TestParamInfo<FormulaFunctionMetadataCase> &info)
 {
     return test_parameter_name(std::string{info.param.formula_name} + "_" + info.param.name);
@@ -159,7 +184,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(5U, catalog.fractal_types.size());
+    EXPECT_EQ(6U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
@@ -692,6 +717,35 @@ TEST_P(ParamsSlotMetadataTest, paramsSlotMetadataLoads)
 INSTANTIATE_TEST_SUITE_P(TestParameterCatalog, ParamsSlotMetadataTest,
     ::testing::ValuesIn(PARAMS_SLOT_METADATA_CASES), params_slot_metadata_test_name);
 
+class FunctionSlotMetadataTest : public ::testing::TestWithParam<FunctionSlotMetadataCase>
+{
+};
+
+TEST_P(FunctionSlotMetadataTest, functionSlotMetadataLoads)
+{
+    const FunctionSlotMetadataCase &expected{GetParam()};
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::FunctionSlotMetadata &function{catalog.function_slot(expected.fractal_type, expected.slot)};
+
+    EXPECT_EQ(expected.name, function.name);
+    EXPECT_EQ("function[" + std::to_string(expected.slot) + "]", function.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, function.metadata.type);
+    EXPECT_EQ(expected.slot, function.slot);
+    ASSERT_TRUE(function.metadata.format);
+    EXPECT_EQ(ParFile::ParameterFormat::RAW, *function.metadata.format);
+    ASSERT_TRUE(function.metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *function.metadata.default_curve);
+    ASSERT_TRUE(function.metadata.extrapolate);
+    EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *function.metadata.extrapolate);
+    EXPECT_NE(function.metadata.values.end(),
+        std::find(function.metadata.values.begin(), function.metadata.values.end(), "sin"));
+    EXPECT_NE(function.metadata.values.end(),
+        std::find(function.metadata.values.begin(), function.metadata.values.end(), "round"));
+}
+
+INSTANTIATE_TEST_SUITE_P(TestParameterCatalog, FunctionSlotMetadataTest,
+    ::testing::ValuesIn(FUNCTION_SLOT_METADATA_CASES), function_slot_metadata_test_name);
+
 TEST(TestParameterCatalog, juliaParamsGroupMetadataLoads)
 {
     const ParFile::ParameterCatalog catalog{core_catalog()};
@@ -711,6 +765,19 @@ TEST(TestParameterCatalog, mandelParamsGroupMetadataLoads)
 {
     const ParFile::ParameterCatalog catalog{core_catalog()};
     const ParFile::ParamsGroupMetadata &group{catalog.params_group("mandel", "z0")};
+
+    EXPECT_EQ("z0", group.name);
+    EXPECT_EQ("params.z0", group.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::COMPLEX, group.metadata.type);
+    ASSERT_EQ(2U, group.slots.size());
+    EXPECT_EQ(0, group.slots[0]);
+    EXPECT_EQ(1, group.slots[1]);
+}
+
+TEST(TestParameterCatalog, mandelfnParamsGroupMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParamsGroupMetadata &group{catalog.params_group("mandelfn", "z0")};
 
     EXPECT_EQ("z0", group.name);
     EXPECT_EQ("params.z0", group.metadata.name);
@@ -989,6 +1056,11 @@ TEST(TestParameterCatalog, unknownParamsGroupRejected)
     EXPECT_THROW(core_catalog().params_group("julia", "unknown"), std::runtime_error);
 }
 
+TEST(TestParameterCatalog, unknownFunctionSlotRejected)
+{
+    EXPECT_THROW(core_catalog().function_slot("mandelfn", 1), std::runtime_error);
+}
+
 TEST(TestParameterCatalog, unknownFormulaParamsKnobRejected)
 {
     EXPECT_THROW(formula_catalog().formula_params_knob("Larry", "unknown"), std::runtime_error);
@@ -1005,10 +1077,24 @@ TEST(TestParameterCatalog, unknownFormulaFunctionValuesRejected)
         std::runtime_error);
 }
 
+TEST(TestParameterCatalog, unknownFractalFunctionValuesRejected)
+{
+    EXPECT_THROW(ParFile::read_parameter_catalog(fractal_function_catalog_text(R"("type":"enum","values":"unknown")")),
+        std::runtime_error);
+}
+
 TEST(TestParameterCatalog, invalidFormulaFunctionNameRejected)
 {
     EXPECT_THROW(
         ParFile::read_parameter_catalog("{\"parameters\":{},\"formula-entries\":{\"foo\":{\"functions\":{\"fn5\":{"
+                                        "\"type\":\"enum\",\"values\":\"id-functions\"}}}}}"),
+        std::runtime_error);
+}
+
+TEST(TestParameterCatalog, invalidFractalFunctionNameRejected)
+{
+    EXPECT_THROW(
+        ParFile::read_parameter_catalog("{\"parameters\":{},\"fractal-types\":{\"foo\":{\"functions\":{\"fn5\":{"
                                         "\"type\":\"enum\",\"values\":\"id-functions\"}}}}}"),
         std::runtime_error);
 }

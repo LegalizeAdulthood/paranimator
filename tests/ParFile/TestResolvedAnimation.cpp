@@ -87,6 +87,21 @@ ParFile::ParameterCatalog catalog_data()
                 {"params.z0", ParFile::ParameterType::COMPLEX, ParFile::ParameterFormat::SLASH_PAIR,
                     ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
                 {0, 1}}}}});
+    result.fractal_types.push_back({"mandelfn",
+        {{{0, "z0-real",
+              {"params[0]", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                  ParFile::ExtrapolateMode::CLAMP, {}, {}}},
+             {1, "z0-imag",
+                 {"params[1]", ParFile::ParameterType::DOUBLE, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
+                     ParFile::ExtrapolateMode::CLAMP, {}, {}}}},
+            {{"z0",
+                {"params.z0", ParFile::ParameterType::COMPLEX, ParFile::ParameterFormat::SLASH_PAIR,
+                    ParFile::Curve::LINEAR, ParFile::ExtrapolateMode::CLAMP, {}, {}},
+                {0, 1}}}},
+        {{{"fn1",
+            {"function[0]", ParFile::ParameterType::ENUM, ParFile::ParameterFormat::RAW, ParFile::Curve::HOLD,
+                ParFile::ExtrapolateMode::CLAMP, {}, {}, id_functions()},
+            0}}}});
     result.fractal_types.push_back({"newton",
         {{{0, "degree",
              {"params[0]", ParFile::ParameterType::INTEGER, ParFile::ParameterFormat::RAW, ParFile::Curve::LINEAR,
@@ -162,6 +177,11 @@ ParFile::ParSet newton_source_set()
 ParFile::ParSet mandel_source_set()
 {
     return {"source", {{"type", "mandel"}, {"params", "0/1/52"}}};
+}
+
+ParFile::ParSet mandelfn_source_set()
+{
+    return {"source", {{"type", "mandelfn"}, {"function", "sin"}, {"params", "0/1/52"}}};
 }
 
 ParFile::Config formula_config_data(std::string_view parameter)
@@ -786,6 +806,30 @@ TEST(TestResolvedAnimation, functionSlotResolvesToFunctionOutputSlot)
     EXPECT_EQ("function", track.output_parameter);
     ASSERT_EQ(1U, track.slots.size());
     EXPECT_EQ(1, track.slots[0]);
+}
+
+TEST(TestResolvedAnimation, functionSlotResolvesFromActiveFractalType)
+{
+    ParFile::Config config{formula_config_data("function[0]")};
+    config.tracks[0].keys = {{0, "tan"}, {2, "log"}};
+    const ParFile::ResolvedAnimation animation{
+        ParFile::resolve_animation(config, catalog_data(), mandelfn_source_set())};
+
+    ASSERT_EQ(1U, animation.tracks.size());
+    const ParFile::ResolvedTrack &track{animation.tracks[0]};
+    EXPECT_EQ("function[0]", track.parameter);
+    EXPECT_EQ("function[0]", track.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::ENUM, track.metadata.type);
+    EXPECT_EQ("sin", track.base_value);
+    EXPECT_EQ("function", track.output_parameter);
+    ASSERT_EQ(1U, track.slots.size());
+    EXPECT_EQ(0, track.slots[0]);
+}
+
+TEST(TestResolvedAnimation, functionSlotRejectedForFractalWithoutFunction)
+{
+    EXPECT_THROW(ParFile::resolve_animation(formula_config_data("function[0]"), catalog_data(), julia_source_set()),
+        std::runtime_error);
 }
 
 TEST(TestResolvedAnimation, functionTrackResolvesWholeList)

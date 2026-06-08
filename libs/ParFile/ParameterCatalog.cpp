@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace ParFile
@@ -453,6 +454,62 @@ FractalParamsMetadata load_fractal_params(const Object &json, std::string_view f
     return result;
 }
 
+int function_slot(std::string_view name)
+{
+    if (name.size() == 3U && name[0] == 'f' && name[1] == 'n' && name[2] >= '1' && name[2] <= '4')
+    {
+        return name[2] - '1';
+    }
+    return -1;
+}
+
+FunctionSlotMetadata load_function_slot(std::string_view name, const Object &json)
+{
+    if (!json.is_object())
+    {
+        throw std::runtime_error("Invalid function metadata '" + std::string{name} + "', value is not an object");
+    }
+
+    FunctionSlotMetadata result;
+    result.name = std::string{name};
+    result.slot = function_slot(name);
+    if (result.slot < 0)
+    {
+        throw std::runtime_error("Invalid function key '" + std::string{name} + "'");
+    }
+    const std::string type{load_required_string(json, name, "type")};
+    if (type != "enum")
+    {
+        throw std::runtime_error("Invalid function metadata '" + std::string{name} + "', type is not enum");
+    }
+    load_required_id_function_values(json, name);
+    result.metadata.type = ParameterType::ENUM;
+    result.metadata.format = ParameterFormat::RAW;
+    result.metadata.default_curve = Curve::HOLD;
+    result.metadata.extrapolate = ExtrapolateMode::CLAMP;
+    result.metadata.values = id_function_values();
+    load_optional_metadata_fields(result.metadata, json);
+    return result;
+}
+
+FunctionSlotsMetadata load_fractal_functions(std::string_view fractal_type, const Object &json)
+{
+    if (!json.is_object())
+    {
+        throw std::runtime_error(
+            "Invalid fractal type metadata '" + std::string{fractal_type} + "', functions is not an object");
+    }
+
+    FunctionSlotsMetadata result;
+    for (const auto &[name, function] : json.items())
+    {
+        FunctionSlotMetadata metadata{load_function_slot(name, function)};
+        metadata.metadata.name = std::string{"function["} + std::to_string(metadata.slot) + "]";
+        result.keys.emplace_back(std::move(metadata));
+    }
+    return result;
+}
+
 FractalTypeMetadata load_fractal_type(std::string_view name, const Object &json)
 {
     if (!json.is_object())
@@ -465,6 +522,10 @@ FractalTypeMetadata load_fractal_type(std::string_view name, const Object &json)
     if (json.contains("params"))
     {
         result.params = load_fractal_params(json.at("params"), name);
+    }
+    if (json.contains("functions"))
+    {
+        result.functions = load_fractal_functions(name, json.at("functions"));
     }
     return result;
 }
@@ -513,43 +574,10 @@ FormulaParamsMetadata load_formula_params(std::string_view formula_name, const O
     return result;
 }
 
-int formula_function_slot(std::string_view name)
-{
-    if (name.size() == 3U && name[0] == 'f' && name[1] == 'n' && name[2] >= '1' && name[2] <= '4')
-    {
-        return name[2] - '1';
-    }
-    return -1;
-}
-
 FormulaFunctionMetadata load_formula_function(std::string_view formula_name, std::string_view name, const Object &json)
 {
-    if (!json.is_object())
-    {
-        throw std::runtime_error(
-            "Invalid formula function metadata '" + std::string{name} + "', value is not an object");
-    }
-
-    FormulaFunctionMetadata result;
-    result.name = std::string{name};
-    result.slot = formula_function_slot(name);
-    if (result.slot < 0)
-    {
-        throw std::runtime_error("Invalid formula function key '" + std::string{name} + "'");
-    }
-    const std::string type{load_required_string(json, name, "type")};
-    if (type != "enum")
-    {
-        throw std::runtime_error("Invalid formula function metadata '" + std::string{name} + "', type is not enum");
-    }
-    load_required_id_function_values(json, name);
+    FormulaFunctionMetadata result{load_function_slot(name, json)};
     result.metadata.name = std::string{formula_name} + "." + std::string{name};
-    result.metadata.type = ParameterType::ENUM;
-    result.metadata.format = ParameterFormat::RAW;
-    result.metadata.default_curve = Curve::HOLD;
-    result.metadata.extrapolate = ExtrapolateMode::CLAMP;
-    result.metadata.values = id_function_values();
-    load_optional_metadata_fields(result.metadata, json);
     return result;
 }
 
@@ -688,6 +716,26 @@ const ParamsGroupMetadata &ParameterCatalog::params_group(std::string_view fract
             "Unknown params group '" + std::string{group} + "' for fractal type '" + std::string{fractal_type} + "'");
     }
     return *group_it;
+}
+
+const FunctionSlotMetadata &ParameterCatalog::function_slot(std::string_view fractal_type, int slot) const
+{
+    const std::string fractal_key{fractal_type};
+    const auto is_fractal_type{[&](const FractalTypeMetadata &metadata) { return metadata.name == fractal_key; }};
+    const auto fractal_it{std::find_if(fractal_types.begin(), fractal_types.end(), is_fractal_type)};
+    if (fractal_it == fractal_types.end())
+    {
+        throw std::runtime_error("Unknown fractal type metadata '" + std::string{fractal_type} + "'");
+    }
+
+    const auto is_slot{[&](const FunctionSlotMetadata &metadata) { return metadata.slot == slot; }};
+    const auto slot_it{std::find_if(fractal_it->functions.keys.begin(), fractal_it->functions.keys.end(), is_slot)};
+    if (slot_it == fractal_it->functions.keys.end())
+    {
+        throw std::runtime_error("Unknown function slot '" + std::to_string(slot) + "' for fractal type '" +
+            std::string{fractal_type} + "'");
+    }
+    return *slot_it;
 }
 
 const FormulaParamsKnobMetadata &ParameterCatalog::formula_params_knob(

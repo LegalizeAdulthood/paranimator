@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://legalize.github.io/paranimator/schemas/parameter-catalog.schema.json",
   "title": "ParAnimator parameter catalog",
-  "description": "Describes Id parameters, fractal-specific params slots, and formula-specific knobs that can be animated.",
+  "description": "Describes Id parameters, fractal-specific params and function slots, and formula-specific knobs that can be animated.",
   "type": "object",
   "required": [ "parameters" ],
   "additionalProperties": false,
@@ -40,6 +40,29 @@
                 "description": "Named multi-slot params= groups for this fractal type.",
                 "type": "object",
                 "additionalProperties": { "$ref": "#/$defs/params-group-metadata" }
+              }
+            }
+          },
+          "functions": {
+            "description": "Function slots mapped to the Id function= parameter.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "fn1": {
+                "description": "First function= slot.",
+                "$ref": "#/$defs/function-slot-metadata"
+              },
+              "fn2": {
+                "description": "Second function= slot.",
+                "$ref": "#/$defs/function-slot-metadata"
+              },
+              "fn3": {
+                "description": "Third function= slot.",
+                "$ref": "#/$defs/function-slot-metadata"
+              },
+              "fn4": {
+                "description": "Fourth function= slot.",
+                "$ref": "#/$defs/function-slot-metadata"
               }
             }
           }
@@ -380,19 +403,19 @@
           "properties": {
             "fn1": {
               "description": "First function= slot exposed as formula variable fn1.",
-              "$ref": "#/$defs/formula-function-metadata"
+              "$ref": "#/$defs/function-slot-metadata"
             },
             "fn2": {
               "description": "Second function= slot exposed as formula variable fn2.",
-              "$ref": "#/$defs/formula-function-metadata"
+              "$ref": "#/$defs/function-slot-metadata"
             },
             "fn3": {
               "description": "Third function= slot exposed as formula variable fn3.",
-              "$ref": "#/$defs/formula-function-metadata"
+              "$ref": "#/$defs/function-slot-metadata"
             },
             "fn4": {
               "description": "Fourth function= slot exposed as formula variable fn4.",
-              "$ref": "#/$defs/formula-function-metadata"
+              "$ref": "#/$defs/function-slot-metadata"
             }
           }
         }
@@ -508,8 +531,8 @@
         }
       ]
     },
-    "formula-function-metadata": {
-      "description": "Metadata for one formula function slot.",
+    "function-slot-metadata": {
+      "description": "Metadata for one function= slot.",
       "type": "object",
       "required": [ "type", "values" ],
       "additionalProperties": false,
