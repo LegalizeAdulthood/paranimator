@@ -212,6 +212,12 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"plasma", 1, "algorithm", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
     {"plasma", 2, "random-seed-mode", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
     {"plasma", 3, "save-pot-file", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
+    {"popcorn", 0, "step-size-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"popcorn", 1, "step-size-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"popcorn", 2, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"popcorn", 3, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
 };
 
 constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
@@ -225,6 +231,10 @@ constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"mandelfn", 0, "fn1"},
     {"manfn+exp", 0, "fn1"},
     {"manfn+zsqrd", 0, "fn1"},
+    {"popcorn", 0, "fn1"},
+    {"popcorn", 1, "fn2"},
+    {"popcorn", 2, "fn3"},
+    {"popcorn", 3, "fn4"},
 };
 
 constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
@@ -247,6 +257,8 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"manzpower", "exponent", "params.exponent", 2, 3},
     {"manzpower", "z0", "params.z0", 0, 1},
     {"manzzpwr", "z0", "params.z0", 0, 1},
+    {"popcorn", "c", "params.c", 2, 3},
+    {"popcorn", "step-size", "params.step-size", 0, 1},
 };
 
 std::string test_parameter_name(std::string text)
@@ -301,7 +313,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(23U, catalog.fractal_types.size());
+    EXPECT_EQ(24U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
