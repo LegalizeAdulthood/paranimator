@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iterator>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -85,11 +86,36 @@ struct FormulaFunctionMetadataCase
     int slot;
 };
 
+struct ParamsSlotMetadataCase
+{
+    const char *fractal_type;
+    int slot;
+    const char *name;
+    ParFile::ParameterType type;
+    ParFile::Curve default_curve;
+    std::optional<double> min;
+    std::optional<double> max;
+};
+
 constexpr FormulaFunctionMetadataCase FORMULA_FUNCTION_METADATA_CASES[]{
     {"DAFrm01", "fn1", 0},
     {"DAFrm07", "fn1", 0},
     {"Larry", "fn1", 0},
     {"Larry", "fn2", 1},
+};
+
+const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
+    {"mandel", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"mandel", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"newtbasin", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
+    {"newtbasin", 1, "stripes", ParFile::ParameterType::DOUBLE, ParFile::Curve::HOLD, std::nullopt, std::nullopt},
+    {"newton", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
+    {"julia", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"julia", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"plasma", 0, "graininess", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, 0.0, 100.0},
+    {"plasma", 1, "algorithm", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
+    {"plasma", 2, "random-seed-mode", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
+    {"plasma", 3, "save-pot-file", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
 };
 
 std::string test_parameter_name(std::string text)
@@ -108,6 +134,12 @@ std::string test_parameter_name(std::string text)
 std::string formula_entry_metadata_test_name(const ::testing::TestParamInfo<FormulaEntryMetadataCase> &info)
 {
     return test_parameter_name(info.param.name);
+}
+
+std::string params_slot_metadata_test_name(const ::testing::TestParamInfo<ParamsSlotMetadataCase> &info)
+{
+    return test_parameter_name(std::string{info.param.fractal_type} + "_" + std::to_string(info.param.slot) + "_" +
+        info.param.name);
 }
 
 std::string formula_function_metadata_test_name(const ::testing::TestParamInfo<FormulaFunctionMetadataCase> &info)
@@ -615,18 +647,50 @@ TEST(TestParameterCatalog, typedCatalogFindsMetadataByName)
     EXPECT_EQ(ParFile::ParameterType::INTEGER, metadata.type);
 }
 
-TEST(TestParameterCatalog, juliaParamsSlotMetadataLoads)
+class ParamsSlotMetadataTest : public ::testing::TestWithParam<ParamsSlotMetadataCase>
 {
-    const ParFile::ParameterCatalog catalog{core_catalog()};
-    const ParFile::ParamsSlotMetadata &slot{catalog.params_slot("julia", 0)};
+};
 
-    EXPECT_EQ(0, slot.index);
-    EXPECT_EQ("c-real", slot.name);
-    EXPECT_EQ("params[0]", slot.metadata.name);
-    EXPECT_EQ(ParFile::ParameterType::DOUBLE, slot.metadata.type);
+TEST_P(ParamsSlotMetadataTest, paramsSlotMetadataLoads)
+{
+    const ParamsSlotMetadataCase &expected{GetParam()};
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParamsSlotMetadata &slot{catalog.params_slot(expected.fractal_type, expected.slot)};
+
+    EXPECT_EQ(expected.slot, slot.index);
+    EXPECT_EQ(expected.name, slot.name);
+    EXPECT_EQ("params[" + std::to_string(expected.slot) + "]", slot.metadata.name);
+    EXPECT_EQ(expected.type, slot.metadata.type);
     ASSERT_TRUE(slot.metadata.format);
     EXPECT_EQ(ParFile::ParameterFormat::RAW, *slot.metadata.format);
+    ASSERT_TRUE(slot.metadata.default_curve);
+    EXPECT_EQ(expected.default_curve, *slot.metadata.default_curve);
+    ASSERT_TRUE(slot.metadata.extrapolate);
+    EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *slot.metadata.extrapolate);
+
+    if (expected.min)
+    {
+        ASSERT_TRUE(slot.metadata.min);
+        EXPECT_DOUBLE_EQ(*expected.min, *slot.metadata.min);
+    }
+    else
+    {
+        EXPECT_FALSE(slot.metadata.min);
+    }
+
+    if (expected.max)
+    {
+        ASSERT_TRUE(slot.metadata.max);
+        EXPECT_DOUBLE_EQ(*expected.max, *slot.metadata.max);
+    }
+    else
+    {
+        EXPECT_FALSE(slot.metadata.max);
+    }
 }
+
+INSTANTIATE_TEST_SUITE_P(TestParameterCatalog, ParamsSlotMetadataTest,
+    ::testing::ValuesIn(PARAMS_SLOT_METADATA_CASES), params_slot_metadata_test_name);
 
 TEST(TestParameterCatalog, juliaParamsGroupMetadataLoads)
 {
@@ -654,86 +718,6 @@ TEST(TestParameterCatalog, mandelParamsGroupMetadataLoads)
     ASSERT_EQ(2U, group.slots.size());
     EXPECT_EQ(0, group.slots[0]);
     EXPECT_EQ(1, group.slots[1]);
-}
-
-TEST(TestParameterCatalog, newtonParamsSlotMetadataLoads)
-{
-    const ParFile::ParameterCatalog catalog{core_catalog()};
-    const ParFile::ParamsSlotMetadata &slot{catalog.params_slot("newton", 0)};
-
-    EXPECT_EQ(0, slot.index);
-    EXPECT_EQ("degree", slot.name);
-    EXPECT_EQ("params[0]", slot.metadata.name);
-    EXPECT_EQ(ParFile::ParameterType::INTEGER, slot.metadata.type);
-    ASSERT_TRUE(slot.metadata.min);
-    EXPECT_EQ(2, *slot.metadata.min);
-}
-
-TEST(TestParameterCatalog, newtbasinParamsSlotMetadataLoads)
-{
-    const ParFile::ParameterCatalog catalog{core_catalog()};
-    const ParFile::ParamsSlotMetadata &degree{catalog.params_slot("newtbasin", 0)};
-    const ParFile::ParamsSlotMetadata &stripes{catalog.params_slot("newtbasin", 1)};
-
-    EXPECT_EQ(0, degree.index);
-    EXPECT_EQ("degree", degree.name);
-    EXPECT_EQ("params[0]", degree.metadata.name);
-    EXPECT_EQ(ParFile::ParameterType::INTEGER, degree.metadata.type);
-    ASSERT_TRUE(degree.metadata.min);
-    EXPECT_EQ(2, *degree.metadata.min);
-
-    EXPECT_EQ(1, stripes.index);
-    EXPECT_EQ("stripes", stripes.name);
-    EXPECT_EQ("params[1]", stripes.metadata.name);
-    EXPECT_EQ(ParFile::ParameterType::DOUBLE, stripes.metadata.type);
-    ASSERT_TRUE(stripes.metadata.default_curve);
-    EXPECT_EQ(ParFile::Curve::HOLD, *stripes.metadata.default_curve);
-}
-
-TEST(TestParameterCatalog, plasmaParamsSlotMetadataLoads)
-{
-    const ParFile::ParameterCatalog catalog{core_catalog()};
-    const ParFile::ParamsSlotMetadata &graininess{catalog.params_slot("plasma", 0)};
-    const ParFile::ParamsSlotMetadata &algorithm{catalog.params_slot("plasma", 1)};
-    const ParFile::ParamsSlotMetadata &seed_mode{catalog.params_slot("plasma", 2)};
-    const ParFile::ParamsSlotMetadata &save_pot{catalog.params_slot("plasma", 3)};
-
-    EXPECT_EQ("graininess", graininess.name);
-    EXPECT_EQ("params[0]", graininess.metadata.name);
-    EXPECT_EQ(ParFile::ParameterType::DOUBLE, graininess.metadata.type);
-    ASSERT_TRUE(graininess.metadata.min);
-    EXPECT_EQ(0, *graininess.metadata.min);
-    ASSERT_TRUE(graininess.metadata.max);
-    EXPECT_EQ(100, *graininess.metadata.max);
-
-    EXPECT_EQ(1, algorithm.index);
-    EXPECT_EQ("algorithm", algorithm.name);
-    EXPECT_EQ("params[1]", algorithm.metadata.name);
-    EXPECT_EQ(ParFile::ParameterType::INTEGER, algorithm.metadata.type);
-    ASSERT_TRUE(algorithm.metadata.default_curve);
-    EXPECT_EQ(ParFile::Curve::HOLD, *algorithm.metadata.default_curve);
-    ASSERT_TRUE(algorithm.metadata.min);
-    EXPECT_EQ(0, *algorithm.metadata.min);
-    ASSERT_TRUE(algorithm.metadata.max);
-    EXPECT_EQ(1, *algorithm.metadata.max);
-
-    EXPECT_EQ(2, seed_mode.index);
-    EXPECT_EQ("random-seed-mode", seed_mode.name);
-    EXPECT_EQ("params[2]", seed_mode.metadata.name);
-    EXPECT_EQ(ParFile::ParameterType::INTEGER, seed_mode.metadata.type);
-    ASSERT_TRUE(seed_mode.metadata.min);
-    EXPECT_EQ(0, *seed_mode.metadata.min);
-    ASSERT_TRUE(seed_mode.metadata.max);
-    EXPECT_EQ(1, *seed_mode.metadata.max);
-
-    EXPECT_EQ(3, save_pot.index);
-    EXPECT_EQ("save-pot-file", save_pot.name);
-    EXPECT_EQ("params[3]", save_pot.metadata.name);
-    EXPECT_EQ(ParFile::ParameterType::INTEGER, save_pot.metadata.type);
-    ASSERT_TRUE(save_pot.metadata.min);
-    EXPECT_EQ(0, *save_pot.metadata.min);
-    ASSERT_TRUE(save_pot.metadata.max);
-    EXPECT_EQ(1, *save_pot.metadata.max);
 }
 
 class FormulaEntryMetadataTest : public ::testing::TestWithParam<FormulaEntryMetadataCase>
