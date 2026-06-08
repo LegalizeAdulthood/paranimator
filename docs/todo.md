@@ -2,7 +2,6 @@
 
 ## Catalogs
 
-- Create complete catalog for all Id parameters
 - Create complete catalog for all fractal types
   - Include specific interpretation of param or function
 - Create complete catalog for all formulas in id.frm
@@ -11,18 +10,11 @@
 
 - Coloring catalog:
   - colors allows encoded spec?
-- Formula catalog:
-  - Only document parameters for formulas in id.frm
 
 ## Color
 
 - Specify RGB colors as floats
 - Specify gamma?
-
-## Platforms
-
-- Linux support
-  - Output bash scripts, not batch scripts
 
 ## Documentation
 
