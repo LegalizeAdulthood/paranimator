@@ -115,6 +115,8 @@ struct ParamsGroupMetadataCase
     const char *fractal_type;
     const char *name;
     const char *metadata_name;
+    int first_slot;
+    int second_slot;
 };
 
 constexpr FormulaFunctionMetadataCase FORMULA_FUNCTION_METADATA_CASES[]{
@@ -128,6 +130,14 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"bifurcation", 0, "filter-cycles", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"bifurcation", 1, "seed-population", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"fn+fn", 0, "fn1-coefficient-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"fn+fn", 1, "fn1-coefficient-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"fn+fn", 2, "fn2-coefficient-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"fn+fn", 3, "fn2-coefficient-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"ifs", 0, "coloring-method", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
     {"ifs3d", 0, "coloring-method", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
@@ -150,14 +160,18 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
 
 constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"bifurcation", 0, "fn1"},
+    {"fn+fn", 0, "fn1"},
+    {"fn+fn", 1, "fn2"},
     {"mandelfn", 0, "fn1"},
 };
 
 constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
-    {"julia", "c", "params.c"},
-    {"mandel", "z0", "params.z0"},
-    {"mandelfn", "z0", "params.z0"},
-    {"manowar", "z0", "params.z0"},
+    {"fn+fn", "fn1-coefficient", "params.fn1-coefficient", 0, 1},
+    {"fn+fn", "fn2-coefficient", "params.fn2-coefficient", 2, 3},
+    {"julia", "c", "params.c", 0, 1},
+    {"mandel", "z0", "params.z0", 0, 1},
+    {"mandelfn", "z0", "params.z0", 0, 1},
+    {"manowar", "z0", "params.z0", 0, 1},
 };
 
 std::string test_parameter_name(std::string text)
@@ -212,7 +226,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(10U, catalog.fractal_types.size());
+    EXPECT_EQ(11U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
@@ -790,8 +804,8 @@ TEST_P(ParamsGroupMetadataTest, paramsGroupMetadataLoads)
     ASSERT_TRUE(group.metadata.format);
     EXPECT_EQ(ParFile::ParameterFormat::SLASH_PAIR, *group.metadata.format);
     ASSERT_EQ(2U, group.slots.size());
-    EXPECT_EQ(0, group.slots[0]);
-    EXPECT_EQ(1, group.slots[1]);
+    EXPECT_EQ(expected.first_slot, group.slots[0]);
+    EXPECT_EQ(expected.second_slot, group.slots[1]);
 }
 
 INSTANTIATE_TEST_SUITE_P(TestParameterCatalog, ParamsGroupMetadataTest,
