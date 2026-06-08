@@ -198,6 +198,10 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"julzpower", 3, "exponent-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"julzzpwr", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"julzzpwr", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"julzzpwr", 2, "exponent-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"plasma", 0, "graininess", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, 0.0, 100.0},
     {"plasma", 1, "algorithm", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
     {"plasma", 2, "random-seed-mode", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
@@ -224,6 +228,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"julia", "c", "params.c", 0, 1},
     {"julzpower", "c", "params.c", 0, 1},
     {"julzpower", "exponent", "params.exponent", 2, 3},
+    {"julzzpwr", "c", "params.c", 0, 1},
     {"lambdafn", "c", "params.c", 0, 1},
     {"mandel", "z0", "params.z0", 0, 1},
     {"mandelfn", "z0", "params.z0", 0, 1},
@@ -286,7 +291,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(20U, catalog.fractal_types.size());
+    EXPECT_EQ(21U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
