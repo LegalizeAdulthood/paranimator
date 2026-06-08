@@ -113,13 +113,6 @@ item after the catalog entry and focused tests land.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
   - `function=`: none.
 
-- `pickover` (`PICKOVER`)
-  - `params[0]`: a; default `2.24`.
-  - `params[1]`: b; default `.43`.
-  - `params[2]`: c; default `-.65`.
-  - `params[3]`: d; default `-2.43`.
-  - `function=`: none.
-
 - `gingerbreadman` (`GINGERBREAD`)
   - `params[0]`: Initial x; default `-.1`.
   - `params[1]`: Initial y; default `0`.
