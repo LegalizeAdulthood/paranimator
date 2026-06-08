@@ -183,6 +183,10 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"manzpower", 3, "exponent-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"manzzpwr", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"manzzpwr", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"manzzpwr", 2, "exponent-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"newtbasin", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
     {"newtbasin", 1, "stripes", ParFile::ParameterType::DOUBLE, ParFile::Curve::HOLD, std::nullopt, std::nullopt},
     {"newton", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
@@ -227,6 +231,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"manowar", "z0", "params.z0", 0, 1},
     {"manzpower", "exponent", "params.exponent", 2, 3},
     {"manzpower", "z0", "params.z0", 0, 1},
+    {"manzzpwr", "z0", "params.z0", 0, 1},
 };
 
 std::string test_parameter_name(std::string text)
@@ -281,7 +286,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(19U, catalog.fractal_types.size());
+    EXPECT_EQ(20U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
