@@ -45,11 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `bifurcation` (`BIFURCATION`)
-  - `params[0]`: +Filter Cycles; default `1000.0`.
-  - `params[1]`: Seed Population; default `0.66`.
-  - `function=`: `fn1`.
-
 - `fn+fn` (`FN_PLUS_FN`)
   - `params[0]`: Real Coefficient First Function; default `1`.
   - `params[1]`: Imag Coefficient First Function; default `0`.
