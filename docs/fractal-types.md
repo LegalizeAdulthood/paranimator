@@ -43,11 +43,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `manowar` (`MAN_O_WAR`)
-  - `params[0]`: Real Perturbation of Z(0); default `0`.
-  - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
-  - `function=`: none.
-
 - `test` (`TEST`)
   - `params[0]`: (testpt Param #1); default `0`.
   - `params[1]`: (testpt param #2); default `0`.

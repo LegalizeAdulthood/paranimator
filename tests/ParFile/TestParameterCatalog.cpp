@@ -110,6 +110,13 @@ struct FunctionSlotMetadataCase
     const char *name;
 };
 
+struct ParamsGroupMetadataCase
+{
+    const char *fractal_type;
+    const char *name;
+    const char *metadata_name;
+};
+
 constexpr FormulaFunctionMetadataCase FORMULA_FUNCTION_METADATA_CASES[]{
     {"DAFrm01", "fn1", 0},
     {"DAFrm07", "fn1", 0},
@@ -122,6 +129,8 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"mandel", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"mandelfn", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"mandelfn", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"manowar", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"manowar", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"newtbasin", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
     {"newtbasin", 1, "stripes", ParFile::ParameterType::DOUBLE, ParFile::Curve::HOLD, std::nullopt, std::nullopt},
     {"newton", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
@@ -135,6 +144,13 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
 
 constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"mandelfn", 0, "fn1"},
+};
+
+constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
+    {"julia", "c", "params.c"},
+    {"mandel", "z0", "params.z0"},
+    {"mandelfn", "z0", "params.z0"},
+    {"manowar", "z0", "params.z0"},
 };
 
 std::string test_parameter_name(std::string text)
@@ -167,6 +183,11 @@ std::string function_slot_metadata_test_name(const ::testing::TestParamInfo<Func
         info.param.name);
 }
 
+std::string params_group_metadata_test_name(const ::testing::TestParamInfo<ParamsGroupMetadataCase> &info)
+{
+    return test_parameter_name(std::string{info.param.fractal_type} + "_" + info.param.name);
+}
+
 std::string formula_function_metadata_test_name(const ::testing::TestParamInfo<FormulaFunctionMetadataCase> &info)
 {
     return test_parameter_name(std::string{info.param.formula_name} + "_" + info.param.name);
@@ -184,7 +205,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(6U, catalog.fractal_types.size());
+    EXPECT_EQ(7U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
@@ -746,13 +767,18 @@ TEST_P(FunctionSlotMetadataTest, functionSlotMetadataLoads)
 INSTANTIATE_TEST_SUITE_P(TestParameterCatalog, FunctionSlotMetadataTest,
     ::testing::ValuesIn(FUNCTION_SLOT_METADATA_CASES), function_slot_metadata_test_name);
 
-TEST(TestParameterCatalog, juliaParamsGroupMetadataLoads)
+class ParamsGroupMetadataTest : public ::testing::TestWithParam<ParamsGroupMetadataCase>
 {
-    const ParFile::ParameterCatalog catalog{core_catalog()};
-    const ParFile::ParamsGroupMetadata &group{catalog.params_group("julia", "c")};
+};
 
-    EXPECT_EQ("c", group.name);
-    EXPECT_EQ("params.c", group.metadata.name);
+TEST_P(ParamsGroupMetadataTest, paramsGroupMetadataLoads)
+{
+    const ParamsGroupMetadataCase &expected{GetParam()};
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParamsGroupMetadata &group{catalog.params_group(expected.fractal_type, expected.name)};
+
+    EXPECT_EQ(expected.name, group.name);
+    EXPECT_EQ(expected.metadata_name, group.metadata.name);
     EXPECT_EQ(ParFile::ParameterType::COMPLEX, group.metadata.type);
     ASSERT_TRUE(group.metadata.format);
     EXPECT_EQ(ParFile::ParameterFormat::SLASH_PAIR, *group.metadata.format);
@@ -761,31 +787,8 @@ TEST(TestParameterCatalog, juliaParamsGroupMetadataLoads)
     EXPECT_EQ(1, group.slots[1]);
 }
 
-TEST(TestParameterCatalog, mandelParamsGroupMetadataLoads)
-{
-    const ParFile::ParameterCatalog catalog{core_catalog()};
-    const ParFile::ParamsGroupMetadata &group{catalog.params_group("mandel", "z0")};
-
-    EXPECT_EQ("z0", group.name);
-    EXPECT_EQ("params.z0", group.metadata.name);
-    EXPECT_EQ(ParFile::ParameterType::COMPLEX, group.metadata.type);
-    ASSERT_EQ(2U, group.slots.size());
-    EXPECT_EQ(0, group.slots[0]);
-    EXPECT_EQ(1, group.slots[1]);
-}
-
-TEST(TestParameterCatalog, mandelfnParamsGroupMetadataLoads)
-{
-    const ParFile::ParameterCatalog catalog{core_catalog()};
-    const ParFile::ParamsGroupMetadata &group{catalog.params_group("mandelfn", "z0")};
-
-    EXPECT_EQ("z0", group.name);
-    EXPECT_EQ("params.z0", group.metadata.name);
-    EXPECT_EQ(ParFile::ParameterType::COMPLEX, group.metadata.type);
-    ASSERT_EQ(2U, group.slots.size());
-    EXPECT_EQ(0, group.slots[0]);
-    EXPECT_EQ(1, group.slots[1]);
-}
+INSTANTIATE_TEST_SUITE_P(TestParameterCatalog, ParamsGroupMetadataTest,
+    ::testing::ValuesIn(PARAMS_GROUP_METADATA_CASES), params_group_metadata_test_name);
 
 class FormulaEntryMetadataTest : public ::testing::TestWithParam<FormulaEntryMetadataCase>
 {
