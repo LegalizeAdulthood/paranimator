@@ -45,11 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `lambdafn` (`LAMBDA_FN`)
-  - `params[0]`: Real Part of Parameter; default `1.0`.
-  - `params[1]`: Imaginary Part of Parameter; default `0.4`.
-  - `function=`: `fn1`.
-
 - `manzpower` (`MANDEL_Z_POWER`)
   - `params[0]`: Real Perturbation of Z(0); default `0`.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
