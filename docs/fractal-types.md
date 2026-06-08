@@ -45,13 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `complexbasin` (`COMPLEX_BASIN`)
-  - `params[0]`: Real part of Degree; default `3`.
-  - `params[1]`: Imag part of Degree; default `0`.
-  - `params[2]`: Real part of Root; default `1`.
-  - `params[3]`: Imag part of Root; default `0`.
-  - `function=`: none.
-
 - `cmplxmarksmand` (`COMPLEX_MARKS_MAND`)
   - `params[0]`: Real Perturbation of Z(0); default `0`.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.

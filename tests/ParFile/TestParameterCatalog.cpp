@@ -209,6 +209,14 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"newtbasin", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
     {"newtbasin", 1, "stripes", ParFile::ParameterType::DOUBLE, ParFile::Curve::HOLD, std::nullopt, std::nullopt},
     {"newton", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
+    {"complexbasin", 0, "degree-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"complexbasin", 1, "degree-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"complexbasin", 2, "root-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"complexbasin", 3, "root-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"complexnewton", 0, "degree-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"complexnewton", 1, "degree-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
@@ -263,6 +271,8 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"fn+fn", "fn2-coefficient", "params.fn2-coefficient", 2, 3},
     {"fn*z+z", "fn1-coefficient", "params.fn1-coefficient", 0, 1},
     {"fn*z+z", "second-term-coefficient", "params.second-term-coefficient", 2, 3},
+    {"complexbasin", "degree", "params.degree", 0, 1},
+    {"complexbasin", "root", "params.root", 2, 3},
     {"complexnewton", "degree", "params.degree", 0, 1},
     {"complexnewton", "root", "params.root", 2, 3},
     {"julfn+exp", "c", "params.c", 0, 1},
@@ -336,7 +346,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(31U, catalog.fractal_types.size());
+    EXPECT_EQ(32U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
