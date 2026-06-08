@@ -70,8 +70,7 @@ std::string formula_function_catalog_text(std::string_view function)
 
 std::string fractal_function_catalog_text(std::string_view function)
 {
-    return "{\"parameters\":{},\"fractal-types\":{\"foo\":{\"functions\":{\"fn1\":{" + std::string{function} +
-        "}}}}}";
+    return "{\"parameters\":{},\"fractal-types\":{\"foo\":{\"functions\":{\"fn1\":{" + std::string{function} + "}}}}}";
 }
 
 struct FormulaEntryMetadataCase
@@ -143,10 +142,10 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"fn*z+z", 1, "fn1-coefficient-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
-    {"fn*z+z", 2, "second-term-coefficient-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR,
-        std::nullopt, std::nullopt},
-    {"fn*z+z", 3, "second-term-coefficient-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR,
-        std::nullopt, std::nullopt},
+    {"fn*z+z", 2, "second-term-coefficient-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"fn*z+z", 3, "second-term-coefficient-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"ifs", 0, "coloring-method", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
     {"ifs3d", 0, "coloring-method", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
     {"kamtorus", 0, "angle", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -155,33 +154,25 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"kamtorus", 3, "points-per-orbit", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"kamtorus3d", 0, "angle", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
-    {"kamtorus3d", 1, "step-size", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
-        std::nullopt},
-    {"kamtorus3d", 2, "stop-value", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
-        std::nullopt},
+    {"kamtorus3d", 1, "step-size", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"kamtorus3d", 2, "stop-value", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"kamtorus3d", 3, "points-per-orbit", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
-    {"julfn+exp", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
-        std::nullopt},
-    {"julfn+exp", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
-        std::nullopt},
-    {"julfn+zsqrd", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
-        std::nullopt},
-    {"julfn+zsqrd", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
-        std::nullopt},
+    {"julfn+exp", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"julfn+exp", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"julfn+zsqrd", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"julfn+zsqrd", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lambdafn", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lambdafn", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lorenz", 0, "time-step", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lorenz", 1, "a", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lorenz", 2, "b", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lorenz", 3, "c", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
-    {"lorenz3d", 0, "time-step", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
-        std::nullopt},
+    {"lorenz3d", 0, "time-step", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lorenz3d", 1, "a", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lorenz3d", 2, "b", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lorenz3d", 3, "c", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
-    {"rossler3d", 0, "time-step", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
-        std::nullopt},
+    {"rossler3d", 0, "time-step", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"rossler3d", 1, "a", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"rossler3d", 2, "b", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"rossler3d", 3, "c", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -201,10 +192,8 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"mandelfn", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manfn+exp", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manfn+exp", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
-    {"manfn+zsqrd", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
-        std::nullopt},
-    {"manfn+zsqrd", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
-        std::nullopt},
+    {"manfn+zsqrd", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"manfn+zsqrd", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manowar", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manowar", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manzpower", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -220,6 +209,14 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"newtbasin", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
     {"newtbasin", 1, "stripes", ParFile::ParameterType::DOUBLE, ParFile::Curve::HOLD, std::nullopt, std::nullopt},
     {"newton", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
+    {"complexnewton", 0, "degree-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"complexnewton", 1, "degree-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"complexnewton", 2, "root-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"complexnewton", 3, "root-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"julia", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"julia", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"julzpower", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -266,6 +263,8 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"fn+fn", "fn2-coefficient", "params.fn2-coefficient", 2, 3},
     {"fn*z+z", "fn1-coefficient", "params.fn1-coefficient", 0, 1},
     {"fn*z+z", "second-term-coefficient", "params.second-term-coefficient", 2, 3},
+    {"complexnewton", "degree", "params.degree", 0, 1},
+    {"complexnewton", "root", "params.root", 2, 3},
     {"julfn+exp", "c", "params.c", 0, 1},
     {"julfn+zsqrd", "c", "params.c", 0, 1},
     {"julia", "c", "params.c", 0, 1},
@@ -305,14 +304,14 @@ std::string formula_entry_metadata_test_name(const ::testing::TestParamInfo<Form
 
 std::string params_slot_metadata_test_name(const ::testing::TestParamInfo<ParamsSlotMetadataCase> &info)
 {
-    return test_parameter_name(std::string{info.param.fractal_type} + "_" + std::to_string(info.param.slot) + "_" +
-        info.param.name);
+    return test_parameter_name(
+        std::string{info.param.fractal_type} + "_" + std::to_string(info.param.slot) + "_" + info.param.name);
 }
 
 std::string function_slot_metadata_test_name(const ::testing::TestParamInfo<FunctionSlotMetadataCase> &info)
 {
-    return test_parameter_name(std::string{info.param.fractal_type} + "_" + std::to_string(info.param.slot) + "_" +
-        info.param.name);
+    return test_parameter_name(
+        std::string{info.param.fractal_type} + "_" + std::to_string(info.param.slot) + "_" + info.param.name);
 }
 
 std::string params_group_metadata_test_name(const ::testing::TestParamInfo<ParamsGroupMetadataCase> &info)
@@ -337,7 +336,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(30U, catalog.fractal_types.size());
+    EXPECT_EQ(31U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
@@ -867,8 +866,8 @@ TEST_P(ParamsSlotMetadataTest, paramsSlotMetadataLoads)
     }
 }
 
-INSTANTIATE_TEST_SUITE_P(TestParameterCatalog, ParamsSlotMetadataTest,
-    ::testing::ValuesIn(PARAMS_SLOT_METADATA_CASES), params_slot_metadata_test_name);
+INSTANTIATE_TEST_SUITE_P(TestParameterCatalog, ParamsSlotMetadataTest, ::testing::ValuesIn(PARAMS_SLOT_METADATA_CASES),
+    params_slot_metadata_test_name);
 
 class FunctionSlotMetadataTest : public ::testing::TestWithParam<FunctionSlotMetadataCase>
 {
