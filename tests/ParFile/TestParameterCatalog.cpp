@@ -171,6 +171,8 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"mandel", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"mandelfn", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"mandelfn", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"manfn+exp", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"manfn+exp", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manfn+zsqrd", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"manfn+zsqrd", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
@@ -216,6 +218,7 @@ constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"julfn+zsqrd", 0, "fn1"},
     {"lambdafn", 0, "fn1"},
     {"mandelfn", 0, "fn1"},
+    {"manfn+exp", 0, "fn1"},
     {"manfn+zsqrd", 0, "fn1"},
 };
 
@@ -232,6 +235,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"lambdafn", "c", "params.c", 0, 1},
     {"mandel", "z0", "params.z0", 0, 1},
     {"mandelfn", "z0", "params.z0", 0, 1},
+    {"manfn+exp", "z0", "params.z0", 0, 1},
     {"manfn+zsqrd", "z0", "params.z0", 0, 1},
     {"manowar", "z0", "params.z0", 0, 1},
     {"manzpower", "exponent", "params.exponent", 2, 3},
@@ -291,7 +295,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(21U, catalog.fractal_types.size());
+    EXPECT_EQ(22U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
