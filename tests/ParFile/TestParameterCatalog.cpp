@@ -127,7 +127,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(3U, catalog.fractal_types.size());
+    EXPECT_EQ(4U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
@@ -667,6 +667,27 @@ TEST(TestParameterCatalog, newtonParamsSlotMetadataLoads)
     EXPECT_EQ(ParFile::ParameterType::INTEGER, slot.metadata.type);
     ASSERT_TRUE(slot.metadata.min);
     EXPECT_EQ(2, *slot.metadata.min);
+}
+
+TEST(TestParameterCatalog, newtbasinParamsSlotMetadataLoads)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    const ParFile::ParamsSlotMetadata &degree{catalog.params_slot("newtbasin", 0)};
+    const ParFile::ParamsSlotMetadata &stripes{catalog.params_slot("newtbasin", 1)};
+
+    EXPECT_EQ(0, degree.index);
+    EXPECT_EQ("degree", degree.name);
+    EXPECT_EQ("params[0]", degree.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::INTEGER, degree.metadata.type);
+    ASSERT_TRUE(degree.metadata.min);
+    EXPECT_EQ(2, *degree.metadata.min);
+
+    EXPECT_EQ(1, stripes.index);
+    EXPECT_EQ("stripes", stripes.name);
+    EXPECT_EQ("params[1]", stripes.metadata.name);
+    EXPECT_EQ(ParFile::ParameterType::DOUBLE, stripes.metadata.type);
+    ASSERT_TRUE(stripes.metadata.default_curve);
+    EXPECT_EQ(ParFile::Curve::HOLD, *stripes.metadata.default_curve);
 }
 
 class FormulaEntryMetadataTest : public ::testing::TestWithParam<FormulaEntryMetadataCase>

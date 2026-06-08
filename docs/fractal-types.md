@@ -22,8 +22,9 @@ Source:
 ## Catalog Rules
 
 - Convert prompt prefixes into type hints: `+` means integer and `#`
-  means U32. Unprefixed numeric prompts should start as double unless
-  source audit proves an enum or string shape.
+  means U32. These prefixes are internal code annotations; drop them
+  from catalog descriptions. Unprefixed numeric prompts should start as
+  double unless source audit proves an enum or string shape.
 - Name obvious real/imag pairs as complex groups while retaining
   addressable scalar slots.
 - Keep source prompt text in comments or tests until semantic names are
@@ -41,11 +42,6 @@ Source:
 Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
-
-- `newtbasin` (`NEWT_BASIN`)
-  - `params[0]`: +Polynomial Degree (>= 2); default `3`.
-  - `params[1]`: Enter non-zero value for stripes; default `0`.
-  - `function=`: none.
 
 - `mandel` (`MANDEL`)
   - `params[0]`: Real Perturbation of Z(0); default `0`.

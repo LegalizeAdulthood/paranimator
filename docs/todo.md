@@ -8,6 +8,7 @@
 
 ### Parameters
 
+- Add a description string to parameter metadata for user documentation
 - Coloring catalog:
   - colors allows encoded spec?
 
