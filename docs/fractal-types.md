@@ -45,13 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `lorenz` (`LORENZ`)
-  - `params[0]`: Time Step; default `.02`.
-  - `params[1]`: a; default `5`.
-  - `params[2]`: b; default `15`.
-  - `params[3]`: c; default `1`.
-  - `function=`: none.
-
 - `complexnewton` (`COMPLEX_NEWTON`)
   - `params[0]`: Real part of Degree; default `3`.
   - `params[1]`: Imag part of Degree; default `0`.
