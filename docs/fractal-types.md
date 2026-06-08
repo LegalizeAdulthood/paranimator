@@ -10,6 +10,8 @@ Source:
   `params=` slot in `g_fractal_specific` or `g_more_fractal_params`.
 - Skip the formula fractal type; formula entries are planned separately in
   `docs/formulas.md`.
+- Skip `test`; it is a developer harness for new built-in fractal types
+  and has no useful paranimator behavior.
 - Skip fractal types that have no `params=` slots. For included types,
   still record whether `FractalFlags::TRIGn` exposes `function=` slots.
 - Use the active Id CMake configuration. `RANDOM_RUN` is not defined by
@@ -42,13 +44,6 @@ Source:
 Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
-
-- `test` (`TEST`)
-  - `params[0]`: (testpt Param #1); default `0`.
-  - `params[1]`: (testpt param #2); default `0`.
-  - `params[2]`: (testpt param #3); default `0`.
-  - `params[3]`: (testpt param #4); default `0`.
-  - `function=`: none.
 
 - `ifs` (`IFS`)
   - `params[0]`: +Coloring method (0,1); default `0`.
