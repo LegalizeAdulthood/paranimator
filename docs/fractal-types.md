@@ -45,16 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `manfn+zsqrd` (`MANDEL_FN_PLUS_Z_SQRD`)
-  - `params[0]`: Real Perturbation of Z(0); default `0`.
-  - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
-  - `function=`: `fn1`.
-
-- `julfn+zsqrd` (`JULIA_FN_PLUS_Z_SQRD`)
-  - `params[0]`: Real Part of Parameter; default `-0.5`.
-  - `params[1]`: Imaginary Part of Parameter; default `0.5`.
-  - `function=`: `fn1`.
-
 - `lambdafn` (`LAMBDA_FN`)
   - `params[0]`: Real Part of Parameter; default `1.0`.
   - `params[1]`: Imaginary Part of Parameter; default `0.4`.

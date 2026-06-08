@@ -161,10 +161,18 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"kamtorus3d", 3, "points-per-orbit", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"julfn+zsqrd", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"julfn+zsqrd", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"mandel", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"mandel", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"mandelfn", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"mandelfn", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"manfn+zsqrd", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"manfn+zsqrd", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"manowar", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manowar", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"newtbasin", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
@@ -183,7 +191,9 @@ constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"fn+fn", 0, "fn1"},
     {"fn+fn", 1, "fn2"},
     {"fn*z+z", 0, "fn1"},
+    {"julfn+zsqrd", 0, "fn1"},
     {"mandelfn", 0, "fn1"},
+    {"manfn+zsqrd", 0, "fn1"},
 };
 
 constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
@@ -191,9 +201,11 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"fn+fn", "fn2-coefficient", "params.fn2-coefficient", 2, 3},
     {"fn*z+z", "fn1-coefficient", "params.fn1-coefficient", 0, 1},
     {"fn*z+z", "second-term-coefficient", "params.second-term-coefficient", 2, 3},
+    {"julfn+zsqrd", "c", "params.c", 0, 1},
     {"julia", "c", "params.c", 0, 1},
     {"mandel", "z0", "params.z0", 0, 1},
     {"mandelfn", "z0", "params.z0", 0, 1},
+    {"manfn+zsqrd", "z0", "params.z0", 0, 1},
     {"manowar", "z0", "params.z0", 0, 1},
 };
 
@@ -249,7 +261,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(14U, catalog.fractal_types.size());
+    EXPECT_EQ(16U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
