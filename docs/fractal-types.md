@@ -113,11 +113,6 @@ item after the catalog entry and focused tests land.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
   - `function=`: none.
 
-- `gingerbreadman` (`GINGERBREAD`)
-  - `params[0]`: Initial x; default `-.1`.
-  - `params[1]`: Initial y; default `0`.
-  - `function=`: none.
-
 - `diffusion` (`DIFFUSION`)
   - `params[0]`: +Border size; default `10`.
   - `params[1]`: +Type (0=Central,1=Falling,2=Square Cavity); default `0`.
