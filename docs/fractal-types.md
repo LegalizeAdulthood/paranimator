@@ -113,11 +113,6 @@ item after the catalog entry and focused tests land.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
   - `function=`: none.
 
-- `henon` (`HENON`)
-  - `params[0]`: a; default `1.4`.
-  - `params[1]`: b; default `.3`.
-  - `function=`: none.
-
 - `pickover` (`PICKOVER`)
   - `params[0]`: a; default `2.24`.
   - `params[1]`: b; default `.43`.
