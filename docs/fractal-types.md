@@ -113,13 +113,6 @@ item after the catalog entry and focused tests land.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
   - `function=`: none.
 
-- `lorenz3d` (`LORENZ_3D`)
-  - `params[0]`: Time Step; default `.02`.
-  - `params[1]`: a; default `5`.
-  - `params[2]`: b; default `15`.
-  - `params[3]`: c; default `1`.
-  - `function=`: none.
-
 - `rossler3d` (`ROSSLER`)
   - `params[0]`: Time Step; default `.04`.
   - `params[1]`: a; default `.2`.
