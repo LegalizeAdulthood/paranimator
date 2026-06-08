@@ -139,6 +139,14 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"fn+fn", 3, "fn2-coefficient-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"fn*z+z", 0, "fn1-coefficient-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"fn*z+z", 1, "fn1-coefficient-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"fn*z+z", 2, "second-term-coefficient-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR,
+        std::nullopt, std::nullopt},
+    {"fn*z+z", 3, "second-term-coefficient-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR,
+        std::nullopt, std::nullopt},
     {"ifs", 0, "coloring-method", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
     {"ifs3d", 0, "coloring-method", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
     {"mandel", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -162,12 +170,15 @@ constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"bifurcation", 0, "fn1"},
     {"fn+fn", 0, "fn1"},
     {"fn+fn", 1, "fn2"},
+    {"fn*z+z", 0, "fn1"},
     {"mandelfn", 0, "fn1"},
 };
 
 constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"fn+fn", "fn1-coefficient", "params.fn1-coefficient", 0, 1},
     {"fn+fn", "fn2-coefficient", "params.fn2-coefficient", 2, 3},
+    {"fn*z+z", "fn1-coefficient", "params.fn1-coefficient", 0, 1},
+    {"fn*z+z", "second-term-coefficient", "params.second-term-coefficient", 2, 3},
     {"julia", "c", "params.c", 0, 1},
     {"mandel", "z0", "params.z0", 0, 1},
     {"mandelfn", "z0", "params.z0", 0, 1},
@@ -226,7 +237,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(11U, catalog.fractal_types.size());
+    EXPECT_EQ(12U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 

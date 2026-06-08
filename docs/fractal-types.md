@@ -45,13 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `fn*z+z` (`FN_MUL_Z_PLUS_Z`)
-  - `params[0]`: Real Coefficient First Function; default `1`.
-  - `params[1]`: Imag Coefficient First Function; default `0`.
-  - `params[2]`: Real Coefficient Second Term; default `1`.
-  - `params[3]`: Imag Coefficient Second Term; default `0`.
-  - `function=`: `fn1`.
-
 - `kamtorus` (`KAM`)
   - `params[0]`: Angle (radians); default `1.3`.
   - `params[1]`: Step size; default `.05`.
