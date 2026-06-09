@@ -45,13 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `fn(z)+fn(pix)` (`FN_PLUS_FN_PIX`)
-  - `params[0]`: Real Perturbation of Z(0); default `0`.
-  - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
-  - `params[2]`: Real Coefficient Second Function; default `1`.
-  - `params[3]`: Imag Coefficient Second Function; default `0`.
-  - `function=`: `fn1/fn2`.
-
 - `marksmandelpwr` (`MARKS_MANDEL_PWR`)
   - `params[0]`: Real Perturbation of Z(0); default `0`.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.

@@ -147,6 +147,14 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"diffusion", 1, "diffusion-type", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 2.0},
     {"diffusion", 2, "color-change-rate", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"fn(z)+fn(pix)", 0, "z0-perturbation-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"fn(z)+fn(pix)", 1, "z0-perturbation-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"fn(z)+fn(pix)", 2, "fn2-coefficient-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"fn(z)+fn(pix)", 3, "fn2-coefficient-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"fn+fn", 0, "fn1-coefficient-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"fn+fn", 1, "fn1-coefficient-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
@@ -322,6 +330,8 @@ constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"bif+sinpi", 0, "fn1"},
     {"bif=sinpi", 0, "fn1"},
     {"biflambda", 0, "fn1"},
+    {"fn(z)+fn(pix)", 0, "fn1"},
+    {"fn(z)+fn(pix)", 1, "fn2"},
     {"fn+fn", 0, "fn1"},
     {"fn+fn", 1, "fn2"},
     {"fn*z+z", 0, "fn1"},
@@ -342,6 +352,8 @@ constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
 };
 
 constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
+    {"fn(z)+fn(pix)", "z0-perturbation", "params.z0-perturbation", 0, 1},
+    {"fn(z)+fn(pix)", "fn2-coefficient", "params.fn2-coefficient", 2, 3},
     {"fn+fn", "fn1-coefficient", "params.fn1-coefficient", 0, 1},
     {"fn+fn", "fn2-coefficient", "params.fn2-coefficient", 2, 3},
     {"fn*z+z", "fn1-coefficient", "params.fn1-coefficient", 0, 1},
@@ -455,7 +467,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(55U, catalog.fractal_types.size());
+    EXPECT_EQ(56U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
