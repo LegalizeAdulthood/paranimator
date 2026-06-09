@@ -45,10 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `martin` (`MARTIN`)
-  - `params[0]`: a; default `3.14`.
-  - `function=`: none.
-
 - `lyapunov` (`LYAPUNOV`)
   - `params[0]`: +Order (integer); default `0`.
   - `params[1]`: Population Seed; default `0.5`.
