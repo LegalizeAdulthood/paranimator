@@ -777,6 +777,32 @@ TEST(TestParameterCatalog, coloringCatalogDeclaresColors)
     EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
 }
 
+TEST(TestParameterCatalog, coloringCatalogDescriptionsLoad)
+{
+    const ParFile::ParameterCatalog catalog{coloring_catalog()};
+    struct ExpectedDescription
+    {
+        const char *name;
+        const char *description;
+    };
+    const ExpectedDescription cases[]{
+        {"colors", "Sets the current image palette from a color map file or direct color specification."},
+        {"decomp", "Colors points by the quadrant of the final orbit value instead of escape iteration bands."},
+        {"logmap", "Compresses escape-time iteration counts into palette colors with logarithmic or related mappings."},
+        {"ranges", "Maps escape-time iteration ranges, including optional stripes, to palette color numbers."},
+        {"truecolor", "Writes truecolor information to a Targa output file."},
+    };
+
+    for (const ExpectedDescription &entry : cases)
+    {
+        EXPECT_EQ(entry.description, catalog.metadata(entry.name).description);
+    }
+    for (const ParFile::ParameterMetadata &metadata : catalog.parameters)
+    {
+        EXPECT_FALSE(metadata.description.empty()) << metadata.name;
+    }
+}
+
 TEST(TestParameterCatalog, coloringCatalogIncludesSavedImageParameters)
 {
     const ParFile::ParameterCatalog catalog{coloring_catalog()};

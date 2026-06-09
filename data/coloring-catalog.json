@@ -2,12 +2,14 @@
   "parameters": {
     "colors": {
       "type": "color-map",
+      "description": "Sets the current image palette from a color map file or direct color specification.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "decomp": {
       "type": "integer",
+      "description": "Colors points by the quadrant of the final orbit value instead of escape iteration bands.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -16,6 +18,7 @@
     },
     "distest": {
       "type": "integer-tuple",
+      "description": "Enables distance estimator coloring and sets the width factor for edge distance bands.",
       "format": "slash",
       "default-curve": "hold",
       "extrapolate": "clamp",
@@ -23,6 +26,7 @@
     },
     "logmap": {
       "type": "integer-or-enum",
+      "description": "Compresses escape-time iteration counts into palette colors with logarithmic or related mappings.",
       "format": "raw",
       "values": [ "no", "old", "yes" ],
       "default-curve": "hold",
@@ -30,6 +34,7 @@
     },
     "logmode": {
       "type": "enum",
+      "description": "Selects on-the-fly, table, or auto recalculation for logarithmic palette mapping.",
       "format": "raw",
       "values": [ "fly", "table", "auto" ],
       "default-curve": "hold",
@@ -37,36 +42,42 @@
     },
     "map": {
       "type": "string",
+      "description": "Loads a replacement default color map from a map file.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "nobof": {
       "type": "yes-no",
+      "description": "Makes inside=bof60 and inside=bof61 behave like other inside coloring options.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "olddemmcolors": {
       "type": "yes-no",
+      "description": "Uses the legacy coloring scheme with the distance estimator method.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "ranges": {
       "type": "string",
+      "description": "Maps escape-time iteration ranges, including optional stripes, to palette color numbers.",
       "format": "slash-list",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "truecolor": {
       "type": "yes-no",
+      "description": "Writes truecolor information to a Targa output file.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "truemode": {
       "type": "enum",
+      "description": "Selects whether truecolor Targa output stores default colors or escape iteration values.",
       "format": "raw",
       "values": [ "def", "iter" ],
       "default-curve": "hold",
