@@ -210,6 +210,10 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"lorenz3d3", 1, "a", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lorenz3d3", 2, "b", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lorenz3d3", 3, "c", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"lorenz3d4", 0, "time-step", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"lorenz3d4", 1, "a", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"lorenz3d4", 2, "b", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"lorenz3d4", 3, "c", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lsystem", 0, "order", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lyapunov", 0, "order", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lyapunov", 1, "seed-population", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
@@ -502,7 +506,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(65U, catalog.fractal_types.size());
+    EXPECT_EQ(66U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 

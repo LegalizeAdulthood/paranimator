@@ -45,13 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `lorenz3d4` (`LORENZ_3D4`)
-  - `params[0]`: Time Step; default `.02`.
-  - `params[1]`: a; default `10`.
-  - `params[2]`: b; default `28`.
-  - `params[3]`: c; default `2.66`.
-  - `function=`: none.
-
 - `lambda(fn||fn)` (`LAMBDA_FN_FN`)
   - `params[0]`: Real Part of Parameter; default `1`.
   - `params[1]`: Imaginary Part of Parameter; default `0.1`.
