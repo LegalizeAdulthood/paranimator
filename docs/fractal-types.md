@@ -45,11 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `tim's_error` (`TIMS_ERROR`)
-  - `params[0]`: Real Perturbation of Z(0); default `0`.
-  - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
-  - `function=`: `fn1`.
-
 - `bifstewart` (`BIF_STEWART`)
   - `params[0]`: +Filter Cycles; default `1000.0`.
   - `params[1]`: Seed Population; default `0.66`.
