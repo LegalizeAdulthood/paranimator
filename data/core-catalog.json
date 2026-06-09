@@ -592,6 +592,48 @@
         }
       }
     },
+    "cellular": {
+      "params": {
+        "format": "slash-list",
+        "slots": [
+          {
+            "index": 0,
+            "name": "initial-string",
+            "type": "integer",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp",
+            "min": -1
+          },
+          {
+            "index": 1,
+            "name": "rule",
+            "type": "integer",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp",
+            "min": 0
+          },
+          {
+            "index": 2,
+            "name": "cellular-type",
+            "type": "integer",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          },
+          {
+            "index": 3,
+            "name": "starting-row",
+            "type": "integer",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp",
+            "min": 0
+          }
+        ]
+      }
+    },
     "diffusion": {
       "params": {
         "format": "slash-list",

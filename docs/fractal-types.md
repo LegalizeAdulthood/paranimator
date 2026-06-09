@@ -23,10 +23,10 @@ Source:
 
 ## Catalog Rules
 
-- Convert prompt prefixes into type hints: `+` means integer and `#`
-  means U32. These prefixes are internal code annotations; drop them
-  from catalog descriptions. Unprefixed numeric prompts should start as
-  double unless source audit proves an enum or string shape.
+- Convert prompt prefixes into type hints: `+` and `#` mean integer.
+  These prefixes are internal code annotations; drop them from catalog
+  descriptions. Unprefixed numeric prompts should start as double unless
+  source audit proves an enum or string shape.
 - Name obvious real/imag pairs as complex groups while retaining
   addressable scalar slots.
 - Keep source prompt text in comments or tests until semantic names are
@@ -44,15 +44,6 @@ Source:
 Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
-
-- `cellular` (`CELLULAR`)
-  - `params[0]`: #Initial String | 0 = Random | -1 = Reuse Last Random;
-    default `11.0`.
-  - `params[1]`: #Rule = # of digits (see below) | 0 = Random; default
-    `3311100320.0`.
-  - `params[2]`: +Type (see below); default `41.0`.
-  - `params[3]`: #Starting Row Number; default `0`.
-  - `function=`: none.
 
 - `julia_inverse` (`INVERSE_JULIA`)
   - `params[0]`: Real Part of Parameter; default `-0.11`.
