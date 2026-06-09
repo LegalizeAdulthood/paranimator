@@ -45,12 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `hopalong` (`HOPALONG`)
-  - `params[0]`: a; default `.4`.
-  - `params[1]`: b; default `1`.
-  - `params[2]`: c; default `0`.
-  - `function=`: none.
-
 - `circle` (`CIRCLE`)
   - `params[0]`: magnification; default `200000L`.
   - `function=`: none.
