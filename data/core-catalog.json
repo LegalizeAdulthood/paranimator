@@ -1899,6 +1899,21 @@
         }
       }
     },
+    "circle": {
+      "params": {
+        "format": "slash-list",
+        "slots": [
+          {
+            "index": 0,
+            "name": "magnification",
+            "type": "double",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          }
+        ]
+      }
+    },
     "cmplxmarksjul": {
       "params": {
         "format": "slash-list",

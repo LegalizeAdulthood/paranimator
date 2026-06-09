@@ -45,10 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `circle` (`CIRCLE`)
-  - `params[0]`: magnification; default `200000L`.
-  - `function=`: none.
-
 - `martin` (`MARTIN`)
   - `params[0]`: a; default `3.14`.
   - `function=`: none.
