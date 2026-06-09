@@ -2414,6 +2414,69 @@
         ]
       }
     },
+    "phoenixcplx": {
+      "params": {
+        "format": "slash-list",
+        "slots": [
+          {
+            "index": 0,
+            "name": "p1-real",
+            "type": "double",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          },
+          {
+            "index": 1,
+            "name": "p1-imag",
+            "type": "double",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          },
+          {
+            "index": 2,
+            "name": "p2-real",
+            "type": "double",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          },
+          {
+            "index": 3,
+            "name": "p2-imag",
+            "type": "double",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          },
+          {
+            "index": 4,
+            "name": "degree",
+            "type": "integer",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          }
+        ],
+        "groups": {
+          "p1": {
+            "type": "complex",
+            "format": "slash-pair",
+            "default-curve": "linear",
+            "extrapolate": "clamp",
+            "slots": [ 0, 1 ]
+          },
+          "p2": {
+            "type": "complex",
+            "format": "slash-pair",
+            "default-curve": "linear",
+            "extrapolate": "clamp",
+            "slots": [ 2, 3 ]
+          }
+        }
+      }
+    },
     "halley": {
       "params": {
         "format": "slash-list",

@@ -45,14 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `phoenixcplx` (`PHOENIX_CPLX`)
-  - `params[0]`: Real portion of p1; default `0.2`.
-  - `params[1]`: Imaginary portion of p1; default `0`.
-  - `params[2]`: Real portion of p2; default `0.3`.
-  - `params[3]`: Imaginary portion of p2; default `0`.
-  - extra `params[4]`: Degree = 0 | >= 2 | <= -3; default `0`.
-  - `function=`: none.
-
 - `mandphoenixclx` (`MAND_PHOENIX_CPLX`)
   - `params[0]`: Real Perturbation of Z(0); default `0`.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
