@@ -45,13 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `dynamic` (`DYNAMIC`)
-  - `params[0]`: +# of intervals (<0 = connect); default `50`.
-  - `params[1]`: time step (<0 = Euler); default `.1`.
-  - `params[2]`: a; default `1`.
-  - `params[3]`: b; default `3`.
-  - `function=`: `fn1`.
-
 - `quat` (`QUAT`)
   - `params[0]`: notused; default `0`.
   - `params[1]`: notused; default `0`.
