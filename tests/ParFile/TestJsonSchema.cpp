@@ -98,8 +98,12 @@ std::string catalog_with_formula_function(std::string_view metadata)
 
 std::string catalog_with_fractal_function(std::string_view metadata)
 {
-    return "{\"parameters\":{},\"fractal-types\":{\"foo\":{\"functions\":{\"fn1\":{" + std::string{metadata} +
-        "}}}}}";
+    return "{\"parameters\":{},\"fractal-types\":{\"foo\":{\"functions\":{\"fn1\":{" + std::string{metadata} + "}}}}}";
+}
+
+std::string catalog_with_fractal_params(std::string_view metadata)
+{
+    return "{\"parameters\":{},\"fractal-types\":{\"foo\":{\"params\":{" + std::string{metadata} + "}}}}";
 }
 
 std::string config_with_gradient_stop_color(std::string_view color)
@@ -556,6 +560,27 @@ TEST(TestJsonSchema, tupleAliasMetadataAccepted)
 TEST(TestJsonSchema, stringMetadataAccepted)
 {
     EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"string")")));
+}
+
+TEST(TestJsonSchema, metadataDescriptionsAccepted)
+{
+    EXPECT_TRUE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","description":"Help")")));
+    EXPECT_TRUE(validates_parameter_catalog_text(
+        catalog_with_fractal_params(R"("slots":[{"index":0,"name":"a","type":"double","description":"Slot help"}])")));
+    EXPECT_TRUE(validates_parameter_catalog_text(
+        catalog_with_fractal_params(R"("groups":{"c":{"type":"complex","slots":[0,1],"description":"Group help"}})")));
+    EXPECT_TRUE(validates_parameter_catalog_text(
+        catalog_with_fractal_function(R"("type":"enum","values":"id-functions","description":"Function help")")));
+    EXPECT_TRUE(validates_parameter_catalog_text(
+        catalog_with_formula_knob(R"("type":"real","variable":"p1.real","description":"Knob help")")));
+    EXPECT_TRUE(validates_parameter_catalog_text(
+        catalog_with_formula_function(R"("type":"enum","values":"id-functions","description":"Function help")")));
+}
+
+TEST(TestJsonSchema, invalidMetadataDescriptionRejected)
+{
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","description":1)")));
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","description":"")")));
 }
 
 TEST(TestJsonSchema, unknownMetadataFormatRejected)

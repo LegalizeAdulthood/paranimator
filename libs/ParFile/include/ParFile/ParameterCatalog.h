@@ -24,6 +24,7 @@ struct ParameterMetadata
     std::vector<std::string> values;
     std::optional<int> arity;
     bool normalize{};
+    std::string description;
 };
 
 struct ParamsSlotMetadata

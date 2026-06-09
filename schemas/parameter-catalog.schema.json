@@ -86,6 +86,11 @@
           "description": "Application data type used to validate and interpolate the parameter.",
           "$ref": "#/$defs/parameter-type"
         },
+        "description": {
+          "description": "User-facing help text for this parameter.",
+          "type": "string",
+          "minLength": 1
+        },
         "format": {
           "description": "Text format used when writing the value to an Id par file.",
           "$ref": "#/$defs/parameter-format"
@@ -142,6 +147,11 @@
           "description": "Human-readable slot name used in track keys.",
           "type": "string"
         },
+        "description": {
+          "description": "User-facing help text for this params= slot.",
+          "type": "string",
+          "minLength": 1
+        },
         "type": {
           "description": "Application data type for this params= slot.",
           "$ref": "#/$defs/parameter-type"
@@ -196,6 +206,11 @@
         "type": {
           "description": "Application data type for the grouped params= value.",
           "$ref": "#/$defs/parameter-type"
+        },
+        "description": {
+          "description": "User-facing help text for this params= group.",
+          "type": "string",
+          "minLength": 1
         },
         "format": {
           "description": "Text format used by the grouped params= value.",
@@ -435,6 +450,11 @@
           "description": "Fixed formula variable component used by this knob, such as p1.real or p2.",
           "type": "string"
         },
+        "description": {
+          "description": "User-facing help text for this formula knob.",
+          "type": "string",
+          "minLength": 1
+        },
         "format": {
           "description": "Text format used by this formula knob value.",
           "$ref": "#/$defs/parameter-format"
@@ -554,6 +574,11 @@
               "description": "Use the fixed function names recognized by Id."
             }
           ]
+        },
+        "description": {
+          "description": "User-facing help text for this function slot.",
+          "type": "string",
+          "minLength": 1
         },
         "format": {
           "description": "Text format used by this function enum value.",

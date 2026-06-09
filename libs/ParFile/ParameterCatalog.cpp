@@ -262,6 +262,7 @@ ParameterMetadata load_metadata(std::string_view name, const Object &json)
     result.values = load_parameter_values(name, result.type, json);
     result.arity = load_optional_positive_int(json, "arity");
     result.normalize = load_optional_bool(json, "normalize").value_or(false);
+    result.description = load_optional_string(json, "description").value_or(std::string{});
     apply_tuple_alias_metadata(result);
     validate_discrete_values_metadata(result);
     return result;
@@ -285,6 +286,7 @@ void load_optional_metadata_fields(ParameterMetadata &metadata, const Object &js
     metadata.max = load_optional_number(json, "max");
     metadata.arity = load_optional_positive_int(json, "arity");
     metadata.normalize = load_optional_bool(json, "normalize").value_or(false);
+    metadata.description = load_optional_string(json, "description").value_or(std::string{});
     apply_tuple_alias_metadata(metadata);
 }
 

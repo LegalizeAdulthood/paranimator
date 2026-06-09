@@ -71,12 +71,6 @@ config schema fields in this plan. JSON Schema already has its own
 
 Each item is one reviewable slice. Remove an item after it lands.
 
-- Metadata contract
-  - Add `description` to `ParameterMetadata`.
-  - Teach `ParameterCatalog.cpp` to read optional `description`.
-  - Permit `description` in `schemas/parameter-catalog.schema.json`.
-  - Add focused loader and schema tests for optional descriptions.
-
 - Top-level core parameters
   - Audit Id help for each `data/core-catalog.json` top-level parameter.
   - Add sourced descriptions to `parameters.*`.

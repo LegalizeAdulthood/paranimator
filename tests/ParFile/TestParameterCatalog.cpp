@@ -1463,6 +1463,75 @@ TEST(TestParameterCatalog, optionalNormalizeDecodes)
     EXPECT_TRUE(metadata.normalize);
 }
 
+TEST(TestParameterCatalog, optionalDescriptionDecodes)
+{
+    const ParFile::ParameterMetadata described{read_metadata(R"("type":"integer","description":"Help text.")")};
+    const ParFile::ParameterMetadata undescribed{read_metadata(R"("type":"integer")")};
+
+    EXPECT_EQ("Help text.", described.description);
+    EXPECT_TRUE(undescribed.description.empty());
+}
+
+TEST(TestParameterCatalog, optionalDescriptionLoadsForAllMetadataShapes)
+{
+    const ParFile::ParameterCatalog catalog{ParFile::read_parameter_catalog(R"({
+  "parameters": {
+    "x": { "type": "integer", "description": "Top parameter help." }
+  },
+  "fractal-types": {
+    "foo": {
+      "params": {
+        "slots": [
+          { "index": 0, "name": "real", "type": "double", "description": "Slot help." },
+          { "index": 1, "name": "imag", "type": "double" }
+        ],
+        "groups": {
+          "c": {
+            "type": "complex",
+            "description": "Group help.",
+            "slots": [ 0, 1 ]
+          }
+        }
+      },
+      "functions": {
+        "fn1": {
+          "type": "enum",
+          "values": "id-functions",
+          "description": "Fractal function help."
+        }
+      }
+    }
+  },
+  "formula-entries": {
+    "bar": {
+      "params": {
+        "knobs": {
+          "knob": {
+            "type": "real",
+            "variable": "p1.real",
+            "description": "Knob help."
+          }
+        }
+      },
+      "functions": {
+        "fn1": {
+          "type": "enum",
+          "values": "id-functions",
+          "description": "Formula function help."
+        }
+      }
+    }
+  }
+})")};
+
+    EXPECT_EQ("Top parameter help.", catalog.metadata("x").description);
+    EXPECT_EQ("Slot help.", catalog.params_slot("foo", 0).metadata.description);
+    EXPECT_EQ("Group help.", catalog.params_group("foo", "c").metadata.description);
+    EXPECT_EQ("Fractal function help.", catalog.function_slot("foo", 0).metadata.description);
+    EXPECT_EQ("Knob help.", catalog.formula_params_knob("bar", "knob").metadata.description);
+    EXPECT_EQ("Formula function help.", catalog.formula_function("bar", "fn1").metadata.description);
+}
+
 TEST(TestParameterCatalog, enumValuesDecode)
 {
     const ParFile::ParameterMetadata metadata{read_metadata(R"("type":"enum","values":["a","b"])")};
