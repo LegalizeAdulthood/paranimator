@@ -240,6 +240,12 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"mandel", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"mandel", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"mandel(fn||fn)", 0, "z0-perturbation-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandel(fn||fn)", 1, "z0-perturbation-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandel(fn||fn)", 2, "function-shift", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"mandelfn", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"mandelfn", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"mandellambda", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -391,6 +397,8 @@ constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"lambda(fn||fn)", 0, "fn1"},
     {"lambda(fn||fn)", 1, "fn2"},
     {"lambdafn", 0, "fn1"},
+    {"mandel(fn||fn)", 0, "fn1"},
+    {"mandel(fn||fn)", 1, "fn2"},
     {"mandelfn", 0, "fn1"},
     {"manfn+exp", 0, "fn1"},
     {"manfn+zsqrd", 0, "fn1"},
@@ -438,6 +446,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"lambdafn", "c", "params.c", 0, 1},
     {"manowarj", "c", "params.c", 0, 1},
     {"mandel", "z0", "params.z0", 0, 1},
+    {"mandel(fn||fn)", "z0-perturbation", "params.z0-perturbation", 0, 1},
     {"mandelfn", "z0", "params.z0", 0, 1},
     {"mandellambda", "z0", "params.z0", 0, 1},
     {"spider", "z0", "params.z0", 0, 1},
@@ -529,7 +538,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(69U, catalog.fractal_types.size());
+    EXPECT_EQ(70U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
