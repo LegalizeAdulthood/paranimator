@@ -1097,6 +1097,21 @@
         }
       }
     },
+    "mandelcloud": {
+      "params": {
+        "format": "slash-list",
+        "slots": [
+          {
+            "index": 0,
+            "name": "interval-count",
+            "type": "integer",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          }
+        ]
+      }
+    },
     "mandelfn": {
       "params": {
         "format": "slash-list",

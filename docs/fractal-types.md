@@ -45,10 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `mandelcloud` (`MANDEL_CLOUD`)
-  - `params[0]`: +# of intervals (<0 = connect); default `50`.
-  - `function=`: none.
-
 - `phoenix` (`PHOENIX`)
   - `params[0]`: Real portion of p1; default `0.56667`.
   - `params[1]`: Real portion of p2; default `-0.5`.
