@@ -156,6 +156,9 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"bifstewart", 1, "seed-population", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"burning-ship", 0, "p1-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"burning-ship", 1, "p1-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"burning-ship", 2, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, 5.0},
     {"cellular", 0, "initial-string", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, -1.0, std::nullopt},
     {"cellular", 1, "rule", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 0.0, std::nullopt},
     {"cellular", 2, "cellular-type", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
@@ -579,6 +582,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"complexbasin", "root", "params.root", 2, 3},
     {"complexnewton", "degree", "params.degree", 0, 1},
     {"complexnewton", "root", "params.root", 2, 3},
+    {"burning-ship", "p1", "params.p1", 0, 1},
     {"halley", "relaxation", "params.relaxation", 1, 3},
     {"phoenixcplx", "p1", "params.p1", 0, 1},
     {"phoenixcplx", "p2", "params.p2", 2, 3},
@@ -705,7 +709,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(100U, catalog.fractal_types.size());
+    EXPECT_EQ(101U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
