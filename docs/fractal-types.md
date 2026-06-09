@@ -45,15 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `mandelbrotmix4` (`MANDELBROT_MIX4`)
-  - `params[0]`: Real portion of p1; default `0.05`.
-  - `params[1]`: Imaginary portion of p1; default `3`.
-  - `params[2]`: Real portion of p2; default `-1.5`.
-  - `params[3]`: Imaginary portion of p2; default `-2`.
-  - extra `params[4]`: Real portion of p3; default `0`.
-  - extra `params[5]`: Imaginary portion of p3; default `0`.
-  - `function=`: `fn1`.
-
 - `burning-ship` (`BURNING_SHIP`)
   - `params[0]`: Real portion of p1; default `0`.
   - `params[1]`: Imaginary portion of p1; default `0`.

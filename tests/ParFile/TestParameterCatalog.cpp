@@ -321,6 +321,18 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"mandel4", 1, "z0-perturbation-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"mandelbrotmix4", 0, "p1-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandelbrotmix4", 1, "p1-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandelbrotmix4", 2, "p2-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandelbrotmix4", 3, "p2-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandelbrotmix4", 4, "p3-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandelbrotmix4", 5, "p3-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"mandelcloud", 0, "interval-count", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"mandelfn", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -538,6 +550,7 @@ constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"latoocarfian", 3, "fn4"},
     {"mandel(fn||fn)", 0, "fn1"},
     {"mandel(fn||fn)", 1, "fn2"},
+    {"mandelbrotmix4", 0, "fn1"},
     {"mandelfn", 0, "fn1"},
     {"manfn+exp", 0, "fn1"},
     {"manfn+zsqrd", 0, "fn1"},
@@ -594,6 +607,9 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"mandel", "z0", "params.z0", 0, 1},
     {"mandel(fn||fn)", "z0-perturbation", "params.z0-perturbation", 0, 1},
     {"mandel4", "z0-perturbation", "params.z0-perturbation", 0, 1},
+    {"mandelbrotmix4", "p1", "params.p1", 0, 1},
+    {"mandelbrotmix4", "p2", "params.p2", 2, 3},
+    {"mandelbrotmix4", "p3", "params.p3", 4, 5},
     {"mandelfn", "z0", "params.z0", 0, 1},
     {"mandellambda", "z0", "params.z0", 0, 1},
     {"mandphoenix", "z0-perturbation", "params.z0-perturbation", 0, 1},
@@ -689,7 +705,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(99U, catalog.fractal_types.size());
+    EXPECT_EQ(100U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
