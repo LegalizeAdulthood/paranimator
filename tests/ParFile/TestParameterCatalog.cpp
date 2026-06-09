@@ -375,6 +375,12 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"julia(fn||fn)", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"julia(fn||fn)", 2, "function-shift", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"julia_inverse", 0, "parameter-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"julia_inverse", 1, "parameter-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"julia_inverse", 2, "max-hits-per-pixel", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"julzpower", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"julzpower", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"julzpower", 2, "exponent-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
@@ -465,6 +471,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"julfn+zsqrd", "c", "params.c", 0, 1},
     {"julia", "c", "params.c", 0, 1},
     {"julia(fn||fn)", "c", "params.c", 0, 1},
+    {"julia_inverse", "parameter", "params.parameter", 0, 1},
     {"julzpower", "c", "params.c", 0, 1},
     {"julzpower", "exponent", "params.exponent", 2, 3},
     {"julzzpwr", "c", "params.c", 0, 1},
@@ -570,7 +577,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(76U, catalog.fractal_types.size());
+    EXPECT_EQ(77U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 

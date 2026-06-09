@@ -45,12 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `julia_inverse` (`INVERSE_JULIA`)
-  - `params[0]`: Real Part of Parameter; default `-0.11`.
-  - `params[1]`: Imaginary Part of Parameter; default `0.6557`.
-  - `params[2]`: Max Hits per Pixel; default `4`.
-  - `function=`: none.
-
 - `mandelcloud` (`MANDEL_CLOUD`)
   - `params[0]`: +# of intervals (<0 = connect); default `50`.
   - `function=`: none.
