@@ -313,6 +313,16 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"mandphoenix", 1, "z0-perturbation-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"mandphoenix", 2, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"mandphoenixclx", 0, "z0-perturbation-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandphoenixclx", 1, "z0-perturbation-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandphoenixclx", 2, "p2-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandphoenixclx", 3, "p2-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandphoenixclx", 4, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"spider", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"spider", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"tetrate", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -555,6 +565,8 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"mandelfn", "z0", "params.z0", 0, 1},
     {"mandellambda", "z0", "params.z0", 0, 1},
     {"mandphoenix", "z0-perturbation", "params.z0-perturbation", 0, 1},
+    {"mandphoenixclx", "z0-perturbation", "params.z0-perturbation", 0, 1},
+    {"mandphoenixclx", "p2", "params.p2", 2, 3},
     {"spider", "z0", "params.z0", 0, 1},
     {"tetrate", "z0", "params.z0", 0, 1},
     {"magnet1m", "z0", "params.z0", 0, 1},
@@ -645,7 +657,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(90U, catalog.fractal_types.size());
+    EXPECT_EQ(91U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
