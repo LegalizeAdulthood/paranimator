@@ -45,12 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `chip` (`CHIP`)
-  - `params[0]`: a; default `-15`.
-  - `params[1]`: b; default `-19`.
-  - `params[2]`: c; default `1`.
-  - `function=`: none.
-
 - `quadruptwo` (`QUADRUP_TWO`)
   - `params[0]`: a; default `34`.
   - `params[1]`: b; default `1`.

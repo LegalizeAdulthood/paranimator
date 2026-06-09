@@ -161,6 +161,9 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"cellular", 2, "cellular-type", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"cellular", 3, "starting-row", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 0.0, std::nullopt},
+    {"chip", 0, "a", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"chip", 1, "b", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"chip", 2, "c", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"circle", 0, "magnification", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"diffusion", 0, "border-size", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
@@ -663,7 +666,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(92U, catalog.fractal_types.size());
+    EXPECT_EQ(93U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
