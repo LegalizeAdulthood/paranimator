@@ -45,13 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `frothybasin` (`FROTHY_BASIN`)
-  - `params[0]`: +Apply mapping once (1) or twice (2); default `1`.
-  - `params[1]`: +Enter non-zero value for alternate color shading; default
-    `0`.
-  - `params[2]`: A (imaginary part of C); default `1.028713768218725`.
-  - `function=`: none.
-
 - `mandel4` (`MANDEL4`)
   - `params[0]`: Real Perturbation of Z(0); default `0`.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
