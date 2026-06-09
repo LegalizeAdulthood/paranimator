@@ -45,12 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `manlam(fn||fn)` (`MAN_LAM_FN_FN`)
-  - `params[0]`: Real Perturbation of Z(0); default `0`.
-  - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
-  - `params[2]`: Function Shift Value; default `10`.
-  - `function=`: `fn1/fn2`.
-
 - `mandel(fn||fn)` (`MAN_FN_FN`)
   - `params[0]`: Real Perturbation of Z(0); default `0`.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.

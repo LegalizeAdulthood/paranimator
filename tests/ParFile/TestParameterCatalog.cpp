@@ -260,6 +260,12 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"manfn+exp", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manfn+zsqrd", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manfn+zsqrd", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"manlam(fn||fn)", 0, "z0-perturbation-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"manlam(fn||fn)", 1, "z0-perturbation-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"manlam(fn||fn)", 2, "function-shift", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"barnsleym1", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"barnsleym1", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"barnsleyj1", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -388,6 +394,8 @@ constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"mandelfn", 0, "fn1"},
     {"manfn+exp", 0, "fn1"},
     {"manfn+zsqrd", 0, "fn1"},
+    {"manlam(fn||fn)", 0, "fn1"},
+    {"manlam(fn||fn)", 1, "fn2"},
     {"marksmandelpwr", 0, "fn1"},
     {"tim's_error", 0, "fn1"},
     {"popcorn", 0, "fn1"},
@@ -438,6 +446,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"magnet2m", "z0", "params.z0", 0, 1},
     {"manfn+exp", "z0", "params.z0", 0, 1},
     {"manfn+zsqrd", "z0", "params.z0", 0, 1},
+    {"manlam(fn||fn)", "z0-perturbation", "params.z0-perturbation", 0, 1},
     {"barnsleym1", "z0", "params.z0", 0, 1},
     {"barnsleym2", "z0", "params.z0", 0, 1},
     {"barnsleym3", "z0", "params.z0", 0, 1},
@@ -520,7 +529,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(68U, catalog.fractal_types.size());
+    EXPECT_EQ(69U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
