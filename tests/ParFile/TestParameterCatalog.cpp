@@ -735,6 +735,33 @@ TEST(TestParameterCatalog, typeMetadataLoads)
     EXPECT_EQ(110U, metadata.values.size());
 }
 
+TEST(TestParameterCatalog, coreCatalogTopLevelDescriptionsLoad)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    struct ExpectedDescription
+    {
+        const char *name;
+        const char *description;
+    };
+    const ExpectedDescription cases[]{
+        {"type", "Selects the fractal type to calculate."},
+        {"center-mag", "Sets the image area by center point, magnification, and optional stretch, rotation, and skew."},
+        {"function", "Selects variable functions for fractal types that expose function slots."},
+        {"potential", "Enables continuous potential coloring and sets max color, slope, modulus, and 16-bit storage."},
+        {"formulafile", "Selects the formula file used by type=formula fractals."},
+        {"orbitdrawmode", "Selects rectangular, straight-line, or function-based drawing for orbits."},
+    };
+
+    for (const ExpectedDescription &entry : cases)
+    {
+        EXPECT_EQ(entry.description, catalog.metadata(entry.name).description);
+    }
+    for (const ParFile::ParameterMetadata &metadata : catalog.parameters)
+    {
+        EXPECT_FALSE(metadata.description.empty()) << metadata.name;
+    }
+}
+
 TEST(TestParameterCatalog, coloringCatalogDeclaresColors)
 {
     const ParFile::ParameterCatalog catalog{coloring_catalog()};

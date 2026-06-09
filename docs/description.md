@@ -71,11 +71,6 @@ config schema fields in this plan. JSON Schema already has its own
 
 Each item is one reviewable slice. Remove an item after it lands.
 
-- Top-level core parameters
-  - Audit Id help for each `data/core-catalog.json` top-level parameter.
-  - Add sourced descriptions to `parameters.*`.
-  - Add focused catalog tests for representative entries.
-
 - Coloring parameters
   - Audit Id help for `data/coloring-catalog.json`.
   - Add sourced descriptions to all coloring metadata parameters.

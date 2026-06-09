@@ -2,6 +2,7 @@
   "parameters": {
     "aspectdrift": {
       "type": "double",
+      "description": "Controls how much zooming may change the aspect ratio before Id snaps it back to normal.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -9,6 +10,7 @@
     },
     "bailout": {
       "type": "double",
+      "description": "Overrides the escape bailout value used by escape-time fractals.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -17,6 +19,7 @@
     },
     "bailoutest": {
       "type": "enum",
+      "description": "Selects the bailout test used to compare orbit values with the bailout limit.",
       "format": "raw",
       "values": [ "mod", "real", "imag", "or", "and", "manh", "manr" ],
       "default-curve": "hold",
@@ -24,6 +27,7 @@
     },
     "bfdigits": {
       "type": "integer",
+      "description": "Forces the number of arbitrary precision digits used when high precision math is active.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -32,24 +36,28 @@
     },
     "biomorph": {
       "type": "integer",
+      "description": "Enables biomorph coloring and sets the color used for affected pixels.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "center-mag": {
       "type": "center-mag",
+      "description": "Sets the image area by center point, magnification, and optional stretch, rotation, and skew.",
       "format": "slash",
       "default-curve": "geometric",
       "extrapolate": "clamp"
     },
     "corners": {
       "type": "corners",
+      "description": "Sets the image area by four rectangle bounds or six parallelogram corner coordinates.",
       "format": "slash",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "fillcolor": {
       "type": "integer-or-enum",
+      "description": "Sets the block fill color used by boundary tracing and tesseral drawing modes.",
       "format": "raw",
       "values": [ "normal" ],
       "default-curve": "hold",
@@ -58,24 +66,28 @@
     },
     "finattract": {
       "type": "yes-no",
+      "description": "Looks for finite attractors in Julia-type lakes and colors their basins when found.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "formulafile": {
       "type": "string",
+      "description": "Selects the formula file used by type=formula fractals.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "formulaname": {
       "type": "string",
+      "description": "Selects the formula entry used by type=formula fractals.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "function": {
       "type": "function-list",
+      "description": "Selects variable functions for fractal types that expose function slots.",
       "format": "slash-list",
       "values": "id-functions",
       "default-curve": "hold",
@@ -83,24 +95,28 @@
     },
     "ifs": {
       "type": "string",
+      "description": "Selects the IFS entry used by type=ifs fractals.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "ifs3d": {
       "type": "string",
+      "description": "Selects the IFS entry used by type=ifs3d fractals.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "ifsfile": {
       "type": "string",
+      "description": "Selects the IFS file used by type=ifs and type=ifs3d fractals.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "initorbit": {
       "type": "numeric-tuple-or-enum",
+      "description": "Sets the complex starting value for Mandelbrot-type orbits or uses each pixel as the start.",
       "format": "slash",
       "values": [
         "pixel"
@@ -111,6 +127,7 @@
     },
     "inside": {
       "type": "inside",
+      "description": "Selects the interior color or interior coloring method for points that do not escape.",
       "format": "raw",
       "values": [
         "maxiter",
@@ -130,6 +147,7 @@
     },
     "invert": {
       "type": "numeric-tuple",
+      "description": "Enables inversion and sets the radius and center of the inversion circle.",
       "format": "slash",
       "default-curve": "hold",
       "extrapolate": "clamp",
@@ -137,24 +155,28 @@
     },
     "ismand": {
       "type": "yes-no",
+      "description": "Sets whether a formula treats the current orbit as Mandelbrot-style or Julia-style.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "lfile": {
       "type": "string",
+      "description": "Selects the L-system file used by type=lsystem fractals.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "lname": {
       "type": "string",
+      "description": "Selects the L-system entry used by type=lsystem fractals.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "mathtolerance": {
       "type": "numeric-tuple",
+      "description": "Controls when Id switches from lower precision math to arbitrary precision during deep zooms.",
       "format": "slash",
       "default-curve": "hold",
       "extrapolate": "clamp",
@@ -162,6 +184,7 @@
     },
     "maxiter": {
       "type": "integer",
+      "description": "Sets the maximum iteration count before a point is treated as inside the set.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -169,18 +192,21 @@
     },
     "miim": {
       "type": "miim",
+      "description": "Selects major and minor methods for MIIM inverse Julia generation.",
       "format": "slash",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "orbitcorners": {
       "type": "corners",
+      "description": "Sets the image-coordinate rectangle or parallelogram used for orbit drawing.",
       "format": "slash",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "orbitdelay": {
       "type": "integer",
+      "description": "Delays orbit plotting so initial orbit points can settle before display.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -188,6 +214,7 @@
     },
     "orbitdrawmode": {
       "type": "enum",
+      "description": "Selects rectangular, straight-line, or function-based drawing for orbits.",
       "format": "raw",
       "values": [ "rectangle", "line", "function", "r", "l", "f" ],
       "default-curve": "hold",
@@ -195,6 +222,7 @@
     },
     "orbitinterval": {
       "type": "integer",
+      "description": "Plots every nth orbit point when using passes=o.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -203,12 +231,14 @@
     },
     "orbitname": {
       "type": "string",
+      "description": "Selects the orbit algorithm used by Julibrot fractals.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "outside": {
       "type": "outside",
+      "description": "Selects the exterior color or coloring method for points that escape.",
       "format": "raw",
       "values": [
         "iter",
@@ -227,12 +257,14 @@
     },
     "params": {
       "type": "string",
+      "description": "Sets the extra parameter values consumed by the selected fractal type.",
       "format": "slash-list",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "passes": {
       "type": "enum",
+      "description": "Selects the drawing algorithm used to calculate the image.",
       "format": "raw",
       "values": [ "1", "2", "3", "b", "d", "g", "g0", "g1", "g2", "g3", "g4", "g5", "g6", "o", "p", "s", "t" ],
       "default-curve": "hold",
@@ -240,6 +272,7 @@
     },
     "periodicity": {
       "type": "integer-or-enum",
+      "description": "Controls periodicity checking, including off, show caught points, or a numeric tightness.",
       "format": "raw",
       "values": [ "no", "show", "yes" ],
       "default-curve": "hold",
@@ -249,48 +282,56 @@
     },
     "potential": {
       "type": "potential",
+      "description": "Enables continuous potential coloring and sets max color, slope, modulus, and 16-bit storage.",
       "format": "slash",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "proximity": {
       "type": "double",
+      "description": "Sets the close-proximity threshold used by inside=fmod and outside=fmod coloring.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "reset": {
       "type": "string",
+      "description": "Resets calculation-related parameters to defaults for a parameter-file image entry.",
       "format": "slash",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "rseed": {
       "type": "integer",
+      "description": "Sets the random-number seed so random image output is reproducible.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "screencoords": {
       "type": "yes-no",
+      "description": "Keeps orbit screen coordinates fixed while the image coordinates zoom, rotate, or skew.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "showdot": {
       "type": "string",
+      "description": "Displays the current pixel with a chosen or automatic color and optional pointer size.",
       "format": "slash",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "showorbit": {
       "type": "yes-no",
+      "description": "Starts image generation with orbit display enabled.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "symmetry": {
       "type": "enum",
+      "description": "Forces the drawing symmetry used as a speedup for fractals that actually have that symmetry.",
       "format": "raw",
       "values": [ "xaxis", "yaxis", "xyaxis", "origin", "pi", "none" ],
       "default-curve": "hold",
@@ -298,6 +339,7 @@
     },
     "type": {
       "type": "enum",
+      "description": "Selects the fractal type to calculate.",
       "format": "raw",
       "values": [
         "ant",
