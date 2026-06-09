@@ -268,6 +268,10 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"manzzpwr", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manzzpwr", 2, "exponent-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"marksmandelpwr", 0, "z0-perturbation-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"marksmandelpwr", 1, "z0-perturbation-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"newtbasin", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
     {"newtbasin", 1, "stripes", ParFile::ParameterType::DOUBLE, ParFile::Curve::HOLD, std::nullopt, std::nullopt},
     {"newton", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
@@ -341,6 +345,7 @@ constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"mandelfn", 0, "fn1"},
     {"manfn+exp", 0, "fn1"},
     {"manfn+zsqrd", 0, "fn1"},
+    {"marksmandelpwr", 0, "fn1"},
     {"popcorn", 0, "fn1"},
     {"popcorn", 1, "fn2"},
     {"popcorn", 2, "fn3"},
@@ -396,6 +401,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"manzpower", "exponent", "params.exponent", 2, 3},
     {"manzpower", "z0", "params.z0", 0, 1},
     {"manzzpwr", "z0", "params.z0", 0, 1},
+    {"marksmandelpwr", "z0-perturbation", "params.z0-perturbation", 0, 1},
     {"popcorn", "c", "params.c", 2, 3},
     {"popcorn", "step-size", "params.step-size", 0, 1},
     {"popcornjul", "c", "params.c", 2, 3},
@@ -467,7 +473,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(56U, catalog.fractal_types.size());
+    EXPECT_EQ(57U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
