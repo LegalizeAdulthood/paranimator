@@ -45,13 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `popcornjul` (`POPCORN_JUL`)
-  - `params[0]`: Step size (real); default `0.05`.
-  - `params[1]`: Step size (imaginary); default `0`.
-  - `params[2]`: Constant C (real); default `3.00`.
-  - `params[3]`: Constant C (imaginary); default `0`.
-  - `function=`: `fn1/fn2/fn3/fn4`.
-
 - `lsystem` (`L_SYSTEM`)
   - `params[0]`: +Order; default `2`.
   - `function=`: none.

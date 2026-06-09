@@ -306,6 +306,12 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"popcorn", 2, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"popcorn", 3, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"popcornjul", 0, "step-size-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"popcornjul", 1, "step-size-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"popcornjul", 2, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"popcornjul", 3, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
 };
 
 constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
@@ -326,6 +332,10 @@ constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"popcorn", 1, "fn2"},
     {"popcorn", 2, "fn3"},
     {"popcorn", 3, "fn4"},
+    {"popcornjul", 0, "fn1"},
+    {"popcornjul", 1, "fn2"},
+    {"popcornjul", 2, "fn3"},
+    {"popcornjul", 3, "fn4"},
 };
 
 constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
@@ -372,6 +382,8 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"manzzpwr", "z0", "params.z0", 0, 1},
     {"popcorn", "c", "params.c", 2, 3},
     {"popcorn", "step-size", "params.step-size", 0, 1},
+    {"popcornjul", "c", "params.c", 2, 3},
+    {"popcornjul", "step-size", "params.step-size", 0, 1},
 };
 
 std::string test_parameter_name(std::string text)
@@ -439,7 +451,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(52U, catalog.fractal_types.size());
+    EXPECT_EQ(53U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
