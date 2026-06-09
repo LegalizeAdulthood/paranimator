@@ -321,6 +321,12 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"newtbasin", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
     {"newtbasin", 1, "stripes", ParFile::ParameterType::DOUBLE, ParFile::Curve::HOLD, std::nullopt, std::nullopt},
     {"newton", 0, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
+    {"halley", 0, "order", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 2.0, std::nullopt},
+    {"halley", 1, "relaxation-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"halley", 2, "epsilon", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"halley", 3, "relaxation-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"complexbasin", 0, "degree-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"complexbasin", 1, "degree-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
@@ -431,6 +437,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"complexbasin", "root", "params.root", 2, 3},
     {"complexnewton", "degree", "params.degree", 0, 1},
     {"complexnewton", "root", "params.root", 2, 3},
+    {"halley", "relaxation", "params.relaxation", 1, 3},
     {"cmplxmarksjul", "c", "params.c", 0, 1},
     {"cmplxmarksjul", "exponent", "params.exponent", 2, 3},
     {"julfn+exp", "c", "params.c", 0, 1},
@@ -542,7 +549,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(71U, catalog.fractal_types.size());
+    EXPECT_EQ(72U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 

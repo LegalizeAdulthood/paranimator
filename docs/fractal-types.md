@@ -45,13 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `halley` (`HALLEY`)
-  - `params[0]`: +Order (integer > 1); default `6`.
-  - `params[1]`: Real Relaxation coefficient; default `1.0`.
-  - `params[2]`: Epsilon; default `0.0001`.
-  - `params[3]`: Imag Relaxation coefficient; default `0`.
-  - `function=`: none.
-
 - `dynamic` (`DYNAMIC`)
   - `params[0]`: +# of intervals (<0 = connect); default `50`.
   - `params[1]`: time step (<0 = Euler); default `.1`.
