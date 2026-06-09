@@ -1451,6 +1451,78 @@ TEST(TestParameterCatalog, coreAThroughCParamsDescriptionsLoad)
     }
 }
 
+TEST(TestParameterCatalog, coreDThroughHParamsDescriptionsLoad)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    struct ExpectedSlotDescription
+    {
+        const char *fractal_type;
+        int slot;
+        const char *description;
+    };
+    const ExpectedSlotDescription slot_cases[]{
+        {"diffusion", 1, "Selects central, falling, or square-cavity diffusion growth."},
+        {"dynamic", 1, "Sets the dynamic system time step dt; negative values select implicit Euler approximation."},
+        {"fn(z)+fn(pix)", 2, "Sets the real coefficient multiplying the second function."},
+        {"hypercomplexj", 4, "Sets the j component of the fixed hypercomplex Julia z-plane slice."},
+        {"frothybasin", 2, "Sets the imaginary part A of C=1+A*i for Frothy Basin attractors."},
+        {"halley", 2, "Sets the epsilon threshold used to decide when Halley iteration has converged."},
+        {"gingerbreadman", 0, "Sets the initial x value for the Gingerbreadman orbit."},
+    };
+    struct ExpectedGroupDescription
+    {
+        const char *fractal_type;
+        const char *group;
+        const char *description;
+    };
+    const ExpectedGroupDescription group_cases[]{
+        {"escher_julia", "parameter", "Sets the complex c value for the target Julia set used by Escher tiling."},
+        {"fn+fn", "fn1-coefficient", "Sets the complex coefficient multiplying the first function."},
+        {"fn*z+z", "second-term-coefficient", "Sets the complex coefficient of the second z term."},
+        {"halley", "relaxation", "Sets the complex relaxation coefficient R controlling convergence stability."},
+    };
+    const char *covered_types[]{
+        "diffusion",
+        "dividebrot5",
+        "dynamic",
+        "escher_julia",
+        "fn(z)+fn(pix)",
+        "fn+fn",
+        "fn*z+z",
+        "hypercomplex",
+        "hypercomplexj",
+        "frothybasin",
+        "halley",
+        "henon",
+        "hopalong",
+        "gingerbreadman",
+    };
+
+    for (const ExpectedSlotDescription &expected : slot_cases)
+    {
+        EXPECT_EQ(expected.description, catalog.params_slot(expected.fractal_type, expected.slot).metadata.description);
+    }
+    for (const ExpectedGroupDescription &expected : group_cases)
+    {
+        EXPECT_EQ(
+            expected.description, catalog.params_group(expected.fractal_type, expected.group).metadata.description);
+    }
+    for (const char *fractal_type : covered_types)
+    {
+        const auto type{std::find_if(catalog.fractal_types.begin(), catalog.fractal_types.end(),
+            [fractal_type](const ParFile::FractalTypeMetadata &entry) { return entry.name == fractal_type; })};
+        ASSERT_NE(catalog.fractal_types.end(), type) << fractal_type;
+        for (const ParFile::ParamsSlotMetadata &slot : type->params.slots)
+        {
+            EXPECT_FALSE(slot.metadata.description.empty()) << fractal_type << " " << slot.name;
+        }
+        for (const ParFile::ParamsGroupMetadata &group : type->params.groups)
+        {
+            EXPECT_FALSE(group.metadata.description.empty()) << fractal_type << " " << group.name;
+        }
+    }
+}
+
 class FormulaEntryMetadataTest : public ::testing::TestWithParam<FormulaEntryMetadataCase>
 {
 };

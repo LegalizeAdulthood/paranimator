@@ -850,6 +850,7 @@
             "index": 0,
             "name": "border-size",
             "type": "integer",
+            "description": "Sets the border width between diffusion growth and the edge of its random-walk box.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -858,6 +859,7 @@
             "index": 1,
             "name": "diffusion-type",
             "type": "integer",
+            "description": "Selects central, falling, or square-cavity diffusion growth.",
             "format": "raw",
             "default-curve": "hold",
             "extrapolate": "clamp",
@@ -868,6 +870,7 @@
             "index": 2,
             "name": "color-change-rate",
             "type": "integer",
+            "description": "Sets how often deposited points shift color, with 0 using random colors.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -883,6 +886,7 @@
             "index": 0,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the DivideBrot5 formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -891,6 +895,7 @@
             "index": 1,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the DivideBrot5 formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -906,6 +911,7 @@
             "index": 0,
             "name": "parameter-real",
             "type": "double",
+            "description": "Sets the real part of c for the target Julia set used by Escher tiling.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -914,6 +920,7 @@
             "index": 1,
             "name": "parameter-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c for the target Julia set used by Escher tiling.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -922,6 +929,7 @@
         "groups": {
           "parameter": {
             "type": "complex",
+            "description": "Sets the complex c value for the target Julia set used by Escher tiling.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -938,6 +946,7 @@
             "index": 0,
             "name": "interval-count",
             "type": "integer",
+            "description": "Sets the initial point interval count; negative values connect plotted orbit points.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -946,6 +955,7 @@
             "index": 1,
             "name": "time-step",
             "type": "double",
+            "description": "Sets the dynamic system time step dt; negative values select implicit Euler approximation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -954,6 +964,7 @@
             "index": 2,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in f(k)=sin(k+a*fn1(b*k)).",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -962,6 +973,7 @@
             "index": 3,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in f(k)=sin(k+a*fn1(b*k)).",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -983,6 +995,7 @@
             "index": 0,
             "name": "z0-perturbation-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for the fn(z)+fn(pix) formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -991,6 +1004,7 @@
             "index": 1,
             "name": "z0-perturbation-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for the fn(z)+fn(pix) formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -999,6 +1013,7 @@
             "index": 2,
             "name": "fn2-coefficient-real",
             "type": "double",
+            "description": "Sets the real coefficient multiplying the second function.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1007,6 +1022,7 @@
             "index": 3,
             "name": "fn2-coefficient-imag",
             "type": "double",
+            "description": "Sets the imaginary coefficient multiplying the second function.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1015,6 +1031,7 @@
         "groups": {
           "z0-perturbation": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for the fn(z)+fn(pix) formula.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1022,6 +1039,7 @@
           },
           "fn2-coefficient": {
             "type": "complex",
+            "description": "Sets the complex coefficient multiplying the second function.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1048,6 +1066,7 @@
             "index": 0,
             "name": "fn1-coefficient-real",
             "type": "double",
+            "description": "Sets the real coefficient multiplying the first function.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1056,6 +1075,7 @@
             "index": 1,
             "name": "fn1-coefficient-imag",
             "type": "double",
+            "description": "Sets the imaginary coefficient multiplying the first function.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1064,6 +1084,7 @@
             "index": 2,
             "name": "fn2-coefficient-real",
             "type": "double",
+            "description": "Sets the real coefficient multiplying the second function.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1072,6 +1093,7 @@
             "index": 3,
             "name": "fn2-coefficient-imag",
             "type": "double",
+            "description": "Sets the imaginary coefficient multiplying the second function.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1080,6 +1102,7 @@
         "groups": {
           "fn1-coefficient": {
             "type": "complex",
+            "description": "Sets the complex coefficient multiplying the first function.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1087,6 +1110,7 @@
           },
           "fn2-coefficient": {
             "type": "complex",
+            "description": "Sets the complex coefficient multiplying the second function.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1113,6 +1137,7 @@
             "index": 0,
             "name": "fn1-coefficient-real",
             "type": "double",
+            "description": "Sets the real coefficient multiplying the first function.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1121,6 +1146,7 @@
             "index": 1,
             "name": "fn1-coefficient-imag",
             "type": "double",
+            "description": "Sets the imaginary coefficient multiplying the first function.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1129,6 +1155,7 @@
             "index": 2,
             "name": "second-term-coefficient-real",
             "type": "double",
+            "description": "Sets the real coefficient of the second z term.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1137,6 +1164,7 @@
             "index": 3,
             "name": "second-term-coefficient-imag",
             "type": "double",
+            "description": "Sets the imaginary coefficient of the second z term.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1145,6 +1173,7 @@
         "groups": {
           "fn1-coefficient": {
             "type": "complex",
+            "description": "Sets the complex coefficient multiplying the first function.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1152,6 +1181,7 @@
           },
           "second-term-coefficient": {
             "type": "complex",
+            "description": "Sets the complex coefficient of the second z term.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1174,6 +1204,7 @@
             "index": 0,
             "name": "unused-0",
             "type": "double",
+            "description": "Unused compatibility slot; changing it has no effect on hypercomplex rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1182,6 +1213,7 @@
             "index": 1,
             "name": "unused-1",
             "type": "double",
+            "description": "Unused compatibility slot; changing it has no effect on hypercomplex rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1190,6 +1222,7 @@
             "index": 2,
             "name": "cj",
             "type": "double",
+            "description": "Sets the j component of C in hypercomplex Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1198,6 +1231,7 @@
             "index": 3,
             "name": "ck",
             "type": "double",
+            "description": "Sets the k component of C in hypercomplex Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1219,6 +1253,7 @@
             "index": 0,
             "name": "c1",
             "type": "double",
+            "description": "Sets the real component of C in the hypercomplex Julia set.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1227,6 +1262,7 @@
             "index": 1,
             "name": "ci",
             "type": "double",
+            "description": "Sets the i component of C in the hypercomplex Julia set.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1235,6 +1271,7 @@
             "index": 2,
             "name": "cj",
             "type": "double",
+            "description": "Sets the j component of C in the hypercomplex Julia set.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1243,6 +1280,7 @@
             "index": 3,
             "name": "ck",
             "type": "double",
+            "description": "Sets the k component of C in the hypercomplex Julia set.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1251,6 +1289,7 @@
             "index": 4,
             "name": "zj",
             "type": "double",
+            "description": "Sets the j component of the fixed hypercomplex Julia z-plane slice.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1259,6 +1298,7 @@
             "index": 5,
             "name": "zk",
             "type": "double",
+            "description": "Sets the k component of the fixed hypercomplex Julia z-plane slice.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1280,6 +1320,7 @@
             "index": 0,
             "name": "mapping-pass-count",
             "type": "integer",
+            "description": "Selects whether the Frothy Basin mapping is applied once or twice per iteration.",
             "format": "raw",
             "default-curve": "hold",
             "extrapolate": "clamp",
@@ -1290,6 +1331,7 @@
             "index": 1,
             "name": "alternate-color-shading",
             "type": "integer",
+            "description": "Enables alternate color shading for Frothy Basin when nonzero.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1298,6 +1340,7 @@
             "index": 2,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part A of C=1+A*i for Frothy Basin attractors.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2919,6 +2962,7 @@
             "index": 0,
             "name": "order",
             "type": "integer",
+            "description": "Sets the polynomial order a in z*(z^a-1), greater than 1.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2928,6 +2972,7 @@
             "index": 1,
             "name": "relaxation-real",
             "type": "double",
+            "description": "Sets the real part of the relaxation coefficient R controlling convergence stability.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2936,6 +2981,7 @@
             "index": 2,
             "name": "epsilon",
             "type": "double",
+            "description": "Sets the epsilon threshold used to decide when Halley iteration has converged.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2944,6 +2990,7 @@
             "index": 3,
             "name": "relaxation-imag",
             "type": "double",
+            "description": "Sets the imaginary part of the relaxation coefficient R controlling convergence stability.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2952,6 +2999,7 @@
         "groups": {
           "relaxation": {
             "type": "complex",
+            "description": "Sets the complex relaxation coefficient R controlling convergence stability.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -4083,6 +4131,7 @@
             "index": 0,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the Henon map.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4091,6 +4140,7 @@
             "index": 1,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the Henon map.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4106,6 +4156,7 @@
             "index": 0,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the Hopalong attractor equation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4114,6 +4165,7 @@
             "index": 1,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the Hopalong attractor equation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4122,6 +4174,7 @@
             "index": 2,
             "name": "c",
             "type": "double",
+            "description": "Sets coefficient c in the Hopalong attractor equation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4191,6 +4244,7 @@
             "index": 0,
             "name": "initial-x",
             "type": "double",
+            "description": "Sets the initial x value for the Gingerbreadman orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4199,6 +4253,7 @@
             "index": 1,
             "name": "initial-y",
             "type": "double",
+            "description": "Sets the initial y value for the Gingerbreadman orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
