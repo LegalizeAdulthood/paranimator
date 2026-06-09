@@ -284,6 +284,10 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"mandel(fn||fn)", 2, "function-shift", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"mandel4", 0, "z0-perturbation-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandel4", 1, "z0-perturbation-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"mandelcloud", 0, "interval-count", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"mandelfn", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -405,6 +409,8 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"julia_inverse", 2, "max-hits-per-pixel", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"julia4", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"julia4", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"julzpower", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"julzpower", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"julzpower", 2, "exponent-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
@@ -498,6 +504,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"julia", "c", "params.c", 0, 1},
     {"julia(fn||fn)", "c", "params.c", 0, 1},
     {"julia_inverse", "parameter", "params.parameter", 0, 1},
+    {"julia4", "c", "params.c", 0, 1},
     {"julzpower", "c", "params.c", 0, 1},
     {"julzpower", "exponent", "params.exponent", 2, 3},
     {"julzzpwr", "c", "params.c", 0, 1},
@@ -512,6 +519,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"manowarj", "c", "params.c", 0, 1},
     {"mandel", "z0", "params.z0", 0, 1},
     {"mandel(fn||fn)", "z0-perturbation", "params.z0-perturbation", 0, 1},
+    {"mandel4", "z0-perturbation", "params.z0-perturbation", 0, 1},
     {"mandelfn", "z0", "params.z0", 0, 1},
     {"mandellambda", "z0", "params.z0", 0, 1},
     {"mandphoenix", "z0-perturbation", "params.z0-perturbation", 0, 1},
@@ -604,7 +612,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(83U, catalog.fractal_types.size());
+    EXPECT_EQ(85U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
