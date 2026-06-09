@@ -276,6 +276,11 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"mandelfn", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"mandellambda", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"mandellambda", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"mandphoenix", 0, "z0-perturbation-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandphoenix", 1, "z0-perturbation-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"mandphoenix", 2, "degree", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"spider", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"spider", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"tetrate", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -493,6 +498,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"mandel(fn||fn)", "z0-perturbation", "params.z0-perturbation", 0, 1},
     {"mandelfn", "z0", "params.z0", 0, 1},
     {"mandellambda", "z0", "params.z0", 0, 1},
+    {"mandphoenix", "z0-perturbation", "params.z0-perturbation", 0, 1},
     {"spider", "z0", "params.z0", 0, 1},
     {"tetrate", "z0", "params.z0", 0, 1},
     {"magnet1m", "z0", "params.z0", 0, 1},
@@ -582,7 +588,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(79U, catalog.fractal_types.size());
+    EXPECT_EQ(80U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
