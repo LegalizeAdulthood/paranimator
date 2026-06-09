@@ -466,6 +466,7 @@
             "index": 0,
             "name": "rule-string",
             "type": "integer",
+            "description": "Sets the ant rule string; digit 1 turns right and other digits turn left.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -474,6 +475,7 @@
             "index": 1,
             "name": "max-points",
             "type": "integer",
+            "description": "Sets the maximum number of ant moves before the run terminates.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -482,6 +484,7 @@
             "index": 2,
             "name": "ant-count",
             "type": "integer",
+            "description": "Sets the number of ants to move, up to 256.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -492,6 +495,7 @@
             "index": 3,
             "name": "ant-type",
             "type": "integer",
+            "description": "Selects ant type 1, the original walker, or ant type 2.",
             "format": "raw",
             "default-curve": "hold",
             "extrapolate": "clamp",
@@ -502,6 +506,7 @@
             "index": 4,
             "name": "wrap",
             "type": "integer",
+            "description": "Selects whether ants stop at screen edges or wrap to the opposite side.",
             "format": "raw",
             "default-curve": "hold",
             "extrapolate": "clamp",
@@ -512,6 +517,7 @@
             "index": 5,
             "name": "random-seed-mode",
             "type": "integer",
+            "description": "Sets the Ant random seed, with 0 random and 1 reusing the last seed.",
             "format": "raw",
             "default-curve": "hold",
             "extrapolate": "clamp",
@@ -529,6 +535,7 @@
             "index": 0,
             "name": "filter-cycles",
             "type": "integer",
+            "description": "Sets the number of iterations to run before plotting bifurcation values.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -537,6 +544,7 @@
             "index": 1,
             "name": "seed-population",
             "type": "double",
+            "description": "Sets the initial normalized population value for bifurcation iteration.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -558,6 +566,7 @@
             "index": 0,
             "name": "filter-cycles",
             "type": "integer",
+            "description": "Sets the number of iterations to run before plotting bifurcation values.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -566,6 +575,7 @@
             "index": 1,
             "name": "seed-population",
             "type": "double",
+            "description": "Sets the initial normalized population value for bifurcation iteration.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -587,6 +597,7 @@
             "index": 0,
             "name": "filter-cycles",
             "type": "integer",
+            "description": "Sets the number of iterations to run before plotting bifurcation values.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -595,6 +606,7 @@
             "index": 1,
             "name": "seed-population",
             "type": "double",
+            "description": "Sets the initial normalized population value for bifurcation iteration.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -616,6 +628,7 @@
             "index": 0,
             "name": "filter-cycles",
             "type": "integer",
+            "description": "Sets the number of iterations to run before plotting bifurcation values.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -624,6 +637,7 @@
             "index": 1,
             "name": "seed-population",
             "type": "double",
+            "description": "Sets the initial normalized population value for bifurcation iteration.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -645,6 +659,7 @@
             "index": 0,
             "name": "filter-cycles",
             "type": "integer",
+            "description": "Sets the number of iterations to run before plotting bifurcation values.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -653,6 +668,7 @@
             "index": 1,
             "name": "seed-population",
             "type": "double",
+            "description": "Sets the initial normalized population value for bifurcation iteration.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -661,6 +677,7 @@
             "index": 2,
             "name": "beta",
             "type": "double",
+            "description": "Sets the exponent applied to the denominator in bifmay bifurcations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -676,6 +693,7 @@
             "index": 0,
             "name": "filter-cycles",
             "type": "integer",
+            "description": "Sets the number of iterations to run before plotting bifurcation values.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -684,6 +702,7 @@
             "index": 1,
             "name": "seed-population",
             "type": "double",
+            "description": "Sets the initial normalized population value for bifurcation iteration.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -705,6 +724,7 @@
             "index": 0,
             "name": "p1-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for the Burning Ship orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -713,6 +733,7 @@
             "index": 1,
             "name": "p1-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for the Burning Ship orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -721,6 +742,7 @@
             "index": 2,
             "name": "degree",
             "type": "integer",
+            "description": "Sets the Burning Ship degree, constrained to values 2 through 5.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -731,6 +753,7 @@
         "groups": {
           "p1": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for the Burning Ship orbit.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -747,6 +770,7 @@
             "index": 0,
             "name": "initial-string",
             "type": "integer",
+            "description": "Sets the starting row pattern, with 0 random and -1 reusing the last random row.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -756,6 +780,7 @@
             "index": 1,
             "name": "rule",
             "type": "integer",
+            "description": "Sets the cellular rule digits, with 0 generating the rule randomly.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -765,6 +790,7 @@
             "index": 2,
             "name": "cellular-type",
             "type": "integer",
+            "description": "Sets the cellular automata class as kr, where k is states and r is radius.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -773,6 +799,7 @@
             "index": 3,
             "name": "starting-row",
             "type": "integer",
+            "description": "Sets the first screen row where cellular automata drawing begins.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -789,6 +816,7 @@
             "index": 0,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the Chip two-dimensional orbit equation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -797,6 +825,7 @@
             "index": 1,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the Chip two-dimensional orbit equation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -805,6 +834,7 @@
             "index": 2,
             "name": "c",
             "type": "double",
+            "description": "Sets coefficient c in the Chip two-dimensional orbit equation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2209,6 +2239,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for the Barnsley Mandelbrot orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2217,6 +2248,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for the Barnsley Mandelbrot orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2225,6 +2257,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for the Barnsley Mandelbrot orbit.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2241,6 +2274,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c in the Barnsley Julia generating formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2249,6 +2283,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c in the Barnsley Julia generating formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2257,6 +2292,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value in the Barnsley Julia generating formula.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2273,6 +2309,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for the Barnsley Mandelbrot orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2281,6 +2318,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for the Barnsley Mandelbrot orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2289,6 +2327,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for the Barnsley Mandelbrot orbit.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2305,6 +2344,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c in the Barnsley Julia generating formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2313,6 +2353,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c in the Barnsley Julia generating formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2321,6 +2362,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value in the Barnsley Julia generating formula.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2337,6 +2379,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for the Barnsley Mandelbrot orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2345,6 +2388,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for the Barnsley Mandelbrot orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2353,6 +2397,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for the Barnsley Mandelbrot orbit.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2369,6 +2414,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c in the Barnsley Julia generating formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2377,6 +2423,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c in the Barnsley Julia generating formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2385,6 +2432,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value in the Barnsley Julia generating formula.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2520,6 +2568,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for the complex Marks Mandel orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2528,6 +2577,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for the complex Marks Mandel orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2536,6 +2586,7 @@
             "index": 2,
             "name": "exponent-real",
             "type": "double",
+            "description": "Sets the real part of the exponent in the complex Marks Mandel formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2544,6 +2595,7 @@
             "index": 3,
             "name": "exponent-imag",
             "type": "double",
+            "description": "Sets the imaginary part of the exponent in the complex Marks Mandel formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2552,6 +2604,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for the complex Marks Mandel orbit.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2559,6 +2612,7 @@
           },
           "exponent": {
             "type": "complex",
+            "description": "Sets the complex exponent in the complex Marks Mandel formula.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2914,6 +2968,7 @@
             "index": 0,
             "name": "degree-real",
             "type": "double",
+            "description": "Sets the real part of the complex degree p in z^p = r.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2922,6 +2977,7 @@
             "index": 1,
             "name": "degree-imag",
             "type": "double",
+            "description": "Sets the imaginary part of the complex degree p in z^p = r.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2930,6 +2986,7 @@
             "index": 2,
             "name": "root-real",
             "type": "double",
+            "description": "Sets the real part of the complex root r in z^p = r.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2938,6 +2995,7 @@
             "index": 3,
             "name": "root-imag",
             "type": "double",
+            "description": "Sets the imaginary part of the complex root r in z^p = r.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2946,6 +3004,7 @@
         "groups": {
           "degree": {
             "type": "complex",
+            "description": "Sets the complex degree p in z^p = r.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2953,6 +3012,7 @@
           },
           "root": {
             "type": "complex",
+            "description": "Sets the complex root r in z^p = r.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2969,6 +3029,7 @@
             "index": 0,
             "name": "degree-real",
             "type": "double",
+            "description": "Sets the real part of the complex degree p in z^p = r.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2977,6 +3038,7 @@
             "index": 1,
             "name": "degree-imag",
             "type": "double",
+            "description": "Sets the imaginary part of the complex degree p in z^p = r.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2985,6 +3047,7 @@
             "index": 2,
             "name": "root-real",
             "type": "double",
+            "description": "Sets the real part of the complex root r in z^p = r.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2993,6 +3056,7 @@
             "index": 3,
             "name": "root-imag",
             "type": "double",
+            "description": "Sets the imaginary part of the complex root r in z^p = r.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3001,6 +3065,7 @@
         "groups": {
           "degree": {
             "type": "complex",
+            "description": "Sets the complex degree p in z^p = r.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3008,6 +3073,7 @@
           },
           "root": {
             "type": "complex",
+            "description": "Sets the complex root r in z^p = r.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3024,6 +3090,7 @@
             "index": 0,
             "name": "magnification",
             "type": "double",
+            "description": "Sets the factor multiplied by x^2+y^2 before truncating to a color index.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3039,6 +3106,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c in the complex Marks Julia formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3047,6 +3115,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c in the complex Marks Julia formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3055,6 +3124,7 @@
             "index": 2,
             "name": "exponent-real",
             "type": "double",
+            "description": "Sets the real part of the exponent in the complex Marks Julia formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3063,6 +3133,7 @@
             "index": 3,
             "name": "exponent-imag",
             "type": "double",
+            "description": "Sets the imaginary part of the exponent in the complex Marks Julia formula.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3071,6 +3142,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value in the complex Marks Julia formula.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3078,6 +3150,7 @@
           },
           "exponent": {
             "type": "complex",
+            "description": "Sets the complex exponent in the complex Marks Julia formula.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",

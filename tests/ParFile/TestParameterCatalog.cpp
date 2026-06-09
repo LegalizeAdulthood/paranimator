@@ -1374,6 +1374,83 @@ TEST_P(ParamsGroupMetadataTest, paramsGroupMetadataLoads)
 INSTANTIATE_TEST_SUITE_P(TestParameterCatalog, ParamsGroupMetadataTest,
     ::testing::ValuesIn(PARAMS_GROUP_METADATA_CASES), params_group_metadata_test_name);
 
+TEST(TestParameterCatalog, coreAThroughCParamsDescriptionsLoad)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    struct ExpectedSlotDescription
+    {
+        const char *fractal_type;
+        int slot;
+        const char *description;
+    };
+    const ExpectedSlotDescription slot_cases[]{
+        {"ant", 0, "Sets the ant rule string; digit 1 turns right and other digits turn left."},
+        {"bifmay", 2, "Sets the exponent applied to the denominator in bifmay bifurcations."},
+        {"cellular", 2, "Sets the cellular automata class as kr, where k is states and r is radius."},
+        {"circle", 0, "Sets the factor multiplied by x^2+y^2 before truncating to a color index."},
+        {"complexnewton", 2, "Sets the real part of the complex root r in z^p = r."},
+    };
+    struct ExpectedGroupDescription
+    {
+        const char *fractal_type;
+        const char *group;
+        const char *description;
+    };
+    const ExpectedGroupDescription group_cases[]{
+        {"barnsleyj1", "c", "Sets the complex c value in the Barnsley Julia generating formula."},
+        {"burning-ship", "p1", "Sets the complex perturbation of z(0) for the Burning Ship orbit."},
+        {"cmplxmarksmand", "exponent", "Sets the complex exponent in the complex Marks Mandel formula."},
+        {"complexbasin", "degree", "Sets the complex degree p in z^p = r."},
+    };
+    const char *covered_types[]{
+        "ant",
+        "barnsleyj1",
+        "barnsleyj2",
+        "barnsleyj3",
+        "barnsleym1",
+        "barnsleym2",
+        "barnsleym3",
+        "bif+sinpi",
+        "bif=sinpi",
+        "biflambda",
+        "bifmay",
+        "bifstewart",
+        "bifurcation",
+        "burning-ship",
+        "cellular",
+        "chip",
+        "circle",
+        "cmplxmarksjul",
+        "cmplxmarksmand",
+        "complexbasin",
+        "complexnewton",
+    };
+
+    for (const ExpectedSlotDescription &expected : slot_cases)
+    {
+        EXPECT_EQ(expected.description, catalog.params_slot(expected.fractal_type, expected.slot).metadata.description);
+    }
+    for (const ExpectedGroupDescription &expected : group_cases)
+    {
+        EXPECT_EQ(
+            expected.description, catalog.params_group(expected.fractal_type, expected.group).metadata.description);
+    }
+    for (const char *fractal_type : covered_types)
+    {
+        const auto type{std::find_if(catalog.fractal_types.begin(), catalog.fractal_types.end(),
+            [fractal_type](const ParFile::FractalTypeMetadata &entry) { return entry.name == fractal_type; })};
+        ASSERT_NE(catalog.fractal_types.end(), type) << fractal_type;
+        for (const ParFile::ParamsSlotMetadata &slot : type->params.slots)
+        {
+            EXPECT_FALSE(slot.metadata.description.empty()) << fractal_type << " " << slot.name;
+        }
+        for (const ParFile::ParamsGroupMetadata &group : type->params.groups)
+        {
+            EXPECT_FALSE(group.metadata.description.empty()) << fractal_type << " " << group.name;
+        }
+    }
+}
+
 class FormulaEntryMetadataTest : public ::testing::TestWithParam<FormulaEntryMetadataCase>
 {
 };
