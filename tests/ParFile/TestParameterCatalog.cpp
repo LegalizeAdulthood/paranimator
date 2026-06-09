@@ -204,6 +204,8 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"barnsleyj2", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"barnsleym3", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"barnsleym3", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"barnsleyj3", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"barnsleyj3", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manowar", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manowar", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manzpower", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -312,6 +314,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"lambda", "c", "params.c", 0, 1},
     {"barnsleyj1", "c", "params.c", 0, 1},
     {"barnsleyj2", "c", "params.c", 0, 1},
+    {"barnsleyj3", "c", "params.c", 0, 1},
     {"lambdafn", "c", "params.c", 0, 1},
     {"mandel", "z0", "params.z0", 0, 1},
     {"mandelfn", "z0", "params.z0", 0, 1},
@@ -382,7 +385,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(40U, catalog.fractal_types.size());
+    EXPECT_EQ(41U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
