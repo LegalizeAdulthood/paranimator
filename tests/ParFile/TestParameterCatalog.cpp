@@ -205,6 +205,8 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"magnet1m", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"magnet1j", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"magnet1j", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"magnet2m", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"magnet2m", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manfn+exp", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manfn+exp", 1, "z0-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"manfn+zsqrd", 0, "z0-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -338,6 +340,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"spider", "z0", "params.z0", 0, 1},
     {"tetrate", "z0", "params.z0", 0, 1},
     {"magnet1m", "z0", "params.z0", 0, 1},
+    {"magnet2m", "z0", "params.z0", 0, 1},
     {"manfn+exp", "z0", "params.z0", 0, 1},
     {"manfn+zsqrd", "z0", "params.z0", 0, 1},
     {"barnsleym1", "z0", "params.z0", 0, 1},
@@ -405,7 +408,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(47U, catalog.fractal_types.size());
+    EXPECT_EQ(48U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
