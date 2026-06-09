@@ -45,13 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `hypercomplex` (`HYPER_CMPLX`)
-  - `params[0]`: notused; default `0`.
-  - `params[1]`: notused; default `0`.
-  - `params[2]`: cj; default `0`.
-  - `params[3]`: ck; default `0`.
-  - `function=`: `fn1`.
-
 - `hypercomplexj` (`HYPER_CMPLX_J`)
   - `params[0]`: c1; default `-.745`.
   - `params[1]`: ci; default `0`.
