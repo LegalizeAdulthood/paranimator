@@ -45,12 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `lyapunov` (`LYAPUNOV`)
-  - `params[0]`: +Order (integer); default `0`.
-  - `params[1]`: Population Seed; default `0.5`.
-  - `params[2]`: +Filter Cycles; default `0`.
-  - `function=`: none.
-
 - `lorenz3d1` (`LORENZ_3D1`)
   - `params[0]`: Time Step; default `.02`.
   - `params[1]`: a; default `5`.
