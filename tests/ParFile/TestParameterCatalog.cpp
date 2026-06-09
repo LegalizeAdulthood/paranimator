@@ -952,6 +952,33 @@ TEST(TestParameterCatalog, xyshiftMetadataLoads)
     EXPECT_EQ(ParFile::ExtrapolateMode::CLAMP, *metadata.extrapolate);
 }
 
+TEST(TestParameterCatalog, id3DCatalogDescriptionsLoad)
+{
+    const ParFile::ParameterCatalog catalog{id_3d_catalog()};
+    struct ExpectedDescription
+    {
+        const char *name;
+        const char *description;
+    };
+    const ExpectedDescription cases[]{
+        {"3d", "Resets 3D parameters to defaults and starts, stops, or overlays 3D mode."},
+        {"rotation", "Rotates the 3D transform around the x, y, and z axes."},
+        {"perspective", "Sets the viewer distance used for perspective in 3D transforms."},
+        {"lightsource", "Sets the x, y, and z coordinates of the light-source vector."},
+        {"randomize", "Randomizes nearby colors to smooth altitude banding in 3D transformations."},
+        {"rds", "Generates a random dot stereogram with optional depth, texture, and calibration settings."},
+    };
+
+    for (const ExpectedDescription &entry : cases)
+    {
+        EXPECT_EQ(entry.description, catalog.metadata(entry.name).description);
+    }
+    for (const ParFile::ParameterMetadata &metadata : catalog.parameters)
+    {
+        EXPECT_FALSE(metadata.description.empty()) << metadata.name;
+    }
+}
+
 TEST(TestParameterCatalog, id3DViewMetadataLoads)
 {
     const ParFile::ParameterCatalog catalog{id_3d_catalog()};

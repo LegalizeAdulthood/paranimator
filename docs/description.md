@@ -71,11 +71,6 @@ config schema fields in this plan. JSON Schema already has its own
 
 Each item is one reviewable slice. Remove an item after it lands.
 
-- 3D parameters
-  - Audit Id help for `data/id-3d-catalog.json`.
-  - Add sourced descriptions to all 3D metadata parameters.
-  - Add focused catalog tests for representative entries.
-
 - Core fractal params A through C
   - Audit Id help and `fractalp.cpp` for fractal types from `ant`
     through `complexnewton`.

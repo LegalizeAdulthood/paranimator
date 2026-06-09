@@ -2,6 +2,7 @@
   "parameters": {
     "3d": {
       "type": "enum",
+      "description": "Resets 3D parameters to defaults and starts, stops, or overlays 3D mode.",
       "format": "raw",
       "values": [ "yes", "no", "y", "n", "overlay" ],
       "default-curve": "hold",
@@ -9,6 +10,7 @@
     },
     "3dmode": {
       "type": "enum",
+      "description": "Selects the Julibrot viewing mode, including monocular, left eye, right eye, or red-blue.",
       "format": "raw",
       "values": [ "monocular", "lefteye", "righteye", "red-blue" ],
       "default-curve": "hold",
@@ -16,6 +18,7 @@
     },
     "ambient": {
       "type": "integer",
+      "description": "Sets the minimum light level, shadow depth, and contrast for light-source fill types.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -24,6 +27,7 @@
     },
     "background": {
       "type": "numeric-tuple",
+      "description": "Sets the red, green, and blue background color for full-color Targa output.",
       "format": "slash",
       "arity": 3,
       "default-curve": "linear",
@@ -31,12 +35,14 @@
     },
     "brief": {
       "type": "yes-no",
+      "description": "Writes shorter ray tracing files by omitting per-triangle color data.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "bright": {
       "type": "numeric-tuple",
+      "description": "Sets red and blue brightness compensation for red-blue stereo glasses.",
       "format": "slash",
       "arity": 2,
       "default-curve": "linear",
@@ -44,6 +50,7 @@
     },
     "coarse": {
       "type": "integer",
+      "description": "Sets 3D preview coarseness and the triangle size used for ray tracing output.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -52,12 +59,14 @@
     },
     "converge": {
       "type": "integer",
+      "description": "Sets stereo convergence and the overall separation of the two stereo images.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "crop": {
       "type": "numeric-tuple",
+      "description": "Trims left and right edges of red and blue stereo image pairs.",
       "format": "slash",
       "arity": 4,
       "default-curve": "linear",
@@ -65,24 +74,28 @@
     },
     "filename": {
       "type": "string",
+      "description": "Restores a saved image or GIF as the starting point for a 3D transform.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "filltype": {
       "type": "integer",
+      "description": "Selects the 3D fill method used to render the transformed surface.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "fullcolor": {
       "type": "yes-no",
+      "description": "Writes full-color Targa output for light-source fill types.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "haze": {
       "type": "integer",
+      "description": "Adds distance haze to full-color light-source terrain output.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -91,12 +104,14 @@
     },
     "interocular": {
       "type": "integer",
+      "description": "Sets stereo eye separation as a percentage of the screen.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "julibrot3d": {
       "type": "numeric-tuple",
+      "description": "Sets Julibrot 3D depth, origin, height, width, and distance parameters.",
       "format": "slash",
       "arity": 6,
       "default-curve": "linear",
@@ -104,12 +119,14 @@
     },
     "julibroteyes": {
       "type": "double",
+      "description": "Sets the distance between the virtual eyes for Julibrot rendering.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "julibrotfromto": {
       "type": "numeric-tuple",
+      "description": "Sets the source and destination coordinate range used for Julibrot rendering.",
       "format": "slash",
       "arity": 4,
       "default-curve": "linear",
@@ -117,6 +134,7 @@
     },
     "latitude": {
       "type": "numeric-tuple",
+      "description": "Sets the minimum and maximum latitude used by spherical projection.",
       "format": "slash",
       "arity": 2,
       "default-curve": "linear",
@@ -124,6 +142,7 @@
     },
     "lightsource": {
       "type": "numeric-tuple",
+      "description": "Sets the x, y, and z coordinates of the light-source vector.",
       "format": "slash",
       "arity": 3,
       "default-curve": "linear",
@@ -131,6 +150,7 @@
     },
     "longitude": {
       "type": "numeric-tuple",
+      "description": "Sets the minimum and maximum longitude used by spherical projection.",
       "format": "slash",
       "arity": 2,
       "default-curve": "linear",
@@ -138,24 +158,28 @@
     },
     "monitorwidth": {
       "type": "double",
+      "description": "Sets the physical image width in inches for random dot stereogram viewing.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "perspective": {
       "type": "integer",
+      "description": "Sets the viewer distance used for perspective in 3D transforms.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "preview": {
       "type": "yes-no",
+      "description": "Enables 3D preview mode before producing the final transformed image.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "radius": {
       "type": "integer",
+      "description": "Sets the radius scale factor for spherical projection.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -163,6 +187,7 @@
     },
     "randomize": {
       "type": "integer",
+      "description": "Randomizes nearby colors to smooth altitude banding in 3D transformations.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -171,24 +196,28 @@
     },
     "ray": {
       "type": "string",
+      "description": "Selects the ray tracing output file format for 3D surfaces.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "rds": {
       "type": "string",
+      "description": "Generates a random dot stereogram with optional depth, texture, and calibration settings.",
       "format": "slash",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "rds-texture": {
       "type": "string",
+      "description": "Selects the texture image used instead of random dots for random dot stereograms.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "rotation": {
       "type": "numeric-tuple",
+      "description": "Rotates the 3D transform around the x, y, and z axes.",
       "format": "slash",
       "arity": 3,
       "default-curve": "linear",
@@ -196,12 +225,14 @@
     },
     "roughness": {
       "type": "integer",
+      "description": "Sets surface roughness as the z-axis scale factor.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "scalexyz": {
       "type": "numeric-tuple",
+      "description": "Sets x, y, and z scale factors for the transformed 3D surface.",
       "format": "slash",
       "arity": 3,
       "default-curve": "linear",
@@ -209,12 +240,14 @@
     },
     "showbox": {
       "type": "yes-no",
+      "description": "Shows the 3D preview bounding box before final rendering.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "smoothing": {
       "type": "integer",
+      "description": "Smooths rough images when using light-source fill modes.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -222,12 +255,14 @@
     },
     "sphere": {
       "type": "yes-no",
+      "description": "Enables spherical projection for the 3D transform.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "stereo": {
       "type": "integer",
+      "description": "Selects the stereo image mode, including none, alternate, superimpose, photo, or pair.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -236,30 +271,35 @@
     },
     "stereowidth": {
       "type": "double",
+      "description": "Sets the physical image width in inches for random dot stereogram viewing.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp"
     },
     "targa_overlay": {
       "type": "yes-no",
+      "description": "Overlays full-color light-source output onto an existing Targa file.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "transparent": {
       "type": "string",
+      "description": "Sets the color range treated as transparent during 3D overlay.",
       "format": "slash",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "usegrayscale": {
       "type": "yes-no",
+      "description": "Uses grayscale brightness rather than color number as depth information.",
       "format": "raw",
       "default-curve": "hold",
       "extrapolate": "clamp"
     },
     "waterline": {
       "type": "integer",
+      "description": "Raises colors at or below this value to form the 3D water level.",
       "format": "raw",
       "default-curve": "linear",
       "extrapolate": "clamp",
@@ -267,6 +307,7 @@
     },
     "xyadjust": {
       "type": "numeric-tuple",
+      "description": "Shifts the final 3D image in x and y without changing perspective.",
       "format": "slash",
       "arity": 2,
       "default-curve": "linear",
@@ -274,6 +315,7 @@
     },
     "xyshift": {
       "type": "numeric-tuple",
+      "description": "Shifts the 3D image in x and y while changing the perspective view.",
       "format": "slash",
       "arity": 2,
       "default-curve": "linear",
