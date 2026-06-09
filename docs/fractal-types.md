@@ -45,11 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `volterra-lotka` (`VL`)
-  - `params[0]`: h; default `0.739`.
-  - `params[1]`: p; default `0.739`.
-  - `function=`: none.
-
 - `escher_julia` (`ESCHER`)
   - `params[0]`: Real Part of Parameter; default `0.32`.
   - `params[1]`: Imaginary Part of Parameter; default `0.043`.
