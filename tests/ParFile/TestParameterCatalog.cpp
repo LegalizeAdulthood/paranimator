@@ -126,6 +126,12 @@ constexpr FormulaFunctionMetadataCase FORMULA_FUNCTION_METADATA_CASES[]{
 };
 
 const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
+    {"ant", 0, "rule-string", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"ant", 1, "max-points", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"ant", 2, "ant-count", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, 1.0, 256.0},
+    {"ant", 3, "ant-type", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 1.0, 2.0},
+    {"ant", 4, "wrap", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
+    {"ant", 5, "random-seed-mode", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
     {"bifurcation", 0, "filter-cycles", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"bifurcation", 1, "seed-population", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
@@ -657,7 +663,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(91U, catalog.fractal_types.size());
+    EXPECT_EQ(92U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 

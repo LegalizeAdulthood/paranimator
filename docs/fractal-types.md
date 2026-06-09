@@ -45,16 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `ant` (`ANT`)
-  - `params[0]`: #Rule String (1's and non-1's, 0 rand); default `1100`.
-  - `params[1]`: #Maxpts; default `1.0E9`.
-  - `params[2]`: +Numants (max 256); default `1`.
-  - `params[3]`: +Ant type (1 or 2); default `1`.
-  - extra `params[4]`: +Wrap?; default `1`.
-  - extra `params[5]`: +Random Seed Value (0 = Random, 1 = Reuse Last);
-    default `0`.
-  - `function=`: none.
-
 - `chip` (`CHIP`)
   - `params[0]`: a; default `-15`.
   - `params[1]`: b; default `-19`.
