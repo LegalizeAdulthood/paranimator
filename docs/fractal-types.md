@@ -45,12 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `bifmay` (`BIF_MAY`)
-  - `params[0]`: +Filter Cycles; default `300.0`.
-  - `params[1]`: Seed Population; default `0.9`.
-  - `params[2]`: Beta >= 2; default `5`.
-  - `function=`: none.
-
 - `halley` (`HALLEY`)
   - `params[0]`: +Order (integer > 1); default `6`.
   - `params[1]`: Real Relaxation coefficient; default `1.0`.
