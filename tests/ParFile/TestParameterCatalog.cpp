@@ -341,6 +341,10 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"lambda", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lambda", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"lambda(fn||fn)", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"lambda(fn||fn)", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"lambda(fn||fn)", 2, "function-shift", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"plasma", 0, "graininess", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, 0.0, 100.0},
     {"plasma", 1, "algorithm", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
     {"plasma", 2, "random-seed-mode", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 1.0},
@@ -372,6 +376,8 @@ constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"fn*z+z", 0, "fn1"},
     {"julfn+exp", 0, "fn1"},
     {"julfn+zsqrd", 0, "fn1"},
+    {"lambda(fn||fn)", 0, "fn1"},
+    {"lambda(fn||fn)", 1, "fn2"},
     {"lambdafn", 0, "fn1"},
     {"mandelfn", 0, "fn1"},
     {"manfn+exp", 0, "fn1"},
@@ -408,6 +414,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"julzpower", "exponent", "params.exponent", 2, 3},
     {"julzzpwr", "c", "params.c", 0, 1},
     {"lambda", "c", "params.c", 0, 1},
+    {"lambda(fn||fn)", "c", "params.c", 0, 1},
     {"barnsleyj1", "c", "params.c", 0, 1},
     {"barnsleyj2", "c", "params.c", 0, 1},
     {"barnsleyj3", "c", "params.c", 0, 1},
@@ -506,7 +513,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(66U, catalog.fractal_types.size());
+    EXPECT_EQ(67U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 

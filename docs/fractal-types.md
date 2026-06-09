@@ -45,12 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `lambda(fn||fn)` (`LAMBDA_FN_FN`)
-  - `params[0]`: Real Part of Parameter; default `1`.
-  - `params[1]`: Imaginary Part of Parameter; default `0.1`.
-  - `params[2]`: Function Shift Value; default `1`.
-  - `function=`: `fn1/fn2`.
-
 - `julia(fn||fn)` (`JUL_FN_FN`)
   - `params[0]`: Real Part of Parameter; default `0`.
   - `params[1]`: Imaginary Part of Parameter; default `0`.
