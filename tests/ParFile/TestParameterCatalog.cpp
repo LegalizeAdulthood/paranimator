@@ -170,6 +170,10 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"diffusion", 1, "diffusion-type", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 2.0},
     {"diffusion", 2, "color-change-rate", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"escher_julia", 0, "parameter-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"escher_julia", 1, "parameter-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"fn(z)+fn(pix)", 0, "z0-perturbation-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"fn(z)+fn(pix)", 1, "z0-perturbation-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
@@ -563,6 +567,7 @@ constexpr ParamsGroupMetadataCase PARAMS_GROUP_METADATA_CASES[]{
     {"julia", "c", "params.c", 0, 1},
     {"julia(fn||fn)", "c", "params.c", 0, 1},
     {"julia_inverse", "parameter", "params.parameter", 0, 1},
+    {"escher_julia", "parameter", "params.parameter", 0, 1},
     {"julia4", "c", "params.c", 0, 1},
     {"julzpower", "c", "params.c", 0, 1},
     {"julzpower", "exponent", "params.exponent", 2, 3},
@@ -674,7 +679,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(96U, catalog.fractal_types.size());
+    EXPECT_EQ(97U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
