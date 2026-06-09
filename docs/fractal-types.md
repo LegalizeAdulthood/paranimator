@@ -45,11 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `dividebrot5` (`DIVIDE_BROT5`)
-  - `params[0]`: a; default `2.0`.
-  - `params[1]`: b; default `0.0`.
-  - `function=`: none.
-
 - `mandelbrotmix4` (`MANDELBROT_MIX4`)
   - `params[0]`: Real portion of p1; default `0.05`.
   - `params[1]`: Imaginary portion of p1; default `3`.
