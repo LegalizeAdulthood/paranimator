@@ -45,15 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `icons` (`ICON`)
-  - `params[0]`: Lambda; default `-2.34`.
-  - `params[1]`: Alpha; default `2.0`.
-  - `params[2]`: Beta; default `0.2`.
-  - `params[3]`: Gamma; default `0.1`.
-  - extra `params[4]`: Omega; default `0`.
-  - extra `params[5]`: +Degree of symmetry; default `3`.
-  - `function=`: none.
-
 - `icons3d` (`ICON_3D`)
   - `params[0]`: Lambda; default `-2.34`.
   - `params[1]`: Alpha; default `2.0`.
