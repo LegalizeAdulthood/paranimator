@@ -45,11 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `bifstewart` (`BIF_STEWART`)
-  - `params[0]`: +Filter Cycles; default `1000.0`.
-  - `params[1]`: Seed Population; default `0.66`.
-  - `function=`: `fn1`.
-
 - `hopalong` (`HOPALONG`)
   - `params[0]`: a; default `.4`.
   - `params[1]`: b; default `1`.
