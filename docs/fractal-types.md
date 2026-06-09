@@ -45,15 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `quatjul` (`QUAT_JUL`)
-  - `params[0]`: c1; default `-.745`.
-  - `params[1]`: ci; default `0`.
-  - `params[2]`: cj; default `.113`.
-  - `params[3]`: ck; default `.05`.
-  - extra `params[4]`: zj; default `0`.
-  - extra `params[5]`: zk; default `0`.
-  - `function=`: none.
-
 - `cellular` (`CELLULAR`)
   - `params[0]`: #Initial String | 0 = Random | -1 = Reuse Last Random;
     default `11.0`.
