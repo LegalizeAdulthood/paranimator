@@ -220,6 +220,10 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
     {"julfn+zsqrd", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lambdafn", 0, "c-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lambdafn", 1, "c-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"latoocarfian", 0, "a", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"latoocarfian", 1, "b", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"latoocarfian", 2, "c", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
+    {"latoocarfian", 3, "d", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lorenz", 0, "time-step", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lorenz", 1, "a", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
     {"lorenz", 2, "b", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt, std::nullopt},
@@ -526,6 +530,10 @@ constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"lambda(fn||fn)", 0, "fn1"},
     {"lambda(fn||fn)", 1, "fn2"},
     {"lambdafn", 0, "fn1"},
+    {"latoocarfian", 0, "fn1"},
+    {"latoocarfian", 1, "fn2"},
+    {"latoocarfian", 2, "fn3"},
+    {"latoocarfian", 3, "fn4"},
     {"mandel(fn||fn)", 0, "fn1"},
     {"mandel(fn||fn)", 1, "fn2"},
     {"mandelfn", 0, "fn1"},
@@ -679,7 +687,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(97U, catalog.fractal_types.size());
+    EXPECT_EQ(98U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 

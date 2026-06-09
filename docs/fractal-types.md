@@ -45,13 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `latoocarfian` (`LATOO`)
-  - `params[0]`: a; default `-0.966918`.
-  - `params[1]`: b; default `2.879879`.
-  - `params[2]`: c; default `0.765145`.
-  - `params[3]`: d; default `0.744728`.
-  - `function=`: `fn1/fn2/fn3/fn4`.
-
 - `dividebrot5` (`DIVIDE_BROT5`)
   - `params[0]`: a; default `2.0`.
   - `params[1]`: b; default `0.0`.
