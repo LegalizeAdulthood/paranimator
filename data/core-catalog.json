@@ -445,6 +445,39 @@
         }
       }
     },
+    "diffusion": {
+      "params": {
+        "format": "slash-list",
+        "slots": [
+          {
+            "index": 0,
+            "name": "border-size",
+            "type": "integer",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          },
+          {
+            "index": 1,
+            "name": "diffusion-type",
+            "type": "integer",
+            "format": "raw",
+            "default-curve": "hold",
+            "extrapolate": "clamp",
+            "min": 0,
+            "max": 2
+          },
+          {
+            "index": 2,
+            "name": "color-change-rate",
+            "type": "integer",
+            "format": "raw",
+            "default-curve": "linear",
+            "extrapolate": "clamp"
+          }
+        ]
+      }
+    },
     "fn+fn": {
       "params": {
         "format": "slash-list",

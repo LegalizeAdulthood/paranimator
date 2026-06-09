@@ -45,12 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `diffusion` (`DIFFUSION`)
-  - `params[0]`: +Border size; default `10`.
-  - `params[1]`: +Type (0=Central,1=Falling,2=Square Cavity); default `0`.
-  - `params[2]`: +Color change rate (0=Random); default `0`.
-  - `function=`: none.
-
 - `spider` (`SPIDER`)
   - `params[0]`: Real Perturbation of Z(0); default `0`.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.

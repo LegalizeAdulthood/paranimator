@@ -130,6 +130,11 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"bifurcation", 1, "seed-population", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"diffusion", 0, "border-size", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"diffusion", 1, "diffusion-type", ParFile::ParameterType::INTEGER, ParFile::Curve::HOLD, 0.0, 2.0},
+    {"diffusion", 2, "color-change-rate", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"fn+fn", 0, "fn1-coefficient-real", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"fn+fn", 1, "fn1-coefficient-imag", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
@@ -388,7 +393,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(42U, catalog.fractal_types.size());
+    EXPECT_EQ(43U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
