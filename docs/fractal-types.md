@@ -45,11 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `bif+sinpi` (`BIF_PLUS_SIN_PI`)
-  - `params[0]`: +Filter Cycles; default `1000.0`.
-  - `params[1]`: Seed Population; default `0.66`.
-  - `function=`: `fn1`.
-
 - `bif=sinpi` (`BIF_EQ_SIN_PI`)
   - `params[0]`: +Filter Cycles; default `1000.0`.
   - `params[1]`: Seed Population; default `0.66`.

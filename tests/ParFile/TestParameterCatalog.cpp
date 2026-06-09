@@ -130,6 +130,10 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
         std::nullopt},
     {"bifurcation", 1, "seed-population", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
+    {"bif+sinpi", 0, "filter-cycles", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
+    {"bif+sinpi", 1, "seed-population", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
+        std::nullopt},
     {"biflambda", 0, "filter-cycles", ParFile::ParameterType::INTEGER, ParFile::Curve::LINEAR, std::nullopt,
         std::nullopt},
     {"biflambda", 1, "seed-population", ParFile::ParameterType::DOUBLE, ParFile::Curve::LINEAR, std::nullopt,
@@ -302,6 +306,7 @@ const ParamsSlotMetadataCase PARAMS_SLOT_METADATA_CASES[]{
 
 constexpr FunctionSlotMetadataCase FUNCTION_SLOT_METADATA_CASES[]{
     {"bifurcation", 0, "fn1"},
+    {"bif+sinpi", 0, "fn1"},
     {"biflambda", 0, "fn1"},
     {"fn+fn", 0, "fn1"},
     {"fn+fn", 1, "fn2"},
@@ -416,7 +421,7 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     const ParFile::ParameterCatalog catalog{core_catalog()};
 
     EXPECT_EQ(42U, catalog.parameters.size());
-    EXPECT_EQ(50U, catalog.fractal_types.size());
+    EXPECT_EQ(51U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
 }
 
