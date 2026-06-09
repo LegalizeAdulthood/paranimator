@@ -45,15 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `hypercomplexj` (`HYPER_CMPLX_J`)
-  - `params[0]`: c1; default `-.745`.
-  - `params[1]`: ci; default `0`.
-  - `params[2]`: cj; default `.113`.
-  - `params[3]`: ck; default `.05`.
-  - extra `params[4]`: zj; default `0`.
-  - extra `params[5]`: zk; default `0`.
-  - `function=`: `fn1`.
-
 - `frothybasin` (`FROTHY_BASIN`)
   - `params[0]`: +Apply mapping once (1) or twice (2); default `1`.
   - `params[1]`: +Enter non-zero value for alternate color shading; default
