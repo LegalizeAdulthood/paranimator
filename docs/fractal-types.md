@@ -45,11 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `spider` (`SPIDER`)
-  - `params[0]`: Real Perturbation of Z(0); default `0`.
-  - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
-  - `function=`: none.
-
 - `tetrate` (`TETRATE`)
   - `params[0]`: Real Perturbation of Z(0); default `0`.
   - `params[1]`: Imaginary Perturbation of Z(0); default `0`.
