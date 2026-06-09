@@ -45,12 +45,6 @@ Each item names the Id type, slots to catalog, default source values,
 extra slots when present, and function slots when present. Remove an
 item after the catalog entry and focused tests land.
 
-- `threeply` (`THREEPLY`)
-  - `params[0]`: a; default `-55`.
-  - `params[1]`: b; default `-1`.
-  - `params[2]`: c; default `-42`.
-  - `function=`: none.
-
 - `volterra-lotka` (`VL`)
   - `params[0]`: h; default `0.739`.
   - `params[1]`: p; default `0.739`.
