@@ -1356,6 +1356,7 @@
             "index": 0,
             "name": "lambda",
             "type": "double",
+            "description": "Sets the lambda term in the Icon orbit map.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1364,6 +1365,7 @@
             "index": 1,
             "name": "alpha",
             "type": "double",
+            "description": "Sets the alpha coefficient applied to orbit magnitude in the Icon orbit map.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1372,6 +1374,7 @@
             "index": 2,
             "name": "beta",
             "type": "double",
+            "description": "Sets the beta coefficient applied to the complex z product in the Icon orbit map.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1380,6 +1383,7 @@
             "index": 3,
             "name": "gamma",
             "type": "double",
+            "description": "Sets the gamma coefficient applied to the z components in the Icon orbit map.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1388,6 +1392,7 @@
             "index": 4,
             "name": "omega",
             "type": "double",
+            "description": "Selects Icon symmetry behavior, with 0 using Dn and nonzero using Zn.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1396,6 +1401,7 @@
             "index": 5,
             "name": "symmetry-degree",
             "type": "integer",
+            "description": "Sets n, the degree of symmetry for the Icon orbit map.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1411,6 +1417,7 @@
             "index": 0,
             "name": "lambda",
             "type": "double",
+            "description": "Sets the lambda term in the 3D Icon orbit map.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1419,6 +1426,7 @@
             "index": 1,
             "name": "alpha",
             "type": "double",
+            "description": "Sets the alpha coefficient applied to orbit magnitude in the 3D Icon orbit map.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1427,6 +1435,7 @@
             "index": 2,
             "name": "beta",
             "type": "double",
+            "description": "Sets the beta coefficient applied to the complex z product in the 3D Icon orbit map.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1435,6 +1444,7 @@
             "index": 3,
             "name": "gamma",
             "type": "double",
+            "description": "Sets the gamma coefficient applied to the z components in the 3D Icon orbit map.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1443,6 +1453,7 @@
             "index": 4,
             "name": "omega",
             "type": "double",
+            "description": "Selects 3D Icon symmetry behavior, with 0 using Dn and nonzero using Zn.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1451,6 +1462,7 @@
             "index": 5,
             "name": "symmetry-degree",
             "type": "integer",
+            "description": "Sets n, the degree of symmetry for the 3D Icon orbit map.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1466,6 +1478,7 @@
             "index": 0,
             "name": "coloring-method",
             "type": "integer",
+            "description": "Selects the IFS coloring method, 0 or 1.",
             "format": "raw",
             "default-curve": "hold",
             "extrapolate": "clamp",
@@ -1483,6 +1496,7 @@
             "index": 0,
             "name": "coloring-method",
             "type": "integer",
+            "description": "Selects the 3D IFS coloring method, 0 or 1.",
             "format": "raw",
             "default-curve": "hold",
             "extrapolate": "clamp",
@@ -1500,6 +1514,7 @@
             "index": 0,
             "name": "angle",
             "type": "double",
+            "description": "Sets angle a used to rotate each KAM Torus orbit step.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1508,6 +1523,7 @@
             "index": 1,
             "name": "step-size",
             "type": "double",
+            "description": "Sets how much to increment the KAM Torus orbit value after each orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1516,6 +1532,7 @@
             "index": 2,
             "name": "stop-value",
             "type": "double",
+            "description": "Sets the KAM Torus orbit value at which new orbit starts stop.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1524,6 +1541,7 @@
             "index": 3,
             "name": "points-per-orbit",
             "type": "integer",
+            "description": "Sets how many points to plot for each KAM Torus orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1539,6 +1557,7 @@
             "index": 0,
             "name": "angle",
             "type": "double",
+            "description": "Sets angle a used to rotate each 3D KAM Torus orbit step.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1547,6 +1566,7 @@
             "index": 1,
             "name": "step-size",
             "type": "double",
+            "description": "Sets how much to increment the 3D KAM Torus orbit value after each orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1555,6 +1575,7 @@
             "index": 2,
             "name": "stop-value",
             "type": "double",
+            "description": "Sets the 3D KAM Torus orbit value at which new orbit starts stop.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1563,6 +1584,7 @@
             "index": 3,
             "name": "points-per-orbit",
             "type": "integer",
+            "description": "Sets how many points to plot for each 3D KAM Torus orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3255,6 +3277,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c in the classic Julia iteration.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3263,6 +3286,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c in the classic Julia iteration.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3271,6 +3295,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value in the classic Julia iteration.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3287,6 +3312,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c added by the selected Julia function branch.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3295,6 +3321,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c added by the selected Julia function branch.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3303,6 +3330,7 @@
             "index": 2,
             "name": "function-shift",
             "type": "double",
+            "description": "Sets the modulus threshold that selects between fn1 and fn2.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3311,6 +3339,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value added by the selected Julia function branch.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3337,6 +3366,7 @@
             "index": 0,
             "name": "parameter-real",
             "type": "double",
+            "description": "Sets the real part of c for inverse Julia boundary tracing.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3345,6 +3375,7 @@
             "index": 1,
             "name": "parameter-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c for inverse Julia boundary tracing.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3353,6 +3384,7 @@
             "index": 2,
             "name": "max-hits-per-pixel",
             "type": "integer",
+            "description": "Sets the maximum inverse Julia hits accumulated for each pixel.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3361,6 +3393,7 @@
         "groups": {
           "parameter": {
             "type": "complex",
+            "description": "Sets the complex c value for inverse Julia boundary tracing.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3377,6 +3410,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c in the fourth-power Julia iteration.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3385,6 +3419,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c in the fourth-power Julia iteration.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3393,6 +3428,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value in the fourth-power Julia iteration.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3409,6 +3445,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c added after fn(z)+e^z in julfn+exp.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3417,6 +3454,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c added after fn(z)+e^z in julfn+exp.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3425,6 +3463,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value added after fn(z)+e^z in julfn+exp.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3447,6 +3486,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c added after fn(z)+z^2 in julfn+zsqrd.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3455,6 +3495,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c added after fn(z)+z^2 in julfn+zsqrd.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3463,6 +3504,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value added after fn(z)+z^2 in julfn+zsqrd.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3485,6 +3527,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c in z^m+c Julia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3493,6 +3536,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c in z^m+c Julia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3501,6 +3545,7 @@
             "index": 2,
             "name": "exponent-real",
             "type": "double",
+            "description": "Sets the real part of exponent m in z^m+c Julia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3509,6 +3554,7 @@
             "index": 3,
             "name": "exponent-imag",
             "type": "double",
+            "description": "Sets the imaginary part of exponent m in z^m+c Julia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3517,6 +3563,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value in z^m+c Julia rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3524,6 +3571,7 @@
           },
           "exponent": {
             "type": "complex",
+            "description": "Sets the complex exponent m in z^m+c Julia rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3540,6 +3588,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c in z^z+z^m+c Julia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3548,6 +3597,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c in z^z+z^m+c Julia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3556,6 +3606,7 @@
             "index": 2,
             "name": "exponent-real",
             "type": "double",
+            "description": "Sets exponent m in z^z+z^m+c Julia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3564,6 +3615,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value in z^z+z^m+c Julia rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3580,6 +3632,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of lambda in lambda*z*(1-z).",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3588,6 +3641,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of lambda in lambda*z*(1-z).",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3596,6 +3650,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex lambda value in lambda*z*(1-z).",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3612,6 +3667,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of lambda multiplying the selected function branch.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3620,6 +3676,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of lambda multiplying the selected function branch.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3628,6 +3685,7 @@
             "index": 2,
             "name": "function-shift",
             "type": "double",
+            "description": "Sets the modulus threshold that selects between fn1 and fn2.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3636,6 +3694,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex lambda value multiplying the selected function branch.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3662,6 +3721,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of lambda multiplying fn(z).",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3670,6 +3730,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of lambda multiplying fn(z).",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3678,6 +3739,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex lambda value multiplying fn(z).",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3700,6 +3762,7 @@
             "index": 0,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the Latoocarfian y-orbit function.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3708,6 +3771,7 @@
             "index": 1,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the Latoocarfian x-orbit function.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3716,6 +3780,7 @@
             "index": 2,
             "name": "c",
             "type": "double",
+            "description": "Sets coefficient c multiplying fn2 in the Latoocarfian x update.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3724,6 +3789,7 @@
             "index": 3,
             "name": "d",
             "type": "double",
+            "description": "Sets coefficient d multiplying fn4 in the Latoocarfian y update.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3757,6 +3823,7 @@
             "index": 0,
             "name": "time-step",
             "type": "double",
+            "description": "Sets the Lorenz integration time step dt.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3765,6 +3832,7 @@
             "index": 1,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3773,6 +3841,7 @@
             "index": 2,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3781,6 +3850,7 @@
             "index": 3,
             "name": "c",
             "type": "double",
+            "description": "Sets coefficient c in the Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3796,6 +3866,7 @@
             "index": 0,
             "name": "time-step",
             "type": "double",
+            "description": "Sets the 3D Lorenz integration time step dt.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3804,6 +3875,7 @@
             "index": 1,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the 3D Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3812,6 +3884,7 @@
             "index": 2,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the 3D Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3820,6 +3893,7 @@
             "index": 3,
             "name": "c",
             "type": "double",
+            "description": "Sets coefficient c in the 3D Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3835,6 +3909,7 @@
             "index": 0,
             "name": "time-step",
             "type": "double",
+            "description": "Sets the one-lobe Lorenz integration time step dt.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3843,6 +3918,7 @@
             "index": 1,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the one-lobe Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3851,6 +3927,7 @@
             "index": 2,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the one-lobe Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3859,6 +3936,7 @@
             "index": 3,
             "name": "c",
             "type": "double",
+            "description": "Sets coefficient c in the one-lobe Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3874,6 +3952,7 @@
             "index": 0,
             "name": "time-step",
             "type": "double",
+            "description": "Sets the three-lobe Lorenz integration time step dt.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3882,6 +3961,7 @@
             "index": 1,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the three-lobe Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3890,6 +3970,7 @@
             "index": 2,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the three-lobe Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3898,6 +3979,7 @@
             "index": 3,
             "name": "c",
             "type": "double",
+            "description": "Sets coefficient c in the three-lobe Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3913,6 +3995,7 @@
             "index": 0,
             "name": "time-step",
             "type": "double",
+            "description": "Sets the four-lobe Lorenz integration time step dt.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3921,6 +4004,7 @@
             "index": 1,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the four-lobe Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3929,6 +4013,7 @@
             "index": 2,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the four-lobe Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3937,6 +4022,7 @@
             "index": 3,
             "name": "c",
             "type": "double",
+            "description": "Sets coefficient c in the four-lobe Lorenz attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3952,6 +4038,7 @@
             "index": 0,
             "name": "order",
             "type": "integer",
+            "description": "Sets how many times to apply the selected L-system transformation rules.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3967,6 +4054,7 @@
             "index": 0,
             "name": "order",
             "type": "integer",
+            "description": "Selects the periodic a/b growth-rate sequence for the Lyapunov map.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3975,6 +4063,7 @@
             "index": 1,
             "name": "seed-population",
             "type": "double",
+            "description": "Sets the initial population value, with 0 and 1 selecting special seed handling.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3983,6 +4072,7 @@
             "index": 2,
             "name": "filter-cycles",
             "type": "integer",
+            "description": "Sets cycles run before Lyapunov exponent calculation; 0 uses half the iterations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"

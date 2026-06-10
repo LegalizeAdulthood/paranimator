@@ -1523,6 +1523,93 @@ TEST(TestParameterCatalog, coreDThroughHParamsDescriptionsLoad)
     }
 }
 
+TEST(TestParameterCatalog, coreIThroughLParamsDescriptionsLoad)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    struct ExpectedSlotDescription
+    {
+        const char *fractal_type;
+        int slot;
+        const char *description;
+    };
+    const ExpectedSlotDescription slot_cases[]{
+        {"icons", 4, "Selects Icon symmetry behavior, with 0 using Dn and nonzero using Zn."},
+        {"ifs", 0, "Selects the IFS coloring method, 0 or 1."},
+        {"julfn+exp", 0, "Sets the real part of c added after fn(z)+e^z in julfn+exp."},
+        {"julia_inverse", 2, "Sets the maximum inverse Julia hits accumulated for each pixel."},
+        {"julzzpwr", 2, "Sets exponent m in z^z+z^m+c Julia rendering."},
+        {"kamtorus", 1, "Sets how much to increment the KAM Torus orbit value after each orbit."},
+        {"lambda(fn||fn)", 2, "Sets the modulus threshold that selects between fn1 and fn2."},
+        {"latoocarfian", 3, "Sets coefficient d multiplying fn4 in the Latoocarfian y update."},
+        {"lorenz3d3", 3, "Sets coefficient c in the three-lobe Lorenz attractor equations."},
+        {"lsystem", 0, "Sets how many times to apply the selected L-system transformation rules."},
+        {"lyapunov", 2, "Sets cycles run before Lyapunov exponent calculation; 0 uses half the iterations."},
+    };
+    struct ExpectedGroupDescription
+    {
+        const char *fractal_type;
+        const char *group;
+        const char *description;
+    };
+    const ExpectedGroupDescription group_cases[]{
+        {"julia", "c", "Sets the complex c value in the classic Julia iteration."},
+        {"julia(fn||fn)", "c", "Sets the complex c value added by the selected Julia function branch."},
+        {"julzpower", "exponent", "Sets the complex exponent m in z^m+c Julia rendering."},
+        {"lambda", "c", "Sets the complex lambda value in lambda*z*(1-z)."},
+    };
+    const char *covered_types[]{
+        "icons",
+        "icons3d",
+        "ifs",
+        "ifs3d",
+        "julfn+exp",
+        "julfn+zsqrd",
+        "julia",
+        "julia(fn||fn)",
+        "julia_inverse",
+        "julia4",
+        "julzpower",
+        "julzzpwr",
+        "kamtorus",
+        "kamtorus3d",
+        "lambda",
+        "lambda(fn||fn)",
+        "lambdafn",
+        "latoocarfian",
+        "lorenz",
+        "lorenz3d",
+        "lorenz3d1",
+        "lorenz3d3",
+        "lorenz3d4",
+        "lsystem",
+        "lyapunov",
+    };
+
+    for (const ExpectedSlotDescription &expected : slot_cases)
+    {
+        EXPECT_EQ(expected.description, catalog.params_slot(expected.fractal_type, expected.slot).metadata.description);
+    }
+    for (const ExpectedGroupDescription &expected : group_cases)
+    {
+        EXPECT_EQ(
+            expected.description, catalog.params_group(expected.fractal_type, expected.group).metadata.description);
+    }
+    for (const char *fractal_type : covered_types)
+    {
+        const auto type{std::find_if(catalog.fractal_types.begin(), catalog.fractal_types.end(),
+            [fractal_type](const ParFile::FractalTypeMetadata &entry) { return entry.name == fractal_type; })};
+        ASSERT_NE(catalog.fractal_types.end(), type) << fractal_type;
+        for (const ParFile::ParamsSlotMetadata &slot : type->params.slots)
+        {
+            EXPECT_FALSE(slot.metadata.description.empty()) << fractal_type << " " << slot.name;
+        }
+        for (const ParFile::ParamsGroupMetadata &group : type->params.groups)
+        {
+            EXPECT_FALSE(group.metadata.description.empty()) << fractal_type << " " << group.name;
+        }
+    }
+}
+
 class FormulaEntryMetadataTest : public ::testing::TestWithParam<FormulaEntryMetadataCase>
 {
 };

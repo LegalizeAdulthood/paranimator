@@ -71,11 +71,6 @@ config schema fields in this plan. JSON Schema already has its own
 
 Each item is one reviewable slice. Remove an item after it lands.
 
-- Core fractal params I through L
-  - Audit Id help and `fractalp.cpp` for fractal types from `icons`
-    through `lyapunov`.
-  - Add descriptions to each params slot and params group.
-
 - Core fractal params M
   - Audit Id help and `fractalp.cpp` for `magnet*`, `mandel*`,
     `man*`, `marks*`, and `martin`.
