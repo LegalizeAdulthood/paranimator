@@ -65,6 +65,17 @@ std::string load_required_string(const Object &json, std::string_view parameter,
     return json.at(key).get<std::string>();
 }
 
+std::string load_required_non_empty_string(const Object &json, std::string_view parameter, std::string_view field)
+{
+    std::string result{load_required_string(json, parameter, field)};
+    if (result.empty())
+    {
+        throw std::runtime_error(
+            "Invalid parameter metadata '" + std::string{parameter} + "', empty string '" + std::string{field} + "'");
+    }
+    return result;
+}
+
 std::string load_required_id_function_values(const Object &json, std::string_view parameter)
 {
     const std::string value_set{load_required_string(json, parameter, "values")};
@@ -262,13 +273,13 @@ ParameterMetadata load_metadata(std::string_view name, const Object &json)
     result.values = load_parameter_values(name, result.type, json);
     result.arity = load_optional_positive_int(json, "arity");
     result.normalize = load_optional_bool(json, "normalize").value_or(false);
-    result.description = load_optional_string(json, "description").value_or(std::string{});
+    result.description = load_required_non_empty_string(json, name, "description");
     apply_tuple_alias_metadata(result);
     validate_discrete_values_metadata(result);
     return result;
 }
 
-void load_optional_metadata_fields(ParameterMetadata &metadata, const Object &json)
+void load_metadata_fields(ParameterMetadata &metadata, const Object &json, std::string_view name)
 {
     if (const std::optional<std::string> format{load_optional_string(json, "format")})
     {
@@ -286,7 +297,7 @@ void load_optional_metadata_fields(ParameterMetadata &metadata, const Object &js
     metadata.max = load_optional_number(json, "max");
     metadata.arity = load_optional_positive_int(json, "arity");
     metadata.normalize = load_optional_bool(json, "normalize").value_or(false);
-    metadata.description = load_optional_string(json, "description").value_or(std::string{});
+    metadata.description = load_required_non_empty_string(json, name, "description");
     apply_tuple_alias_metadata(metadata);
 }
 
@@ -490,7 +501,7 @@ FunctionSlotMetadata load_function_slot(std::string_view name, const Object &jso
     result.metadata.default_curve = Curve::HOLD;
     result.metadata.extrapolate = ExtrapolateMode::CLAMP;
     result.metadata.values = id_function_values();
-    load_optional_metadata_fields(result.metadata, json);
+    load_metadata_fields(result.metadata, json, name);
     return result;
 }
 
@@ -546,7 +557,7 @@ FormulaParamsKnobMetadata load_formula_params_knob(
     result.metadata.name = std::string{formula_name} + "." + std::string{knob_name};
     result.metadata.type = load_formula_knob_type(knob_name, json);
     result.metadata.format = default_formula_knob_format(result.metadata.type);
-    load_optional_metadata_fields(result.metadata, json);
+    load_metadata_fields(result.metadata, json, result.metadata.name);
     const std::string variable{load_required_string(json, knob_name, "variable")};
     result.slots = load_formula_variable_slots(knob_name, result.metadata.type, variable);
     return result;

@@ -51,26 +51,61 @@ ParFile::ParameterCatalog typed_catalog()
             ParFile::ExtrapolateMode::CLAMP, {}, {}}}};
 }
 
-std::string catalog_text(std::string_view metadata)
+std::string metadata_with_description(std::string_view metadata)
+{
+    std::string result{metadata};
+    if (result.find("\"description\"") == std::string::npos)
+    {
+        result += R"(,"description":"Test help.")";
+    }
+    return result;
+}
+
+std::string catalog_text_raw(std::string_view metadata)
 {
     return "{\"parameters\":{\"x\":{" + std::string{metadata} + "}}}";
 }
 
-std::string formula_catalog_text(std::string_view knob)
+std::string catalog_text(std::string_view metadata)
+{
+    return catalog_text_raw(metadata_with_description(metadata));
+}
+
+std::string formula_catalog_text_raw(std::string_view knob)
 {
     return "{\"parameters\":{},\"formula-entries\":{\"foo\":{\"params\":{\"knobs\":{\"x\":{" + std::string{knob} +
         "}}}}}}";
 }
 
-std::string formula_function_catalog_text(std::string_view function)
+std::string formula_catalog_text(std::string_view knob)
+{
+    return formula_catalog_text_raw(metadata_with_description(knob));
+}
+
+std::string formula_function_catalog_text_raw(std::string_view function)
 {
     return "{\"parameters\":{},\"formula-entries\":{\"foo\":{\"functions\":{\"fn1\":{" + std::string{function} +
         "}}}}}";
 }
 
-std::string fractal_function_catalog_text(std::string_view function)
+std::string formula_function_catalog_text(std::string_view function)
+{
+    return formula_function_catalog_text_raw(metadata_with_description(function));
+}
+
+std::string fractal_function_catalog_text_raw(std::string_view function)
 {
     return "{\"parameters\":{},\"fractal-types\":{\"foo\":{\"functions\":{\"fn1\":{" + std::string{function} + "}}}}}";
+}
+
+std::string fractal_function_catalog_text(std::string_view function)
+{
+    return fractal_function_catalog_text_raw(metadata_with_description(function));
+}
+
+std::string fractal_params_catalog_text(std::string_view params)
+{
+    return "{\"parameters\":{},\"fractal-types\":{\"foo\":{\"params\":{" + std::string{params} + "}}}}";
 }
 
 struct FormulaEntryMetadataCase
@@ -702,6 +737,46 @@ ParFile::ParameterMetadata read_metadata(std::string_view metadata)
     return ParFile::read_parameter_catalog(catalog_text(metadata)).metadata("x");
 }
 
+void expect_metadata_description(
+    std::string_view catalog_name, std::string_view scope, const ParFile::ParameterMetadata &metadata)
+{
+    EXPECT_FALSE(metadata.description.empty()) << catalog_name << " " << scope << " " << metadata.name;
+}
+
+void expect_complete_descriptions(std::string_view catalog_name, const ParFile::ParameterCatalog &catalog)
+{
+    for (const ParFile::ParameterMetadata &metadata : catalog.parameters)
+    {
+        expect_metadata_description(catalog_name, "parameter", metadata);
+    }
+    for (const ParFile::FractalTypeMetadata &fractal_type : catalog.fractal_types)
+    {
+        for (const ParFile::ParamsSlotMetadata &slot : fractal_type.params.slots)
+        {
+            expect_metadata_description(catalog_name, fractal_type.name + "." + slot.name, slot.metadata);
+        }
+        for (const ParFile::ParamsGroupMetadata &group : fractal_type.params.groups)
+        {
+            expect_metadata_description(catalog_name, fractal_type.name + "." + group.name, group.metadata);
+        }
+        for (const ParFile::FunctionSlotMetadata &function : fractal_type.functions.keys)
+        {
+            expect_metadata_description(catalog_name, fractal_type.name + "." + function.name, function.metadata);
+        }
+    }
+    for (const ParFile::FormulaEntryMetadata &formula : catalog.formula_entries)
+    {
+        for (const ParFile::FormulaParamsKnobMetadata &knob : formula.params.knobs)
+        {
+            expect_metadata_description(catalog_name, formula.name + "." + knob.name, knob.metadata);
+        }
+        for (const ParFile::FormulaFunctionMetadata &function : formula.functions.keys)
+        {
+            expect_metadata_description(catalog_name, formula.name + "." + function.name, function.metadata);
+        }
+    }
+}
+
 } // namespace
 
 TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
@@ -711,6 +786,14 @@ TEST(TestParameterCatalog, validCatalogJsonDeserializesAllCoreParameters)
     EXPECT_EQ(42U, catalog.parameters.size());
     EXPECT_EQ(101U, catalog.fractal_types.size());
     EXPECT_EQ(0U, catalog.formula_entries.size());
+}
+
+TEST(TestParameterCatalog, allLoadedCatalogDescriptionsAreComplete)
+{
+    expect_complete_descriptions("core", core_catalog());
+    expect_complete_descriptions("coloring", coloring_catalog());
+    expect_complete_descriptions("id-3d", id_3d_catalog());
+    expect_complete_descriptions("formula", formula_catalog());
 }
 
 TEST(TestParameterCatalog, typeMetadataLoads)
@@ -2058,16 +2141,14 @@ TEST(TestParameterCatalog, optionalNormalizeDecodes)
     EXPECT_TRUE(metadata.normalize);
 }
 
-TEST(TestParameterCatalog, optionalDescriptionDecodes)
+TEST(TestParameterCatalog, descriptionDecodes)
 {
-    const ParFile::ParameterMetadata described{read_metadata(R"("type":"integer","description":"Help text.")")};
-    const ParFile::ParameterMetadata undescribed{read_metadata(R"("type":"integer")")};
+    const ParFile::ParameterMetadata metadata{read_metadata(R"("type":"integer","description":"Help text.")")};
 
-    EXPECT_EQ("Help text.", described.description);
-    EXPECT_TRUE(undescribed.description.empty());
+    EXPECT_EQ("Help text.", metadata.description);
 }
 
-TEST(TestParameterCatalog, optionalDescriptionLoadsForAllMetadataShapes)
+TEST(TestParameterCatalog, descriptionLoadsForAllMetadataShapes)
 {
     const ParFile::ParameterCatalog catalog{ParFile::read_parameter_catalog(R"({
   "parameters": {
@@ -2078,7 +2159,7 @@ TEST(TestParameterCatalog, optionalDescriptionLoadsForAllMetadataShapes)
       "params": {
         "slots": [
           { "index": 0, "name": "real", "type": "double", "description": "Slot help." },
-          { "index": 1, "name": "imag", "type": "double" }
+          { "index": 1, "name": "imag", "type": "double", "description": "Second slot help." }
         ],
         "groups": {
           "c": {
@@ -2125,6 +2206,46 @@ TEST(TestParameterCatalog, optionalDescriptionLoadsForAllMetadataShapes)
     EXPECT_EQ("Fractal function help.", catalog.function_slot("foo", 0).metadata.description);
     EXPECT_EQ("Knob help.", catalog.formula_params_knob("bar", "knob").metadata.description);
     EXPECT_EQ("Formula function help.", catalog.formula_function("bar", "fn1").metadata.description);
+}
+
+TEST(TestParameterCatalog, missingDescriptionRejectedForAllMetadataShapes)
+{
+    EXPECT_THROW(ParFile::read_parameter_catalog(catalog_text_raw(R"("type":"integer")")), std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(
+                     fractal_params_catalog_text(R"("slots":[{"index":0,"name":"a","type":"double"}])")),
+        std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(
+                     fractal_params_catalog_text(R"("groups":{"c":{"type":"complex","slots":[0,1]}})")),
+        std::runtime_error);
+    EXPECT_THROW(
+        ParFile::read_parameter_catalog(fractal_function_catalog_text_raw(R"("type":"enum","values":"id-functions")")),
+        std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(formula_catalog_text_raw(R"("type":"real","variable":"p1.real")")),
+        std::runtime_error);
+    EXPECT_THROW(
+        ParFile::read_parameter_catalog(formula_function_catalog_text_raw(R"("type":"enum","values":"id-functions")")),
+        std::runtime_error);
+}
+
+TEST(TestParameterCatalog, emptyDescriptionRejectedForAllMetadataShapes)
+{
+    EXPECT_THROW(
+        ParFile::read_parameter_catalog(catalog_text_raw(R"("type":"integer","description":"")")), std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(fractal_params_catalog_text(
+                     R"("slots":[{"index":0,"name":"a","type":"double","description":""}])")),
+        std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(fractal_params_catalog_text(
+                     R"("groups":{"c":{"type":"complex","slots":[0,1],"description":""}})")),
+        std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(
+                     fractal_function_catalog_text_raw(R"("type":"enum","values":"id-functions","description":"")")),
+        std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(
+                     formula_catalog_text_raw(R"("type":"real","variable":"p1.real","description":"")")),
+        std::runtime_error);
+    EXPECT_THROW(ParFile::read_parameter_catalog(
+                     formula_function_catalog_text_raw(R"("type":"enum","values":"id-functions","description":"")")),
+        std::runtime_error);
 }
 
 TEST(TestParameterCatalog, enumValuesDecode)

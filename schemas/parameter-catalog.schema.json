@@ -79,7 +79,7 @@
     "parameter-metadata": {
       "description": "Animation metadata for one Id parameter or derived parameter target.",
       "type": "object",
-      "required": [ "type" ],
+      "required": [ "type", "description" ],
       "additionalProperties": false,
       "properties": {
         "type": {
@@ -135,7 +135,7 @@
     "params-slot-metadata": {
       "description": "Metadata for one scalar slot in an Id params= value.",
       "type": "object",
-      "required": [ "index", "name", "type" ],
+      "required": [ "index", "name", "type", "description" ],
       "additionalProperties": false,
       "properties": {
         "index": {
@@ -200,7 +200,7 @@
     "params-group-metadata": {
       "description": "Metadata for a named group of slots in an Id params= value.",
       "type": "object",
-      "required": [ "type", "slots" ],
+      "required": [ "type", "slots", "description" ],
       "additionalProperties": false,
       "properties": {
         "type": {
@@ -439,7 +439,7 @@
     "formula-params-knob-metadata": {
       "description": "Metadata for one human-readable formula params knob.",
       "type": "object",
-      "required": [ "type", "variable" ],
+      "required": [ "type", "variable", "description" ],
       "additionalProperties": false,
       "properties": {
         "type": {
@@ -554,7 +554,7 @@
     "function-slot-metadata": {
       "description": "Metadata for one function= slot.",
       "type": "object",
-      "required": [ "type", "values" ],
+      "required": [ "type", "values", "description" ],
       "additionalProperties": false,
       "properties": {
         "type": {

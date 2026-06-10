@@ -79,26 +79,56 @@ std::string config_with_layer_compose(std::string_view compose)
 })";
 }
 
-std::string catalog_with_metadata(std::string_view metadata)
+std::string metadata_with_description(std::string_view metadata)
+{
+    std::string result{metadata};
+    if (result.find("\"description\"") == std::string::npos)
+    {
+        result += R"(,"description":"Test help.")";
+    }
+    return result;
+}
+
+std::string catalog_with_raw_metadata(std::string_view metadata)
 {
     return "{\"parameters\":{\"x\":{" + std::string{metadata} + "}}}";
 }
 
-std::string catalog_with_formula_knob(std::string_view metadata)
+std::string catalog_with_metadata(std::string_view metadata)
+{
+    return catalog_with_raw_metadata(metadata_with_description(metadata));
+}
+
+std::string catalog_with_raw_formula_knob(std::string_view metadata)
 {
     return "{\"parameters\":{},\"formula-entries\":{\"foo\":{\"params\":{\"knobs\":{\"x\":{" + std::string{metadata} +
         "}}}}}}";
 }
 
-std::string catalog_with_formula_function(std::string_view metadata)
+std::string catalog_with_formula_knob(std::string_view metadata)
+{
+    return catalog_with_raw_formula_knob(metadata_with_description(metadata));
+}
+
+std::string catalog_with_raw_formula_function(std::string_view metadata)
 {
     return "{\"parameters\":{},\"formula-entries\":{\"foo\":{\"functions\":{\"fn1\":{" + std::string{metadata} +
         "}}}}}";
 }
 
-std::string catalog_with_fractal_function(std::string_view metadata)
+std::string catalog_with_formula_function(std::string_view metadata)
+{
+    return catalog_with_raw_formula_function(metadata_with_description(metadata));
+}
+
+std::string catalog_with_raw_fractal_function(std::string_view metadata)
 {
     return "{\"parameters\":{},\"fractal-types\":{\"foo\":{\"functions\":{\"fn1\":{" + std::string{metadata} + "}}}}}";
+}
+
+std::string catalog_with_fractal_function(std::string_view metadata)
+{
+    return catalog_with_raw_fractal_function(metadata_with_description(metadata));
 }
 
 std::string catalog_with_fractal_params(std::string_view metadata)
@@ -577,6 +607,21 @@ TEST(TestJsonSchema, metadataDescriptionsAccepted)
         catalog_with_formula_function(R"("type":"enum","values":"id-functions","description":"Function help")")));
 }
 
+TEST(TestJsonSchema, metadataDescriptionsRequired)
+{
+    EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_raw_metadata(R"("type":"integer")")));
+    EXPECT_FALSE(validates_parameter_catalog_text(
+        catalog_with_fractal_params(R"("slots":[{"index":0,"name":"a","type":"double"}])")));
+    EXPECT_FALSE(validates_parameter_catalog_text(
+        catalog_with_fractal_params(R"("groups":{"c":{"type":"complex","slots":[0,1]}})")));
+    EXPECT_FALSE(validates_parameter_catalog_text(
+        catalog_with_raw_fractal_function(R"("type":"enum","values":"id-functions")")));
+    EXPECT_FALSE(
+        validates_parameter_catalog_text(catalog_with_raw_formula_knob(R"("type":"real","variable":"p1.real")")));
+    EXPECT_FALSE(validates_parameter_catalog_text(
+        catalog_with_raw_formula_function(R"("type":"enum","values":"id-functions")")));
+}
+
 TEST(TestJsonSchema, invalidMetadataDescriptionRejected)
 {
     EXPECT_FALSE(validates_parameter_catalog_text(catalog_with_metadata(R"("type":"integer","description":1)")));
@@ -685,7 +730,11 @@ TEST(TestJsonSchema, invalidFormulaFunctionNameRejected)
   "formula-entries": {
     "foo": {
       "functions": {
-        "fn5": { "type": "enum", "values": "id-functions" }
+        "fn5": {
+          "type": "enum",
+          "values": "id-functions",
+          "description": "Function help"
+        }
       }
     }
   }
@@ -699,7 +748,11 @@ TEST(TestJsonSchema, invalidFractalFunctionNameRejected)
   "fractal-types": {
     "foo": {
       "functions": {
-        "fn5": { "type": "enum", "values": "id-functions" }
+        "fn5": {
+          "type": "enum",
+          "values": "id-functions",
+          "description": "Function help"
+        }
       }
     }
   }

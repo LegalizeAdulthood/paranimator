@@ -66,14 +66,3 @@ config schema fields in this plan. JSON Schema already has its own
   knobs, and formula functions.
 - Add a final completeness test that fails on any loaded metadata object
   with an empty description.
-
-## Work Items
-
-Each item is one reviewable slice. Remove an item after it lands.
-
-- Enforce completeness
-  - Make `description` required in every catalog schema metadata
-    definition.
-  - Make the loader reject missing or empty descriptions.
-  - Add completeness tests that walk all loaded catalog metadata.
-  - Remove the completed description item from `docs/todo.md`.
