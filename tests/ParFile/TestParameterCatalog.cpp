@@ -1760,6 +1760,74 @@ TEST(TestParameterCatalog, coreNThroughPParamsDescriptionsLoad)
     }
 }
 
+TEST(TestParameterCatalog, coreQThroughZParamsDescriptionsLoad)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    struct ExpectedSlotDescription
+    {
+        const char *fractal_type;
+        int slot;
+        const char *description;
+    };
+    const ExpectedSlotDescription slot_cases[]{
+        {"quat", 2, "Sets the j component of the quaternion Mandelbrot c-plane slice."},
+        {"quatjul", 5, "Sets the k component of the quaternion Julia z-plane slice."},
+        {"rossler3d", 0, "Sets dt, the time step multiplying the Rossler differential equations."},
+        {"spider", 0, "Sets the real perturbation of z(0) for Spider rendering."},
+        {"tetrate", 1, "Sets the imaginary perturbation of z(0) for Tetrate rendering."},
+        {"tim's_error", 1, "Sets the imaginary perturbation of z(0) for Tim's Error rendering."},
+        {"quadruptwo", 2, "Sets coefficient c in the Quadruptwo attractor equation."},
+        {"threeply", 1, "Sets coefficient b in the Threeply attractor equation."},
+        {"volterra-lotka", 0, "Sets Volterra-Lotka parameter h; values are clamped to 0 through 1."},
+    };
+    struct ExpectedGroupDescription
+    {
+        const char *fractal_type;
+        const char *group;
+        const char *description;
+    };
+    const ExpectedGroupDescription group_cases[]{
+        {"spider", "z0", "Sets the complex perturbation of z(0) for Spider rendering."},
+        {"tetrate", "z0", "Sets the complex perturbation of z(0) for Tetrate rendering."},
+        {"tim's_error", "z0-perturbation", "Sets the complex perturbation of z(0) for Tim's Error rendering."},
+    };
+    const char *covered_types[]{
+        "quadruptwo",
+        "quat",
+        "quatjul",
+        "rossler3d",
+        "spider",
+        "tetrate",
+        "threeply",
+        "tim's_error",
+        "volterra-lotka",
+    };
+
+    for (const ExpectedSlotDescription &expected : slot_cases)
+    {
+        EXPECT_EQ(expected.description, catalog.params_slot(expected.fractal_type, expected.slot).metadata.description);
+    }
+    for (const ExpectedGroupDescription &expected : group_cases)
+    {
+        EXPECT_EQ(
+            expected.description, catalog.params_group(expected.fractal_type, expected.group).metadata.description);
+    }
+    for (const char *fractal_type : covered_types)
+    {
+        const auto type{std::find_if(catalog.fractal_types.begin(), catalog.fractal_types.end(),
+            [fractal_type](const ParFile::FractalTypeMetadata &entry) { return entry.name == fractal_type; })};
+        ASSERT_NE(catalog.fractal_types.end(), type) << fractal_type;
+        for (const ParFile::ParamsSlotMetadata &slot : type->params.slots)
+        {
+            EXPECT_FALSE(slot.metadata.description.empty()) << fractal_type << " " << slot.name;
+        }
+        for (const ParFile::ParamsGroupMetadata &group : type->params.groups)
+        {
+            EXPECT_FALSE(group.metadata.description.empty()) << fractal_type << " " << group.name;
+        }
+    }
+}
+
 class FormulaEntryMetadataTest : public ::testing::TestWithParam<FormulaEntryMetadataCase>
 {
 };

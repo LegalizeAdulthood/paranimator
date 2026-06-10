@@ -71,11 +71,6 @@ config schema fields in this plan. JSON Schema already has its own
 
 Each item is one reviewable slice. Remove an item after it lands.
 
-- Core fractal params Q through Z
-  - Audit Id help and `fractalp.cpp` for fractal types from
-    `quadruptwo` through `volterra-lotka`.
-  - Add descriptions to each params slot and params group.
-
 - Core fractal function slots
   - Audit Id help for `function=` and `fractalp.cpp` where functions
     have special meaning.

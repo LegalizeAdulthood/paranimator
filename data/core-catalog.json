@@ -2023,6 +2023,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for Spider rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2031,6 +2032,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for Spider rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2039,6 +2041,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for Spider rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2055,6 +2058,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for Tetrate rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2063,6 +2067,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for Tetrate rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2071,6 +2076,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for Tetrate rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2894,6 +2900,7 @@
             "index": 0,
             "name": "z0-perturbation-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for Tim's Error rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2902,6 +2909,7 @@
             "index": 1,
             "name": "z0-perturbation-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for Tim's Error rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2910,6 +2918,7 @@
         "groups": {
           "z0-perturbation": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for Tim's Error rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -4187,6 +4196,7 @@
             "index": 0,
             "name": "unused-0",
             "type": "double",
+            "description": "Unused compatibility slot; quat uses xpixel for the c1 component.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4195,6 +4205,7 @@
             "index": 1,
             "name": "unused-1",
             "type": "double",
+            "description": "Unused compatibility slot; quat uses ypixel for the ci component.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4203,6 +4214,7 @@
             "index": 2,
             "name": "cj",
             "type": "double",
+            "description": "Sets the j component of the quaternion Mandelbrot c-plane slice.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4211,6 +4223,7 @@
             "index": 3,
             "name": "ck",
             "type": "double",
+            "description": "Sets the k component of the quaternion Mandelbrot c-plane slice.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4226,6 +4239,7 @@
             "index": 0,
             "name": "c1",
             "type": "double",
+            "description": "Sets the scalar component c1 of the quaternion Julia constant.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4234,6 +4248,7 @@
             "index": 1,
             "name": "ci",
             "type": "double",
+            "description": "Sets the i component ci of the quaternion Julia constant.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4242,6 +4257,7 @@
             "index": 2,
             "name": "cj",
             "type": "double",
+            "description": "Sets the j component cj of the quaternion Julia constant.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4250,6 +4266,7 @@
             "index": 3,
             "name": "ck",
             "type": "double",
+            "description": "Sets the k component ck of the quaternion Julia constant.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4258,6 +4275,7 @@
             "index": 4,
             "name": "zj",
             "type": "double",
+            "description": "Sets the j component of the quaternion Julia z-plane slice.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4266,6 +4284,7 @@
             "index": 5,
             "name": "zk",
             "type": "double",
+            "description": "Sets the k component of the quaternion Julia z-plane slice.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4281,6 +4300,7 @@
             "index": 0,
             "name": "time-step",
             "type": "double",
+            "description": "Sets dt, the time step multiplying the Rossler differential equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4289,6 +4309,7 @@
             "index": 1,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the Rossler attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4297,6 +4318,7 @@
             "index": 2,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the Rossler attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4305,6 +4327,7 @@
             "index": 3,
             "name": "c",
             "type": "double",
+            "description": "Sets coefficient c in the Rossler attractor equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4672,6 +4695,7 @@
             "index": 0,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the Quadruptwo attractor equation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4680,6 +4704,7 @@
             "index": 1,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the Quadruptwo attractor equation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4688,6 +4713,7 @@
             "index": 2,
             "name": "c",
             "type": "double",
+            "description": "Sets coefficient c in the Quadruptwo attractor equation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4703,6 +4729,7 @@
             "index": 0,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the Threeply attractor equation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4711,6 +4738,7 @@
             "index": 1,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the Threeply attractor equation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4719,6 +4747,7 @@
             "index": 2,
             "name": "c",
             "type": "double",
+            "description": "Sets coefficient c in the Threeply attractor equation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4734,6 +4763,7 @@
             "index": 0,
             "name": "h",
             "type": "double",
+            "description": "Sets Volterra-Lotka parameter h; values are clamped to 0 through 1.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4742,6 +4772,7 @@
             "index": 1,
             "name": "p",
             "type": "double",
+            "description": "Sets Volterra-Lotka parameter p; values are clamped to 0 through 1.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
