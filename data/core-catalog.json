@@ -2932,6 +2932,7 @@
             "index": 0,
             "name": "degree",
             "type": "integer",
+            "description": "Sets polynomial degree n for Newton basin roots of z^n - 1.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2941,6 +2942,7 @@
             "index": 1,
             "name": "stripes",
             "type": "double",
+            "description": "Enables alternating color stripes showing Newton basin iteration changes.",
             "format": "raw",
             "default-curve": "hold",
             "extrapolate": "clamp"
@@ -2956,6 +2958,7 @@
             "index": 0,
             "name": "degree",
             "type": "integer",
+            "description": "Sets polynomial degree n for Newton roots of z^n - 1.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2972,6 +2975,7 @@
             "index": 0,
             "name": "p1-real",
             "type": "double",
+            "description": "Sets the real p1 constant for the Phoenix recurrence.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2980,6 +2984,7 @@
             "index": 1,
             "name": "p2-real",
             "type": "double",
+            "description": "Sets the real p2 constant for the Phoenix recurrence.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2988,6 +2993,7 @@
             "index": 2,
             "name": "degree",
             "type": "integer",
+            "description": "Sets the Phoenix degree case: 0, >=2, or <=-3.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3003,6 +3009,7 @@
             "index": 0,
             "name": "p1-real",
             "type": "double",
+            "description": "Sets the real portion of complex p1 for Phoenix rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3011,6 +3018,7 @@
             "index": 1,
             "name": "p1-imag",
             "type": "double",
+            "description": "Sets the imaginary portion of complex p1 for Phoenix rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3019,6 +3027,7 @@
             "index": 2,
             "name": "p2-real",
             "type": "double",
+            "description": "Sets the real portion of complex p2 for Phoenix rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3027,6 +3036,7 @@
             "index": 3,
             "name": "p2-imag",
             "type": "double",
+            "description": "Sets the imaginary portion of complex p2 for Phoenix rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3035,6 +3045,7 @@
             "index": 4,
             "name": "degree",
             "type": "integer",
+            "description": "Sets the complex Phoenix degree case: 0, >=2, or <=-3.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3043,6 +3054,7 @@
         "groups": {
           "p1": {
             "type": "complex",
+            "description": "Sets the complex p1 constant for Phoenix rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3050,6 +3062,7 @@
           },
           "p2": {
             "type": "complex",
+            "description": "Sets the complex p2 constant for Phoenix rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -4382,6 +4395,7 @@
             "index": 0,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the Pickover attractor x update.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4390,6 +4404,7 @@
             "index": 1,
             "name": "b",
             "type": "double",
+            "description": "Sets coefficient b in the Pickover attractor x update.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4398,6 +4413,7 @@
             "index": 2,
             "name": "c",
             "type": "double",
+            "description": "Sets coefficient c in the Pickover attractor y update.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4406,6 +4422,7 @@
             "index": 3,
             "name": "d",
             "type": "double",
+            "description": "Sets coefficient d in the Pickover attractor y update.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4446,6 +4463,7 @@
             "index": 0,
             "name": "graininess",
             "type": "double",
+            "description": "Sets how abruptly plasma colors change; 0 or 0.125 through 100 are valid.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -4456,6 +4474,7 @@
             "index": 1,
             "name": "algorithm",
             "type": "integer",
+            "description": "Selects the plasma algorithm, 0 for original or 1 for new.",
             "format": "raw",
             "default-curve": "hold",
             "extrapolate": "clamp",
@@ -4466,6 +4485,7 @@
             "index": 2,
             "name": "random-seed-mode",
             "type": "integer",
+            "description": "Selects plasma seed handling, 0 for random or 1 to reuse the last seed.",
             "format": "raw",
             "default-curve": "hold",
             "extrapolate": "clamp",
@@ -4476,6 +4496,7 @@
             "index": 3,
             "name": "save-pot-file",
             "type": "integer",
+            "description": "Enables 16-bit potential-file output for plasma clouds when nonzero.",
             "format": "raw",
             "default-curve": "hold",
             "extrapolate": "clamp",
@@ -4493,6 +4514,7 @@
             "index": 0,
             "name": "step-size-real",
             "type": "double",
+            "description": "Sets the real part of h, the Popcorn orbit step size.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4501,6 +4523,7 @@
             "index": 1,
             "name": "step-size-imag",
             "type": "double",
+            "description": "Sets the imaginary part of h, the Popcorn orbit step size.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4509,6 +4532,7 @@
             "index": 2,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of constant c in the Popcorn orbit equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4517,6 +4541,7 @@
             "index": 3,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of constant c in the Popcorn orbit equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4525,6 +4550,7 @@
         "groups": {
           "step-size": {
             "type": "complex",
+            "description": "Sets complex h, the Popcorn orbit step size.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -4532,6 +4558,7 @@
           },
           "c": {
             "type": "complex",
+            "description": "Sets complex constant c in the Popcorn orbit equations.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -4566,6 +4593,7 @@
             "index": 0,
             "name": "step-size-real",
             "type": "double",
+            "description": "Sets the real part of h, the Popcorn Julia step size.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4574,6 +4602,7 @@
             "index": 1,
             "name": "step-size-imag",
             "type": "double",
+            "description": "Sets the imaginary part of h, the Popcorn Julia step size.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4582,6 +4611,7 @@
             "index": 2,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of constant c in the Popcorn Julia equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4590,6 +4620,7 @@
             "index": 3,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of constant c in the Popcorn Julia equations.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -4598,6 +4629,7 @@
         "groups": {
           "step-size": {
             "type": "complex",
+            "description": "Sets complex h, the Popcorn Julia step size.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -4605,6 +4637,7 @@
           },
           "c": {
             "type": "complex",
+            "description": "Sets complex constant c in the Popcorn Julia equations.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",

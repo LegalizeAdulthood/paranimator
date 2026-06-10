@@ -1694,6 +1694,72 @@ TEST(TestParameterCatalog, coreMParamsDescriptionsLoad)
     }
 }
 
+TEST(TestParameterCatalog, coreNThroughPParamsDescriptionsLoad)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    struct ExpectedSlotDescription
+    {
+        const char *fractal_type;
+        int slot;
+        const char *description;
+    };
+    const ExpectedSlotDescription slot_cases[]{
+        {"newtbasin", 1, "Enables alternating color stripes showing Newton basin iteration changes."},
+        {"newton", 0, "Sets polynomial degree n for Newton roots of z^n - 1."},
+        {"phoenix", 2, "Sets the Phoenix degree case: 0, >=2, or <=-3."},
+        {"phoenixcplx", 4, "Sets the complex Phoenix degree case: 0, >=2, or <=-3."},
+        {"pickover", 2, "Sets coefficient c in the Pickover attractor y update."},
+        {"plasma", 2, "Selects plasma seed handling, 0 for random or 1 to reuse the last seed."},
+        {"popcorn", 0, "Sets the real part of h, the Popcorn orbit step size."},
+        {"popcornjul", 3, "Sets the imaginary part of constant c in the Popcorn Julia equations."},
+    };
+    struct ExpectedGroupDescription
+    {
+        const char *fractal_type;
+        const char *group;
+        const char *description;
+    };
+    const ExpectedGroupDescription group_cases[]{
+        {"phoenixcplx", "p1", "Sets the complex p1 constant for Phoenix rendering."},
+        {"popcorn", "step-size", "Sets complex h, the Popcorn orbit step size."},
+        {"popcornjul", "c", "Sets complex constant c in the Popcorn Julia equations."},
+    };
+    const char *covered_types[]{
+        "newtbasin",
+        "newton",
+        "phoenix",
+        "phoenixcplx",
+        "pickover",
+        "plasma",
+        "popcorn",
+        "popcornjul",
+    };
+
+    for (const ExpectedSlotDescription &expected : slot_cases)
+    {
+        EXPECT_EQ(expected.description, catalog.params_slot(expected.fractal_type, expected.slot).metadata.description);
+    }
+    for (const ExpectedGroupDescription &expected : group_cases)
+    {
+        EXPECT_EQ(
+            expected.description, catalog.params_group(expected.fractal_type, expected.group).metadata.description);
+    }
+    for (const char *fractal_type : covered_types)
+    {
+        const auto type{std::find_if(catalog.fractal_types.begin(), catalog.fractal_types.end(),
+            [fractal_type](const ParFile::FractalTypeMetadata &entry) { return entry.name == fractal_type; })};
+        ASSERT_NE(catalog.fractal_types.end(), type) << fractal_type;
+        for (const ParFile::ParamsSlotMetadata &slot : type->params.slots)
+        {
+            EXPECT_FALSE(slot.metadata.description.empty()) << fractal_type << " " << slot.name;
+        }
+        for (const ParFile::ParamsGroupMetadata &group : type->params.groups)
+        {
+            EXPECT_FALSE(group.metadata.description.empty()) << fractal_type << " " << group.name;
+        }
+    }
+}
+
 class FormulaEntryMetadataTest : public ::testing::TestWithParam<FormulaEntryMetadataCase>
 {
 };
