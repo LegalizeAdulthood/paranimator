@@ -1600,6 +1600,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for the classic Mandelbrot orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1608,6 +1609,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for the classic Mandelbrot orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1616,6 +1618,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for the classic Mandelbrot orbit.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1632,6 +1635,7 @@
             "index": 0,
             "name": "z0-perturbation-real",
             "type": "double",
+            "description": "Sets the real part of p1, the z(0) perturbation, for mandel(fn||fn).",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1640,6 +1644,7 @@
             "index": 1,
             "name": "z0-perturbation-imag",
             "type": "double",
+            "description": "Sets the imaginary part of p1, the z(0) perturbation, for mandel(fn||fn).",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1648,6 +1653,7 @@
             "index": 2,
             "name": "function-shift",
             "type": "double",
+            "description": "Sets the modulus threshold that selects between fn1 and fn2.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1656,6 +1662,7 @@
         "groups": {
           "z0-perturbation": {
             "type": "complex",
+            "description": "Sets p1, the complex z(0) perturbation, for mandel(fn||fn).",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1682,6 +1689,7 @@
             "index": 0,
             "name": "z0-perturbation-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for fourth-power Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1690,6 +1698,7 @@
             "index": 1,
             "name": "z0-perturbation-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for fourth-power Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1698,6 +1707,7 @@
         "groups": {
           "z0-perturbation": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for fourth-power Mandelbrot rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1714,6 +1724,7 @@
             "index": 0,
             "name": "p1-real",
             "type": "double",
+            "description": "Sets a, the real part of p1, in MandelbrotMix4.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1722,6 +1733,7 @@
             "index": 1,
             "name": "p1-imag",
             "type": "double",
+            "description": "Sets b, the imaginary part of p1, in MandelbrotMix4.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1730,6 +1742,7 @@
             "index": 2,
             "name": "p2-real",
             "type": "double",
+            "description": "Sets d, the real part of p2, in MandelbrotMix4.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1738,6 +1751,7 @@
             "index": 3,
             "name": "p2-imag",
             "type": "double",
+            "description": "Sets f, the imaginary part of p2, in MandelbrotMix4.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1746,6 +1760,7 @@
             "index": 4,
             "name": "p3-real",
             "type": "double",
+            "description": "Sets the k offset, real(p3), in MandelbrotMix4.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1754,6 +1769,7 @@
             "index": 5,
             "name": "p3-imag",
             "type": "double",
+            "description": "Sets the bailout offset, imag(p3), in MandelbrotMix4.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1762,6 +1778,7 @@
         "groups": {
           "p1": {
             "type": "complex",
+            "description": "Sets p1, whose real and imaginary parts become a and b in MandelbrotMix4.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1769,6 +1786,7 @@
           },
           "p2": {
             "type": "complex",
+            "description": "Sets p2, whose real and imaginary parts become d and f in MandelbrotMix4.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1776,6 +1794,7 @@
           },
           "p3": {
             "type": "complex",
+            "description": "Sets p3, whose real and imaginary parts control k and bailout in MandelbrotMix4.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1798,6 +1817,7 @@
             "index": 0,
             "name": "interval-count",
             "type": "integer",
+            "description": "Sets the Mandelbrot orbit interval count; negative values connect orbit points.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1813,6 +1833,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for the Mandelfn orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1821,6 +1842,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for the Mandelfn orbit.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1829,6 +1851,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for the Mandelfn orbit.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1851,6 +1874,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for Mandellambda rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1859,6 +1883,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for Mandellambda rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1867,6 +1892,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for Mandellambda rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1883,6 +1909,7 @@
             "index": 0,
             "name": "z0-perturbation-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for Mandelbrot Phoenix rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1891,6 +1918,7 @@
             "index": 1,
             "name": "z0-perturbation-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for Mandelbrot Phoenix rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1899,6 +1927,7 @@
             "index": 2,
             "name": "degree",
             "type": "integer",
+            "description": "Sets the Mandelbrot Phoenix degree case: 0, >=2, or <=-3.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1907,6 +1936,7 @@
         "groups": {
           "z0-perturbation": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for Mandelbrot Phoenix rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1923,6 +1953,7 @@
             "index": 0,
             "name": "z0-perturbation-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for complex Mandelbrot Phoenix rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1931,6 +1962,7 @@
             "index": 1,
             "name": "z0-perturbation-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for complex Mandelbrot Phoenix rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1939,6 +1971,7 @@
             "index": 2,
             "name": "p2-real",
             "type": "double",
+            "description": "Sets the real part of p2 in complex Mandelbrot Phoenix rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1947,6 +1980,7 @@
             "index": 3,
             "name": "p2-imag",
             "type": "double",
+            "description": "Sets the imaginary part of p2 in complex Mandelbrot Phoenix rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1955,6 +1989,7 @@
             "index": 4,
             "name": "degree",
             "type": "integer",
+            "description": "Sets the complex Mandelbrot Phoenix degree case: 0, >=2, or <=-3.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -1963,6 +1998,7 @@
         "groups": {
           "z0-perturbation": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for complex Mandelbrot Phoenix rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -1970,6 +2006,7 @@
           },
           "p2": {
             "type": "complex",
+            "description": "Sets the complex p2 value in complex Mandelbrot Phoenix rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2050,6 +2087,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for Magnet1 Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2058,6 +2096,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for Magnet1 Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2066,6 +2105,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for Magnet1 Mandelbrot rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2082,6 +2122,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c for Magnet1 Julia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2090,6 +2131,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c for Magnet1 Julia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2098,6 +2140,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value for Magnet1 Julia rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2114,6 +2157,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for Magnet2 Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2122,6 +2166,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for Magnet2 Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2130,6 +2175,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for Magnet2 Mandelbrot rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2146,6 +2192,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c for Magnet2 Julia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2154,6 +2201,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c for Magnet2 Julia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2162,6 +2210,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value for Magnet2 Julia rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2178,6 +2227,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for manfn+exp rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2186,6 +2236,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for manfn+exp rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2194,6 +2245,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for manfn+exp rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2216,6 +2268,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for manfn+zsqrd rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2224,6 +2277,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for manfn+zsqrd rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2232,6 +2286,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for manfn+zsqrd rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2254,6 +2309,7 @@
             "index": 0,
             "name": "z0-perturbation-real",
             "type": "double",
+            "description": "Sets the real part of p1, the z(0) perturbation, for manlam(fn||fn).",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2262,6 +2318,7 @@
             "index": 1,
             "name": "z0-perturbation-imag",
             "type": "double",
+            "description": "Sets the imaginary part of p1, the z(0) perturbation, for manlam(fn||fn).",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2270,6 +2327,7 @@
             "index": 2,
             "name": "function-shift",
             "type": "double",
+            "description": "Sets the modulus threshold that selects between fn1 and fn2.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2278,6 +2336,7 @@
         "groups": {
           "z0-perturbation": {
             "type": "complex",
+            "description": "Sets p1, the complex z(0) perturbation, for manlam(fn||fn).",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2514,6 +2573,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for Man-o-war Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2522,6 +2582,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for Man-o-war Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2530,6 +2591,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for Man-o-war Mandelbrot rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2546,6 +2608,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c for Man-o-war Julia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2554,6 +2617,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c for Man-o-war Julia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2562,6 +2626,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value for Man-o-war Julia rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2578,6 +2643,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for z^exp+c Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2586,6 +2652,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for z^exp+c Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2594,6 +2661,7 @@
             "index": 2,
             "name": "exponent-real",
             "type": "double",
+            "description": "Sets the real part of exponent exp in z^exp+c Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2602,6 +2670,7 @@
             "index": 3,
             "name": "exponent-imag",
             "type": "double",
+            "description": "Sets the imaginary part of exponent exp in z^exp+c Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2610,6 +2679,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for z^exp+c Mandelbrot rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2617,6 +2687,7 @@
           },
           "exponent": {
             "type": "complex",
+            "description": "Sets the complex exponent exp in z^exp+c Mandelbrot rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2694,6 +2765,7 @@
             "index": 0,
             "name": "z0-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for z^z+z^exp+C Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2702,6 +2774,7 @@
             "index": 1,
             "name": "z0-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for z^z+z^exp+C Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2710,6 +2783,7 @@
             "index": 2,
             "name": "exponent-real",
             "type": "double",
+            "description": "Sets exponent exp in z^z+z^exp+C Mandelbrot rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2718,6 +2792,7 @@
         "groups": {
           "z0": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for z^z+z^exp+C Mandelbrot rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2734,6 +2809,7 @@
             "index": 0,
             "name": "z0-perturbation-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for MarksMandel rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2742,6 +2818,7 @@
             "index": 1,
             "name": "z0-perturbation-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for MarksMandel rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2750,6 +2827,7 @@
             "index": 2,
             "name": "exponent-real",
             "type": "double",
+            "description": "Sets exponent exp in c^(exp-1)*z^2+c for MarksMandel rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2758,6 +2836,7 @@
         "groups": {
           "z0-perturbation": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for MarksMandel rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -2774,6 +2853,7 @@
             "index": 0,
             "name": "z0-perturbation-real",
             "type": "double",
+            "description": "Sets the real perturbation of z(0) for MarksMandelPwr rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2782,6 +2862,7 @@
             "index": 1,
             "name": "z0-perturbation-imag",
             "type": "double",
+            "description": "Sets the imaginary perturbation of z(0) for MarksMandelPwr rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -2790,6 +2871,7 @@
         "groups": {
           "z0-perturbation": {
             "type": "complex",
+            "description": "Sets the complex perturbation of z(0) for MarksMandelPwr rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -3237,6 +3319,7 @@
             "index": 0,
             "name": "c-real",
             "type": "double",
+            "description": "Sets the real part of c in c^(exp-1)*z^2+c for MarksJulia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3245,6 +3328,7 @@
             "index": 1,
             "name": "c-imag",
             "type": "double",
+            "description": "Sets the imaginary part of c in c^(exp-1)*z^2+c for MarksJulia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3253,6 +3337,7 @@
             "index": 2,
             "name": "exponent-real",
             "type": "double",
+            "description": "Sets exponent exp in c^(exp-1)*z^2+c for MarksJulia rendering.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -3261,6 +3346,7 @@
         "groups": {
           "c": {
             "type": "complex",
+            "description": "Sets the complex c value in c^(exp-1)*z^2+c for MarksJulia rendering.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp",
@@ -4280,6 +4366,7 @@
             "index": 0,
             "name": "a",
             "type": "double",
+            "description": "Sets coefficient a in the Martin attractor equation.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"

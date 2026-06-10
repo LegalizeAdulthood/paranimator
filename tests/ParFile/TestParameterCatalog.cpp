@@ -1610,6 +1610,90 @@ TEST(TestParameterCatalog, coreIThroughLParamsDescriptionsLoad)
     }
 }
 
+TEST(TestParameterCatalog, coreMParamsDescriptionsLoad)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    struct ExpectedSlotDescription
+    {
+        const char *fractal_type;
+        int slot;
+        const char *description;
+    };
+    const ExpectedSlotDescription slot_cases[]{
+        {"magnet1j", 0, "Sets the real part of c for Magnet1 Julia rendering."},
+        {"mandel(fn||fn)", 2, "Sets the modulus threshold that selects between fn1 and fn2."},
+        {"mandelbrotmix4", 5, "Sets the bailout offset, imag(p3), in MandelbrotMix4."},
+        {"mandphoenixclx", 4, "Sets the complex Mandelbrot Phoenix degree case: 0, >=2, or <=-3."},
+        {"manzpower", 2, "Sets the real part of exponent exp in z^exp+c Mandelbrot rendering."},
+        {"marksjulia", 2, "Sets exponent exp in c^(exp-1)*z^2+c for MarksJulia rendering."},
+        {"martin", 0, "Sets coefficient a in the Martin attractor equation."},
+    };
+    struct ExpectedGroupDescription
+    {
+        const char *fractal_type;
+        const char *group;
+        const char *description;
+    };
+    const ExpectedGroupDescription group_cases[]{
+        {"mandel", "z0", "Sets the complex perturbation of z(0) for the classic Mandelbrot orbit."},
+        {"mandelbrotmix4", "p3", "Sets p3, whose real and imaginary parts control k and bailout in MandelbrotMix4."},
+        {"magnet2m", "z0", "Sets the complex perturbation of z(0) for Magnet2 Mandelbrot rendering."},
+        {"mandphoenixclx", "p2", "Sets the complex p2 value in complex Mandelbrot Phoenix rendering."},
+        {"manzpower", "exponent", "Sets the complex exponent exp in z^exp+c Mandelbrot rendering."},
+        {"marksjulia", "c", "Sets the complex c value in c^(exp-1)*z^2+c for MarksJulia rendering."},
+    };
+    const char *covered_types[]{
+        "magnet1j",
+        "magnet1m",
+        "magnet2j",
+        "magnet2m",
+        "mandel",
+        "mandel(fn||fn)",
+        "mandel4",
+        "mandelbrotmix4",
+        "mandelcloud",
+        "mandelfn",
+        "mandellambda",
+        "mandphoenix",
+        "mandphoenixclx",
+        "manfn+exp",
+        "manfn+zsqrd",
+        "manlam(fn||fn)",
+        "manowar",
+        "manowarj",
+        "manzpower",
+        "manzzpwr",
+        "marksjulia",
+        "marksmandel",
+        "marksmandelpwr",
+        "martin",
+    };
+
+    for (const ExpectedSlotDescription &expected : slot_cases)
+    {
+        EXPECT_EQ(expected.description, catalog.params_slot(expected.fractal_type, expected.slot).metadata.description);
+    }
+    for (const ExpectedGroupDescription &expected : group_cases)
+    {
+        EXPECT_EQ(
+            expected.description, catalog.params_group(expected.fractal_type, expected.group).metadata.description);
+    }
+    for (const char *fractal_type : covered_types)
+    {
+        const auto type{std::find_if(catalog.fractal_types.begin(), catalog.fractal_types.end(),
+            [fractal_type](const ParFile::FractalTypeMetadata &entry) { return entry.name == fractal_type; })};
+        ASSERT_NE(catalog.fractal_types.end(), type) << fractal_type;
+        for (const ParFile::ParamsSlotMetadata &slot : type->params.slots)
+        {
+            EXPECT_FALSE(slot.metadata.description.empty()) << fractal_type << " " << slot.name;
+        }
+        for (const ParFile::ParamsGroupMetadata &group : type->params.groups)
+        {
+            EXPECT_FALSE(group.metadata.description.empty()) << fractal_type << " " << group.name;
+        }
+    }
+}
+
 class FormulaEntryMetadataTest : public ::testing::TestWithParam<FormulaEntryMetadataCase>
 {
 };
