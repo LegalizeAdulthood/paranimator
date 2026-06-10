@@ -71,13 +71,6 @@ config schema fields in this plan. JSON Schema already has its own
 
 Each item is one reviewable slice. Remove an item after it lands.
 
-- Formula params and functions
-  - Audit the formula files for every entry in
-    `data/formula-catalog.json`.
-  - Add descriptions to each formula params knob.
-  - Add descriptions to formula function slots using formula comments
-    when present.
-
 - Enforce completeness
   - Make `description` required in every catalog schema metadata
     definition.

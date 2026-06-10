@@ -6,6 +6,7 @@
         "fn1": {
           "type": "enum",
           "values": "id-functions",
+          "description": "Selects fn1 added to pixel before multiplying by z^(z-1).",
           "format": "raw",
           "default-curve": "hold",
           "extrapolate": "clamp"
@@ -17,6 +18,7 @@
         "fn1": {
           "type": "enum",
           "values": "id-functions",
+          "description": "Selects fn1 multiplied by z^(z-1) before adding pixel.",
           "format": "raw",
           "default-curve": "hold",
           "extrapolate": "clamp"
@@ -29,6 +31,7 @@
           "fractal parameter": {
             "type": "complex",
             "variable": "p1",
+            "description": "Sets Larry's complex c parameter; 0/0 uses the default 0.5.",
             "format": "slash-pair",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -36,6 +39,7 @@
           "bailout": {
             "type": "real",
             "variable": "p2.real",
+            "description": "Sets Larry's bailout threshold; nonpositive values use 4.",
             "format": "raw",
             "default-curve": "linear",
             "extrapolate": "clamp"
@@ -46,6 +50,7 @@
         "fn1": {
           "type": "enum",
           "values": "id-functions",
+          "description": "Selects outer fn1 in z=fn1(fn2(z*z))+c.",
           "format": "raw",
           "default-curve": "hold",
           "extrapolate": "clamp"
@@ -53,6 +58,7 @@
         "fn2": {
           "type": "enum",
           "values": "id-functions",
+          "description": "Selects inner fn2 in z=fn1(fn2(z*z))+c.",
           "format": "raw",
           "default-curve": "hold",
           "extrapolate": "clamp"

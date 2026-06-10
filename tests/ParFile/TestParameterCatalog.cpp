@@ -1910,6 +1910,34 @@ TEST(TestParameterCatalog, formulaParamsComplexKnobMetadataLoads)
     EXPECT_EQ(1, knob.slots[1]);
 }
 
+TEST(TestParameterCatalog, formulaDescriptionsLoad)
+{
+    const ParFile::ParameterCatalog catalog{formula_catalog()};
+
+    EXPECT_EQ("Sets Larry's complex c parameter; 0/0 uses the default 0.5.",
+        catalog.formula_params_knob("Larry", "fractal parameter").metadata.description);
+    EXPECT_EQ("Sets Larry's bailout threshold; nonpositive values use 4.",
+        catalog.formula_params_knob("Larry", "bailout").metadata.description);
+    EXPECT_EQ("Selects fn1 added to pixel before multiplying by z^(z-1).",
+        catalog.formula_function("DAFrm01", "fn1").metadata.description);
+    EXPECT_EQ("Selects fn1 multiplied by z^(z-1) before adding pixel.",
+        catalog.formula_function("DAFrm07", "fn1").metadata.description);
+    EXPECT_EQ("Selects outer fn1 in z=fn1(fn2(z*z))+c.", catalog.formula_function("Larry", "fn1").metadata.description);
+    EXPECT_EQ("Selects inner fn2 in z=fn1(fn2(z*z))+c.", catalog.formula_function("Larry", "fn2").metadata.description);
+
+    for (const ParFile::FormulaEntryMetadata &formula : catalog.formula_entries)
+    {
+        for (const ParFile::FormulaParamsKnobMetadata &knob : formula.params.knobs)
+        {
+            EXPECT_FALSE(knob.metadata.description.empty()) << formula.name << " " << knob.name;
+        }
+        for (const ParFile::FormulaFunctionMetadata &function : formula.functions.keys)
+        {
+            EXPECT_FALSE(function.metadata.description.empty()) << formula.name << " " << function.name;
+        }
+    }
+}
+
 TEST(TestParameterCatalog, formulaParamsIntegerKnobMetadataLoads)
 {
     const ParFile::ParameterCatalog catalog{
