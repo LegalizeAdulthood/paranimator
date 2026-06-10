@@ -1351,6 +1351,39 @@ TEST_P(FunctionSlotMetadataTest, functionSlotMetadataLoads)
 INSTANTIATE_TEST_SUITE_P(TestParameterCatalog, FunctionSlotMetadataTest,
     ::testing::ValuesIn(FUNCTION_SLOT_METADATA_CASES), function_slot_metadata_test_name);
 
+TEST(TestParameterCatalog, coreFunctionSlotDescriptionsLoad)
+{
+    const ParFile::ParameterCatalog catalog{core_catalog()};
+    struct ExpectedFunctionDescription
+    {
+        const char *fractal_type;
+        int slot;
+        const char *description;
+    };
+    const ExpectedFunctionDescription cases[]{
+        {"bifstewart", 0, "Selects the function squared in the Stewart bifurcation formula."},
+        {"dynamic", 0, "Selects fn1 in f(k)=sin(k+a*fn1(b*k)) for the dynamic system."},
+        {"fn(z)+fn(pix)", 1, "Selects fn2 applied to c in z(n+1)=fn1(z)+p*fn2(c)."},
+        {"hypercomplexj", 0, "Selects the function applied in the hypercomplex Julia z'=fn(z)+c formula."},
+        {"julia(fn||fn)", 1, "Selects the branch function used when |z| is at or above the shift value."},
+        {"lambdafn", 0, "Selects fn1 in the lambda*z function formula z(n+1)=lambda*fn1(z)."},
+        {"mandelbrotmix4", 0, "Selects fn1 applied to the pixel to produce c in MandelbrotMix4."},
+        {"latoocarfian", 3, "Selects fn4 applied to y*a and multiplied by d in the Latoocarfian y update."},
+        {"popcornjul", 2, "Selects fn3 applied to x+fn4(c*x) in the Popcorn Julia equations."},
+    };
+
+    for (const ExpectedFunctionDescription &expected : cases)
+    {
+        EXPECT_EQ(
+            expected.description, catalog.function_slot(expected.fractal_type, expected.slot).metadata.description);
+    }
+    for (const FunctionSlotMetadataCase &expected : FUNCTION_SLOT_METADATA_CASES)
+    {
+        EXPECT_FALSE(catalog.function_slot(expected.fractal_type, expected.slot).metadata.description.empty())
+            << expected.fractal_type << " " << expected.name;
+    }
+}
+
 class ParamsGroupMetadataTest : public ::testing::TestWithParam<ParamsGroupMetadataCase>
 {
 };

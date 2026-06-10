@@ -554,6 +554,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects the function applied to the old population in the generalized bifurcation formula.",
           "values": "id-functions"
         }
       }
@@ -585,6 +586,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects the function applied to pi times the population before adding the bifurcation term.",
           "values": "id-functions"
         }
       }
@@ -616,6 +618,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects the function applied to pi times the population for the next bifurcation value.",
           "values": "id-functions"
         }
       }
@@ -647,6 +650,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects the function applied to population in the lambda bifurcation formula.",
           "values": "id-functions"
         }
       }
@@ -712,6 +716,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects the function squared in the Stewart bifurcation formula.",
           "values": "id-functions"
         }
       }
@@ -983,6 +988,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 in f(k)=sin(k+a*fn1(b*k)) for the dynamic system.",
           "values": "id-functions"
         }
       }
@@ -1050,10 +1056,12 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 applied to z in z(n+1)=fn1(z)+p*fn2(c).",
           "values": "id-functions"
         },
         "fn2": {
           "type": "enum",
+          "description": "Selects fn2 applied to c in z(n+1)=fn1(z)+p*fn2(c).",
           "values": "id-functions"
         }
       }
@@ -1121,10 +1129,12 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 in p1*fn1(z)+p2*fn2(z).",
           "values": "id-functions"
         },
         "fn2": {
           "type": "enum",
+          "description": "Selects fn2 in p1*fn1(z)+p2*fn2(z).",
           "values": "id-functions"
         }
       }
@@ -1192,6 +1202,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 in p1*fn1(z)*z+p2*z.",
           "values": "id-functions"
         }
       }
@@ -1241,6 +1252,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects the function applied in the hypercomplex z'=fn(z)+c formula.",
           "values": "id-functions"
         }
       }
@@ -1308,6 +1320,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects the function applied in the hypercomplex Julia z'=fn(z)+c formula.",
           "values": "id-functions"
         }
       }
@@ -1673,10 +1686,12 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects the branch function used when |z| is below the shift value.",
           "values": "id-functions"
         },
         "fn2": {
           "type": "enum",
+          "description": "Selects the branch function used when |z| is at or above the shift value.",
           "values": "id-functions"
         }
       }
@@ -1805,6 +1820,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 applied to the pixel to produce c in MandelbrotMix4.",
           "values": "id-functions"
         }
       }
@@ -1862,6 +1878,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 in the Mandelfn z(n+1)=c*fn1(z) formula.",
           "values": "id-functions"
         }
       }
@@ -2262,6 +2279,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 added to e^z in the manfn+exp formula.",
           "values": "id-functions"
         }
       }
@@ -2303,6 +2321,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 added to z^2 in the manfn+zsqrd formula.",
           "values": "id-functions"
         }
       }
@@ -2353,10 +2372,12 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects the branch function used when |z| is below the shift value.",
           "values": "id-functions"
         },
         "fn2": {
           "type": "enum",
+          "description": "Selects the branch function used when |z| is at or above the shift value.",
           "values": "id-functions"
         }
       }
@@ -2888,6 +2909,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects the function used in MarksMandelPwr before adding lambda.",
           "values": "id-functions"
         }
       }
@@ -2929,6 +2951,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects the function used in Tim's Error before adding lambda.",
           "values": "id-functions"
         }
       }
@@ -3458,10 +3481,12 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects the branch function used when |z| is below the shift value.",
           "values": "id-functions"
         },
         "fn2": {
           "type": "enum",
+          "description": "Selects the branch function used when |z| is at or above the shift value.",
           "values": "id-functions"
         }
       }
@@ -3582,6 +3607,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 added to e^z in the julfn+exp formula.",
           "values": "id-functions"
         }
       }
@@ -3623,6 +3649,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 added to z^2 in the julfn+zsqrd formula.",
           "values": "id-functions"
         }
       }
@@ -3813,10 +3840,12 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects the branch function used when |z| is below the shift value.",
           "values": "id-functions"
         },
         "fn2": {
           "type": "enum",
+          "description": "Selects the branch function used when |z| is at or above the shift value.",
           "values": "id-functions"
         }
       }
@@ -3858,6 +3887,7 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 in the lambda*z function formula z(n+1)=lambda*fn1(z).",
           "values": "id-functions"
         }
       }
@@ -3907,18 +3937,22 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 applied to y*b in the Latoocarfian x update.",
           "values": "id-functions"
         },
         "fn2": {
           "type": "enum",
+          "description": "Selects fn2 applied to x*b and multiplied by c in the Latoocarfian x update.",
           "values": "id-functions"
         },
         "fn3": {
           "type": "enum",
+          "description": "Selects fn3 applied to x*a in the Latoocarfian y update.",
           "values": "id-functions"
         },
         "fn4": {
           "type": "enum",
+          "description": "Selects fn4 applied to y*a and multiplied by d in the Latoocarfian y update.",
           "values": "id-functions"
         }
       }
@@ -4592,18 +4626,22 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 applied to y+fn2(c*y) in the Popcorn equations.",
           "values": "id-functions"
         },
         "fn2": {
           "type": "enum",
+          "description": "Selects fn2 applied to c*y inside the fn1 Popcorn term.",
           "values": "id-functions"
         },
         "fn3": {
           "type": "enum",
+          "description": "Selects fn3 applied to x+fn4(c*x) in the Popcorn equations.",
           "values": "id-functions"
         },
         "fn4": {
           "type": "enum",
+          "description": "Selects fn4 applied to c*x inside the fn3 Popcorn term.",
           "values": "id-functions"
         }
       }
@@ -4671,18 +4709,22 @@
       "functions": {
         "fn1": {
           "type": "enum",
+          "description": "Selects fn1 applied to y+fn2(c*y) in the Popcorn Julia equations.",
           "values": "id-functions"
         },
         "fn2": {
           "type": "enum",
+          "description": "Selects fn2 applied to c*y inside the fn1 Popcorn Julia term.",
           "values": "id-functions"
         },
         "fn3": {
           "type": "enum",
+          "description": "Selects fn3 applied to x+fn4(c*x) in the Popcorn Julia equations.",
           "values": "id-functions"
         },
         "fn4": {
           "type": "enum",
+          "description": "Selects fn4 applied to c*x inside the fn3 Popcorn Julia term.",
           "values": "id-functions"
         }
       }

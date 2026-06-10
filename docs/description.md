@@ -71,11 +71,6 @@ config schema fields in this plan. JSON Schema already has its own
 
 Each item is one reviewable slice. Remove an item after it lands.
 
-- Core fractal function slots
-  - Audit Id help for `function=` and `fractalp.cpp` where functions
-    have special meaning.
-  - Add descriptions to all built-in fractal `functions.fn*` metadata.
-
 - Formula params and functions
   - Audit the formula files for every entry in
     `data/formula-catalog.json`.
