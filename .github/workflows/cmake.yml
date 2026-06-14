@@ -6,26 +6,48 @@ on:
   pull_request:
     branches: [ "master" ]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
     runs-on: ${{matrix.os}}
-    env:
-      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
     steps:
     - name: Checkout
       uses: actions/checkout@v4.1.1
       with:
         submodules: true
 
-    - name: Set Environment Variables
-      uses: actions/github-script@v7
+    - name: Setup vcpkg package cache
+      id: vc
+      uses: LegalizeAdulthood/vcpkg-github-cache@4305d9f202bf0131458407402f0cc7efc3412394 # v1.1.0
       with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+        token: ${{github.token}}
+        bootstrap: "true"
+        install-nuget: "true"
+        debug: "false"
+        trace: "false"
 
     - name: Run Workflow
-      run: cmake --workflow --preset default
+      shell: pwsh
+      run: |
+        cmake --workflow --preset default 2>&1 |
+          Tee-Object -FilePath build.log
+        if ($LASTEXITCODE -ne 0) {
+          exit $LASTEXITCODE
+        }
+
+    - name: Analyze vcpkg package cache
+      if: always()
+      uses: LegalizeAdulthood/vcpkg-github-cache/analyze@4305d9f202bf0131458407402f0cc7efc3412394 # v1.1.0
+      with:
+        token: ${{github.token}}
+        build-log: build.log
+        artifact-name: vcpkg-cache-diagnostics-${{github.job}}-${{matrix.os}}
+        fail-on: "never"
+        debug: "false"
+        trace: "false"
